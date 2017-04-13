@@ -1,0 +1,76 @@
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.microsoft.azure.webjobs.script.rpc.messages";
+option java_outer_classname = "RPCInvokeFunctionProto";
+option objc_class_prefix = "RpcFunction";
+option csharp_namespace = "Microsoft.Azure.WebJobs.Script.Rpc.Messages";
+
+package RpcFunction;
+
+// Interface exported by the server.
+service RpcFunction {
+  // A Bidirectional streaming RPC.
+  //
+  // Accepts a stream of RpcFunctionInvokeMetadata and returns a stream of updated RpcFunctionInvokeMetadata
+  rpc RpcInvokeFunction(stream RpcFunctionInvokeMetadata) returns (stream RpcFunctionInvokeMetadata) {}
+}
+
+message RpcFunctionInvokeMetadata {
+  string invocationId = 1;
+  string functionName = 2;
+  string scriptFile = 3;
+  string entryPoint = 9;
+  string triggerType = 10;
+  Bindings bindings = 11;
+  BindingData bindingData = 12;
+  HttpMessage httpRequest = 14;
+  HttpMessage httpResponse = 15;
+  repeated InputsWithDataTypes inputsWithDataTypes = 16;
+  repeated BindingsWithDataTypes bindingsWithDataTypes = 17;
+  map<string,bytes> messageOutputs = 18;
+  repeated string logs = 19;
+}
+
+message InputsWithDataTypes {
+  string invocationId = 1;
+  string dataType = 10;
+  bytes messageInputs = 15;
+}
+
+message Bindings {
+  string invocationId = 1;
+  map<string,bytes> messageBindings = 15;
+}
+
+message BindingsWithDataTypes {
+  string invocationId = 1;
+  string name = 2;
+  string dataType = 10;
+  bytes messageBindings = 15;
+}
+
+message BindingData {
+  string invocationId = 1;
+  map<string,bytes> messageBindingData = 15;
+}
+
+message HttpMessageBody{
+  string type = 1;
+  bytes data = 2;
+}
+
+message HttpMessage {
+  string method = 1;
+  string url = 2; 
+  map<string,string> headers = 3;
+  HttpMessageBody httpMessageBody = 4;
+  string rawBody = 10;
+  string statusCode = 11;
+  bytes rawResponse = 12;
+  string rawResponseType = 13;
+  map<string,string> query = 15;
+  bool isRaw = 16;
+}
+
