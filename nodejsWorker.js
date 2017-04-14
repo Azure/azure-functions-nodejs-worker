@@ -14,14 +14,14 @@ let rpcWorkerHost = '127.0.0.1';
 let nodejsWorkerPort = 50051;
 let nodejsWorkerAddress = rpcWorkerHost + ':' + nodejsWorkerPort;
 
-function isEmpty (obj) {
+function isEmpty(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) { return false; }
   }
   return true;
 }
 
-function isHttpRequestFirstInput (binArrayInputs) {
+function isHttpRequestFirstInput(binArrayInputs) {
   let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
   try {
     let triggerInputJSON = JSON.parse(triggerInputString);
@@ -33,7 +33,7 @@ function isHttpRequestFirstInput (binArrayInputs) {
   return false;
 }
 
-function getBytesForObject (inputObject) {
+function getBytesForObject(inputObject) {
   let updatedBinding;
   if (typeof (inputObject) === 'string') {
     updatedBinding = inputObject;
@@ -50,7 +50,7 @@ function getBytesForObject (inputObject) {
   return updatedBindingBufferView;
 }
 
-function buildHttpMessage (inputMessage, isResponseMessage) {
+function buildHttpMessage(inputMessage, isResponseMessage) {
   let httpMessage = {};
   if (inputMessage['method']) {
     httpMessage['method'] = inputMessage['method'];
@@ -68,10 +68,10 @@ function buildHttpMessage (inputMessage, isResponseMessage) {
     httpMessage['query'] = inputMessage['query'];
   }
   if (inputMessage['statusCode']) {
-    httpMessage['statusCode'] = inputMessage['statusCode'].toString(); ;
+    httpMessage['statusCode'] = inputMessage['statusCode'].toString();;
   }
   if (inputMessage['status'] && !httpMessage['statusCode']) {
-    httpMessage['statusCode'] = inputMessage['status'].toString(); ;
+    httpMessage['statusCode'] = inputMessage['status'].toString();;
   }
   if (inputMessage['body']) {
     httpMessage.httpMessageBody = {};
@@ -111,7 +111,7 @@ function buildHttpMessage (inputMessage, isResponseMessage) {
  * with a stream of updated rpcFunctionInvokeMetadata.
  * @param {Duplex} call The stream for incoming and outgoing messages
  */
-function rpcInvokeFunction (call) {
+function rpcInvokeFunction(call) {
   call.on('data', function (rpcFunctionInvokeMetadata) {
     scriptFilePath = rpcFunctionInvokeMetadata.scriptFile;
 
@@ -149,6 +149,18 @@ function rpcInvokeFunction (call) {
       context.req['query'] = rpcFunctionInvokeMetadata.httpRequest['query'];
       if (rpcFunctionInvokeMetadata.httpRequest['rawBody']) {
         context.req['rawBody'] = rpcFunctionInvokeMetadata.httpRequest['rawBody'];
+      }
+      if (rpcFunctionInvokeMetadata.httpRequest['params']) {
+        context.req.params = {};
+        for (let key in rpcFunctionInvokeMetadata.httpRequest['params']) {
+          if (rpcFunctionInvokeMetadata.httpRequest['params'].hasOwnProperty(key)) {
+            let binArrayInputs = rpcFunctionInvokeMetadata.httpRequest['params'][key];
+            let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
+            // let triggerInputJSON = JSON.parse(triggerInputString);
+            console.log(key + ' -> ' + triggerInputString);
+            context.req.params[key] = triggerInputString;
+          }
+        }
       }
 
       let requestBody = rpcFunctionInvokeMetadata.httpRequest['httpMessageBody'];
@@ -302,7 +314,7 @@ function rpcInvokeFunction (call) {
  * it serves.
  * @return {Server} The new server object
  */
-function getServer () {
+function getServer() {
   let server = new grpc.Server();
   server.addProtoService(rpcFunction.RpcFunction.service, {
     rpcInvokeFunction: rpcInvokeFunction

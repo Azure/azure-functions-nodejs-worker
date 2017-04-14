@@ -66,11 +66,11 @@ message HttpMessage {
   string url = 2; 
   map<string,string> headers = 3;
   HttpMessageBody httpMessageBody = 4;
-  string rawBody = 10;
-  string statusCode = 11;
-  bytes rawResponse = 12;
-  string rawResponseType = 13;
+  map<string,bytes> params = 10;
+  string rawBody = 11;
+  string statusCode = 12;
+  bytes rawResponse = 13;
+  string rawResponseType = 14;
   map<string,string> query = 15;
   bool isRaw = 16;
 }
-
