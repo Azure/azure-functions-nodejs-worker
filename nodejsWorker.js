@@ -7,12 +7,14 @@ let scriptFilePath;
 //TODO hook up unhandled exception handler
 let globalInitializationScript = require('./azurefunctions/functions.js').globalInitialization;
 let createFunction = require('./azurefunctions/functions.js').createFunction;
+let clearRequireCacheScript = require('./azurefunctions/functions.js').clearRequireCache;
 
 let rpcFunction = grpc.load(PROTO_PATH).RpcFunction;
 
 let rpcWorkerHost = '127.0.0.1';
 let nodejsWorkerPort = 50051;
 let nodejsWorkerAddress = rpcWorkerHost + ':' + nodejsWorkerPort;
+let unhandledExceptioError;
 
 function isEmpty(obj) {
   for (let key in obj) {
@@ -106,6 +108,20 @@ function buildHttpMessage(inputMessage, isResponseMessage) {
   return httpMessage;
 }
 
+
+function terminateWorker(call, callback) {
+  callback(null, {});
+  process.exit(1);
+}
+
+function clearRequiredCache(call, callback) {
+   Object.keys(require.cache).forEach(function (key) {
+        delete require.cache[key];
+    });
+  callback(null, {});
+}
+
+
 /**
  * rpcInvokeFunction handler. Receives a stream of rpcFunctionInvokeMetadata, and responds
  * with a stream of updated rpcFunctionInvokeMetadata.
@@ -113,9 +129,16 @@ function buildHttpMessage(inputMessage, isResponseMessage) {
  */
 function rpcInvokeFunction(call) {
   call.on('data', function (rpcFunctionInvokeMetadata) {
+    console.log('here...received rpc invoke');
     scriptFilePath = rpcFunctionInvokeMetadata.scriptFile;
 
     let context = {};
+
+  process.on('uncaughtException', function (err) {
+        context.handleUncaughtException(err.stack);
+    });
+    
+
     context.invocationId = rpcFunctionInvokeMetadata.invocationId;
     context._triggerType = rpcFunctionInvokeMetadata.triggerType;
 
@@ -298,12 +321,21 @@ function rpcInvokeFunction(call) {
       console.log('traceMessage: ' + JSON.stringify(traceMessage));
     };
 
+     context.handleUncaughtException = function (errorStack) {
+      if(errorStack){
+        rpcFunctionInvokeMetadata.unhandledExceptionError = JSON.stringify(errorStack);
+        call.write(rpcFunctionInvokeMetadata);
+       // process.exit(1);
+      }
+    };
+
     let azureFunctionScript = createFunction(require(scriptFilePath));
     let azureFunctionScriptContext = [context, resultCallback];
     var invokeFunctionCode = azureFunctionScript.apply(invokeFunctionCode, azureFunctionScriptContext);
     // final response with the result
     call.write(rpcFunctionInvokeMetadata);
   });
+
   call.on('end', function () {
     call.end();
   });
@@ -317,7 +349,9 @@ function rpcInvokeFunction(call) {
 function getServer() {
   let server = new grpc.Server();
   server.addProtoService(rpcFunction.RpcFunction.service, {
-    rpcInvokeFunction: rpcInvokeFunction
+    rpcInvokeFunction: rpcInvokeFunction,
+    terminateWorker: terminateWorker,
+    clearRequiredCache: clearRequiredCache
   });
   return server;
 }

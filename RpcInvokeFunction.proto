@@ -15,7 +15,12 @@ service RpcFunction {
   //
   // Accepts a stream of RpcFunctionInvokeMetadata and returns a stream of updated RpcFunctionInvokeMetadata
   rpc RpcInvokeFunction(stream RpcFunctionInvokeMetadata) returns (stream RpcFunctionInvokeMetadata) {}
+  rpc TerminateWorker(emptyMessage) returns (emptyMessage) {}
+  rpc ClearRequiredCache(emptyMessage) returns (emptyMessage) {}
 }
+
+  
+message  emptyMessage {}
 
 message RpcFunctionInvokeMetadata {
   string invocationId = 1;
@@ -31,6 +36,7 @@ message RpcFunctionInvokeMetadata {
   repeated BindingsWithDataTypes bindingsWithDataTypes = 17;
   map<string,bytes> messageOutputs = 18;
   repeated string logs = 19;
+  string unhandledExceptionError = 20;
 }
 
 message InputsWithDataTypes {
