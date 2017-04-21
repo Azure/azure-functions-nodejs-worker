@@ -15,12 +15,25 @@ service RpcFunction {
   //
   // Accepts a stream of RpcFunctionInvokeMetadata and returns a stream of updated RpcFunctionInvokeMetadata
   rpc RpcInvokeFunction(stream RpcFunctionInvokeMetadata) returns (stream RpcFunctionInvokeMetadata) {}
-  rpc TerminateWorker(emptyMessage) returns (emptyMessage) {}
-  rpc ClearRequiredCache(emptyMessage) returns (emptyMessage) {}
+  rpc TerminateWorker(EmptyMessage) returns (EmptyMessage) {}
+  rpc ClearRequiredCache(EmptyMessage) returns (EmptyMessage) {}
 }
 
+enum RpcDataType {
+    String = 0;
+    Number = 1;
+    Bytes = 2;
+	Http = 3;
+  }
+
+  message DataValue {
+    string stringValue = 1;
+    int32  numberValue = 2;
+    bytes  bytesValue = 3;
+	HttpMessage httpMessageValue = 4;
+  }
   
-message  emptyMessage {}
+message  EmptyMessage {}
 
 message RpcFunctionInvokeMetadata {
   string invocationId = 1;
@@ -29,7 +42,8 @@ message RpcFunctionInvokeMetadata {
   string entryPoint = 9;
   string triggerType = 10;
   Bindings bindings = 11;
-  BindingData bindingData = 12;
+  repeated InputBindings InputBindings = 12;
+  BindingData bindingData = 13;
   HttpMessage httpRequest = 14;
   HttpMessage httpResponse = 15;
   repeated InputsWithDataTypes inputsWithDataTypes = 16;
@@ -43,6 +57,12 @@ message InputsWithDataTypes {
   string invocationId = 1;
   string dataType = 10;
   bytes messageInputs = 15;
+}
+
+message InputBindings {
+  string name = 1;
+  RpcDataType dataType = 2;
+  DataValue dataValue = 3;
 }
 
 message Bindings {
