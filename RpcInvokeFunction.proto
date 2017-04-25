@@ -41,50 +41,27 @@ message RpcFunctionInvokeMetadata {
   string scriptFile = 3;
   string entryPoint = 9;
   string triggerType = 10;
-  Bindings bindings = 11;
-  repeated InputBindings InputBindings = 12;
-  BindingData bindingData = 13;
-  HttpMessage httpRequest = 14;
-  HttpMessage httpResponse = 15;
-  repeated InputsWithDataTypes inputsWithDataTypes = 16;
-  repeated BindingsWithDataTypes bindingsWithDataTypes = 17;
+  repeated FunctionBindings functionInputBindings = 12;
+  repeated FunctionBindings functionOutputBindings = 13;
+  TriggerMetadata triggerMetadata = 14;
   map<string,bytes> messageOutputs = 18;
   repeated string logs = 19;
   string unhandledExceptionError = 20;
 }
 
-message InputsWithDataTypes {
-  string invocationId = 1;
-  string dataType = 10;
-  bytes messageInputs = 15;
-}
-
-message InputBindings {
+message FunctionBindings {
   string name = 1;
   RpcDataType dataType = 2;
   DataValue dataValue = 3;
 }
 
-message Bindings {
-  string invocationId = 1;
-  map<string,bytes> messageBindings = 15;
-}
-
-message BindingsWithDataTypes {
-  string invocationId = 1;
-  string name = 2;
-  string dataType = 10;
-  bytes messageBindings = 15;
-}
-
-message BindingData {
-  string invocationId = 1;
+message TriggerMetadata {
   map<string,bytes> messageBindingData = 15;
 }
 
 message HttpMessageBody{
-  string type = 1;
-  bytes data = 2;
+  RpcDataType httpMessageBodyType = 1;
+  DataValue httpMessageBodyDataValue = 2;
 }
 
 message HttpMessage {
@@ -95,8 +72,8 @@ message HttpMessage {
   map<string,bytes> params = 10;
   string rawBody = 11;
   string statusCode = 12;
-  bytes rawResponse = 13;
-  string rawResponseType = 14;
+  DataValue rawResponseDataValue = 13;
+  RpcDataType rawResponseDataType = 14;
   map<string,string> query = 15;
   bool isRaw = 16;
 }

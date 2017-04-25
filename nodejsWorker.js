@@ -23,47 +23,54 @@ function isEmpty(obj) {
   return true;
 }
 
-function buildContextHttpRequest(context, inputHttpRequest){
+function buildContextHttpRequest(context, inputHttpRequest) {
 
-      // Get Request
-      context.req = {};
+  // Get Request
+  context.req = {};
 
-      context.req['method'] = inputHttpRequest['method'];
-      context.req['originalUrl'] = inputHttpRequest['url'];
-      context.req['headers'] = inputHttpRequest['headers'];
-      context.req['query'] = inputHttpRequest['query'];
-      if (inputHttpRequest['rawBody']) {
-        context.req['rawBody'] = inputHttpRequest['rawBody'];
+  context.req['method'] = inputHttpRequest['method'];
+  context.req['originalUrl'] = inputHttpRequest['url'];
+  context.req['headers'] = inputHttpRequest['headers'];
+  context.req['query'] = inputHttpRequest['query'];
+  if (inputHttpRequest['rawBody']) {
+    context.req['rawBody'] = inputHttpRequest['rawBody'];
+  }
+  if (inputHttpRequest['params']) {
+    context.req.params = {};
+    for (let key in inputHttpRequest['params']) {
+      if (inputHttpRequest['params'].hasOwnProperty(key)) {
+        let binArrayInputs = inputHttpRequest['params'][key];
+        let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
+        // let triggerInputJSON = JSON.parse(triggerInputString);
+        console.log(key + ' -> ' + triggerInputString);
+        context.req.params[key] = triggerInputString;
       }
-      if (inputHttpRequest['params']) {
-        context.req.params = {};
-        for (let key in inputHttpRequest['params']) {
-          if (inputHttpRequest['params'].hasOwnProperty(key)) {
-            let binArrayInputs = inputHttpRequest['params'][key];
-            let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-            // let triggerInputJSON = JSON.parse(triggerInputString);
-            console.log(key + ' -> ' + triggerInputString);
-            context.req.params[key] = triggerInputString;
-          }
+    }
+  }
+
+  let requestBody = inputHttpRequest['httpMessageBody'];
+  if (requestBody) {
+    let requestBodyType = requestBody['httpMessageBodyType'];
+    let requestBodyDataValue = requestBody['httpMessageBodyDataValue'];
+    switch (requestBodyType) {
+      case "String":
+      default:
+        let stringValue = requestBodyDataValue['stringValue'];
+        try {
+          let triggerInputJSON = JSON.parse(stringValue);
+          console.log(' triggerInputJSON ' + triggerInputJSON);
+          context.req['body'] = triggerInputJSON;
+        } catch (error) {
+          console.log(' stringValue ' + stringValue);
+          context.req['body'] = stringValue;
         }
-      }
-
-      let requestBody = inputHttpRequest['httpMessageBody'];
-      if (requestBody) {
-        let binArrayInputs = requestBody['data'];
-        if (requestBody['type'] === 'Buffer') {
-          context.req['body'] = binArrayInputs;
-        } else {
-          let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-          try {
-            let triggerInputJSON = JSON.parse(triggerInputString);
-            context.req['body'] = triggerInputJSON;
-          } catch (error) {
-            console.log('triggerInputString-->' + triggerInputString);
-            context.req['body'] = triggerInputString;
-          }
-        }
-      }
+        break;
+      case "Bytes":
+        let bytesValue = requestBodyDataValue['bytesValue']
+        context.req['body'] = bytesValue;
+        break;
+    }
+  }
 }
 
 function isHttpRequestFirstInput(binArrayInputs) {
@@ -82,6 +89,14 @@ function getBytesForObject(inputObject) {
   let updatedBinding;
   if (typeof (inputObject) === 'string') {
     updatedBinding = inputObject;
+  } else if (Buffer.isBuffer(inputObject)) {
+    let inputString = String.fromCharCode.apply(null, inputObject);
+    try {
+      let inputJSON = JSON.parse(inputString);
+      updatedBinding = inputJSON;
+    } catch (error) {
+      updatedBinding = inputString;
+    }
   } else {
     updatedBinding = JSON.stringify(inputObject);
   }
@@ -95,7 +110,28 @@ function getBytesForObject(inputObject) {
   return updatedBindingBufferView;
 }
 
-function buildHttpMessage(inputMessage, isResponseMessage) {
+
+function getStringForObject(inputObject) {
+  let updatedBinding;
+  if (typeof (inputObject) === 'string') {
+    return inputObject;
+  } else if (Buffer.isBuffer(inputObject)) {
+    let inputString = String.fromCharCode.apply(null, inputObject);
+    try {
+      let inputJSON = JSON.parse(inputString);
+      updatedBinding = inputJSON;
+    } catch (error) {
+      updatedBinding = inputString;
+    }
+  } else {
+    updatedBinding = JSON.stringify(inputObject);
+  }
+
+  console.log(updatedBinding);
+  return updatedBinding;
+}
+
+function buildHttpMessage(inputMessage) {
   let httpMessage = {};
   if (inputMessage['method']) {
     httpMessage['method'] = inputMessage['method'];
@@ -120,32 +156,40 @@ function buildHttpMessage(inputMessage, isResponseMessage) {
   }
   if (inputMessage['body']) {
     httpMessage.httpMessageBody = {};
-
+    httpMessage.httpMessageBody.httpMessageBodyDataValue = {};
     if (inputMessage['isRaw']) {
       httpMessage.isRaw = true;
     }
     if (inputMessage['headers'] && inputMessage['headers']['raw']) {
-      httpMessage.httpMessageBody['type'] = 'Buffer';
+      httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
     }
     let binArrayInputs = inputMessage['body'];
     if (Buffer.isBuffer(binArrayInputs)) {
-      httpMessage.httpMessageBody['type'] = 'Buffer';
+      httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
     }
-    if (httpMessage.httpMessageBody['type'] === 'Buffer' && !inputMessage['rawBody']) {
-      httpMessage.httpMessageBody['data'] = binArrayInputs;
+    try {
+      let inputJSON = JSON.parse(inputMessage['body']);
+      if (inputJSON["type"] == "Buffer") {
+        httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
+      }
+    } catch (error) { }
+    //if (httpMessage.httpMessageBody['httpMessageBodyType'] === rpcFunction.RpcDataType.Bytes && !inputMessage['rawBody']) {
+    if (httpMessage.httpMessageBody['httpMessageBodyType'] === rpcFunction.RpcDataType.Bytes) {
+      httpMessage.httpMessageBody.httpMessageBodyDataValue['bytesValue'] = binArrayInputs;
     } else {
-      httpMessage.httpMessageBody['data'] = getBytesForObject(inputMessage['body']);
+      httpMessage.httpMessageBody.httpMessageBodyDataValue['stringValue'] = getStringForObject(inputMessage['body']);
     }
   }
 
   if (isEmpty(httpMessage)) {
+    httpMessage.rawResponseDataValue = {};
     if (Buffer.isBuffer(inputMessage)) {
-      httpMessage.rawResponseType = 'Buffer';
-      httpMessage.rawResponse = inputMessage;
+      httpMessage.rawResponseDataType = rpcFunction.RpcDataType.Bytes;
+      httpMessage.rawResponseDataValue['bytesValue'] = inputMessage;
     } else {
-      httpMessage.rawResponseType = 'String';
+      //httpMessage.rawResponseType = 'String';
 
-      httpMessage.rawResponse = getBytesForObject(inputMessage);
+      httpMessage.rawResponseDataValue['stringValue'] = getStringForObject(inputMessage);
     }
   }
   return httpMessage;
@@ -211,9 +255,9 @@ function rpcInvokeFunction(call) {
 
     // Get bindingData
     context.bindingData = {};
-    for (let key in rpcFunctionInvokeMetadata.bindingData.messageBindingData) {
-      if (rpcFunctionInvokeMetadata.bindingData.messageBindingData.hasOwnProperty(key)) {
-        let binArrayInputs = rpcFunctionInvokeMetadata.bindingData.messageBindingData[key];
+    for (let key in rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData) {
+      if (rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData.hasOwnProperty(key)) {
+        let binArrayInputs = rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData[key];
         let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
         // let triggerInputJSON = JSON.parse(triggerInputString);
         console.log(key + ' -> ' + triggerInputString);
@@ -245,34 +289,38 @@ function rpcInvokeFunction(call) {
       }
     } */
 
-    for (let inputBindingsIndex = 0; inputBindingsIndex < rpcFunctionInvokeMetadata.InputBindings.length; inputBindingsIndex++) {
-      let name = rpcFunctionInvokeMetadata.InputBindings[inputBindingsIndex]['name'];
-      let inputDataType = rpcFunctionInvokeMetadata.InputBindings[inputBindingsIndex]['dataType'];
+    for (let inputBindingsIndex = 0; inputBindingsIndex < rpcFunctionInvokeMetadata.functionInputBindings.length; inputBindingsIndex++) {
+      let name = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['name'];
+      let inputDataType = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataType'];
+
       switch (inputDataType) {
         case "String":
         default:
-          let stringValue = rpcFunctionInvokeMetadata.InputBindings[inputBindingsIndex]['dataValue']['stringValue'];
+          let stringValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['stringValue'];
           try {
             let triggerInputJSON = JSON.parse(stringValue);
             console.log(' triggerInputJSON ' + triggerInputJSON);
             context._inputs.push(triggerInputJSON);
-            context.bindings[name]=triggerInputJSON;
+            context.bindings[name] = triggerInputJSON;
           } catch (error) {
             console.log(' stringValue ' + stringValue);
             context._inputs.push(stringValue);
-            context.bindings[name]=stringValue;
+            context.bindings[name] = stringValue;
           }
+          break;
         case "Bytes":
-          let bytesValue = rpcFunctionInvokeMetadata.InputBindings[inputBindingsIndex]['dataValue']['bytesValue']
+          let bytesValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['bytesValue']
           context._inputs.push(bytesValue);
-          context.bindings[name]=bytesValue;
+          context.bindings[name] = bytesValue;
           break;
         case "Http":
-        let httpMessageValue = rpcFunctionInvokeMetadata.InputBindings[inputBindingsIndex]['dataValue']['httpMessageValue'];
-        buildContextHttpRequest(context,httpMessageValue );
-        context._inputs.push(context.req);
-        context.bindings[name]=context.req;
-        break;
+          let httpMessageValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['httpMessageValue'];
+          buildContextHttpRequest(context, httpMessageValue);
+          if (name != 'webhookReq') {
+              context._inputs.push(context.req);
+              context.bindings[name] = context.req;
+          }
+          break;
       }
     }
 
@@ -299,41 +347,37 @@ function rpcInvokeFunction(call) {
       }
 
       for (let key in context.bindings) {
-        if (key === 'req' || key === 'res') {
-          if (key === 'req' || key === 'request') {
-            console.log('httpRequest: ' + JSON.stringify(context.bindings[key]));
-            rpcFunctionInvokeMetadata.httpRequest = buildHttpMessage(context.bindings[key], false);
-          } else {
-            console.log('httpResponse: ' + JSON.stringify(context.bindings[key]));
-            rpcFunctionInvokeMetadata.httpResponse = buildHttpMessage(context.bindings[key], true);
-          }
-        } else {
-          // Convert string to bytes
-          let bindingsWithDataTypesItem = {};
-          bindingsWithDataTypesItem.invocationId = rpcFunctionInvokeMetadata.invocationId;
-          bindingsWithDataTypesItem.name = key;
+        let outputBindingsItem = {};
+        outputBindingsItem.dataValue = {};
+        outputBindingsItem.name = key;
+        if (key === 'req' || key === 'request' || key == 'res') {
+          console.log('key -->' + key + JSON.stringify(context.bindings[key]));
+          outputBindingsItem.dataType = rpcFunction.RpcDataType.Http;
+          outputBindingsItem.dataValue.httpMessageValue = buildHttpMessage(context.bindings[key]);
+        }
+        else {
           let updatedBinding;
-          if (typeof (context.bindings[key]) === 'string') {
-            updatedBinding = context.bindings[key];
-          } else if (Number.isInteger(context.bindings[key])) {
-            updatedBinding = JSON.stringify(context.bindings[key]);
-            bindingsWithDataTypesItem.dataType = 'int';
+          if(typeof (context.bindings[key]) === 'string') {
+            outputBindingsItem.dataType = rpcFunction.RpcDataType.String;
+            outputBindingsItem.dataValue.stringValue = context.bindings[key];
+          } else
+          if (Number.isInteger(context.bindings[key])) {
+            outputBindingsItem.dataType = rpcFunction.RpcDataType.Number;
+            outputBindingsItem.dataValue.numberValue = context.bindings[key];
           } else {
             updatedBinding = JSON.stringify(context.bindings[key]);
             let updatedBindingJSON = JSON.parse(updatedBinding);
-            if (updatedBindingJSON['type']) {
-              bindingsWithDataTypesItem.dataType = updatedBindingJSON['type'];
-            }
             if (updatedBindingJSON['type'] && updatedBindingJSON['type'] === 'Buffer') {
-              bindingsWithDataTypesItem.messageBindings = context.bindings[key];
+              outputBindingsItem.dataType = rpcFunction.RpcDataType.Bytes;
+              outputBindingsItem.dataValue.bytesValue = context.bindings[key];
+            } else {
+              outputBindingsItem.dataType = rpcFunction.RpcDataType.String;
+              outputBindingsItem.dataValue.stringValue = updatedBinding;
             }
           }
-          console.log(key + ' -> ' + updatedBinding);
-          if (typeof (bindingsWithDataTypesItem.messageBindings) === 'undefined') {
-            bindingsWithDataTypesItem.messageBindings = getBytesForObject(updatedBinding);
-          }
-          rpcFunctionInvokeMetadata.bindingsWithDataTypes.push(bindingsWithDataTypesItem);
+         // console.log(key + ' -> ' + updatedBinding);
         }
+        rpcFunctionInvokeMetadata.functionOutputBindings.push(outputBindingsItem);
       }
       return result;
     };
@@ -343,9 +387,9 @@ function rpcInvokeFunction(call) {
         invocationId: rpcFunctionInvokeMetadata.invocationId
       };
       logMessage.logs = [];
-      logMessage.inputsWithDataTypes = {};
-      logMessage.bindingsWithDataTypes = {};
-      logMessage.messageOutputs = {};
+      //logMessage.inputsWithDataTypes = {};
+      //logMessage.functionOutputBindings = {};
+      //logMessage.messageOutputs = {};
       // TODO add another property for invocationId
       traceMessage.msg = traceMessage['msg'];
       logMessage.logs.push(JSON.stringify(traceMessage));
