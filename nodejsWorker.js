@@ -227,6 +227,10 @@ function rpcInvokeFunction(call) {
 
 
     context.invocationId = rpcFunctionInvokeMetadata.invocationId;
+    context.executionContext = {};
+    context.executionContext.invocationId=rpcFunctionInvokeMetadata.invocationId;
+    context.executionContext.functionName = rpcFunctionInvokeMetadata.functionName;
+    context.executionContext.functionDirectory = path.dirname(scriptFilePath);
     context._triggerType = rpcFunctionInvokeMetadata.triggerType;
 
     // Get bindings
