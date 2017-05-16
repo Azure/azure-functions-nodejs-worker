@@ -1,0 +1,259 @@
+syntax = "proto3";
+// protobuf vscode extension: https://marketplace.visualstudio.com/items?itemName=zxh404.vscode-proto3
+
+option java_multiple_files = true;
+option java_package = "com.microsoft.azure.webjobs.script.rpc.messages";
+option java_outer_classname = "FunctionRpc";
+option objc_class_prefix = "FunctionRpc";
+option csharp_namespace = "Microsoft.Azure.WebJobs.Script.Rpc.Messages";
+
+package FunctionRpc;
+
+// Interface exported by the server.
+service FunctionRpc {
+ rpc EventStream (stream StreamingMessage) returns (stream StreamingMessage) {}
+}
+
+message StreamingMessage{
+    enum Type {
+      StartStream = 0; 
+
+      /// WORKER/HOST
+      WorkerInitRequest = 1;
+      WorkerInitResponse = 2;
+
+      WorkerHeartbeat = 3;
+
+      WorkerTerminate = 4;
+
+      // TODO: figure out valid status updates
+      WorkerStatusRequest = 5;
+      WorkerStatusResponse = 6;
+
+      FileChangeRequest = 8;
+      FileChangeResponse = 9;
+      
+      // FUNCTION
+      FunctionLoadRequest = 10;
+      FunctionLoadResponse = 11;
+      
+      // INVOCATION
+      InvocationRequest = 12;
+      InvocationResponse = 14;
+      InvocationCancel = 15;
+
+      // MISC
+      Log = 19;
+    }
+    Type type = 1;
+    google.protobuf.Any content = 2;
+}
+
+// Process.Start required info
+// message {
+//   connection details
+//   protocol type
+//   protocol version 
+// }
+
+message WorkerInitRequest {
+  string request_id = 0;
+  string host_version = 1;
+
+  /*
+  */
+  map<string, string> capabilites = 2;
+
+  // inform worker of supported categories and their levels
+  // i.e. Worker = Verbose, Function.MyFunc = None
+  map<string, Log.Level> log_categories = 3;
+}
+
+message WorkerInitResponse {
+  string request_id = 0;
+  string worker_version = 1;
+  map<string, string> capabilites = 2;
+  StatusResult result = 3;
+  
+  // subscripe for file change notifications
+  repeated string supported_file_types = 4;
+}
+
+message StatusResult {
+  enum Status {
+    Failure = 0;
+    Success = 1;
+    Cancelled = 2;
+  }
+  Status status = 0;
+  string result = 1;
+  Exception exception = 2;
+  repeated Log logs = 3;
+}
+
+// TODO: investigate grpc heartbeat - don't limit to grpc implemention
+// Message is empty by design - Will add more fields in future if needed
+message WorkerHeartbeat {}
+
+// Warning before killing the process after grace_period
+// Worker self terminates ..no response on this
+message WorkerTerminate {
+  Duration grace_period = 0; // could also use absolute time
+}
+
+message FileChangeRequest {
+  // https://msdn.microsoft.com/en-us/library/t6xf43e0(v=vs.110).aspx
+  enum Type {
+    Created = 1;
+    Deleted = 2;
+    Changed = 4;
+    Renamed = 8;
+    All = 15;
+  }
+
+  string request_id = 0;
+  Type type = 1;
+  string full_path = 2;
+  string name = 3;
+}
+
+message FileChangeResponse {
+  enum Action {
+    Ignore = 0;
+    Restart = 1;
+    Reload = 2;
+  }
+
+  string request_id = 0;
+  Action action = 1;
+  // functions to reload
+  repeated string function_ids = 2;
+}
+
+// TODO: figure out useful worker status
+message WorkerStatusRequest{
+  string request_id = 0;
+}
+
+message WorkerStatusResponse {
+  string request_id = 0;
+  map<string, FunctionState> function_state = 1;
+}
+
+// Likely not necessary, as encapsulated in FunctionLoadResponse
+// Metrics also not necessary, can be aggregated on host side
+message FunctionState {
+  enum State {
+    Error = 0;
+    Loaded = 1;
+  }
+  State state = 0;
+}
+
+message FunctionLoadRequest {
+  string request_id = 0;
+  // unique function identifier (avoid name collisions, facilitate reload case)
+  string function_id = 1;
+  FunctionMetadata metadata = 2;
+}
+
+message FunctionLoadResponse {
+  string request_id = 0;
+  string function_id = 1;
+  StatusResult result = 2;
+}
+
+message FunctionMetadata {
+  // TODO: do we want the host's name - the language worker might do a better job of assignment than the host
+  string name = 0;
+
+  string directory = 1;
+  string script_file = 2;
+  string entry_point = 3;
+
+  // not adding disabled or excluded as those (currently) are only relevant to host
+}
+
+message InvocationRequest {
+  string request_id = 0;
+  string invocation_id = 1;
+  string function_id = 2;
+  repeated ParameterBinding input_data = 3;
+
+  // TODO: json serialized binding data, or could use a type scheme like map<string, DataValue>
+  string binding_data = 4;
+}
+
+message InvocationCancel {
+  string invocation_id = 0;
+  Duration grace_period = 1; // could also use absolute time
+}
+
+message InvocationResponse {
+  string request_id = 0;
+  string invocation_id = 1;
+  repeated ParameterBinding output_data = 2; // $return is added as a parameter binding for the function result
+  StatusResult result = 3;
+}
+
+message DataValue {
+  enum Type {
+    String = 0;
+    Json = 1;
+    Bytes = 2;
+    Stream = 3;
+    Http = 4;
+  }
+  Type type = 1;
+  string string = 2;
+  bytes  bytes = 4;
+  Http http = 5;
+}
+
+message ParameterBinding {
+  string name = 1;
+  DataValue value = 2;
+}
+
+message Log {
+  // Matching ILogger semantics
+  // https://github.com/aspnet/Logging/blob/9506ccc3f3491488fe88010ef8b9eb64594abf95/src/Microsoft.Extensions.Logging/Logger.cs
+  enum Level {
+    Trace = 0;
+    Debug = 1;
+    Information = 2;
+    Warning = 3;
+    Error = 4;
+    Critical = 5;
+    None = 6;
+  }
+
+  string category = 0;
+  string event_id = 1;
+  Exception exception = 2;
+  Level level = 3;
+  string message = 4;
+
+  // json serialized property bag, or could use a type scheme like map<string, DataValue>
+  string properties = 5;
+}
+
+message Exception {
+  string source = 0;
+  string stack_trace = 1;
+  string message = 2;
+}
+
+// TODO - solidify this
+message Http {
+  string method = 1;
+  string url = 2; 
+  map<string,string> headers = 3;
+  DataValue body = 4;
+  map<string,bytes> params = 10;
+  string raw_body = 11;
+  string status_code = 12;
+  DataValue raw = 14;
+  map<string,string> query = 15;
+  bool is_raw = 16;
+}
