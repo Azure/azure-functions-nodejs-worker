@@ -18,31 +18,44 @@ message StreamingMessage{
     enum Type {
       StartStream = 0; 
 
-      /// WORKER/HOST
+      //// WORKER/HOST
+      
+      // Host sends capabilities/init data to worker
       WorkerInitRequest = 1;
+      // Worker responds after initializing with its capabilities & status
       WorkerInitResponse = 2;
 
+      // Worker periodically sends empty heartbeat message to host
       WorkerHeartbeat = 3;
 
+      // Host sends terminate message to worker.
+      // Worker terminates if it can, otherwise host terminates after a grace period
       WorkerTerminate = 4;
 
-      // TODO: figure out valid status updates
+      // Add any worker relevant status to response
       WorkerStatusRequest = 5;
       WorkerStatusResponse = 6;
 
-      FileChangeRequest = 8;
-      FileChangeResponse = 9;
+      // On file change event, host sends notification to worker
+      FileChangeEventRequest = 8;
+      // Worker responds with the desired action (ignore, restart worker, reload function)
+      FileChangeEventResponse = 9;
       
-      // FUNCTION
+      //// FUNCTION
+
+      // Host sends required metadata to worker to load function
       FunctionLoadRequest = 10;
+      // Worker responds after loading with the load result
       FunctionLoadResponse = 11;
       
-      // INVOCATION
+      //// INVOCATION
       InvocationRequest = 12;
       InvocationResponse = 14;
+      // Host sends cancel message to attempt to cancel an invocation. 
+      // If an invocation is cancelled, host will receive an invocation response with status cancelled.
       InvocationCancel = 15;
 
-      // MISC
+      //// MISC
       Log = 19;
     }
     Type type = 1;
@@ -50,18 +63,15 @@ message StreamingMessage{
 }
 
 // Process.Start required info
-// message {
 //   connection details
 //   protocol type
 //   protocol version 
-// }
 
 message WorkerInitRequest {
   string request_id = 0;
   string host_version = 1;
 
-  /*
-  */
+  // A map of host supported features/capabilities
   map<string, string> capabilites = 2;
 
   // inform worker of supported categories and their levels
@@ -72,11 +82,9 @@ message WorkerInitRequest {
 message WorkerInitResponse {
   string request_id = 0;
   string worker_version = 1;
+  // A map of worker supported features/capabilities
   map<string, string> capabilites = 2;
   StatusResult result = 3;
-  
-  // subscripe for file change notifications
-  repeated string supported_file_types = 4;
 }
 
 message StatusResult {
@@ -88,6 +96,7 @@ message StatusResult {
   Status status = 0;
   string result = 1;
   Exception exception = 2;
+  // Captured logs or relevant details can use the logs property
   repeated Log logs = 3;
 }
 
@@ -98,10 +107,10 @@ message WorkerHeartbeat {}
 // Warning before killing the process after grace_period
 // Worker self terminates ..no response on this
 message WorkerTerminate {
-  Duration grace_period = 0; // could also use absolute time
+  Duration grace_period = 0;
 }
 
-message FileChangeRequest {
+message FileChangeEventRequest {
   // https://msdn.microsoft.com/en-us/library/t6xf43e0(v=vs.110).aspx
   enum Type {
     Created = 1;
@@ -117,7 +126,7 @@ message FileChangeRequest {
   string name = 3;
 }
 
-message FileChangeResponse {
+message FileChangeEventResponse {
   enum Action {
     Ignore = 0;
     Restart = 1;
@@ -130,24 +139,12 @@ message FileChangeResponse {
   repeated string function_ids = 2;
 }
 
-// TODO: figure out useful worker status
 message WorkerStatusRequest{
   string request_id = 0;
 }
 
 message WorkerStatusResponse {
   string request_id = 0;
-  map<string, FunctionState> function_state = 1;
-}
-
-// Likely not necessary, as encapsulated in FunctionLoadResponse
-// Metrics also not necessary, can be aggregated on host side
-message FunctionState {
-  enum State {
-    Error = 0;
-    Loaded = 1;
-  }
-  State state = 0;
 }
 
 message FunctionLoadRequest {
@@ -179,9 +176,7 @@ message InvocationRequest {
   string invocation_id = 1;
   string function_id = 2;
   repeated ParameterBinding input_data = 3;
-
-  // TODO: json serialized binding data, or could use a type scheme like map<string, DataValue>
-  string binding_data = 4;
+  map<string, TypedData> trigger_metadata = 4;
 }
 
 message InvocationCancel {
@@ -196,7 +191,7 @@ message InvocationResponse {
   StatusResult result = 3;
 }
 
-message DataValue {
+message TypedData {
   enum Type {
     String = 0;
     Json = 1;
@@ -204,15 +199,15 @@ message DataValue {
     Stream = 3;
     Http = 4;
   }
-  Type type = 1;
-  string string = 2;
-  bytes  bytes = 4;
-  Http http = 5;
+  Type type_val = 1;
+  string string_val = 2;
+  bytes  bytes_val = 4;
+  Http http_val = 5;
 }
 
 message ParameterBinding {
   string name = 1;
-  DataValue value = 2;
+  TypedData data = 2;
 }
 
 message Log {
@@ -234,7 +229,7 @@ message Log {
   Level level = 3;
   string message = 4;
 
-  // json serialized property bag, or could use a type scheme like map<string, DataValue>
+  // json serialized property bag, or could use a type scheme like map<string, TypedData>
   string properties = 5;
 }
 
@@ -249,11 +244,11 @@ message Http {
   string method = 1;
   string url = 2; 
   map<string,string> headers = 3;
-  DataValue body = 4;
+  TypedData body = 4;
   map<string,bytes> params = 10;
   string raw_body = 11;
   string status_code = 12;
-  DataValue raw = 14;
+  TypedData raw_response = 14;
   map<string,string> query = 15;
   bool is_raw = 16;
 }
