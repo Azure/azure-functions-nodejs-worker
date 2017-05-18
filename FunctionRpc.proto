@@ -9,6 +9,9 @@ option csharp_namespace = "Microsoft.Azure.WebJobs.Script.Rpc.Messages";
 
 package FunctionRpc;
 
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+
 // Interface exported by the server.
 service FunctionRpc {
  rpc EventStream (stream StreamingMessage) returns (stream StreamingMessage) {}
@@ -68,7 +71,7 @@ message StreamingMessage{
 //   protocol version 
 
 message WorkerInitRequest {
-  string request_id = 0;
+  string request_id = 4;
   string host_version = 1;
 
   // A map of host supported features/capabilities
@@ -80,7 +83,7 @@ message WorkerInitRequest {
 }
 
 message WorkerInitResponse {
-  string request_id = 0;
+  string request_id = 4;
   string worker_version = 1;
   // A map of worker supported features/capabilities
   map<string, string> capabilites = 2;
@@ -93,7 +96,7 @@ message StatusResult {
     Success = 1;
     Cancelled = 2;
   }
-  Status status = 0;
+  Status status = 4;
   string result = 1;
   Exception exception = 2;
   // Captured logs or relevant details can use the logs property
@@ -107,12 +110,13 @@ message WorkerHeartbeat {}
 // Warning before killing the process after grace_period
 // Worker self terminates ..no response on this
 message WorkerTerminate {
-  Duration grace_period = 0;
+  google.protobuf.Duration grace_period = 1;
 }
 
 message FileChangeEventRequest {
   // https://msdn.microsoft.com/en-us/library/t6xf43e0(v=vs.110).aspx
   enum Type {
+	Unknown = 0;
     Created = 1;
     Deleted = 2;
     Changed = 4;
@@ -120,7 +124,7 @@ message FileChangeEventRequest {
     All = 15;
   }
 
-  string request_id = 0;
+  string request_id = 4;
   Type type = 1;
   string full_path = 2;
   string name = 3;
@@ -133,36 +137,36 @@ message FileChangeEventResponse {
     Reload = 2;
   }
 
-  string request_id = 0;
+  string request_id = 4;
   Action action = 1;
   // functions to reload
   repeated string function_ids = 2;
 }
 
 message WorkerStatusRequest{
-  string request_id = 0;
+  string request_id = 1;
 }
 
 message WorkerStatusResponse {
-  string request_id = 0;
+  string request_id = 1;
 }
 
 message FunctionLoadRequest {
-  string request_id = 0;
+  string request_id = 3;
   // unique function identifier (avoid name collisions, facilitate reload case)
   string function_id = 1;
   FunctionMetadata metadata = 2;
 }
 
 message FunctionLoadResponse {
-  string request_id = 0;
+  string request_id = 3;
   string function_id = 1;
   StatusResult result = 2;
 }
 
 message FunctionMetadata {
   // TODO: do we want the host's name - the language worker might do a better job of assignment than the host
-  string name = 0;
+  string name = 4;
 
   string directory = 1;
   string script_file = 2;
@@ -172,7 +176,7 @@ message FunctionMetadata {
 }
 
 message InvocationRequest {
-  string request_id = 0;
+  string request_id = 5;
   string invocation_id = 1;
   string function_id = 2;
   repeated ParameterBinding input_data = 3;
@@ -180,12 +184,12 @@ message InvocationRequest {
 }
 
 message InvocationCancel {
-  string invocation_id = 0;
-  Duration grace_period = 1; // could also use absolute time
+  string invocation_id = 2;
+  google.protobuf.Duration grace_period = 1; // could also use absolute time
 }
 
 message InvocationResponse {
-  string request_id = 0;
+  string request_id = 4;
   string invocation_id = 1;
   repeated ParameterBinding output_data = 2; // $return is added as a parameter binding for the function result
   StatusResult result = 3;
@@ -223,7 +227,7 @@ message Log {
     None = 6;
   }
 
-  string category = 0;
+  string category = 6;
   string event_id = 1;
   Exception exception = 2;
   Level level = 3;
@@ -234,7 +238,7 @@ message Log {
 }
 
 message Exception {
-  string source = 0;
+  string source = 3;
   string stack_trace = 1;
   string message = 2;
 }
