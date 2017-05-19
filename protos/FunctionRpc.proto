@@ -237,7 +237,7 @@ message Log {
   Exception exception = 6;
 
   // json serialized property bag, or could use a type scheme like map<string, TypedData>
-  string properties = 5;
+  string properties = 7;
 }
 
 message Exception {
