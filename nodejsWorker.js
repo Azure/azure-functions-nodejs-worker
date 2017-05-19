@@ -1,21 +1,19 @@
+var streamingMessage = require('./protos/FunctionRpc_pb').StreamingMessage;
+var services = require('./protos/FunctionRpc_grpc_pb');
+
 var parseArgs = require('minimist');
 
 let path = require('path');
 let grpc = require('grpc');
 
-let PROTO_PATH = path.join(__dirname, '/RpcInvokeFunction.proto');
-let scriptFilePath;
 //TODO hook up unhandled exception handler
 let globalInitializationScript = require('./azurefunctions/functions.js').globalInitialization;
 let createFunction = require('./azurefunctions/functions.js').createFunction;
 let clearRequireCacheScript = require('./azurefunctions/functions.js').clearRequireCache;
 
-let rpcFunction = grpc.load(PROTO_PATH).RpcFunction;
-
-let rpcWorkerHost = '127.0.0.1';
-let nodejsWorkerPort = 50051;
-let nodejsWorkerAddress = rpcWorkerHost + ':' + nodejsWorkerPort;
 let unhandledExceptioError;
+var grpcClient;
+var loadedFunctionsList = {};
 
 function isEmpty(obj) {
   for (let key in obj) {
@@ -24,54 +22,35 @@ function isEmpty(obj) {
   return true;
 }
 
-function buildContextHttpRequest(context, inputHttpRequest) {
+function getContextHttpRequest(inputHttpRequest) {
 
   // Get Request
-  context.req = {};
+  let contextHttpRequest = {};
 
-  context.req['method'] = inputHttpRequest['method'];
-  context.req['originalUrl'] = inputHttpRequest['url'];
-  context.req['headers'] = inputHttpRequest['headers'];
-  context.req['query'] = inputHttpRequest['query'];
+  contextHttpRequest['method'] = inputHttpRequest['method'];
+  contextHttpRequest['originalUrl'] = inputHttpRequest['url'];
+  contextHttpRequest['headers'] = inputHttpRequest['headers'];
+  contextHttpRequest['query'] = inputHttpRequest['query'];
   if (inputHttpRequest['rawBody']) {
-    context.req['rawBody'] = inputHttpRequest['rawBody'];
+    contextHttpRequest['rawBody'] = inputHttpRequest['rawBody'];
   }
   if (inputHttpRequest['params']) {
-    context.req.params = {};
+    contextHttpRequest.params = {};
     for (let key in inputHttpRequest['params']) {
       if (inputHttpRequest['params'].hasOwnProperty(key)) {
         let binArrayInputs = inputHttpRequest['params'][key];
         let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
         // let triggerInputJSON = JSON.parse(triggerInputString);
         console.log(key + ' -> ' + triggerInputString);
-        context.req.params[key] = triggerInputString;
+        contextHttpRequest.params[key] = triggerInputString;
       }
     }
   }
-
-  let requestBody = inputHttpRequest['httpMessageBody'];
+  let requestBody = inputHttpRequest['body'];
   if (requestBody) {
-    let requestBodyType = requestBody['httpMessageBodyType'];
-    let requestBodyDataValue = requestBody['httpMessageBodyDataValue'];
-    switch (requestBodyType) {
-      case "String":
-      default:
-        let stringValue = requestBodyDataValue['stringValue'];
-        try {
-          let triggerInputJSON = JSON.parse(stringValue);
-          console.log(' triggerInputJSON ' + triggerInputJSON);
-          context.req['body'] = triggerInputJSON;
-        } catch (error) {
-          console.log(' stringValue ' + stringValue);
-          context.req['body'] = stringValue;
-        }
-        break;
-      case "Bytes":
-        let bytesValue = requestBodyDataValue['bytesValue']
-        context.req['body'] = bytesValue;
-        break;
-    }
+    contextHttpRequest['body'] = getValueFromTypedData(requestBody);
   }
+  return contextHttpRequest;
 }
 
 function isHttpRequestFirstInput(binArrayInputs) {
@@ -111,6 +90,29 @@ function getBytesForObject(inputObject) {
   return updatedBindingBufferView;
 }
 
+function getValueFromTypedData(typedData) {
+  switch (typedData.type) {
+    case TypedData.Type.String:
+      return typedData.string_val;
+    case TypedData.Type.Json:
+    default:
+      return JSON.parse(typedData.string_val);
+    case TypedData.Type.Bytes:
+      return TypedData.Type.bytes_val;
+  }
+}
+
+function getTypedDataFromObject(inputObject) {
+  let typedData = streamingMessage.TypedData();
+  if (typeof (inputObject) === 'string') {
+    typedData.setType(streamingMessage.TypedData.Type.String);
+    typedData.setStringVal(inputObject);
+  } else if (Buffer.isBuffer(inputObject)) {
+    typedData.setType(streamingMessage.TypedData.Type.Bytes);
+    typedData.setBytesVal(inputObject);
+  }
+  return typedData;
+}
 
 function getStringForObject(inputObject) {
   let updatedBinding;
@@ -174,7 +176,6 @@ function buildHttpMessage(inputMessage) {
         httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
       }
     } catch (error) { }
-    //if (httpMessage.httpMessageBody['httpMessageBodyType'] === rpcFunction.RpcDataType.Bytes && !inputMessage['rawBody']) {
     if (httpMessage.httpMessageBody['httpMessageBodyType'] === rpcFunction.RpcDataType.Bytes) {
       httpMessage.httpMessageBody.httpMessageBodyDataValue['bytesValue'] = binArrayInputs;
     } else {
@@ -196,7 +197,6 @@ function buildHttpMessage(inputMessage) {
   return httpMessage;
 }
 
-
 function terminateWorker(call, callback) {
   callback(null, {});
   process.exit(1);
@@ -209,304 +209,248 @@ function clearRequiredCache(call, callback) {
   callback(null, {});
 }
 
+function getUnpackedMessage(anyTypeMessage, messageType, messageTypeName) {
+  let typeName = 'FunctionRpc' + messageTypeName;
+  return anyTypeMessage.unpack(messageType, typeName);
+}
+
+function getPackedMessage(meesage, messageTypeName) {
+  let typeName = 'FunctionRpc' + messageTypeName;
+  var packedMessage = new proto.google.protobuf.Any;
+  packedMessage.pack(meesage.serializeBinary(), typeName);
+  return packedMessage;
+}
+
+function handleFunctionLoadRequest(functionLoadRequest) {
+
+  let functionMetadata = {};
+  functionMetadata.name = functionLoadRequest.FunctionMetadata.name;
+  functionMetadata.directory = functionLoadRequest.FunctionMetadata.directory;
+  functionMetadata.script_file = functionLoadRequest.FunctionMetadata.script_file;
+  functionMetadata.entry_point = functionLoadRequest.FunctionMetadata.entry_point;
+  //TODO handle updating existing function_id
+  loadedFunctionsList[functionLoadRequest.function_id] = functionMetadata;
+
+}
+
+function handleInvokeRequest(functionInvokeMetadata) {
+  let functionMetadata = loadedFunctionsList[functionLoadRequest.function_id];
+  let scriptFilePath = functionMetadata.script_file;
+  let invocationResponse = new streamingMessage.InvocationResponse();
+  let statusResult = new streamingMessage.StatusResult();
+  let context = {};
+
+  invocationResponse.setRequestId(functionInvokeMetadata.getRequestId());
+  invocationResponse.setInvocationId(functionInvokeMetadata.getInvocationId());
+
+  process.on('uncaughtException', function (err) {
+    context.handleUncaughtException(err.stack);
+  });
+
+
+  context.invocationId = functionInvokeMetadata.invocation_id;
+  context.executionContext = {};
+  context.executionContext.invocationId = functionInvokeMetadata.invocation_id;
+  context.executionContext.functionName = functionMetadata.name;
+  context.executionContext.functionDirectory = functionMetadata.directory;
+  //TODO how to infer triggerType
+  context._triggerType = functionInvokeMetadata.triggerType;
+
+  // Get bindings
+  context.bindings = {};
+
+  if (functionMetadata.entry_point) {
+    context._entryPoint = functionMetadata.entry_point;
+  }
+
+  // Get bindingData from trigger_metadata
+  context.bindingData = {};
+  for (let key in functionInvokeMetadata.trigger_metadata) {
+    if (functionInvokeMetadata.trigger_metadata.hasOwnProperty(key)) {
+      context.bindingData[key] = getValueFromTypedData(functionInvokeMetadata.trigger_metadata[key]);
+    }
+  }
+
+  // Get _inputs from ParameterBindings
+  context._inputs = [];
+  context.req = {};
+  for (let inputBindingsIndex = 0; inputBindingsIndex < functionInvokeMetadata.input_data.length; inputBindingsIndex++) {
+    let parameterBinding = functionInvokeMetadata.input_data[inputBindingsIndex];
+    let name = parameterBinding['name'];
+    let typedData = parameterBinding['data'];
+
+    if (typedData.Type == streamingMessage.TypedData.Type.Http) {
+      context.req = getContextHttpRequest(typedDat.http_val);
+      //TODO figure out webHookTrigger
+      if (name != 'webhookReq') {
+        context._inputs.push(context.req);
+        context.bindings[name] = context.req;
+      }
+    }
+    else {
+      let inputDataValue = getValueFromTypedData(functionInvokeMetadata.input_data[inputBindingsIndex]['data']);
+      context._inputs.push(inputDataValue);
+      context.bindings[name] = inputDataValue;
+    }
+  }
+
+  context.bind = function (p, callback) {
+    for (let key in p) {
+      if (p.hasOwnProperty(key)) {
+        context.bindings[key] = p[key];
+      }
+    }
+    if (typeof callback === 'function') {
+      callback(null);
+    }
+  };
+
+  var resultCallback = function (error, result) {
+
+
+    if (error) {
+      console.log(error);
+      statusResult.setStatus(streamingMessage.StatusResult.Status.Failure);
+      //TODO change type of result to Bytes instead of string?
+      //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
+      statusResult.setResult(error.toString());
+      invocationResponse.setResult(statusResult);
+
+    }
+    if (result) {
+      console.log(result);
+      statusResult.setStatus(streamingMessage.StatusResult.Status.Success);
+      //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
+      statusResult.setResult(result.toString());
+      let returnParamerterBinding = new streamingMessage.parameterBinding();
+      returnParamerterBinding.setName('$return');
+      returnParamerterBinding.setData(getTypedDataFromObject(result));
+      invocationResponse.setResult(statusResult);
+    }
+
+    for (let key in context.bindings) {
+      let outputParameterBinding = {};
+      outputParameterBinding.setName(key);
+
+      if (key === 'req' || key === 'request' || key == 'res') {
+        let typedData = new streamingMessage.TypedData();
+        typedData.setType(streamingMessage.TypedData.Type.Http);
+        typedData.setHttpVal(buildHttpMessage(context.bindings[key]));
+        outputParameterBinding.setData(typedData);
+      }
+      else {
+        outputParameterBinding.setData(getTypedDataFromObject(context.bindings[key]));
+        //TODO JSON and Number
+      }
+      invocationResponse.addOutputData(outputParameterBinding);
+    }
+    return result;
+  };
+
+  context.log = function (traceMessage) {
+    let logMessage = new streamingMessage.LogMessage();
+    logMessage.setInvocationId(context.invocationId);
+    //TODO change to enum??
+    logMessage.setCategory('Invocation');
+    logMessage.setMessage(JSON.stringify(traceMessage));
+    call.write(getPackedMessage(logMessage, 'Log'));
+    console.log('traceMessage: ' + JSON.stringify(traceMessage));
+  };
+
+  context.handleUncaughtException = function (errorStack) {
+    //TODO Should we log and self Terminate?
+    if (errorStack) {
+      console.log(errorStack);
+      let exceptionMessage = new streamingMessage.Exception();
+      exceptionMessage.setStackTrace(errorStack);
+
+      statusResult.setStatus(streamingMessage.StatusResult.Status.Failure);
+      statusResult.setException(exceptionMessage);
+      invocationResponse.setResult(statusResult);
+
+      call.write(getPackedMessage(invocationResponse, 'InvocationResponse'));
+      // process.exit(1);
+    }
+  };
+
+  let azureFunctionScript = createFunction(require(scriptFilePath));
+  let azureFunctionScriptContext = [context, resultCallback];
+  var invokeFunctionCode = azureFunctionScript.apply(invokeFunctionCode, azureFunctionScriptContext);
+  // final response with the result
+  call.write(getPackedMessage(invocationResponse, 'InvocationResponse'));
+}
+
+function handleWorkerInitRequest(WorkerInitRequest) {
+
+}
+
+
+
 
 /**
  * rpcInvokeFunction handler. Receives a stream of rpcFunctionInvokeMetadata, and responds
  * with a stream of updated rpcFunctionInvokeMetadata.
  * @param {Duplex} call The stream for incoming and outgoing messages
  */
-function rpcInvokeFunction(call) {
-  call.on('data', function (rpcFunctionInvokeMetadata) {
-    console.log('here...received rpc invoke');
-    scriptFilePath = rpcFunctionInvokeMetadata.scriptFile;
+function initiateDuplexStreaming(callback) {
+  //TODO error handling if grpcClient is not initialized
+  var call = grpcClient.eventStream();
+  call.on('data', function (incomingMessage) {
+    console.log('here...received incomingMessage');
+    //Handle each message type
+    switch (incomingMessage.type) {
+      case streamingMessage.WorkerInitRequest:
+        handleWorkerInitRequest(getUnpackedMessage(incomingMessage.content, streamingMessage.WorkerInitRequest, 'WorkerInitRequest'));
 
-    let context = {};
+        break;
+      case streamingMessage.WorkerTerminate:
 
-    process.on('uncaughtException', function (err) {
-      context.handleUncaughtException(err.stack);
-    });
+        break;
+      case streamingMessage.FileChangeEventRequest:
 
+        break;
+      case streamingMessage.FileChangeEventResponse:
+        break;
+      case streamingMessage.WorkerStatusRequest:
+        break;
+      case streamingMessage.FunctionLoadRequest:
 
-    context.invocationId = rpcFunctionInvokeMetadata.invocationId;
-    context.executionContext = {};
-    context.executionContext.invocationId=rpcFunctionInvokeMetadata.invocationId;
-    context.executionContext.functionName = rpcFunctionInvokeMetadata.functionName;
-    context.executionContext.functionDirectory = path.dirname(scriptFilePath);
-    context._triggerType = rpcFunctionInvokeMetadata.triggerType;
-
-    // Get bindings
-    context.bindings = {};
-    /*for (let key in rpcFunctionInvokeMetadata.bindings.messageBindings) {
-      if (rpcFunctionInvokeMetadata.bindings.messageBindings.hasOwnProperty(key)) {
-        let binArrayInputs = rpcFunctionInvokeMetadata.bindings.messageBindings[key];
-        if (context._triggerType === 'blobTrigger') {
-          context.bindings[key] = binArrayInputs;
-        } else {
-          let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-          try {
-            let triggerInputJSON = JSON.parse(triggerInputString);
-            context.bindings[key] = triggerInputJSON;
-          } catch (error) {
-            console.log(key + ' -> ' + triggerInputString);
-            context.bindings[key] = triggerInputString;
-          }
-        }
-      }
-    }*/
-
-    if (rpcFunctionInvokeMetadata.entryPoint) {
-      context._entryPoint = rpcFunctionInvokeMetadata.entryPoint;
+        break;
+      case streamingMessage.InvocationRequest:
+        handleInvokeRequest(getUnpackedMessage(incomingMessage.content, streamingMessage.InvocationRequest, 'InvocationRequest'));
+        break;
+      default:
+        throw new Error('Unknown streaming message type');
     }
-
-    // Get bindingData
-    context.bindingData = {};
-    for (let key in rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData) {
-      if (rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData.hasOwnProperty(key)) {
-        let binArrayInputs = rpcFunctionInvokeMetadata.triggerMetadata.messageBindingData[key];
-        let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-        // let triggerInputJSON = JSON.parse(triggerInputString);
-        console.log(key + ' -> ' + triggerInputString);
-        context.bindingData[key] = triggerInputString;
-      }
-    }
-
-    // Get _inputs
-    context._inputs = [];
-    /*for (let inputsWithDataTypesIndex = 0; inputsWithDataTypesIndex < rpcFunctionInvokeMetadata.inputsWithDataTypes.length; inputsWithDataTypesIndex++) {
-      let inputDataType = rpcFunctionInvokeMetadata.inputsWithDataTypes[inputsWithDataTypesIndex]['dataType'];
-      let binArrayInputs = rpcFunctionInvokeMetadata.inputsWithDataTypes[inputsWithDataTypesIndex]['messageInputs'];
-      if (inputsWithDataTypesIndex === 0 && isHttpRequestFirstInput(binArrayInputs)) {
-        context._inputs.push(context.req);
-        continue;
-      }
-      if (typeof (inputDataType) !== 'undefined' && (inputDataType === 'Binary' || inputDataType === 'Buffer')) {
-        context._inputs.push(binArrayInputs);
-      } else {
-        let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-        try {
-          let triggerInputJSON = JSON.parse(triggerInputString);
-          console.log(' triggerInputJSON ' + triggerInputJSON);
-          context._inputs.push(triggerInputJSON);
-        } catch (error) {
-          console.log(' triggerInputString ' + triggerInputString);
-          context._inputs.push(triggerInputString);
-        }
-      }
-    } */
-
-    for (let inputBindingsIndex = 0; inputBindingsIndex < rpcFunctionInvokeMetadata.functionInputBindings.length; inputBindingsIndex++) {
-      let name = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['name'];
-      let inputDataType = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataType'];
-
-      switch (inputDataType) {
-        case "String":
-        default:
-          let stringValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['stringValue'];
-          try {
-            let triggerInputJSON = JSON.parse(stringValue);
-            console.log(' triggerInputJSON ' + triggerInputJSON);
-            context._inputs.push(triggerInputJSON);
-            context.bindings[name] = triggerInputJSON;
-          } catch (error) {
-            console.log(' stringValue ' + stringValue);
-            context._inputs.push(stringValue);
-            context.bindings[name] = stringValue;
-          }
-          break;
-        case "Bytes":
-          let bytesValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['bytesValue']
-          context._inputs.push(bytesValue);
-          context.bindings[name] = bytesValue;
-          break;
-        case "Http":
-          let httpMessageValue = rpcFunctionInvokeMetadata.functionInputBindings[inputBindingsIndex]['dataValue']['httpMessageValue'];
-          buildContextHttpRequest(context, httpMessageValue);
-          if (name != 'webhookReq') {
-              context._inputs.push(context.req);
-              context.bindings[name] = context.req;
-          }
-          break;
-      }
-    }
-
-    context.bind = function (p, callback) {
-      for (let key in p) {
-        if (p.hasOwnProperty(key)) {
-          context.bindings[key] = p[key];
-        }
-      }
-      if (typeof callback === 'function') {
-        // Call it, since we have confirmed it is callable
-        callback(null);
-      }
-    };
-
-    var resultCallback = function (error, result) {
-      if (error) {
-        console.log(error);
-        rpcFunctionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
-      }
-      if (result) {
-        console.log(result);
-        rpcFunctionInvokeMetadata.messageOutputs['result'] = getBytesForObject(result);
-      }
-
-      for (let key in context.bindings) {
-        let outputBindingsItem = {};
-        outputBindingsItem.dataValue = {};
-        outputBindingsItem.name = key;
-        if (key === 'req' || key === 'request' || key == 'res') {
-          console.log('key -->' + key + JSON.stringify(context.bindings[key]));
-          outputBindingsItem.dataType = rpcFunction.RpcDataType.Http;
-          outputBindingsItem.dataValue.httpMessageValue = buildHttpMessage(context.bindings[key]);
-        }
-        else {
-          let updatedBinding;
-          if(typeof (context.bindings[key]) === 'string') {
-            outputBindingsItem.dataType = rpcFunction.RpcDataType.String;
-            outputBindingsItem.dataValue.stringValue = context.bindings[key];
-          } else
-          if (Number.isInteger(context.bindings[key])) {
-            outputBindingsItem.dataType = rpcFunction.RpcDataType.Number;
-            outputBindingsItem.dataValue.numberValue = context.bindings[key];
-          } else {
-            updatedBinding = JSON.stringify(context.bindings[key]);
-            let updatedBindingJSON = JSON.parse(updatedBinding);
-            if (updatedBindingJSON['type'] && updatedBindingJSON['type'] === 'Buffer') {
-              outputBindingsItem.dataType = rpcFunction.RpcDataType.Bytes;
-              outputBindingsItem.dataValue.bytesValue = context.bindings[key];
-            } else {
-              outputBindingsItem.dataType = rpcFunction.RpcDataType.String;
-              outputBindingsItem.dataValue.stringValue = updatedBinding;
-            }
-          }
-         // console.log(key + ' -> ' + updatedBinding);
-        }
-        rpcFunctionInvokeMetadata.functionOutputBindings.push(outputBindingsItem);
-      }
-      return result;
-    };
-
-    context.log = function (traceMessage) {
-      let logMessage = {
-        invocationId: rpcFunctionInvokeMetadata.invocationId
-      };
-      logMessage.logs = [];
-      //logMessage.inputsWithDataTypes = {};
-      //logMessage.functionOutputBindings = {};
-      //logMessage.messageOutputs = {};
-      // TODO add another property for invocationId
-      traceMessage.msg = traceMessage['msg'];
-      logMessage.logs.push(JSON.stringify(traceMessage));
-      call.write(logMessage);
-      console.log('traceMessage: ' + JSON.stringify(traceMessage));
-    };
-
-    context.handleUncaughtException = function (errorStack) {
-      if (errorStack) {
-        rpcFunctionInvokeMetadata.unhandledExceptionError = JSON.stringify(errorStack);
-        call.write(rpcFunctionInvokeMetadata);
-        // process.exit(1);
-      }
-    };
-
-    let azureFunctionScript = createFunction(require(scriptFilePath));
-    let azureFunctionScriptContext = [context, resultCallback];
-    var invokeFunctionCode = azureFunctionScript.apply(invokeFunctionCode, azureFunctionScriptContext);
-    // final response with the result
-    call.write(rpcFunctionInvokeMetadata);
   });
+
+
+  let startStreamingMessage = new messages.StreamingMessage();
+  let emptyStartMessage = new messages.StartStream();
+  let anyEmptyStartMessage = new proto.google.protobuf.Any;
+  anyEmptyStartMessage.pack(emptyStartMessage.serializeBinary(), 'FunctionRpc.StartStream');
+
+  startStreamingMessage.setType(messages.StreamingMessage.Type.STARTSTREAM);
+  startStreamingMessage.setContent(anyEmptyStartMessage);
+
+  //Initiate Event Streaming RPC
+  call.write(startStreamingMessage);
 
   call.on('end', function () {
     call.end();
   });
 }
 
-/**
- * Get a new server with the handler functions in this file bound to the methods
- * it serves.
- * @return {Server} The new server object
- */
-function getServer() {
-  let server = new grpc.Server();
-  server.addProtoService(rpcFunction.RpcFunction.service, {
-    rpcInvokeFunction: rpcInvokeFunction,
-    terminateWorker: terminateWorker,
-    clearRequiredCache: clearRequiredCache
-  });
-  return server;
-}
-
-if (require.main === module) {
-  let routeServer = getServer();
-  routeServer.bind(nodejsWorkerAddress, grpc.ServerCredentials.createInsecure());
-  routeServer.start();
-  console.log('server started at: ' + nodejsWorkerAddress);
-}
-
 function main() {
   var argv = parseArgs(process.argv.slice(2));
-  if(typeof argv.host == 'undefined' || typeof argv.port == 'undefined'){
+  if (typeof argv.host == 'undefined' || typeof argv.port == 'undefined') {
     console.log('usage --host hostName --port portNumber');
     throw new Error('Connection info missing');
   }
-  var client = new services.GreeterClient('localhost:50051',
-    grpc.credentials.createInsecure());
-  var user;
-  if (process.argv.length >= 3) {
-    user = process.argv[2];
-  } else {
-    user = 'world';
-  }
-  var request = new messages.HelloRequest();
-  request.setName(user);
+  let grpcConnectionString = argv.host + ':' + argv.port;
+  grpcClient = new services.FunctionRpcClient(grpcConnectionString, grpc.credentials.createInsecure());
 
-  var nd = new messages.NetworkDetails();
-  nd.setDetailedmessage('hey from node');
-  var ndBytes = nd.serializeBinary();
-
-  var value = new proto.google.protobuf.Any;
-  value.setValue(nd.serializeBinary());
-  value.setTypeUrl('type.googleapis.com/helloworld.NetworkDetails');
-  request.setDetails(value);
-
-
-  client.sayHello(request, function (err, response) {
-    console.log('Greeting:', response.getMessage());
-  });
-
-  client.sayHelloAgain(request, function (err, response) {
-    console.log('Greeting Again:', response.getMessage());
-  });
-
-  helloStreaming();
-
-  function helloStreaming(callback) {
-    var call = client.sayHelloStreaming();
-    call.on('data', function (note) {
-      var value = messages.NetworkDetails.deserializeBinary(note.array[1]);
-      console.log('Got message '+value);
-    });
-
-    call.on('end', function () {
-      call.end();
-    });
-
-    call.write(value);
-
-    //var workerInitResponse = new messages.workerInitResponse();
-    //workerInitResponse.setReady(true);
-
-    //var packedWorkerInitResponse = new proto.google.protobuf.Any;
-   // packedWorkerInitResponse.setValue(workerInitResponse.serializeBinary());
-    //packedWorkerInitResponse.setTypeUrl('type.googleapis.com/helloworld.WorkerInitResponse');
-
-    //var outgoingMesssage = new messages.streamingMessage();
-    //outgoingMesssage.setMessageType(StreamingMessage.MessageType.workerInitResponse);
-    //outgoingMesssage.setMessageContent(packedWorkerInitResponse);
-    //call.write(value);
-    //call.end();
-  }
+  initiateDuplexStreaming();
 }
 
 main();

@@ -8,7 +8,10 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${file}   -host localhost -port 50051"
+      "program": "${file}",
+      "args": [
+        "--host","localhost","--port","50051"
+      ]
     }
   ]
 }
