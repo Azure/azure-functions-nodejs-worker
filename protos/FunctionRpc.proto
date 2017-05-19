@@ -70,6 +70,8 @@ message StreamingMessage{
 //   protocol type
 //   protocol version 
 
+message StartStream {}
+
 message WorkerInitRequest {
   string request_id = 4;
   string host_version = 1;
@@ -227,11 +229,12 @@ message Log {
     None = 6;
   }
 
-  string category = 6;
-  string event_id = 1;
-  Exception exception = 2;
+  string invocation_id = 1;
+  string category = 2;
   Level level = 3;
   string message = 4;
+  string event_id = 5;
+  Exception exception = 6;
 
   // json serialized property bag, or could use a type scheme like map<string, TypedData>
   string properties = 5;
