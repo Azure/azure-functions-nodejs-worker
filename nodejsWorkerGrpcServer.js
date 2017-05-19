@@ -1,4 +1,3 @@
-var parseArgs = require('minimist');
 
 let path = require('path');
 let grpc = require('grpc');
@@ -444,69 +443,4 @@ if (require.main === module) {
   console.log('server started at: ' + nodejsWorkerAddress);
 }
 
-function main() {
-  var argv = parseArgs(process.argv.slice(2));
-  if(typeof argv.host == 'undefined' || typeof argv.port == 'undefined'){
-    console.log('usage --host hostName --port portNumber');
-    throw new Error('Connection info missing');
-  }
-  var client = new services.GreeterClient('localhost:50051',
-    grpc.credentials.createInsecure());
-  var user;
-  if (process.argv.length >= 3) {
-    user = process.argv[2];
-  } else {
-    user = 'world';
-  }
-  var request = new messages.HelloRequest();
-  request.setName(user);
-
-  var nd = new messages.NetworkDetails();
-  nd.setDetailedmessage('hey from node');
-  var ndBytes = nd.serializeBinary();
-
-  var value = new proto.google.protobuf.Any;
-  value.setValue(nd.serializeBinary());
-  value.setTypeUrl('type.googleapis.com/helloworld.NetworkDetails');
-  request.setDetails(value);
-
-
-  client.sayHello(request, function (err, response) {
-    console.log('Greeting:', response.getMessage());
-  });
-
-  client.sayHelloAgain(request, function (err, response) {
-    console.log('Greeting Again:', response.getMessage());
-  });
-
-  helloStreaming();
-
-  function helloStreaming(callback) {
-    var call = client.sayHelloStreaming();
-    call.on('data', function (note) {
-      var value = messages.NetworkDetails.deserializeBinary(note.array[1]);
-      console.log('Got message '+value);
-    });
-
-    call.on('end', function () {
-      call.end();
-    });
-
-    call.write(value);
-
-    //var workerInitResponse = new messages.workerInitResponse();
-    //workerInitResponse.setReady(true);
-
-    //var packedWorkerInitResponse = new proto.google.protobuf.Any;
-   // packedWorkerInitResponse.setValue(workerInitResponse.serializeBinary());
-    //packedWorkerInitResponse.setTypeUrl('type.googleapis.com/helloworld.WorkerInitResponse');
-
-    //var outgoingMesssage = new messages.streamingMessage();
-    //outgoingMesssage.setMessageType(StreamingMessage.MessageType.workerInitResponse);
-    //outgoingMesssage.setMessageContent(packedWorkerInitResponse);
-    //call.write(value);
-    //call.end();
-  }
-}
-
-main();
+exports.getServer = getServer;

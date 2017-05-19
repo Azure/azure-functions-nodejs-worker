@@ -1,0 +1,2 @@
+protoc --js_out=import_style=commonjs,binary:. --grpc_out=../node/static_codegen --plugin=protoc-gen-grpc=E:/FuncLang/grpc/node_modules/grpc-tools/bin/grpc_node_plugin.exe helloworld.proto
+protoc --js_out=import_style=commonjs,binary:../node/static_codegen/ --grpc_out=../node/static_codegen --plugin=protoc-gen-grpc=E:/FuncLang/grpc/node_modules/grpc-tools/bin/grpc_node_plugin.exe any.proto
