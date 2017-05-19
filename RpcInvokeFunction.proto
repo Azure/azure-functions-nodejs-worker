@@ -1,0 +1,79 @@
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.microsoft.azure.webjobs.script.rpc.messages";
+option java_outer_classname = "RPCInvokeFunctionProto";
+option objc_class_prefix = "RpcFunction";
+option csharp_namespace = "Microsoft.Azure.WebJobs.Script.Rpc.Messages";
+
+package RpcFunction;
+
+// Interface exported by the server.
+service RpcFunction {
+  // A Bidirectional streaming RPC.
+  //
+  // Accepts a stream of RpcFunctionInvokeMetadata and returns a stream of updated RpcFunctionInvokeMetadata
+  rpc RpcInvokeFunction(stream RpcFunctionInvokeMetadata) returns (stream RpcFunctionInvokeMetadata) {}
+  rpc TerminateWorker(EmptyMessage) returns (EmptyMessage) {}
+  rpc ClearRequiredCache(EmptyMessage) returns (EmptyMessage) {}
+}
+
+enum RpcDataType {
+    String = 0;
+    Number = 1;
+    Bytes = 2;
+	Http = 3;
+  }
+
+  message DataValue {
+    string stringValue = 1;
+    int32  numberValue = 2;
+    bytes  bytesValue = 3;
+	HttpMessage httpMessageValue = 4;
+  }
+  
+message  EmptyMessage {}
+
+message RpcFunctionInvokeMetadata {
+  string invocationId = 1;
+  string functionName = 2;
+  string scriptFile = 3;
+  string entryPoint = 9;
+  string triggerType = 10;
+  repeated FunctionBindings functionInputBindings = 12;
+  repeated FunctionBindings functionOutputBindings = 13;
+  TriggerMetadata triggerMetadata = 14;
+  map<string,bytes> messageOutputs = 18;
+  repeated string logs = 19;
+  string unhandledExceptionError = 20;
+}
+
+message FunctionBindings {
+  string name = 1;
+  RpcDataType dataType = 2;
+  DataValue dataValue = 3;
+}
+
+message TriggerMetadata {
+  map<string,bytes> messageBindingData = 15;
+}
+
+message HttpMessageBody{
+  RpcDataType httpMessageBodyType = 1;
+  DataValue httpMessageBodyDataValue = 2;
+}
+
+message HttpMessage {
+  string method = 1;
+  string url = 2; 
+  map<string,string> headers = 3;
+  HttpMessageBody httpMessageBody = 4;
+  map<string,bytes> params = 10;
+  string rawBody = 11;
+  string statusCode = 12;
+  DataValue rawResponseDataValue = 13;
+  RpcDataType rawResponseDataType = 14;
+  map<string,string> query = 15;
+  bool isRaw = 16;
+}
