@@ -70,7 +70,10 @@ message StreamingMessage{
 //   protocol type
 //   protocol version 
 
-message StartStream {}
+message StartStream {
+  string request_id = 1;
+  string worker_id = 2;
+}
 
 message WorkerInitRequest {
   string request_id = 4;
