@@ -11,21 +11,21 @@ var global = Function('return this')();
 
 var google_protobuf_any_pb = require('google-protobuf/google/protobuf/any_pb.js');
 var google_protobuf_duration_pb = require('google-protobuf/google/protobuf/duration_pb.js');
-goog.exportSymbol('proto.FunctionRpc.Exception', null, global);
 goog.exportSymbol('proto.FunctionRpc.FileChangeEventRequest', null, global);
 goog.exportSymbol('proto.FunctionRpc.FileChangeEventRequest.Type', null, global);
 goog.exportSymbol('proto.FunctionRpc.FileChangeEventResponse', null, global);
 goog.exportSymbol('proto.FunctionRpc.FileChangeEventResponse.Action', null, global);
 goog.exportSymbol('proto.FunctionRpc.FunctionLoadRequest', null, global);
 goog.exportSymbol('proto.FunctionRpc.FunctionLoadResponse', null, global);
-goog.exportSymbol('proto.FunctionRpc.FunctionMetadata', null, global);
-goog.exportSymbol('proto.FunctionRpc.Http', null, global);
 goog.exportSymbol('proto.FunctionRpc.InvocationCancel', null, global);
 goog.exportSymbol('proto.FunctionRpc.InvocationRequest', null, global);
 goog.exportSymbol('proto.FunctionRpc.InvocationResponse', null, global);
-goog.exportSymbol('proto.FunctionRpc.Log', null, global);
-goog.exportSymbol('proto.FunctionRpc.Log.Level', null, global);
 goog.exportSymbol('proto.FunctionRpc.ParameterBinding', null, global);
+goog.exportSymbol('proto.FunctionRpc.RpcException', null, global);
+goog.exportSymbol('proto.FunctionRpc.RpcFunctionMetadata', null, global);
+goog.exportSymbol('proto.FunctionRpc.RpcHttp', null, global);
+goog.exportSymbol('proto.FunctionRpc.RpcLog', null, global);
+goog.exportSymbol('proto.FunctionRpc.RpcLog.Level', null, global);
 goog.exportSymbol('proto.FunctionRpc.StartStream', null, global);
 goog.exportSymbol('proto.FunctionRpc.StatusResult', null, global);
 goog.exportSymbol('proto.FunctionRpc.StatusResult.Status', null, global);
@@ -86,7 +86,8 @@ proto.FunctionRpc.StreamingMessage.prototype.toObject = function(opt_includeInst
 proto.FunctionRpc.StreamingMessage.toObject = function(includeInstance, msg) {
   var f, obj = {
     type: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    content: (f = msg.getContent()) && google_protobuf_any_pb.Any.toObject(includeInstance, f)
+    content: (f = msg.getContent()) && google_protobuf_any_pb.Any.toObject(includeInstance, f),
+    requestId: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -132,6 +133,10 @@ proto.FunctionRpc.StreamingMessage.deserializeBinaryFromReader = function(msg, r
       reader.readMessage(value,google_protobuf_any_pb.Any.deserializeBinaryFromReader);
       msg.setContent(value);
       break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestId(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -175,6 +180,13 @@ proto.FunctionRpc.StreamingMessage.serializeBinaryToWriter = function(message, w
       google_protobuf_any_pb.Any.serializeBinaryToWriter
     );
   }
+  f = message.getRequestId();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -196,7 +208,7 @@ proto.FunctionRpc.StreamingMessage.Type = {
   INVOCATIONREQUEST: 12,
   INVOCATIONRESPONSE: 14,
   INVOCATIONCANCEL: 15,
-  LOG: 19
+  RPCLOG: 19
 };
 
 /**
@@ -241,6 +253,21 @@ proto.FunctionRpc.StreamingMessage.prototype.clearContent = function() {
  */
 proto.FunctionRpc.StreamingMessage.prototype.hasContent = function() {
   return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string request_id = 3;
+ * @return {string}
+ */
+proto.FunctionRpc.StreamingMessage.prototype.getRequestId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/** @param {string} value */
+proto.FunctionRpc.StreamingMessage.prototype.setRequestId = function(value) {
+  jspb.Message.setField(this, 3, value);
 };
 
 
@@ -290,7 +317,7 @@ proto.FunctionRpc.StartStream.prototype.toObject = function(opt_includeInstance)
  */
 proto.FunctionRpc.StartStream.toObject = function(includeInstance, msg) {
   var f, obj = {
-
+    workerId: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -327,6 +354,10 @@ proto.FunctionRpc.StartStream.deserializeBinaryFromReader = function(msg, reader
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setWorkerId(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -355,6 +386,28 @@ proto.FunctionRpc.StartStream.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.StartStream.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getWorkerId();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string worker_id = 2;
+ * @return {string}
+ */
+proto.FunctionRpc.StartStream.prototype.getWorkerId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/** @param {string} value */
+proto.FunctionRpc.StartStream.prototype.setWorkerId = function(value) {
+  jspb.Message.setField(this, 2, value);
 };
 
 
@@ -404,7 +457,6 @@ proto.FunctionRpc.WorkerInitRequest.prototype.toObject = function(opt_includeIns
  */
 proto.FunctionRpc.WorkerInitRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     hostVersion: jspb.Message.getFieldWithDefault(msg, 1, ""),
     capabilitesMap: (f = msg.getCapabilitesMap()) ? f.toObject(includeInstance, undefined) : [],
     logCategoriesMap: (f = msg.getLogCategoriesMap()) ? f.toObject(includeInstance, undefined) : []
@@ -444,10 +496,6 @@ proto.FunctionRpc.WorkerInitRequest.deserializeBinaryFromReader = function(msg, 
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setHostVersion(value);
@@ -492,13 +540,6 @@ proto.FunctionRpc.WorkerInitRequest.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.WorkerInitRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
   f = message.getHostVersion();
   if (f.length > 0) {
     writer.writeString(
@@ -514,21 +555,6 @@ proto.FunctionRpc.WorkerInitRequest.serializeBinaryToWriter = function(message, 
   if (f && f.getLength() > 0) {
     f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeEnum);
   }
-};
-
-
-/**
- * optional string request_id = 4;
- * @return {string}
- */
-proto.FunctionRpc.WorkerInitRequest.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.WorkerInitRequest.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 4, value);
 };
 
 
@@ -566,13 +592,13 @@ proto.FunctionRpc.WorkerInitRequest.prototype.clearCapabilitesMap = function() {
 
 
 /**
- * map<string, Log.Level> log_categories = 3;
+ * map<string, RpcLog.Level> log_categories = 3;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
  * empty, instead returning `undefined`
- * @return {!jspb.Map<string,!proto.FunctionRpc.Log.Level>}
+ * @return {!jspb.Map<string,!proto.FunctionRpc.RpcLog.Level>}
  */
 proto.FunctionRpc.WorkerInitRequest.prototype.getLogCategoriesMap = function(opt_noLazyCreate) {
-  return /** @type {!jspb.Map<string,!proto.FunctionRpc.Log.Level>} */ (
+  return /** @type {!jspb.Map<string,!proto.FunctionRpc.RpcLog.Level>} */ (
       jspb.Message.getMapField(this, 3, opt_noLazyCreate,
       null));
 };
@@ -629,7 +655,6 @@ proto.FunctionRpc.WorkerInitResponse.prototype.toObject = function(opt_includeIn
  */
 proto.FunctionRpc.WorkerInitResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     workerVersion: jspb.Message.getFieldWithDefault(msg, 1, ""),
     capabilitesMap: (f = msg.getCapabilitesMap()) ? f.toObject(includeInstance, undefined) : [],
     result: (f = msg.getResult()) && proto.FunctionRpc.StatusResult.toObject(includeInstance, f)
@@ -669,10 +694,6 @@ proto.FunctionRpc.WorkerInitResponse.deserializeBinaryFromReader = function(msg,
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setWorkerVersion(value);
@@ -716,13 +737,6 @@ proto.FunctionRpc.WorkerInitResponse.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.WorkerInitResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
   f = message.getWorkerVersion();
   if (f.length > 0) {
     writer.writeString(
@@ -742,21 +756,6 @@ proto.FunctionRpc.WorkerInitResponse.serializeBinaryToWriter = function(message,
       proto.FunctionRpc.StatusResult.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * optional string request_id = 4;
- * @return {string}
- */
-proto.FunctionRpc.WorkerInitResponse.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.WorkerInitResponse.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 4, value);
 };
 
 
@@ -878,9 +877,9 @@ proto.FunctionRpc.StatusResult.toObject = function(includeInstance, msg) {
   var f, obj = {
     status: jspb.Message.getFieldWithDefault(msg, 4, 0),
     result: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    exception: (f = msg.getException()) && proto.FunctionRpc.Exception.toObject(includeInstance, f),
+    exception: (f = msg.getException()) && proto.FunctionRpc.RpcException.toObject(includeInstance, f),
     logsList: jspb.Message.toObjectList(msg.getLogsList(),
-    proto.FunctionRpc.Log.toObject, includeInstance)
+    proto.FunctionRpc.RpcLog.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -926,13 +925,13 @@ proto.FunctionRpc.StatusResult.deserializeBinaryFromReader = function(msg, reade
       msg.setResult(value);
       break;
     case 2:
-      var value = new proto.FunctionRpc.Exception;
-      reader.readMessage(value,proto.FunctionRpc.Exception.deserializeBinaryFromReader);
+      var value = new proto.FunctionRpc.RpcException;
+      reader.readMessage(value,proto.FunctionRpc.RpcException.deserializeBinaryFromReader);
       msg.setException(value);
       break;
     case 3:
-      var value = new proto.FunctionRpc.Log;
-      reader.readMessage(value,proto.FunctionRpc.Log.deserializeBinaryFromReader);
+      var value = new proto.FunctionRpc.RpcLog;
+      reader.readMessage(value,proto.FunctionRpc.RpcLog.deserializeBinaryFromReader);
       msg.addLogs(value);
       break;
     default:
@@ -982,7 +981,7 @@ proto.FunctionRpc.StatusResult.serializeBinaryToWriter = function(message, write
     writer.writeMessage(
       2,
       f,
-      proto.FunctionRpc.Exception.serializeBinaryToWriter
+      proto.FunctionRpc.RpcException.serializeBinaryToWriter
     );
   }
   f = message.getLogsList();
@@ -990,7 +989,7 @@ proto.FunctionRpc.StatusResult.serializeBinaryToWriter = function(message, write
     writer.writeRepeatedMessage(
       3,
       f,
-      proto.FunctionRpc.Log.serializeBinaryToWriter
+      proto.FunctionRpc.RpcLog.serializeBinaryToWriter
     );
   }
 };
@@ -1036,16 +1035,16 @@ proto.FunctionRpc.StatusResult.prototype.setResult = function(value) {
 
 
 /**
- * optional Exception exception = 2;
- * @return {?proto.FunctionRpc.Exception}
+ * optional RpcException exception = 2;
+ * @return {?proto.FunctionRpc.RpcException}
  */
 proto.FunctionRpc.StatusResult.prototype.getException = function() {
-  return /** @type{?proto.FunctionRpc.Exception} */ (
-    jspb.Message.getWrapperField(this, proto.FunctionRpc.Exception, 2));
+  return /** @type{?proto.FunctionRpc.RpcException} */ (
+    jspb.Message.getWrapperField(this, proto.FunctionRpc.RpcException, 2));
 };
 
 
-/** @param {?proto.FunctionRpc.Exception|undefined} value */
+/** @param {?proto.FunctionRpc.RpcException|undefined} value */
 proto.FunctionRpc.StatusResult.prototype.setException = function(value) {
   jspb.Message.setWrapperField(this, 2, value);
 };
@@ -1066,30 +1065,30 @@ proto.FunctionRpc.StatusResult.prototype.hasException = function() {
 
 
 /**
- * repeated Log logs = 3;
+ * repeated RpcLog logs = 3;
  * If you change this array by adding, removing or replacing elements, or if you
  * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.FunctionRpc.Log>}
+ * @return {!Array.<!proto.FunctionRpc.RpcLog>}
  */
 proto.FunctionRpc.StatusResult.prototype.getLogsList = function() {
-  return /** @type{!Array.<!proto.FunctionRpc.Log>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.FunctionRpc.Log, 3));
+  return /** @type{!Array.<!proto.FunctionRpc.RpcLog>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.FunctionRpc.RpcLog, 3));
 };
 
 
-/** @param {!Array.<!proto.FunctionRpc.Log>} value */
+/** @param {!Array.<!proto.FunctionRpc.RpcLog>} value */
 proto.FunctionRpc.StatusResult.prototype.setLogsList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 3, value);
 };
 
 
 /**
- * @param {!proto.FunctionRpc.Log=} opt_value
+ * @param {!proto.FunctionRpc.RpcLog=} opt_value
  * @param {number=} opt_index
- * @return {!proto.FunctionRpc.Log}
+ * @return {!proto.FunctionRpc.RpcLog}
  */
 proto.FunctionRpc.StatusResult.prototype.addLogs = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.FunctionRpc.Log, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.FunctionRpc.RpcLog, opt_index);
 };
 
 
@@ -1415,7 +1414,6 @@ proto.FunctionRpc.FileChangeEventRequest.prototype.toObject = function(opt_inclu
  */
 proto.FunctionRpc.FileChangeEventRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     type: jspb.Message.getFieldWithDefault(msg, 1, 0),
     fullPath: jspb.Message.getFieldWithDefault(msg, 2, ""),
     name: jspb.Message.getFieldWithDefault(msg, 3, "")
@@ -1455,10 +1453,6 @@ proto.FunctionRpc.FileChangeEventRequest.deserializeBinaryFromReader = function(
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {!proto.FunctionRpc.FileChangeEventRequest.Type} */ (reader.readEnum());
       msg.setType(value);
@@ -1499,13 +1493,6 @@ proto.FunctionRpc.FileChangeEventRequest.prototype.serializeBinary = function() 
  */
 proto.FunctionRpc.FileChangeEventRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
   f = message.getType();
   if (f !== 0.0) {
     writer.writeEnum(
@@ -1541,21 +1528,6 @@ proto.FunctionRpc.FileChangeEventRequest.Type = {
   RENAMED: 8,
   ALL: 15
 };
-
-/**
- * optional string request_id = 4;
- * @return {string}
- */
-proto.FunctionRpc.FileChangeEventRequest.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.FileChangeEventRequest.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 4, value);
-};
-
 
 /**
  * optional Type type = 1;
@@ -1655,7 +1627,6 @@ proto.FunctionRpc.FileChangeEventResponse.prototype.toObject = function(opt_incl
  */
 proto.FunctionRpc.FileChangeEventResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     action: jspb.Message.getFieldWithDefault(msg, 1, 0),
     functionIdsList: jspb.Message.getField(msg, 2)
   };
@@ -1694,10 +1665,6 @@ proto.FunctionRpc.FileChangeEventResponse.deserializeBinaryFromReader = function
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {!proto.FunctionRpc.FileChangeEventResponse.Action} */ (reader.readEnum());
       msg.setAction(value);
@@ -1734,13 +1701,6 @@ proto.FunctionRpc.FileChangeEventResponse.prototype.serializeBinary = function()
  */
 proto.FunctionRpc.FileChangeEventResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
   f = message.getAction();
   if (f !== 0.0) {
     writer.writeEnum(
@@ -1766,21 +1726,6 @@ proto.FunctionRpc.FileChangeEventResponse.Action = {
   RESTART: 1,
   RELOAD: 2
 };
-
-/**
- * optional string request_id = 4;
- * @return {string}
- */
-proto.FunctionRpc.FileChangeEventResponse.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.FileChangeEventResponse.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 4, value);
-};
-
 
 /**
  * optional Action action = 1;
@@ -1874,7 +1819,7 @@ proto.FunctionRpc.WorkerStatusRequest.prototype.toObject = function(opt_includeI
  */
 proto.FunctionRpc.WorkerStatusRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, "")
+
   };
 
   if (includeInstance) {
@@ -1911,10 +1856,6 @@ proto.FunctionRpc.WorkerStatusRequest.deserializeBinaryFromReader = function(msg
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -1943,28 +1884,6 @@ proto.FunctionRpc.WorkerStatusRequest.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.WorkerStatusRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string request_id = 1;
- * @return {string}
- */
-proto.FunctionRpc.WorkerStatusRequest.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.WorkerStatusRequest.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 1, value);
 };
 
 
@@ -2014,7 +1933,7 @@ proto.FunctionRpc.WorkerStatusResponse.prototype.toObject = function(opt_include
  */
 proto.FunctionRpc.WorkerStatusResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, "")
+
   };
 
   if (includeInstance) {
@@ -2051,10 +1970,6 @@ proto.FunctionRpc.WorkerStatusResponse.deserializeBinaryFromReader = function(ms
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -2083,28 +1998,6 @@ proto.FunctionRpc.WorkerStatusResponse.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.WorkerStatusResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional string request_id = 1;
- * @return {string}
- */
-proto.FunctionRpc.WorkerStatusResponse.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.WorkerStatusResponse.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 1, value);
 };
 
 
@@ -2154,9 +2047,8 @@ proto.FunctionRpc.FunctionLoadRequest.prototype.toObject = function(opt_includeI
  */
 proto.FunctionRpc.FunctionLoadRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 3, ""),
     functionId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    metadata: (f = msg.getMetadata()) && proto.FunctionRpc.FunctionMetadata.toObject(includeInstance, f)
+    metadata: (f = msg.getMetadata()) && proto.FunctionRpc.RpcFunctionMetadata.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -2193,17 +2085,13 @@ proto.FunctionRpc.FunctionLoadRequest.deserializeBinaryFromReader = function(msg
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setFunctionId(value);
       break;
     case 2:
-      var value = new proto.FunctionRpc.FunctionMetadata;
-      reader.readMessage(value,proto.FunctionRpc.FunctionMetadata.deserializeBinaryFromReader);
+      var value = new proto.FunctionRpc.RpcFunctionMetadata;
+      reader.readMessage(value,proto.FunctionRpc.RpcFunctionMetadata.deserializeBinaryFromReader);
       msg.setMetadata(value);
       break;
     default:
@@ -2234,13 +2122,6 @@ proto.FunctionRpc.FunctionLoadRequest.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.FunctionLoadRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
   f = message.getFunctionId();
   if (f.length > 0) {
     writer.writeString(
@@ -2253,24 +2134,9 @@ proto.FunctionRpc.FunctionLoadRequest.serializeBinaryToWriter = function(message
     writer.writeMessage(
       2,
       f,
-      proto.FunctionRpc.FunctionMetadata.serializeBinaryToWriter
+      proto.FunctionRpc.RpcFunctionMetadata.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * optional string request_id = 3;
- * @return {string}
- */
-proto.FunctionRpc.FunctionLoadRequest.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.FunctionLoadRequest.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 3, value);
 };
 
 
@@ -2290,16 +2156,16 @@ proto.FunctionRpc.FunctionLoadRequest.prototype.setFunctionId = function(value) 
 
 
 /**
- * optional FunctionMetadata metadata = 2;
- * @return {?proto.FunctionRpc.FunctionMetadata}
+ * optional RpcFunctionMetadata metadata = 2;
+ * @return {?proto.FunctionRpc.RpcFunctionMetadata}
  */
 proto.FunctionRpc.FunctionLoadRequest.prototype.getMetadata = function() {
-  return /** @type{?proto.FunctionRpc.FunctionMetadata} */ (
-    jspb.Message.getWrapperField(this, proto.FunctionRpc.FunctionMetadata, 2));
+  return /** @type{?proto.FunctionRpc.RpcFunctionMetadata} */ (
+    jspb.Message.getWrapperField(this, proto.FunctionRpc.RpcFunctionMetadata, 2));
 };
 
 
-/** @param {?proto.FunctionRpc.FunctionMetadata|undefined} value */
+/** @param {?proto.FunctionRpc.RpcFunctionMetadata|undefined} value */
 proto.FunctionRpc.FunctionLoadRequest.prototype.setMetadata = function(value) {
   jspb.Message.setWrapperField(this, 2, value);
 };
@@ -2365,7 +2231,6 @@ proto.FunctionRpc.FunctionLoadResponse.prototype.toObject = function(opt_include
  */
 proto.FunctionRpc.FunctionLoadResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 3, ""),
     functionId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     result: (f = msg.getResult()) && proto.FunctionRpc.StatusResult.toObject(includeInstance, f)
   };
@@ -2404,10 +2269,6 @@ proto.FunctionRpc.FunctionLoadResponse.deserializeBinaryFromReader = function(ms
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setFunctionId(value);
@@ -2445,13 +2306,6 @@ proto.FunctionRpc.FunctionLoadResponse.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.FunctionLoadResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
   f = message.getFunctionId();
   if (f.length > 0) {
     writer.writeString(
@@ -2467,21 +2321,6 @@ proto.FunctionRpc.FunctionLoadResponse.serializeBinaryToWriter = function(messag
       proto.FunctionRpc.StatusResult.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * optional string request_id = 3;
- * @return {string}
- */
-proto.FunctionRpc.FunctionLoadResponse.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.FunctionLoadResponse.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 3, value);
 };
 
 
@@ -2541,12 +2380,12 @@ proto.FunctionRpc.FunctionLoadResponse.prototype.hasResult = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.FunctionRpc.FunctionMetadata = function(opt_data) {
+proto.FunctionRpc.RpcFunctionMetadata = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.FunctionRpc.FunctionMetadata, jspb.Message);
+goog.inherits(proto.FunctionRpc.RpcFunctionMetadata, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.FunctionRpc.FunctionMetadata.displayName = 'proto.FunctionRpc.FunctionMetadata';
+  proto.FunctionRpc.RpcFunctionMetadata.displayName = 'proto.FunctionRpc.RpcFunctionMetadata';
 }
 
 
@@ -2561,8 +2400,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.toObject = function(opt_includeInstance) {
-  return proto.FunctionRpc.FunctionMetadata.toObject(opt_includeInstance, this);
+proto.FunctionRpc.RpcFunctionMetadata.prototype.toObject = function(opt_includeInstance) {
+  return proto.FunctionRpc.RpcFunctionMetadata.toObject(opt_includeInstance, this);
 };
 
 
@@ -2571,10 +2410,10 @@ proto.FunctionRpc.FunctionMetadata.prototype.toObject = function(opt_includeInst
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.FunctionRpc.FunctionMetadata} msg The msg instance to transform.
+ * @param {!proto.FunctionRpc.RpcFunctionMetadata} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.FunctionRpc.FunctionMetadata.toObject = function(includeInstance, msg) {
+proto.FunctionRpc.RpcFunctionMetadata.toObject = function(includeInstance, msg) {
   var f, obj = {
     name: jspb.Message.getFieldWithDefault(msg, 4, ""),
     directory: jspb.Message.getFieldWithDefault(msg, 1, ""),
@@ -2593,23 +2432,23 @@ proto.FunctionRpc.FunctionMetadata.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.FunctionRpc.FunctionMetadata}
+ * @return {!proto.FunctionRpc.RpcFunctionMetadata}
  */
-proto.FunctionRpc.FunctionMetadata.deserializeBinary = function(bytes) {
+proto.FunctionRpc.RpcFunctionMetadata.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.FunctionRpc.FunctionMetadata;
-  return proto.FunctionRpc.FunctionMetadata.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.FunctionRpc.RpcFunctionMetadata;
+  return proto.FunctionRpc.RpcFunctionMetadata.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.FunctionRpc.FunctionMetadata} msg The message object to deserialize into.
+ * @param {!proto.FunctionRpc.RpcFunctionMetadata} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.FunctionRpc.FunctionMetadata}
+ * @return {!proto.FunctionRpc.RpcFunctionMetadata}
  */
-proto.FunctionRpc.FunctionMetadata.deserializeBinaryFromReader = function(msg, reader) {
+proto.FunctionRpc.RpcFunctionMetadata.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -2645,9 +2484,9 @@ proto.FunctionRpc.FunctionMetadata.deserializeBinaryFromReader = function(msg, r
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.serializeBinary = function() {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.FunctionRpc.FunctionMetadata.serializeBinaryToWriter(this, writer);
+  proto.FunctionRpc.RpcFunctionMetadata.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -2655,10 +2494,10 @@ proto.FunctionRpc.FunctionMetadata.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.FunctionRpc.FunctionMetadata} message
+ * @param {!proto.FunctionRpc.RpcFunctionMetadata} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.FunctionRpc.FunctionMetadata.serializeBinaryToWriter = function(message, writer) {
+proto.FunctionRpc.RpcFunctionMetadata.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getName();
   if (f.length > 0) {
@@ -2695,13 +2534,13 @@ proto.FunctionRpc.FunctionMetadata.serializeBinaryToWriter = function(message, w
  * optional string name = 4;
  * @return {string}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.getName = function() {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.getName = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.FunctionMetadata.prototype.setName = function(value) {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.setName = function(value) {
   jspb.Message.setField(this, 4, value);
 };
 
@@ -2710,13 +2549,13 @@ proto.FunctionRpc.FunctionMetadata.prototype.setName = function(value) {
  * optional string directory = 1;
  * @return {string}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.getDirectory = function() {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.getDirectory = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.FunctionMetadata.prototype.setDirectory = function(value) {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.setDirectory = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -2725,13 +2564,13 @@ proto.FunctionRpc.FunctionMetadata.prototype.setDirectory = function(value) {
  * optional string script_file = 2;
  * @return {string}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.getScriptFile = function() {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.getScriptFile = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.FunctionMetadata.prototype.setScriptFile = function(value) {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.setScriptFile = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
@@ -2740,13 +2579,13 @@ proto.FunctionRpc.FunctionMetadata.prototype.setScriptFile = function(value) {
  * optional string entry_point = 3;
  * @return {string}
  */
-proto.FunctionRpc.FunctionMetadata.prototype.getEntryPoint = function() {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.getEntryPoint = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.FunctionMetadata.prototype.setEntryPoint = function(value) {
+proto.FunctionRpc.RpcFunctionMetadata.prototype.setEntryPoint = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
@@ -2804,7 +2643,6 @@ proto.FunctionRpc.InvocationRequest.prototype.toObject = function(opt_includeIns
  */
 proto.FunctionRpc.InvocationRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 5, ""),
     invocationId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     functionId: jspb.Message.getFieldWithDefault(msg, 2, ""),
     inputDataList: jspb.Message.toObjectList(msg.getInputDataList(),
@@ -2846,10 +2684,6 @@ proto.FunctionRpc.InvocationRequest.deserializeBinaryFromReader = function(msg, 
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 5:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setInvocationId(value);
@@ -2897,13 +2731,6 @@ proto.FunctionRpc.InvocationRequest.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.InvocationRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      5,
-      f
-    );
-  }
   f = message.getInvocationId();
   if (f.length > 0) {
     writer.writeString(
@@ -2930,21 +2757,6 @@ proto.FunctionRpc.InvocationRequest.serializeBinaryToWriter = function(message, 
   if (f && f.getLength() > 0) {
     f.serializeBinary(4, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.FunctionRpc.TypedData.serializeBinaryToWriter);
   }
-};
-
-
-/**
- * optional string request_id = 5;
- * @return {string}
- */
-proto.FunctionRpc.InvocationRequest.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.InvocationRequest.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 5, value);
 };
 
 
@@ -3266,7 +3078,6 @@ proto.FunctionRpc.InvocationResponse.prototype.toObject = function(opt_includeIn
  */
 proto.FunctionRpc.InvocationResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     invocationId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     outputDataList: jspb.Message.toObjectList(msg.getOutputDataList(),
     proto.FunctionRpc.ParameterBinding.toObject, includeInstance),
@@ -3307,10 +3118,6 @@ proto.FunctionRpc.InvocationResponse.deserializeBinaryFromReader = function(msg,
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 4:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
-      break;
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setInvocationId(value);
@@ -3353,13 +3160,6 @@ proto.FunctionRpc.InvocationResponse.prototype.serializeBinary = function() {
  */
 proto.FunctionRpc.InvocationResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
-      4,
-      f
-    );
-  }
   f = message.getInvocationId();
   if (f.length > 0) {
     writer.writeString(
@@ -3383,21 +3183,6 @@ proto.FunctionRpc.InvocationResponse.serializeBinaryToWriter = function(message,
       proto.FunctionRpc.StatusResult.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * optional string request_id = 4;
- * @return {string}
- */
-proto.FunctionRpc.InvocationResponse.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/** @param {string} value */
-proto.FunctionRpc.InvocationResponse.prototype.setRequestId = function(value) {
-  jspb.Message.setField(this, 4, value);
 };
 
 
@@ -3528,7 +3313,7 @@ proto.FunctionRpc.TypedData.toObject = function(includeInstance, msg) {
     typeVal: jspb.Message.getFieldWithDefault(msg, 1, 0),
     stringVal: jspb.Message.getFieldWithDefault(msg, 2, ""),
     bytesVal: msg.getBytesVal_asB64(),
-    httpVal: (f = msg.getHttpVal()) && proto.FunctionRpc.Http.toObject(includeInstance, f)
+    httpVal: (f = msg.getHttpVal()) && proto.FunctionRpc.RpcHttp.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3578,8 +3363,8 @@ proto.FunctionRpc.TypedData.deserializeBinaryFromReader = function(msg, reader) 
       msg.setBytesVal(value);
       break;
     case 5:
-      var value = new proto.FunctionRpc.Http;
-      reader.readMessage(value,proto.FunctionRpc.Http.deserializeBinaryFromReader);
+      var value = new proto.FunctionRpc.RpcHttp;
+      reader.readMessage(value,proto.FunctionRpc.RpcHttp.deserializeBinaryFromReader);
       msg.setHttpVal(value);
       break;
     default:
@@ -3636,7 +3421,7 @@ proto.FunctionRpc.TypedData.serializeBinaryToWriter = function(message, writer) 
     writer.writeMessage(
       5,
       f,
-      proto.FunctionRpc.Http.serializeBinaryToWriter
+      proto.FunctionRpc.RpcHttp.serializeBinaryToWriter
     );
   }
 };
@@ -3723,16 +3508,16 @@ proto.FunctionRpc.TypedData.prototype.setBytesVal = function(value) {
 
 
 /**
- * optional Http http_val = 5;
- * @return {?proto.FunctionRpc.Http}
+ * optional RpcHttp http_val = 5;
+ * @return {?proto.FunctionRpc.RpcHttp}
  */
 proto.FunctionRpc.TypedData.prototype.getHttpVal = function() {
-  return /** @type{?proto.FunctionRpc.Http} */ (
-    jspb.Message.getWrapperField(this, proto.FunctionRpc.Http, 5));
+  return /** @type{?proto.FunctionRpc.RpcHttp} */ (
+    jspb.Message.getWrapperField(this, proto.FunctionRpc.RpcHttp, 5));
 };
 
 
-/** @param {?proto.FunctionRpc.Http|undefined} value */
+/** @param {?proto.FunctionRpc.RpcHttp|undefined} value */
 proto.FunctionRpc.TypedData.prototype.setHttpVal = function(value) {
   jspb.Message.setWrapperField(this, 5, value);
 };
@@ -3947,12 +3732,12 @@ proto.FunctionRpc.ParameterBinding.prototype.hasData = function() {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.FunctionRpc.Log = function(opt_data) {
+proto.FunctionRpc.RpcLog = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.FunctionRpc.Log, jspb.Message);
+goog.inherits(proto.FunctionRpc.RpcLog, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.FunctionRpc.Log.displayName = 'proto.FunctionRpc.Log';
+  proto.FunctionRpc.RpcLog.displayName = 'proto.FunctionRpc.RpcLog';
 }
 
 
@@ -3967,8 +3752,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.FunctionRpc.Log.prototype.toObject = function(opt_includeInstance) {
-  return proto.FunctionRpc.Log.toObject(opt_includeInstance, this);
+proto.FunctionRpc.RpcLog.prototype.toObject = function(opt_includeInstance) {
+  return proto.FunctionRpc.RpcLog.toObject(opt_includeInstance, this);
 };
 
 
@@ -3977,17 +3762,17 @@ proto.FunctionRpc.Log.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.FunctionRpc.Log} msg The msg instance to transform.
+ * @param {!proto.FunctionRpc.RpcLog} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.FunctionRpc.Log.toObject = function(includeInstance, msg) {
+proto.FunctionRpc.RpcLog.toObject = function(includeInstance, msg) {
   var f, obj = {
     invocationId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     category: jspb.Message.getFieldWithDefault(msg, 2, ""),
     level: jspb.Message.getFieldWithDefault(msg, 3, 0),
     message: jspb.Message.getFieldWithDefault(msg, 4, ""),
     eventId: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    exception: (f = msg.getException()) && proto.FunctionRpc.Exception.toObject(includeInstance, f),
+    exception: (f = msg.getException()) && proto.FunctionRpc.RpcException.toObject(includeInstance, f),
     properties: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
@@ -4002,23 +3787,23 @@ proto.FunctionRpc.Log.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.FunctionRpc.Log}
+ * @return {!proto.FunctionRpc.RpcLog}
  */
-proto.FunctionRpc.Log.deserializeBinary = function(bytes) {
+proto.FunctionRpc.RpcLog.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.FunctionRpc.Log;
-  return proto.FunctionRpc.Log.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.FunctionRpc.RpcLog;
+  return proto.FunctionRpc.RpcLog.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.FunctionRpc.Log} msg The message object to deserialize into.
+ * @param {!proto.FunctionRpc.RpcLog} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.FunctionRpc.Log}
+ * @return {!proto.FunctionRpc.RpcLog}
  */
-proto.FunctionRpc.Log.deserializeBinaryFromReader = function(msg, reader) {
+proto.FunctionRpc.RpcLog.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -4034,7 +3819,7 @@ proto.FunctionRpc.Log.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCategory(value);
       break;
     case 3:
-      var value = /** @type {!proto.FunctionRpc.Log.Level} */ (reader.readEnum());
+      var value = /** @type {!proto.FunctionRpc.RpcLog.Level} */ (reader.readEnum());
       msg.setLevel(value);
       break;
     case 4:
@@ -4046,8 +3831,8 @@ proto.FunctionRpc.Log.deserializeBinaryFromReader = function(msg, reader) {
       msg.setEventId(value);
       break;
     case 6:
-      var value = new proto.FunctionRpc.Exception;
-      reader.readMessage(value,proto.FunctionRpc.Exception.deserializeBinaryFromReader);
+      var value = new proto.FunctionRpc.RpcException;
+      reader.readMessage(value,proto.FunctionRpc.RpcException.deserializeBinaryFromReader);
       msg.setException(value);
       break;
     case 7:
@@ -4067,9 +3852,9 @@ proto.FunctionRpc.Log.deserializeBinaryFromReader = function(msg, reader) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.FunctionRpc.Log.prototype.serializeBinary = function() {
+proto.FunctionRpc.RpcLog.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.FunctionRpc.Log.serializeBinaryToWriter(this, writer);
+  proto.FunctionRpc.RpcLog.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -4077,10 +3862,10 @@ proto.FunctionRpc.Log.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.FunctionRpc.Log} message
+ * @param {!proto.FunctionRpc.RpcLog} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.FunctionRpc.Log.serializeBinaryToWriter = function(message, writer) {
+proto.FunctionRpc.RpcLog.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getInvocationId();
   if (f.length > 0) {
@@ -4122,7 +3907,7 @@ proto.FunctionRpc.Log.serializeBinaryToWriter = function(message, writer) {
     writer.writeMessage(
       6,
       f,
-      proto.FunctionRpc.Exception.serializeBinaryToWriter
+      proto.FunctionRpc.RpcException.serializeBinaryToWriter
     );
   }
   f = message.getProperties();
@@ -4138,7 +3923,7 @@ proto.FunctionRpc.Log.serializeBinaryToWriter = function(message, writer) {
 /**
  * @enum {number}
  */
-proto.FunctionRpc.Log.Level = {
+proto.FunctionRpc.RpcLog.Level = {
   TRACE: 0,
   DEBUG: 1,
   INFORMATION: 2,
@@ -4152,13 +3937,13 @@ proto.FunctionRpc.Log.Level = {
  * optional string invocation_id = 1;
  * @return {string}
  */
-proto.FunctionRpc.Log.prototype.getInvocationId = function() {
+proto.FunctionRpc.RpcLog.prototype.getInvocationId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Log.prototype.setInvocationId = function(value) {
+proto.FunctionRpc.RpcLog.prototype.setInvocationId = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -4167,28 +3952,28 @@ proto.FunctionRpc.Log.prototype.setInvocationId = function(value) {
  * optional string category = 2;
  * @return {string}
  */
-proto.FunctionRpc.Log.prototype.getCategory = function() {
+proto.FunctionRpc.RpcLog.prototype.getCategory = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Log.prototype.setCategory = function(value) {
+proto.FunctionRpc.RpcLog.prototype.setCategory = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
 
 /**
  * optional Level level = 3;
- * @return {!proto.FunctionRpc.Log.Level}
+ * @return {!proto.FunctionRpc.RpcLog.Level}
  */
-proto.FunctionRpc.Log.prototype.getLevel = function() {
-  return /** @type {!proto.FunctionRpc.Log.Level} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+proto.FunctionRpc.RpcLog.prototype.getLevel = function() {
+  return /** @type {!proto.FunctionRpc.RpcLog.Level} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
-/** @param {!proto.FunctionRpc.Log.Level} value */
-proto.FunctionRpc.Log.prototype.setLevel = function(value) {
+/** @param {!proto.FunctionRpc.RpcLog.Level} value */
+proto.FunctionRpc.RpcLog.prototype.setLevel = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
@@ -4197,13 +3982,13 @@ proto.FunctionRpc.Log.prototype.setLevel = function(value) {
  * optional string message = 4;
  * @return {string}
  */
-proto.FunctionRpc.Log.prototype.getMessage = function() {
+proto.FunctionRpc.RpcLog.prototype.getMessage = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Log.prototype.setMessage = function(value) {
+proto.FunctionRpc.RpcLog.prototype.setMessage = function(value) {
   jspb.Message.setField(this, 4, value);
 };
 
@@ -4212,34 +3997,34 @@ proto.FunctionRpc.Log.prototype.setMessage = function(value) {
  * optional string event_id = 5;
  * @return {string}
  */
-proto.FunctionRpc.Log.prototype.getEventId = function() {
+proto.FunctionRpc.RpcLog.prototype.getEventId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Log.prototype.setEventId = function(value) {
+proto.FunctionRpc.RpcLog.prototype.setEventId = function(value) {
   jspb.Message.setField(this, 5, value);
 };
 
 
 /**
- * optional Exception exception = 6;
- * @return {?proto.FunctionRpc.Exception}
+ * optional RpcException exception = 6;
+ * @return {?proto.FunctionRpc.RpcException}
  */
-proto.FunctionRpc.Log.prototype.getException = function() {
-  return /** @type{?proto.FunctionRpc.Exception} */ (
-    jspb.Message.getWrapperField(this, proto.FunctionRpc.Exception, 6));
+proto.FunctionRpc.RpcLog.prototype.getException = function() {
+  return /** @type{?proto.FunctionRpc.RpcException} */ (
+    jspb.Message.getWrapperField(this, proto.FunctionRpc.RpcException, 6));
 };
 
 
-/** @param {?proto.FunctionRpc.Exception|undefined} value */
-proto.FunctionRpc.Log.prototype.setException = function(value) {
+/** @param {?proto.FunctionRpc.RpcException|undefined} value */
+proto.FunctionRpc.RpcLog.prototype.setException = function(value) {
   jspb.Message.setWrapperField(this, 6, value);
 };
 
 
-proto.FunctionRpc.Log.prototype.clearException = function() {
+proto.FunctionRpc.RpcLog.prototype.clearException = function() {
   this.setException(undefined);
 };
 
@@ -4248,7 +4033,7 @@ proto.FunctionRpc.Log.prototype.clearException = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.FunctionRpc.Log.prototype.hasException = function() {
+proto.FunctionRpc.RpcLog.prototype.hasException = function() {
   return jspb.Message.getField(this, 6) != null;
 };
 
@@ -4257,13 +4042,13 @@ proto.FunctionRpc.Log.prototype.hasException = function() {
  * optional string properties = 7;
  * @return {string}
  */
-proto.FunctionRpc.Log.prototype.getProperties = function() {
+proto.FunctionRpc.RpcLog.prototype.getProperties = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Log.prototype.setProperties = function(value) {
+proto.FunctionRpc.RpcLog.prototype.setProperties = function(value) {
   jspb.Message.setField(this, 7, value);
 };
 
@@ -4279,12 +4064,12 @@ proto.FunctionRpc.Log.prototype.setProperties = function(value) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.FunctionRpc.Exception = function(opt_data) {
+proto.FunctionRpc.RpcException = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.FunctionRpc.Exception, jspb.Message);
+goog.inherits(proto.FunctionRpc.RpcException, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.FunctionRpc.Exception.displayName = 'proto.FunctionRpc.Exception';
+  proto.FunctionRpc.RpcException.displayName = 'proto.FunctionRpc.RpcException';
 }
 
 
@@ -4299,8 +4084,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.FunctionRpc.Exception.prototype.toObject = function(opt_includeInstance) {
-  return proto.FunctionRpc.Exception.toObject(opt_includeInstance, this);
+proto.FunctionRpc.RpcException.prototype.toObject = function(opt_includeInstance) {
+  return proto.FunctionRpc.RpcException.toObject(opt_includeInstance, this);
 };
 
 
@@ -4309,10 +4094,10 @@ proto.FunctionRpc.Exception.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.FunctionRpc.Exception} msg The msg instance to transform.
+ * @param {!proto.FunctionRpc.RpcException} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.FunctionRpc.Exception.toObject = function(includeInstance, msg) {
+proto.FunctionRpc.RpcException.toObject = function(includeInstance, msg) {
   var f, obj = {
     source: jspb.Message.getFieldWithDefault(msg, 3, ""),
     stackTrace: jspb.Message.getFieldWithDefault(msg, 1, ""),
@@ -4330,23 +4115,23 @@ proto.FunctionRpc.Exception.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.FunctionRpc.Exception}
+ * @return {!proto.FunctionRpc.RpcException}
  */
-proto.FunctionRpc.Exception.deserializeBinary = function(bytes) {
+proto.FunctionRpc.RpcException.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.FunctionRpc.Exception;
-  return proto.FunctionRpc.Exception.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.FunctionRpc.RpcException;
+  return proto.FunctionRpc.RpcException.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.FunctionRpc.Exception} msg The message object to deserialize into.
+ * @param {!proto.FunctionRpc.RpcException} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.FunctionRpc.Exception}
+ * @return {!proto.FunctionRpc.RpcException}
  */
-proto.FunctionRpc.Exception.deserializeBinaryFromReader = function(msg, reader) {
+proto.FunctionRpc.RpcException.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -4378,9 +4163,9 @@ proto.FunctionRpc.Exception.deserializeBinaryFromReader = function(msg, reader) 
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.FunctionRpc.Exception.prototype.serializeBinary = function() {
+proto.FunctionRpc.RpcException.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.FunctionRpc.Exception.serializeBinaryToWriter(this, writer);
+  proto.FunctionRpc.RpcException.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -4388,10 +4173,10 @@ proto.FunctionRpc.Exception.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.FunctionRpc.Exception} message
+ * @param {!proto.FunctionRpc.RpcException} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.FunctionRpc.Exception.serializeBinaryToWriter = function(message, writer) {
+proto.FunctionRpc.RpcException.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getSource();
   if (f.length > 0) {
@@ -4421,13 +4206,13 @@ proto.FunctionRpc.Exception.serializeBinaryToWriter = function(message, writer) 
  * optional string source = 3;
  * @return {string}
  */
-proto.FunctionRpc.Exception.prototype.getSource = function() {
+proto.FunctionRpc.RpcException.prototype.getSource = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Exception.prototype.setSource = function(value) {
+proto.FunctionRpc.RpcException.prototype.setSource = function(value) {
   jspb.Message.setField(this, 3, value);
 };
 
@@ -4436,13 +4221,13 @@ proto.FunctionRpc.Exception.prototype.setSource = function(value) {
  * optional string stack_trace = 1;
  * @return {string}
  */
-proto.FunctionRpc.Exception.prototype.getStackTrace = function() {
+proto.FunctionRpc.RpcException.prototype.getStackTrace = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Exception.prototype.setStackTrace = function(value) {
+proto.FunctionRpc.RpcException.prototype.setStackTrace = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -4451,13 +4236,13 @@ proto.FunctionRpc.Exception.prototype.setStackTrace = function(value) {
  * optional string message = 2;
  * @return {string}
  */
-proto.FunctionRpc.Exception.prototype.getMessage = function() {
+proto.FunctionRpc.RpcException.prototype.getMessage = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Exception.prototype.setMessage = function(value) {
+proto.FunctionRpc.RpcException.prototype.setMessage = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
@@ -4473,12 +4258,12 @@ proto.FunctionRpc.Exception.prototype.setMessage = function(value) {
  * @extends {jspb.Message}
  * @constructor
  */
-proto.FunctionRpc.Http = function(opt_data) {
+proto.FunctionRpc.RpcHttp = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, null);
 };
-goog.inherits(proto.FunctionRpc.Http, jspb.Message);
+goog.inherits(proto.FunctionRpc.RpcHttp, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
-  proto.FunctionRpc.Http.displayName = 'proto.FunctionRpc.Http';
+  proto.FunctionRpc.RpcHttp.displayName = 'proto.FunctionRpc.RpcHttp';
 }
 
 
@@ -4493,8 +4278,8 @@ if (jspb.Message.GENERATE_TO_OBJECT) {
  *     for transitional soy proto support: http://goto/soy-param-migration
  * @return {!Object}
  */
-proto.FunctionRpc.Http.prototype.toObject = function(opt_includeInstance) {
-  return proto.FunctionRpc.Http.toObject(opt_includeInstance, this);
+proto.FunctionRpc.RpcHttp.prototype.toObject = function(opt_includeInstance) {
+  return proto.FunctionRpc.RpcHttp.toObject(opt_includeInstance, this);
 };
 
 
@@ -4503,10 +4288,10 @@ proto.FunctionRpc.Http.prototype.toObject = function(opt_includeInstance) {
  * @param {boolean|undefined} includeInstance Whether to include the JSPB
  *     instance for transitional soy proto support:
  *     http://goto/soy-param-migration
- * @param {!proto.FunctionRpc.Http} msg The msg instance to transform.
+ * @param {!proto.FunctionRpc.RpcHttp} msg The msg instance to transform.
  * @return {!Object}
  */
-proto.FunctionRpc.Http.toObject = function(includeInstance, msg) {
+proto.FunctionRpc.RpcHttp.toObject = function(includeInstance, msg) {
   var f, obj = {
     method: jspb.Message.getFieldWithDefault(msg, 1, ""),
     url: jspb.Message.getFieldWithDefault(msg, 2, ""),
@@ -4531,23 +4316,23 @@ proto.FunctionRpc.Http.toObject = function(includeInstance, msg) {
 /**
  * Deserializes binary data (in protobuf wire format).
  * @param {jspb.ByteSource} bytes The bytes to deserialize.
- * @return {!proto.FunctionRpc.Http}
+ * @return {!proto.FunctionRpc.RpcHttp}
  */
-proto.FunctionRpc.Http.deserializeBinary = function(bytes) {
+proto.FunctionRpc.RpcHttp.deserializeBinary = function(bytes) {
   var reader = new jspb.BinaryReader(bytes);
-  var msg = new proto.FunctionRpc.Http;
-  return proto.FunctionRpc.Http.deserializeBinaryFromReader(msg, reader);
+  var msg = new proto.FunctionRpc.RpcHttp;
+  return proto.FunctionRpc.RpcHttp.deserializeBinaryFromReader(msg, reader);
 };
 
 
 /**
  * Deserializes binary data (in protobuf wire format) from the
  * given reader into the given message object.
- * @param {!proto.FunctionRpc.Http} msg The message object to deserialize into.
+ * @param {!proto.FunctionRpc.RpcHttp} msg The message object to deserialize into.
  * @param {!jspb.BinaryReader} reader The BinaryReader to use.
- * @return {!proto.FunctionRpc.Http}
+ * @return {!proto.FunctionRpc.RpcHttp}
  */
-proto.FunctionRpc.Http.deserializeBinaryFromReader = function(msg, reader) {
+proto.FunctionRpc.RpcHttp.deserializeBinaryFromReader = function(msg, reader) {
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
@@ -4615,9 +4400,9 @@ proto.FunctionRpc.Http.deserializeBinaryFromReader = function(msg, reader) {
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
-proto.FunctionRpc.Http.prototype.serializeBinary = function() {
+proto.FunctionRpc.RpcHttp.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  proto.FunctionRpc.Http.serializeBinaryToWriter(this, writer);
+  proto.FunctionRpc.RpcHttp.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
@@ -4625,10 +4410,10 @@ proto.FunctionRpc.Http.prototype.serializeBinary = function() {
 /**
  * Serializes the given message to binary data (in protobuf wire
  * format), writing to the given BinaryWriter.
- * @param {!proto.FunctionRpc.Http} message
+ * @param {!proto.FunctionRpc.RpcHttp} message
  * @param {!jspb.BinaryWriter} writer
  */
-proto.FunctionRpc.Http.serializeBinaryToWriter = function(message, writer) {
+proto.FunctionRpc.RpcHttp.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getMethod();
   if (f.length > 0) {
@@ -4700,13 +4485,13 @@ proto.FunctionRpc.Http.serializeBinaryToWriter = function(message, writer) {
  * optional string method = 1;
  * @return {string}
  */
-proto.FunctionRpc.Http.prototype.getMethod = function() {
+proto.FunctionRpc.RpcHttp.prototype.getMethod = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Http.prototype.setMethod = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setMethod = function(value) {
   jspb.Message.setField(this, 1, value);
 };
 
@@ -4715,13 +4500,13 @@ proto.FunctionRpc.Http.prototype.setMethod = function(value) {
  * optional string url = 2;
  * @return {string}
  */
-proto.FunctionRpc.Http.prototype.getUrl = function() {
+proto.FunctionRpc.RpcHttp.prototype.getUrl = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Http.prototype.setUrl = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setUrl = function(value) {
   jspb.Message.setField(this, 2, value);
 };
 
@@ -4732,14 +4517,14 @@ proto.FunctionRpc.Http.prototype.setUrl = function(value) {
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,string>}
  */
-proto.FunctionRpc.Http.prototype.getHeadersMap = function(opt_noLazyCreate) {
+proto.FunctionRpc.RpcHttp.prototype.getHeadersMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,string>} */ (
       jspb.Message.getMapField(this, 3, opt_noLazyCreate,
       null));
 };
 
 
-proto.FunctionRpc.Http.prototype.clearHeadersMap = function() {
+proto.FunctionRpc.RpcHttp.prototype.clearHeadersMap = function() {
   this.getHeadersMap().clear();
 };
 
@@ -4748,19 +4533,19 @@ proto.FunctionRpc.Http.prototype.clearHeadersMap = function() {
  * optional TypedData body = 4;
  * @return {?proto.FunctionRpc.TypedData}
  */
-proto.FunctionRpc.Http.prototype.getBody = function() {
+proto.FunctionRpc.RpcHttp.prototype.getBody = function() {
   return /** @type{?proto.FunctionRpc.TypedData} */ (
     jspb.Message.getWrapperField(this, proto.FunctionRpc.TypedData, 4));
 };
 
 
 /** @param {?proto.FunctionRpc.TypedData|undefined} value */
-proto.FunctionRpc.Http.prototype.setBody = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setBody = function(value) {
   jspb.Message.setWrapperField(this, 4, value);
 };
 
 
-proto.FunctionRpc.Http.prototype.clearBody = function() {
+proto.FunctionRpc.RpcHttp.prototype.clearBody = function() {
   this.setBody(undefined);
 };
 
@@ -4769,7 +4554,7 @@ proto.FunctionRpc.Http.prototype.clearBody = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.FunctionRpc.Http.prototype.hasBody = function() {
+proto.FunctionRpc.RpcHttp.prototype.hasBody = function() {
   return jspb.Message.getField(this, 4) != null;
 };
 
@@ -4780,14 +4565,14 @@ proto.FunctionRpc.Http.prototype.hasBody = function() {
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,!(string|Uint8Array)>}
  */
-proto.FunctionRpc.Http.prototype.getParamsMap = function(opt_noLazyCreate) {
+proto.FunctionRpc.RpcHttp.prototype.getParamsMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,!(string|Uint8Array)>} */ (
       jspb.Message.getMapField(this, 10, opt_noLazyCreate,
       null));
 };
 
 
-proto.FunctionRpc.Http.prototype.clearParamsMap = function() {
+proto.FunctionRpc.RpcHttp.prototype.clearParamsMap = function() {
   this.getParamsMap().clear();
 };
 
@@ -4796,13 +4581,13 @@ proto.FunctionRpc.Http.prototype.clearParamsMap = function() {
  * optional string raw_body = 11;
  * @return {string}
  */
-proto.FunctionRpc.Http.prototype.getRawBody = function() {
+proto.FunctionRpc.RpcHttp.prototype.getRawBody = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Http.prototype.setRawBody = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setRawBody = function(value) {
   jspb.Message.setField(this, 11, value);
 };
 
@@ -4811,13 +4596,13 @@ proto.FunctionRpc.Http.prototype.setRawBody = function(value) {
  * optional string status_code = 12;
  * @return {string}
  */
-proto.FunctionRpc.Http.prototype.getStatusCode = function() {
+proto.FunctionRpc.RpcHttp.prototype.getStatusCode = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
 };
 
 
 /** @param {string} value */
-proto.FunctionRpc.Http.prototype.setStatusCode = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setStatusCode = function(value) {
   jspb.Message.setField(this, 12, value);
 };
 
@@ -4826,19 +4611,19 @@ proto.FunctionRpc.Http.prototype.setStatusCode = function(value) {
  * optional TypedData raw_response = 14;
  * @return {?proto.FunctionRpc.TypedData}
  */
-proto.FunctionRpc.Http.prototype.getRawResponse = function() {
+proto.FunctionRpc.RpcHttp.prototype.getRawResponse = function() {
   return /** @type{?proto.FunctionRpc.TypedData} */ (
     jspb.Message.getWrapperField(this, proto.FunctionRpc.TypedData, 14));
 };
 
 
 /** @param {?proto.FunctionRpc.TypedData|undefined} value */
-proto.FunctionRpc.Http.prototype.setRawResponse = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setRawResponse = function(value) {
   jspb.Message.setWrapperField(this, 14, value);
 };
 
 
-proto.FunctionRpc.Http.prototype.clearRawResponse = function() {
+proto.FunctionRpc.RpcHttp.prototype.clearRawResponse = function() {
   this.setRawResponse(undefined);
 };
 
@@ -4847,7 +4632,7 @@ proto.FunctionRpc.Http.prototype.clearRawResponse = function() {
  * Returns whether this field is set.
  * @return {!boolean}
  */
-proto.FunctionRpc.Http.prototype.hasRawResponse = function() {
+proto.FunctionRpc.RpcHttp.prototype.hasRawResponse = function() {
   return jspb.Message.getField(this, 14) != null;
 };
 
@@ -4858,14 +4643,14 @@ proto.FunctionRpc.Http.prototype.hasRawResponse = function() {
  * empty, instead returning `undefined`
  * @return {!jspb.Map<string,string>}
  */
-proto.FunctionRpc.Http.prototype.getQueryMap = function(opt_noLazyCreate) {
+proto.FunctionRpc.RpcHttp.prototype.getQueryMap = function(opt_noLazyCreate) {
   return /** @type {!jspb.Map<string,string>} */ (
       jspb.Message.getMapField(this, 15, opt_noLazyCreate,
       null));
 };
 
 
-proto.FunctionRpc.Http.prototype.clearQueryMap = function() {
+proto.FunctionRpc.RpcHttp.prototype.clearQueryMap = function() {
   this.getQueryMap().clear();
 };
 
@@ -4876,54 +4661,15 @@ proto.FunctionRpc.Http.prototype.clearQueryMap = function() {
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
-proto.FunctionRpc.Http.prototype.getIsRaw = function() {
+proto.FunctionRpc.RpcHttp.prototype.getIsRaw = function() {
   return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 16, false));
 };
 
 
 /** @param {boolean} value */
-proto.FunctionRpc.Http.prototype.setIsRaw = function(value) {
+proto.FunctionRpc.RpcHttp.prototype.setIsRaw = function(value) {
   jspb.Message.setField(this, 16, value);
 };
 
-/**
- * Packs the given message instance into this Any.
- * @param {!Uint8Array} serialized The serialized data to pack.
- * @param {string} name The type name of this message object.
- * @param {string=} opt_typeUrlPrefix the type URL prefix.
- */
-proto.google.protobuf.Any.prototype.pack = function(serialized, name,
-                                                    opt_typeUrlPrefix) {
-  if (!opt_typeUrlPrefix) {
-    opt_typeUrlPrefix = 'type.googleapis.com/';
-  }
-
-  if (opt_typeUrlPrefix.substr(-1) != '/') {
-    this.setTypeUrl(opt_typeUrlPrefix + '/' + name);
-  } else {
-    this.setTypeUrl(opt_typeUrlPrefix + name);
-  }
-
-  this.setValue(serialized);
-};
-
-
-/**
- * @template T
- * Unpacks this Any into the given message object.
- * @param {function(Uint8Array):T} deserialize Function that will deserialize
- *     the binary data properly.
- * @param {string} name The expected type name of this message object.
- * @return {?T} If the name matched the expected name, returns the deserialized
- *     object, otherwise returns undefined.
- */
-proto.google.protobuf.Any.prototype.unpack = function(deserialize, name) {
-  console.log('type name:'+this.getTypeName());
-  if (this.getTypeName() == name) {
-    return deserialize(this.getValue_asU8());
-  } else {
-    return null;
-  }
-};
 
 goog.object.extend(exports, proto.FunctionRpc);

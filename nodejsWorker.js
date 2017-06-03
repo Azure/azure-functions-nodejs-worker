@@ -1,4 +1,5 @@
 var streamingMessage = require('./protos/FunctionRpc_pb').StreamingMessage;
+var messages = require('./protos/FunctionRpc_pb');
 var services = require('./protos/FunctionRpc_grpc_pb');
 
 var parseArgs = require('minimist');
@@ -91,24 +92,27 @@ function getBytesForObject(inputObject) {
 }
 
 function getValueFromTypedData(typedData) {
-  switch (typedData.type) {
-    case TypedData.Type.String:
-      return typedData.string_val;
-    case TypedData.Type.Json:
+  switch (typedData.typeVal) {
+    //case TypedData.Type.String:
+    case 0:
+      return typedData.stringVal;
+    //case TypedData.Type.Json:
+    case 1:
     default:
-      return JSON.parse(typedData.string_val);
-    case TypedData.Type.Bytes:
-      return TypedData.Type.bytes_val;
+      return JSON.parse(typedData.stringVal);
+    //case TypedData.Type.Bytes:
+    case 2:
+      return TypedData.Type.bytesVal;
   }
 }
 
 function getTypedDataFromObject(inputObject) {
-  let typedData = streamingMessage.TypedData();
+  let typedData = new messages.TypedData();
   if (typeof (inputObject) === 'string') {
-    typedData.setType(streamingMessage.TypedData.Type.String);
+    typedData.setTypeVal(messages.TypedData.Type.String);
     typedData.setStringVal(inputObject);
   } else if (Buffer.isBuffer(inputObject)) {
-    typedData.setType(streamingMessage.TypedData.Type.Bytes);
+    typedData.setTypeVal(messages.TypedData.Type.Bytes);
     typedData.setBytesVal(inputObject);
   }
   return typedData;
@@ -135,6 +139,7 @@ function getStringForObject(inputObject) {
 }
 
 function buildHttpMessage(inputMessage) {
+  // TODO build RpcHttpMessage
   let httpMessage = {};
   if (inputMessage['method']) {
     httpMessage['method'] = inputMessage['method'];
@@ -210,51 +215,57 @@ function clearRequiredCache(call, callback) {
 }
 
 function getUnpackedMessage(anyTypeMessage, messageType, messageTypeName) {
-  let typeName = 'FunctionRpc' + messageTypeName;
-  return anyTypeMessage.unpack(messageType, typeName);
+  let typeName = 'FunctionRpc.' + messageTypeName;
+  let unpackedValue = anyTypeMessage.unpack(messageType.deserializeBinary, typeName);
+  return unpackedValue;
 }
 
-function getPackedMessage(meesage, messageTypeName) {
-  let typeName = 'FunctionRpc' + messageTypeName;
+function getPackedMessage(message, messageTypeName) {
+  let typeName = 'FunctionRpc.' + messageTypeName;
   var packedMessage = new proto.google.protobuf.Any;
-  packedMessage.pack(meesage.serializeBinary(), typeName);
+  packedMessage.pack(message.serializeBinary(), typeName);
   return packedMessage;
 }
 
 function handleFunctionLoadRequest(functionLoadRequest) {
-
+  let rpcFunctionMetadata = functionLoadRequest.getMetadata();
   let functionMetadata = {};
-  functionMetadata.name = functionLoadRequest.FunctionMetadata.name;
-  functionMetadata.directory = functionLoadRequest.FunctionMetadata.directory;
-  functionMetadata.script_file = functionLoadRequest.FunctionMetadata.script_file;
-  functionMetadata.entry_point = functionLoadRequest.FunctionMetadata.entry_point;
+  functionMetadata.name = rpcFunctionMetadata.getName();
+  functionMetadata.directory = rpcFunctionMetadata.getDirectory();
+  if (rpcFunctionMetadata.getScriptFile()) {
+    functionMetadata.script_file = rpcFunctionMetadata.getScriptFile();
+  }
+  if (rpcFunctionMetadata.getEntryPoint()) {
+    functionMetadata.entry_point = rpcFunctionMetadata.getEntryPoint();
+  }
   //TODO handle updating existing function_id
-  loadedFunctionsList[functionLoadRequest.function_id] = functionMetadata;
-
+  loadedFunctionsList[functionLoadRequest.getFunctionId()] = functionMetadata;
+  return functionLoadRequest.getFunctionId();
 }
 
-function handleInvokeRequest(functionInvokeMetadata) {
-  let functionMetadata = loadedFunctionsList[functionLoadRequest.function_id];
+function handleInvokeRequest(invocationRequest, call, requestId) {
+  //TODO handle updating non-existing function_id
+  let functionMetadata = loadedFunctionsList[invocationRequest.getFunctionId()];
   let scriptFilePath = functionMetadata.script_file;
-  let invocationResponse = new streamingMessage.InvocationResponse();
-  let statusResult = new streamingMessage.StatusResult();
+  let invocationResponse = new messages.InvocationResponse();
+  let statusResult = new messages.StatusResult();
   let context = {};
 
-  invocationResponse.setRequestId(functionInvokeMetadata.getRequestId());
-  invocationResponse.setInvocationId(functionInvokeMetadata.getInvocationId());
+  invocationResponse.setInvocationId(invocationRequest.getInvocationId());
 
   process.on('uncaughtException', function (err) {
+    console.log('uncaught...' + err);
     context.handleUncaughtException(err.stack);
   });
 
 
-  context.invocationId = functionInvokeMetadata.invocation_id;
+  context.invocationId = invocationRequest.getInvocationId();
   context.executionContext = {};
-  context.executionContext.invocationId = functionInvokeMetadata.invocation_id;
+  context.executionContext.invocationId = invocationRequest.getInvocationId();
   context.executionContext.functionName = functionMetadata.name;
   context.executionContext.functionDirectory = functionMetadata.directory;
-  //TODO how to infer triggerType
-  context._triggerType = functionInvokeMetadata.triggerType;
+  // TODO how to infer triggerType
+  // context._triggerType = functionInvokeMetadata.triggerType;
 
   // Get bindings
   context.bindings = {};
@@ -265,22 +276,24 @@ function handleInvokeRequest(functionInvokeMetadata) {
 
   // Get bindingData from trigger_metadata
   context.bindingData = {};
-  for (let key in functionInvokeMetadata.trigger_metadata) {
-    if (functionInvokeMetadata.trigger_metadata.hasOwnProperty(key)) {
-      context.bindingData[key] = getValueFromTypedData(functionInvokeMetadata.trigger_metadata[key]);
-    }
+  let triggerMetadata = invocationRequest.getTriggerMetadataMap().toObject(false, messages.TypedData.toObject);
+  for (key in triggerMetadata) {
+    context.bindingData[triggerMetadata[key][0]] = getValueFromTypedData(triggerMetadata[key][1]);
   }
 
   // Get _inputs from ParameterBindings
   context._inputs = [];
   context.req = {};
-  for (let inputBindingsIndex = 0; inputBindingsIndex < functionInvokeMetadata.input_data.length; inputBindingsIndex++) {
-    let parameterBinding = functionInvokeMetadata.input_data[inputBindingsIndex];
+  let inputDataList = invocationRequest.getInputDataList();
+  for (let inputBindingsIndex = 0; inputBindingsIndex < inputDataList.length; inputBindingsIndex++) {
+    let parameterBinding = messages.ParameterBinding.toObject(false, inputDataList[inputBindingsIndex]);
     let name = parameterBinding['name'];
     let typedData = parameterBinding['data'];
 
-    if (typedData.Type == streamingMessage.TypedData.Type.Http) {
-      context.req = getContextHttpRequest(typedDat.http_val);
+    //if (typedData.typeVal == messages.TypedData.Type.Http) {
+    // TODO figure out how to use enum
+    if (typedData.typeVal == 4) {
+      context.req = getContextHttpRequest(typedData.httpVal);
       //TODO figure out webHookTrigger
       if (name != 'webhookReq') {
         context._inputs.push(context.req);
@@ -288,7 +301,7 @@ function handleInvokeRequest(functionInvokeMetadata) {
       }
     }
     else {
-      let inputDataValue = getValueFromTypedData(functionInvokeMetadata.input_data[inputBindingsIndex]['data']);
+      let inputDataValue = getValueFromTypedData(typedData);
       context._inputs.push(inputDataValue);
       context.bindings[name] = inputDataValue;
     }
@@ -306,35 +319,32 @@ function handleInvokeRequest(functionInvokeMetadata) {
   };
 
   var resultCallback = function (error, result) {
-
-
     if (error) {
       console.log(error);
-      statusResult.setStatus(streamingMessage.StatusResult.Status.Failure);
+      statusResult.setStatus(messages.StatusResult.Status.Failure);
       //TODO change type of result to Bytes instead of string?
       //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
       statusResult.setResult(error.toString());
       invocationResponse.setResult(statusResult);
-
     }
     if (result) {
       console.log(result);
-      statusResult.setStatus(streamingMessage.StatusResult.Status.Success);
+      statusResult.setStatus(messages.StatusResult.Status.Success);
       //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
       statusResult.setResult(result.toString());
-      let returnParamerterBinding = new streamingMessage.parameterBinding();
+      let returnParamerterBinding = new messages.ParameterBinding();
       returnParamerterBinding.setName('$return');
       returnParamerterBinding.setData(getTypedDataFromObject(result));
       invocationResponse.setResult(statusResult);
     }
 
     for (let key in context.bindings) {
-      let outputParameterBinding = {};
+      let outputParameterBinding = new messages.ParameterBinding();
       outputParameterBinding.setName(key);
 
       if (key === 'req' || key === 'request' || key == 'res') {
-        let typedData = new streamingMessage.TypedData();
-        typedData.setType(streamingMessage.TypedData.Type.Http);
+        let typedData = new messages.TypedData();
+        typedData.setType(messages.TypedData.Type.Http);
         typedData.setHttpVal(buildHttpMessage(context.bindings[key]));
         outputParameterBinding.setData(typedData);
       }
@@ -348,12 +358,12 @@ function handleInvokeRequest(functionInvokeMetadata) {
   };
 
   context.log = function (traceMessage) {
-    let logMessage = new streamingMessage.LogMessage();
+    let logMessage = new messages.RpcLog();
     logMessage.setInvocationId(context.invocationId);
     //TODO change to enum??
     logMessage.setCategory('Invocation');
     logMessage.setMessage(JSON.stringify(traceMessage));
-    call.write(getPackedMessage(logMessage, 'Log'));
+    //call.write(getPackedMessage(logMessage, 'Log'));
     console.log('traceMessage: ' + JSON.stringify(traceMessage));
   };
 
@@ -361,10 +371,10 @@ function handleInvokeRequest(functionInvokeMetadata) {
     //TODO Should we log and self Terminate?
     if (errorStack) {
       console.log(errorStack);
-      let exceptionMessage = new streamingMessage.Exception();
+      let exceptionMessage = new messages.RpcException();
       exceptionMessage.setStackTrace(errorStack);
 
-      statusResult.setStatus(streamingMessage.StatusResult.Status.Failure);
+      statusResult.setStatus(messages.StatusResult.Status.Failure);
       statusResult.setException(exceptionMessage);
       invocationResponse.setResult(statusResult);
 
@@ -376,31 +386,40 @@ function handleInvokeRequest(functionInvokeMetadata) {
   let azureFunctionScript = createFunction(require(scriptFilePath));
   let azureFunctionScriptContext = [context, resultCallback];
   var invokeFunctionCode = azureFunctionScript.apply(invokeFunctionCode, azureFunctionScriptContext);
+
   // final response with the result
-  call.write(getPackedMessage(invocationResponse, 'InvocationResponse'));
+
+  let invocationResponseStreamingMessage = new messages.StreamingMessage();
+
+  invocationResponseStreamingMessage.setRequestId(requestId);
+  invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
+  invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
+
+  call.write(invocationResponseStreamingMessage);
+
 }
 
 function handleWorkerInitRequest(WorkerInitRequest) {
 
 }
 
-
-
-
 /**
  * rpcInvokeFunction handler. Receives a stream of rpcFunctionInvokeMetadata, and responds
  * with a stream of updated rpcFunctionInvokeMetadata.
  * @param {Duplex} call The stream for incoming and outgoing messages
  */
-function initiateDuplexStreaming(callback) {
+function initiateDuplexStreaming(startStreamRequestId) {
   //TODO error handling if grpcClient is not initialized
   var call = grpcClient.eventStream();
   call.on('data', function (incomingMessage) {
     console.log('here...received incomingMessage');
     //Handle each message type
-    switch (incomingMessage.type) {
-      case streamingMessage.WorkerInitRequest:
-        handleWorkerInitRequest(getUnpackedMessage(incomingMessage.content, streamingMessage.WorkerInitRequest, 'WorkerInitRequest'));
+    let incomingMessageType = incomingMessage.getType();
+    switch (incomingMessageType) {
+      //case streamingMessage.WorkerInitRequest:
+      // TODO figure out using enum type
+      case 0:
+        handleWorkerInitRequest(getUnpackedMessage(incomingMessage.getContent(), messages.WorkerInitRequest, 'WorkerInitRequest'));
 
         break;
       case streamingMessage.WorkerTerminate:
@@ -413,11 +432,34 @@ function initiateDuplexStreaming(callback) {
         break;
       case streamingMessage.WorkerStatusRequest:
         break;
-      case streamingMessage.FunctionLoadRequest:
+      //case streamingMessage.FunctionLoadRequest:
+      case 10:
+        let functionId = handleFunctionLoadRequest(getUnpackedMessage(incomingMessage.getContent(), messages.FunctionLoadRequest, 'FunctionLoadRequest'));
+        let functionLoadResponseStreamingMessage = new messages.StreamingMessage();
 
+        let functionLoadResponseMessage = new messages.FunctionLoadResponse();
+        functionLoadResponseMessage.setFunctionId(functionId);
+
+        let statusResult = new messages.StatusResult();
+        statusResult.setStatus(messages.StatusResult.Status.SUCCESS);
+        //TODO build proper statusResult
+        statusResult.setResult('Loaded function');
+
+        functionLoadResponseMessage.setResult(statusResult)
+
+        let antTypeMessage = new proto.google.protobuf.Any;
+        antTypeMessage.pack(functionLoadResponseMessage.serializeBinary(), 'FunctionRpc.FunctionLoadResponse');
+
+        functionLoadResponseStreamingMessage.setRequestId(incomingMessage.getRequestId());
+        functionLoadResponseStreamingMessage.setType(messages.StreamingMessage.Type.FUNCTIONLOADRESPONSE);
+        functionLoadResponseStreamingMessage.setContent(antTypeMessage);
+
+        //Initiate Event Streaming RPC
+        call.write(functionLoadResponseStreamingMessage);
         break;
-      case streamingMessage.InvocationRequest:
-        handleInvokeRequest(getUnpackedMessage(incomingMessage.content, streamingMessage.InvocationRequest, 'InvocationRequest'));
+      //case streamingMessage.InvocationRequest:
+      case 12:
+        handleInvokeRequest(getUnpackedMessage(incomingMessage.getContent(), messages.InvocationRequest, 'InvocationRequest'), call, incomingMessage.getRequestId());
         break;
       default:
         throw new Error('Unknown streaming message type');
@@ -427,15 +469,19 @@ function initiateDuplexStreaming(callback) {
 
   let startStreamingMessage = new messages.StreamingMessage();
   let emptyStartMessage = new messages.StartStream();
+
   let anyEmptyStartMessage = new proto.google.protobuf.Any;
   anyEmptyStartMessage.pack(emptyStartMessage.serializeBinary(), 'FunctionRpc.StartStream');
 
+  startStreamingMessage.setRequestId(startStreamRequestId);
   startStreamingMessage.setType(messages.StreamingMessage.Type.STARTSTREAM);
   startStreamingMessage.setContent(anyEmptyStartMessage);
 
   //Initiate Event Streaming RPC
   call.write(startStreamingMessage);
-
+  call.on('error', function (err) {
+    console.log('grpc erro..' + err);
+  })
   call.on('end', function () {
     call.end();
   });
@@ -443,14 +489,19 @@ function initiateDuplexStreaming(callback) {
 
 function main() {
   var argv = parseArgs(process.argv.slice(2));
-  if (typeof argv.host == 'undefined' || typeof argv.port == 'undefined') {
-    console.log('usage --host hostName --port portNumber');
+  if (typeof argv.host == 'undefined' || typeof argv.port == 'undefined' || typeof argv.requestId == 'undefined') {
+    console.log('usage --host hostName --port portNumber --requestId requestId');
     throw new Error('Connection info missing');
   }
   let grpcConnectionString = argv.host + ':' + argv.port;
-  grpcClient = new services.FunctionRpcClient(grpcConnectionString, grpc.credentials.createInsecure());
+  try {
+    grpcClient = new services.FunctionRpcClient(grpcConnectionString, grpc.credentials.createInsecure());
+    console.log('created client...');
+  } catch (err) {
+    console.log(err);
+  }
 
-  initiateDuplexStreaming();
+  initiateDuplexStreaming(argv.requestId);
 }
 
 main();
