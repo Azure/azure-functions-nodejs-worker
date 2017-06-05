@@ -375,6 +375,16 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
     //TODO change to enum??
     logMessage.setCategory('Invocation');
     logMessage.setMessage(JSON.stringify(traceMessage));
+
+    let logStreamingMessage = new messages.StreamingMessage();
+
+    // logStreamingMessage.setRequestId(requestId);
+    logStreamingMessage.setType(messages.StreamingMessage.Type.RPCLOG);
+    logStreamingMessage.setContent(getPackedMessage(logMessage, 'RpcLog'));
+
+    // TODO figure out live logging
+    call.write(logStreamingMessage);
+
     //call.write(getPackedMessage(logMessage, 'Log'));
     console.log('traceMessage: ' + JSON.stringify(traceMessage));
   };
