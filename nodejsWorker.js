@@ -95,11 +95,18 @@ function getValueFromTypedData(typedData) {
   switch (typedData.typeVal) {
     //case TypedData.Type.String:
     case 0:
-      return typedData.stringVal;
+    // return typedData.stringVal;
     //case TypedData.Type.Json:
     case 1:
     default:
-      return JSON.parse(typedData.stringVal);
+      let parsedJson = typedData.stringVal;
+      try {
+        parsedJson = JSON.parse(typedData.stringVal);
+        return parsedJson;
+      } catch (error) {
+        return parsedJson;
+      }
+
     //case TypedData.Type.Bytes:
     case 2:
       return TypedData.Type.bytesVal;
@@ -114,6 +121,9 @@ function getTypedDataFromObject(inputObject) {
   } else if (Buffer.isBuffer(inputObject)) {
     typedData.setTypeVal(messages.TypedData.Type.Bytes);
     typedData.setBytesVal(inputObject);
+  } else {
+    typedData.setTypeVal(messages.TypedData.Type.JSON);
+    typedData.setStringVal(JSON.stringify(inputObject));
   }
   return typedData;
 }
@@ -336,6 +346,7 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
       returnParamerterBinding.setName('$return');
       returnParamerterBinding.setData(getTypedDataFromObject(result));
       invocationResponse.setResult(statusResult);
+      invocationResponse.addOutputData(returnParamerterBinding);
     }
 
     for (let key in context.bindings) {
@@ -354,6 +365,7 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
       }
       invocationResponse.addOutputData(outputParameterBinding);
     }
+    statusResult.setStatus(messages.StatusResult.Status.Success);
     return result;
   };
 
