@@ -27,68 +27,31 @@ function getContextHttpRequest(inputHttpRequest) {
 
   // Get Request
   let contextHttpRequest = {};
+  contextHttpRequest.headers = {};
+  contextHttpRequest.query = {};
+  contextHttpRequest.params = {};
 
-  contextHttpRequest['method'] = inputHttpRequest['method'];
-  contextHttpRequest['originalUrl'] = inputHttpRequest['url'];
-  contextHttpRequest['headers'] = inputHttpRequest['headers'];
-  contextHttpRequest['query'] = inputHttpRequest['query'];
-  if (inputHttpRequest['rawBody']) {
-    contextHttpRequest['rawBody'] = inputHttpRequest['rawBody'];
+  contextHttpRequest['method'] = inputHttpRequest.getMethod();
+  contextHttpRequest['originalUrl'] = inputHttpRequest.getUrl();
+  let inputHttpRequestHeaders = inputHttpRequest.getHeadersMap().toObject();
+  for (key in inputHttpRequestHeaders) {
+    contextHttpRequest.headers[inputHttpRequestHeaders[key][0]] = inputHttpRequestHeaders[key][1];
   }
-  if (inputHttpRequest['params']) {
-    contextHttpRequest.params = {};
-    for (let key in inputHttpRequest['params']) {
-      if (inputHttpRequest['params'].hasOwnProperty(key)) {
-        let binArrayInputs = inputHttpRequest['params'][key];
-        let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-        // let triggerInputJSON = JSON.parse(triggerInputString);
-        console.log(key + ' -> ' + triggerInputString);
-        contextHttpRequest.params[key] = triggerInputString;
-      }
-    }
+  let inputHttpQueryParams = inputHttpRequest.getQueryMap().toObject();
+  for (key in inputHttpQueryParams) {
+    contextHttpRequest.query[inputHttpQueryParams[key][0]] = inputHttpQueryParams[key][1];
   }
-  let requestBody = inputHttpRequest['body'];
-  if (requestBody) {
-    contextHttpRequest['body'] = getValueFromTypedData(requestBody);
+  if (inputHttpRequest.getRawBody()) {
+    contextHttpRequest['rawBody'] = inputHttpRequest.getRawBody();
+  }
+  let inputHttpRequestParams = inputHttpRequest.getParamsMap().toObject(false, messages.TypedData.toObject);
+  for (key in inputHttpRequestParams) {
+    contextHttpRequest.params[inputHttpRequestParams[key][0]] = getValueFromTypedData(inputHttpRequestParams[key][1]);
+  }
+  if (inputHttpRequest.getBody()) {
+    contextHttpRequest['body'] = getValueFromTypedDataObject(inputHttpRequest.getBody());
   }
   return contextHttpRequest;
-}
-
-function isHttpRequestFirstInput(binArrayInputs) {
-  let triggerInputString = String.fromCharCode.apply(null, binArrayInputs);
-  try {
-    let triggerInputJSON = JSON.parse(triggerInputString);
-    if (triggerInputJSON['originalUrl']) {
-      return true;
-    }
-  } catch (error) {
-  }
-  return false;
-}
-
-function getBytesForObject(inputObject) {
-  let updatedBinding;
-  if (typeof (inputObject) === 'string') {
-    updatedBinding = inputObject;
-  } else if (Buffer.isBuffer(inputObject)) {
-    let inputString = String.fromCharCode.apply(null, inputObject);
-    try {
-      let inputJSON = JSON.parse(inputString);
-      updatedBinding = inputJSON;
-    } catch (error) {
-      updatedBinding = inputString;
-    }
-  } else {
-    updatedBinding = JSON.stringify(inputObject);
-  }
-
-  console.log(updatedBinding);
-  let updatedBindingBuffer = new ArrayBuffer(updatedBinding.length); // 2 bytes for each char
-  let updatedBindingBufferView = new Uint8Array(updatedBindingBuffer);
-  for (let j = 0; j < updatedBinding.length; j++) {
-    updatedBindingBufferView[j] = updatedBinding.charCodeAt(j);
-  }
-  return updatedBindingBufferView;
 }
 
 function getValueFromTypedData(typedData) {
@@ -109,20 +72,44 @@ function getValueFromTypedData(typedData) {
 
     //case TypedData.Type.Bytes:
     case 2:
-      return TypedData.Type.bytesVal;
+      return typedData.bytesVal;
+  }
+}
+
+function getValueFromTypedDataObject(typedData) {
+  switch (typedData.getTypeVal()) {
+    //case TypedData.Type.String:
+    case 0:
+    // return typedData.stringVal;
+    //case TypedData.Type.Json:
+    case 1:
+    default:
+      try {
+        return JSON.parse(typedData.getStringVal());
+      } catch (error) {
+        return typedData.getStringVal();
+      }
+
+    //case TypedData.Type.Bytes:
+    case 2:
+      return typedData.getBytesVal();
   }
 }
 
 function getTypedDataFromObject(inputObject) {
   let typedData = new messages.TypedData();
   if (typeof (inputObject) === 'string') {
-    typedData.setTypeVal(messages.TypedData.Type.String);
+    //typedData.setTypeVal(messages.TypedData.Type.String);
+    typedData.setTypeVal(0);
     typedData.setStringVal(inputObject);
-  } else if (Buffer.isBuffer(inputObject)) {
-    typedData.setTypeVal(messages.TypedData.Type.Bytes);
+  } else if (Buffer.isBuffer(inputObject) || ArrayBuffer.isView(inputObject)) {
+    //typedData.setTypeVal(messages.TypedData.Type.Bytes);
+    typedData.setTypeVal(2);
     typedData.setBytesVal(inputObject);
   } else {
-    typedData.setTypeVal(messages.TypedData.Type.JSON);
+    //typedData.setTypeVal(messages.TypedData.Type.JSON);
+    // TODO do we need JSON type?
+    typedData.setTypeVal(0);
     typedData.setStringVal(JSON.stringify(inputObject));
   }
   return typedData;
@@ -132,7 +119,7 @@ function getStringForObject(inputObject) {
   let updatedBinding;
   if (typeof (inputObject) === 'string') {
     return inputObject;
-  } else if (Buffer.isBuffer(inputObject)) {
+  } else if (Buffer.isBuffer(inputObject) || ArrayBuffer.isView(inputObject)) {
     let inputString = String.fromCharCode.apply(null, inputObject);
     try {
       let inputJSON = JSON.parse(inputString);
@@ -144,70 +131,78 @@ function getStringForObject(inputObject) {
     updatedBinding = JSON.stringify(inputObject);
   }
 
-  console.log(updatedBinding);
   return updatedBinding;
 }
 
 function buildHttpMessage(inputMessage) {
-  // TODO build RpcHttpMessage
-  let httpMessage = {};
+  let isRawResponse = true;
+  let httpMessage = new messages.RpcHttp();
   if (inputMessage['method']) {
-    httpMessage['method'] = inputMessage['method'];
+    httpMessage.setMethod(inputMessage['method']);
+    isRawResponse = false;
   }
   if (inputMessage['rawBody']) {
-    httpMessage['rawBody'] = inputMessage['rawBody'];
+    httpMessage.setRawBody(inputMessage['rawBody']);
+    isRawResponse = false;
   }
   if (inputMessage['originalUrl']) {
-    httpMessage['url'] = inputMessage['originalUrl'];
+    httpMessage.setUrl(inputMessage['originalUrl']);
+    isRawResponse = false;
   }
   if (inputMessage['headers']) {
-    httpMessage['headers'] = inputMessage['headers'];
+    for (headerKey in inputMessage['headers']) {
+      httpMessage.getHeadersMap().set(headerKey, inputMessage['headers'][headerKey])
+    }
+    isRawResponse = false;
   }
   if (inputMessage['query']) {
-    httpMessage['query'] = inputMessage['query'];
+    for (queryKey in inputMessage['query']) {
+      httpMessage.getQueryMap().set(headerKey, inputMessage['query'][queryKey])
+    }
+    isRawResponse = false;
   }
   if (inputMessage['statusCode']) {
-    httpMessage['statusCode'] = inputMessage['statusCode'].toString();;
+    httpMessage.setStatusCode(inputMessage['statusCode'].toString());
+    isRawResponse = false;
   }
   if (inputMessage['status'] && !httpMessage['statusCode']) {
-    httpMessage['statusCode'] = inputMessage['status'].toString();;
+    httpMessage.setStatusCode(inputMessage['status'].toString());
+    isRawResponse = false;
   }
   if (inputMessage['body']) {
-    httpMessage.httpMessageBody = {};
-    httpMessage.httpMessageBody.httpMessageBodyDataValue = {};
+    isRawResponse = false;
+    let httpBody = new messages.TypedData();
     if (inputMessage['isRaw']) {
-      httpMessage.isRaw = true;
+      httpMessage.setIsRaw(true);
     }
     if (inputMessage['headers'] && inputMessage['headers']['raw']) {
-      httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
+      //httpBody.setTypeVal(messages.TypedData.Type.Bytes);
+      httpBody.setTypeVal(2);
     }
-    let binArrayInputs = inputMessage['body'];
-    if (Buffer.isBuffer(binArrayInputs)) {
-      httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
+    if (Buffer.isBuffer(inputMessage['body']) || ArrayBuffer.isView(inputMessage['body'])) {
+      //httpBody.setTypeVal(messages.TypedData.Type.Bytes);
+      httpBody.setTypeVal(2);
     }
-    try {
-      let inputJSON = JSON.parse(inputMessage['body']);
-      if (inputJSON["type"] == "Buffer") {
-        httpMessage.httpMessageBody['httpMessageBodyType'] = rpcFunction.RpcDataType.Bytes;
-      }
-    } catch (error) { }
-    if (httpMessage.httpMessageBody['httpMessageBodyType'] === rpcFunction.RpcDataType.Bytes) {
-      httpMessage.httpMessageBody.httpMessageBodyDataValue['bytesValue'] = binArrayInputs;
+    //if (httpMessage.body.getTypeVal() === messages.TypedData.Type.Bytes) {
+    if (httpBody.getTypeVal() === 2 && !inputMessage['rawBody']) {
+      httpBody.setBytesVal(inputMessage['body']);
     } else {
-      httpMessage.httpMessageBody.httpMessageBodyDataValue['stringValue'] = getStringForObject(inputMessage['body']);
+      httpBody.setStringVal(getStringForObject(inputMessage['body']));
     }
+    httpMessage.setBody(httpBody);
   }
 
-  if (isEmpty(httpMessage)) {
-    httpMessage.rawResponseDataValue = {};
-    if (Buffer.isBuffer(inputMessage)) {
-      httpMessage.rawResponseDataType = rpcFunction.RpcDataType.Bytes;
-      httpMessage.rawResponseDataValue['bytesValue'] = inputMessage;
+  if (isRawResponse) {
+    let rawResponseTypedData = new messages.TypedData();
+    if (Buffer.isBuffer(inputMessage) || ArrayBuffer.isView(inputMessage)) {
+      //rawResponseTypedData.setTypeVal(messages.TypedData.Type.Bytes);
+      rawResponseTypedData.setTypeVal(2);
+      rawResponseTypedData.setBytesVal(inputMessage);
     } else {
-      //httpMessage.rawResponseType = 'String';
-
-      httpMessage.rawResponseDataValue['stringValue'] = getStringForObject(inputMessage);
+      rawResponseTypedData.setTypeVal(0);
+      rawResponseTypedData.setStringVal(getStringForObject(inputMessage));
     }
+    httpMessage.setRawResponse(rawResponseTypedData);
   }
   return httpMessage;
 }
@@ -275,7 +270,7 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
   context.executionContext.functionName = functionMetadata.name;
   context.executionContext.functionDirectory = functionMetadata.directory;
   // TODO how to infer triggerType
-  // context._triggerType = functionInvokeMetadata.triggerType;
+
 
   // Get bindings
   context.bindings = {};
@@ -296,14 +291,15 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
   context.req = {};
   let inputDataList = invocationRequest.getInputDataList();
   for (let inputBindingsIndex = 0; inputBindingsIndex < inputDataList.length; inputBindingsIndex++) {
-    let parameterBinding = messages.ParameterBinding.toObject(false, inputDataList[inputBindingsIndex]);
-    let name = parameterBinding['name'];
-    let typedData = parameterBinding['data'];
+    let parameterBinding = inputDataList[inputBindingsIndex];
+    let name = parameterBinding.getName();
+    let typedData = parameterBinding.getData();
 
     //if (typedData.typeVal == messages.TypedData.Type.Http) {
     // TODO figure out how to use enum
-    if (typedData.typeVal == 4) {
-      context.req = getContextHttpRequest(typedData.httpVal);
+    if (typedData.getTypeVal() == 4) {
+      context.req = getContextHttpRequest(typedData.getHttpVal());
+      context._triggerType = 'httptrigger';
       //TODO figure out webHookTrigger
       if (name != 'webhookReq') {
         context._inputs.push(context.req);
@@ -311,7 +307,7 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
       }
     }
     else {
-      let inputDataValue = getValueFromTypedData(typedData);
+      let inputDataValue = getValueFromTypedDataObject(typedData);
       context._inputs.push(inputDataValue);
       context.bindings[name] = inputDataValue;
     }
@@ -332,15 +328,12 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
     if (error) {
       console.log(error);
       statusResult.setStatus(messages.StatusResult.Status.Failure);
-      //TODO change type of result to Bytes instead of string?
-      //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
       statusResult.setResult(error.toString());
       invocationResponse.setResult(statusResult);
     }
     if (result) {
       console.log(result);
       statusResult.setStatus(messages.StatusResult.Status.Success);
-      //functionInvokeMetadata.messageOutputs['result'] = getBytesForObject(error);
       statusResult.setResult(result.toString());
       let returnParamerterBinding = new messages.ParameterBinding();
       returnParamerterBinding.setName('$return');
@@ -352,10 +345,12 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
     for (let key in context.bindings) {
       let outputParameterBinding = new messages.ParameterBinding();
       outputParameterBinding.setName(key);
+      console.log('out binding...' + JSON.stringify(context.bindings[key]));
 
       if (key === 'req' || key === 'request' || key == 'res') {
         let typedData = new messages.TypedData();
-        typedData.setType(messages.TypedData.Type.Http);
+        //typedData.setTypeVal(messages.TypedData.Type.Http);
+        typedData.setTypeVal(4);
         typedData.setHttpVal(buildHttpMessage(context.bindings[key]));
         outputParameterBinding.setData(typedData);
       }
