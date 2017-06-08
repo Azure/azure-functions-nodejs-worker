@@ -92,7 +92,8 @@ function getValueFromTypedDataObject(typedData) {
 
     //case TypedData.Type.Bytes:
     case 2:
-      return typedData.getBytesVal();
+      //return typedData.getBytesVal();
+      return  Buffer.from(typedData.getBytesVal());
   }
 }
 
@@ -165,7 +166,7 @@ function buildHttpMessage(inputMessage) {
     httpMessage.setStatusCode(inputMessage['statusCode'].toString());
     isRawResponse = false;
   }
-  if (inputMessage['status'] && !httpMessage['statusCode']) {
+  if (inputMessage['status'] && !httpMessage.getStatusCode()) {
     httpMessage.setStatusCode(inputMessage['status'].toString());
     isRawResponse = false;
   }
@@ -361,6 +362,17 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
       invocationResponse.addOutputData(outputParameterBinding);
     }
     statusResult.setStatus(messages.StatusResult.Status.Success);
+
+// final response with the result
+
+  let invocationResponseStreamingMessage = new messages.StreamingMessage();
+
+  invocationResponseStreamingMessage.setRequestId(requestId);
+  invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
+  invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
+
+  call.write(invocationResponseStreamingMessage);
+
     return result;
   };
 
@@ -404,15 +416,15 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
   let azureFunctionScriptContext = [context, resultCallback];
   var invokeFunctionCode = azureFunctionScript.apply(invokeFunctionCode, azureFunctionScriptContext);
 
-  // final response with the result
+  // // final response with the result
 
-  let invocationResponseStreamingMessage = new messages.StreamingMessage();
+  // let invocationResponseStreamingMessage = new messages.StreamingMessage();
 
-  invocationResponseStreamingMessage.setRequestId(requestId);
-  invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
-  invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
+  // invocationResponseStreamingMessage.setRequestId(requestId);
+  // invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
+  // invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
 
-  call.write(invocationResponseStreamingMessage);
+  // call.write(invocationResponseStreamingMessage);
 
 }
 
