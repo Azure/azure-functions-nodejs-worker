@@ -249,6 +249,13 @@ function handleFunctionLoadRequest(functionLoadRequest) {
   return functionLoadRequest.getFunctionId();
 }
 
+process.on('exit', code => {
+  if (grpcClient) {
+    console.log("closing grpc");
+    grpc.closeClient(grpcClient);
+  }
+});
+
 function handleInvokeRequest(invocationRequest, call, requestId) {
   //TODO handle updating non-existing function_id
   let functionMetadata = loadedFunctionsList[invocationRequest.getFunctionId()];
@@ -263,7 +270,6 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
     console.log('uncaught...' + err);
     context.handleUncaughtException(err.stack);
   });
-
 
   context.invocationId = invocationRequest.getInvocationId();
   context.executionContext = {};
@@ -442,10 +448,12 @@ function handleWorkerInitRequest(WorkerInitRequest) {
 function initiateDuplexStreaming(startStreamRequestId) {
   //TODO error handling if grpcClient is not initialized
   var call = grpcClient.eventStream();
+  console.log('eventStream');
   call.on('data', function (incomingMessage) {
     console.log('here...received incomingMessage');
     //Handle each message type
     let incomingMessageType = incomingMessage.getType();
+    console.log(`type ${incomingMessageType}`);
     switch (incomingMessageType) {
       //case streamingMessage.WorkerInitRequest:
       // TODO figure out using enum type

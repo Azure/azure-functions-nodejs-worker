@@ -10,7 +10,7 @@
       "name": "Launch Program",
       "program": "${file}",
       "args": [
-        "--host","localhost","--port","50051"
+        "--host","localhost","--port","50051", "--requestId", "requestId"
       ]
     }
   ]
