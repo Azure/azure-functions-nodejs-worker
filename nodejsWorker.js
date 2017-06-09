@@ -93,7 +93,7 @@ function getValueFromTypedDataObject(typedData) {
     //case TypedData.Type.Bytes:
     case 2:
       //return typedData.getBytesVal();
-      return  Buffer.from(typedData.getBytesVal());
+      return Buffer.from(typedData.getBytesVal());
   }
 }
 
@@ -298,19 +298,21 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
 
     //if (typedData.typeVal == messages.TypedData.Type.Http) {
     // TODO figure out how to use enum
-    if (typedData.getTypeVal() == 4) {
-      context.req = getContextHttpRequest(typedData.getHttpVal());
-      context._triggerType = 'httptrigger';
-      //TODO figure out webHookTrigger
-      if (name != 'webhookReq') {
-        context._inputs.push(context.req);
-        context.bindings[name] = context.req;
+    if (typedData) {
+      if (typedData.getTypeVal() == 4) {
+        context.req = getContextHttpRequest(typedData.getHttpVal());
+        context._triggerType = 'httptrigger';
+        //TODO figure out webHookTrigger
+        if (name != 'webhookReq') {
+          context._inputs.push(context.req);
+          context.bindings[name] = context.req;
+        }
       }
-    }
-    else {
-      let inputDataValue = getValueFromTypedDataObject(typedData);
-      context._inputs.push(inputDataValue);
-      context.bindings[name] = inputDataValue;
+      else {
+        let inputDataValue = getValueFromTypedDataObject(typedData);
+        context._inputs.push(inputDataValue);
+        context.bindings[name] = inputDataValue;
+      }
     }
   }
 
@@ -363,15 +365,15 @@ function handleInvokeRequest(invocationRequest, call, requestId) {
     }
     statusResult.setStatus(messages.StatusResult.Status.Success);
 
-// final response with the result
+    // final response with the result
 
-  let invocationResponseStreamingMessage = new messages.StreamingMessage();
+    let invocationResponseStreamingMessage = new messages.StreamingMessage();
 
-  invocationResponseStreamingMessage.setRequestId(requestId);
-  invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
-  invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
+    invocationResponseStreamingMessage.setRequestId(requestId);
+    invocationResponseStreamingMessage.setType(messages.StreamingMessage.Type.INVOCATIONRESPONSE);
+    invocationResponseStreamingMessage.setContent(getPackedMessage(invocationResponse, 'InvocationResponse'));
 
-  call.write(invocationResponseStreamingMessage);
+    call.write(invocationResponseStreamingMessage);
 
     return result;
   };
