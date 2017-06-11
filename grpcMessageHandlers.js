@@ -114,7 +114,6 @@ module.exports = {
       for (let key in context.bindings) {
         let outputParameterBinding = new messages.ParameterBinding();
         outputParameterBinding.setName(key);
-        console.log(`building outputParamater for ${key}: ${JSON.stringify(context.bindings[key])}`);
         if (key === 'req' || key === 'request' || key == 'res') {
           let typedData = new messages.TypedData();
           // typedData.setTypeVal(messages.TypedData.Type.Http);
@@ -151,11 +150,11 @@ module.exports = {
 
       call.write(logStreamingMessage);
 
-      console.log('traceMessage: ' + JSON.stringify(traceMessage));
+      // console.log('traceMessage: ' + JSON.stringify(traceMessage));
     };
 
     context.handleUncaughtException = function (errorStack) {
-      // TODO Should we log and self Terminate?
+      // TODO Log and self Terminate?
       if (errorStack) {
         console.log(errorStack);
         let exceptionMessage = new messages.RpcException();

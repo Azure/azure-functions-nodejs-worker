@@ -26,8 +26,6 @@ function initiateDuplexStreaming (startStreamRequestId) {
   console.log('eventStream');
   call.on('data', function (incomingMessage) {
     switch (incomingMessage.getType()) {
-    console.log(`type ${incomingMessageType}`);
-      // case streamingMessage.FunctionLoadRequest:
     case 10: {
       let functionLoadRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.FunctionLoadRequest, 'FunctionLoadRequest');
       let functionId = functionLoadRequest.getFunctionId();
@@ -37,7 +35,6 @@ function initiateDuplexStreaming (startStreamRequestId) {
       call.write(functionLoadResponseStreamingMessage);
       break;
     }
-      // case streamingMessage.InvocationRequest:
     case 12:{
       let invocationRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.InvocationRequest, 'InvocationRequest');
       grpcMessageHandlers.handleInvokeRequest(invocationRequest, call, incomingMessage.getRequestId(), loadedFunctionsList);
@@ -51,7 +48,7 @@ function initiateDuplexStreaming (startStreamRequestId) {
 
   let startStreamingMessage = grpcMessageHandlers.buildStartStream(startStreamRequestId);
 
-  // Initiate Event Streaming RPC
+  console.log('Initiating Duplex event stream channel');
   call.write(startStreamingMessage);
   call.on('error', function (err) {
     console.log('grpc error..' + err);
@@ -70,7 +67,7 @@ function main () {
   let grpcConnectionString = argv.host + ':' + argv.port;
   try {
     grpcClient = new services.FunctionRpcClient(grpcConnectionString, grpc.credentials.createInsecure());
-    console.log('created client...');
+    console.log('NodeJS Worker created...');
   } catch (err) {
     console.log(err);
   }
