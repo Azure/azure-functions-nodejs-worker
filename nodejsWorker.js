@@ -12,7 +12,7 @@ let loadedFunctionsList = {};
 
 process.on('exit', code => {
   if (grpcClient) {
-    console.log("closing grpc");
+    console.log('closing grpc');
     grpc.closeClient(grpcClient);
   }
 });
@@ -20,29 +20,28 @@ process.on('exit', code => {
 /**
  * @param {Duplex} call The stream for incoming and outgoing messages
  */
-function initiateDuplexStreaming (startStreamRequestId) {
+function initiateDuplexStreaming(startStreamRequestId) {
   // TODO error handling if grpcClient is not initialized
   let call = grpcClient.eventStream();
-  console.log('eventStream');
   call.on('data', function (incomingMessage) {
     switch (incomingMessage.getType()) {
-    case 10: {
-      let functionLoadRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.FunctionLoadRequest, 'FunctionLoadRequest');
-      let functionId = functionLoadRequest.getFunctionId();
-      loadedFunctionsList = grpcMessageHandlers.handleFunctionLoadRequest(functionLoadRequest, loadedFunctionsList);
-      let functionLoadResponseStreamingMessage = grpcMessageHandlers.buildFunctionLoadResponse(incomingMessage.getRequestId(), functionId);
+      case 10: {
+        let functionLoadRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.FunctionLoadRequest, 'FunctionLoadRequest');
+        let functionId = functionLoadRequest.getFunctionId();
+        loadedFunctionsList = grpcMessageHandlers.handleFunctionLoadRequest(functionLoadRequest, loadedFunctionsList);
+        let functionLoadResponseStreamingMessage = grpcMessageHandlers.buildFunctionLoadResponse(incomingMessage.getRequestId(), functionId);
 
-      call.write(functionLoadResponseStreamingMessage);
-      break;
-    }
-    case 12:{
-      let invocationRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.InvocationRequest, 'InvocationRequest');
-      grpcMessageHandlers.handleInvokeRequest(invocationRequest, call, incomingMessage.getRequestId(), loadedFunctionsList);
-      break;
-    }
-    default:{
-      throw new Error('Unknown message type');
-    }
+        call.write(functionLoadResponseStreamingMessage);
+        break;
+      }
+      case 12: {
+        let invocationRequest = grpcMessageConverters.getUnpackedMessage(incomingMessage.getContent(), messages.InvocationRequest, 'InvocationRequest');
+        grpcMessageHandlers.handleInvokeRequest(invocationRequest, call, incomingMessage.getRequestId(), loadedFunctionsList);
+        break;
+      }
+      default: {
+        throw new Error('Unknown message type');
+      }
     }
   });
 
@@ -58,7 +57,7 @@ function initiateDuplexStreaming (startStreamRequestId) {
   });
 }
 
-function main () {
+function main() {
   let argv = parseArgs(process.argv.slice(2));
   if (typeof argv.host === 'undefined' || typeof argv.port === 'undefined' || typeof argv.requestId === 'undefined') {
     console.log('usage --host hostName --port portNumber --requestId requestId');
