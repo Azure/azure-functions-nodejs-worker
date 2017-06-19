@@ -59,10 +59,11 @@ message StreamingMessage{
       InvocationCancel = 15;
 
       //// MISC
-      Log = 19;
+      RpcLog = 19;
     }
     Type type = 1;
     google.protobuf.Any content = 2;
+	string request_id = 3;
 }
 
 // Process.Start required info
@@ -71,12 +72,10 @@ message StreamingMessage{
 //   protocol version 
 
 message StartStream {
-  string request_id = 1;
   string worker_id = 2;
 }
 
 message WorkerInitRequest {
-  string request_id = 4;
   string host_version = 1;
 
   // A map of host supported features/capabilities
@@ -84,11 +83,10 @@ message WorkerInitRequest {
 
   // inform worker of supported categories and their levels
   // i.e. Worker = Verbose, Function.MyFunc = None
-  map<string, Log.Level> log_categories = 3;
+  map<string, RpcLog.Level> log_categories = 3;
 }
 
 message WorkerInitResponse {
-  string request_id = 4;
   string worker_version = 1;
   // A map of worker supported features/capabilities
   map<string, string> capabilites = 2;
@@ -103,9 +101,9 @@ message StatusResult {
   }
   Status status = 4;
   string result = 1;
-  Exception exception = 2;
+  RpcException exception = 2;
   // Captured logs or relevant details can use the logs property
-  repeated Log logs = 3;
+  repeated RpcLog logs = 3;
 }
 
 // TODO: investigate grpc heartbeat - don't limit to grpc implemention
@@ -129,7 +127,6 @@ message FileChangeEventRequest {
     All = 15;
   }
 
-  string request_id = 4;
   Type type = 1;
   string full_path = 2;
   string name = 3;
@@ -142,34 +139,29 @@ message FileChangeEventResponse {
     Reload = 2;
   }
 
-  string request_id = 4;
   Action action = 1;
   // functions to reload
   repeated string function_ids = 2;
 }
 
 message WorkerStatusRequest{
-  string request_id = 1;
 }
 
 message WorkerStatusResponse {
-  string request_id = 1;
 }
 
 message FunctionLoadRequest {
-  string request_id = 3;
   // unique function identifier (avoid name collisions, facilitate reload case)
   string function_id = 1;
-  FunctionMetadata metadata = 2;
+  RpcFunctionMetadata metadata = 2;
 }
 
 message FunctionLoadResponse {
-  string request_id = 3;
   string function_id = 1;
   StatusResult result = 2;
 }
 
-message FunctionMetadata {
+message RpcFunctionMetadata {
   // TODO: do we want the host's name - the language worker might do a better job of assignment than the host
   string name = 4;
 
@@ -181,7 +173,6 @@ message FunctionMetadata {
 }
 
 message InvocationRequest {
-  string request_id = 5;
   string invocation_id = 1;
   string function_id = 2;
   repeated ParameterBinding input_data = 3;
@@ -194,7 +185,6 @@ message InvocationCancel {
 }
 
 message InvocationResponse {
-  string request_id = 4;
   string invocation_id = 1;
   repeated ParameterBinding output_data = 2; // $return is added as a parameter binding for the function result
   StatusResult result = 3;
@@ -211,7 +201,7 @@ message TypedData {
   Type type_val = 1;
   string string_val = 2;
   bytes  bytes_val = 4;
-  Http http_val = 5;
+  RpcHttp http_val = 5;
 }
 
 message ParameterBinding {
@@ -219,7 +209,7 @@ message ParameterBinding {
   TypedData data = 2;
 }
 
-message Log {
+message RpcLog {
   // Matching ILogger semantics
   // https://github.com/aspnet/Logging/blob/9506ccc3f3491488fe88010ef8b9eb64594abf95/src/Microsoft.Extensions.Logging/Logger.cs
   enum Level {
@@ -237,20 +227,20 @@ message Log {
   Level level = 3;
   string message = 4;
   string event_id = 5;
-  Exception exception = 6;
+  RpcException exception = 6;
 
   // json serialized property bag, or could use a type scheme like map<string, TypedData>
   string properties = 7;
 }
 
-message Exception {
+message RpcException {
   string source = 3;
   string stack_trace = 1;
   string message = 2;
 }
 
 // TODO - solidify this
-message Http {
+message RpcHttp {
   string method = 1;
   string url = 2; 
   map<string,string> headers = 3;
