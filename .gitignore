@@ -35,7 +35,7 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
-protos/FunctionRpc_grpc_pb.js
-protos/FunctionRpc_pb.js
+protos/*
+!protos/FunctionRpc.proto
 
 dist
