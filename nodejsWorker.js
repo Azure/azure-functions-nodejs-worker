@@ -17,6 +17,12 @@ process.on('exit', code => {
   }
 });
 
+process.on('uncaughtException', function (err) {
+  // TODO -> wire this up to invocation context if possible
+  console.log('unhandled exception');
+  console.log(err);
+});
+
 /**
  * @param {Duplex} call The stream for incoming and outgoing messages
  */

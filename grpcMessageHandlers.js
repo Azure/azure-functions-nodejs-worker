@@ -36,11 +36,6 @@ function handleInvokeRequest(invocationRequest, call, requestId, loadedFunctions
 
   invocationResponse.setInvocationId(invocationRequest.getInvocationId());
 
-  process.on('uncaughtException', function (err) {
-    // TODO log and self terminate?
-    context.handleUncaughtException(err.stack);
-  });
-
   context.invocationId = invocationRequest.getInvocationId();
   context.executionContext.invocationId = invocationRequest.getInvocationId();
   context.executionContext.functionName = functionMetadata.name;
