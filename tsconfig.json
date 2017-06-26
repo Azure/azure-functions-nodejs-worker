@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "commonjs",
+        "target": "es6",
+        "noImplicitAny": false,
+        "allowJs": true
+    },
+    "include": [
+        "src/**/*",
+        "azurefunctions/**/*",
+        "protos/**/*"
+    ]
+}
