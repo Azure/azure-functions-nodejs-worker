@@ -4,13 +4,17 @@
   "dependencies": {
     "google-protobuf": "^3.0.0",
     "grpc": "^1.0.0",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "protobufjs": "^6.7.0" 
   },
   "devDependencies": {
     "@types/node": "^6.0.78",
     "typescript": "^2.3.4"
   },
-  "scripts":{
-   "build": "./node_modules/.bin/tsc" 
+  "scripts": {
+    "build": "npm run gen && tsc",
+    "gen": "npm run genJs && npm run genTs",
+    "genJs": "pbjs -t json-module -w commonjs -o protos/rpc.js protos/FunctionRpc.proto",
+    "genTs": "pbjs -t static-module protos/FunctionRpc.proto -o protos/rpc_static.js && pbts -o protos/rpc.d.ts protos/rpc_static.js" 
   }
 }
