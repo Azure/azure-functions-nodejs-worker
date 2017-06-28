@@ -1,14 +1,18 @@
 {
     "compilerOptions": {
-        "outDir": "dist",
         "module": "commonjs",
         "target": "es6",
         "noImplicitAny": false,
-        "allowJs": true
+        "allowJs": true,
+        "strict": true,
+        "outDir": "dist",
+        "sourceMap": true,
+        "watch": true
     },
     "include": [
         "src/**/*",
         "azurefunctions/**/*",
         "protos/**/*"
-    ]
+    ],
+    "compileOnSave": true
 }
