@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "node",
             "request": "launch",
@@ -12,7 +13,7 @@
             "outFiles": [
                 "${workspaceRoot}/dist/src/*.js"
             ],
-            "args": ["--host", "127.0.0.1", "--port", "50051", "--requestId", "100"]
+            "args": ["--host", "127.0.0.1", "--port", "50051", "--requestId", "100a"]
         }
     ]
 }
