@@ -23,6 +23,7 @@ export interface EventStream extends Duplex {
     on(event: 'data', listener: (message: rpc.StreamingMessage) => void);
     on(event: 'functionLoadRequest', listener: (requestId: string, message: rpc.FunctionLoadRequest) => void);
     on(event: 'invocationRequest', listener: (requestId: string, message: rpc.InvocationRequest) => void);
+    on(event: 'workerInitRequest', listener: (requestId: string, message: rpc.WorkerInitRequest) => void);
     
     on(event: string, listener: Function);
 }

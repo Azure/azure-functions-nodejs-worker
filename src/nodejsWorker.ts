@@ -8,9 +8,9 @@ import * as handle from './messageHandlers';
 
 let loadedFunctions = {};
 
-let { host, port, requestId } = parseArgs(process.argv.slice(2));
-if (!host && !port && !requestId) {
-  console.log('usage --host hostName --port portNumber --requestId requestId');
+let { host, port, workerId, requestId } = parseArgs(process.argv.slice(2));
+if (!host || !port || !workerId || !requestId) {
+  console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId');
   throw new Error('Connection info missing');
 }
 
@@ -26,7 +26,16 @@ eventStream.on('data', function (msg) {
     eventStream.emit(msg.content, msg.requestId, msg[msg.content]);
   }
 });
-
+eventStream.on('workerInitRequest', (id, msg) => {
+  eventStream.write({
+    requestId: id,
+    workerInitResponse: {
+      result: {
+        status: Status.Success
+      }
+    }
+  });
+});
 eventStream.on('functionLoadRequest', (id, msg) => {
   if (msg.functionId && msg.metadata) {
     loadedFunctions[msg.functionId] = msg.metadata;
@@ -66,5 +75,7 @@ eventStream.on('invocationRequest', (id, msg) => {
 
 eventStream.write({
   requestId: requestId,
-  startStream: {}
+  startStream: {
+    workerId: workerId
+  }
 });
