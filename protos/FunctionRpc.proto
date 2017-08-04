@@ -39,8 +39,9 @@ message StreamingMessage {
 
     // On file change event, host sends notification to worker
     FileChangeEventRequest file_change_event_request = 6;
-    // Worker responds with the desired action (ignore, restart worker, reload function)
-    FileChangeEventResponse file_change_event_response = 7;
+
+    // Worker requests a desired action (restart worker, reload function)
+    WorkerActionResponse worker_action_response = 7;
     
     // Host sends required metadata to worker to load function
     FunctionLoadRequest function_load_request = 8;
@@ -123,16 +124,14 @@ message FileChangeEventRequest {
   string name = 3;
 }
 
-message FileChangeEventResponse {
+message WorkerActionResponse {
   enum Action {
-    Ignore = 0;
-    Restart = 1;
-    Reload = 2;
+    Restart = 0;
+    Reload = 1;
   }
-
+  
   Action action = 1;
-  // functions to reload
-  repeated string function_ids = 2;
+  string reason = 2;
 }
 
 message WorkerStatusRequest{
@@ -150,6 +149,7 @@ message FunctionLoadRequest {
 message FunctionLoadResponse {
   string function_id = 1;
   StatusResult result = 2;
+  // TODO: return type expected?
 }
 
 message RpcFunctionMetadata {
@@ -159,6 +159,8 @@ message RpcFunctionMetadata {
   string directory = 1;
   string script_file = 2;
   string entry_point = 3;
+
+  map<string, BindingInfo> bindings = 6;
 
   // not adding disabled or excluded as those (currently) are only relevant to host
 }
@@ -177,7 +179,8 @@ message InvocationCancel {
 
 message InvocationResponse {
   string invocation_id = 1;
-  repeated ParameterBinding output_data = 2; // $return is added as a parameter binding for the function result
+  repeated ParameterBinding output_data = 2;
+  TypedData return_value = 4;
   StatusResult result = 3;
 }
 
@@ -196,6 +199,17 @@ message TypedData {
 message ParameterBinding {
   string name = 1;
   TypedData data = 2;
+}
+
+message BindingInfo {
+  string type = 2;
+  Direction direction = 3;
+
+  enum Direction {
+    in = 0;
+	out = 1;
+	inout = 2;
+  }
 }
 
 message RpcLog {

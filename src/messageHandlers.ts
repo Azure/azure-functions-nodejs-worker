@@ -5,6 +5,7 @@ import { EventStream } from './rpcService';
 import { getEntryPoint } from '../azurefunctions/functions';
 import { Response } from '../azurefunctions/http/response';
 import { Request } from '../azurefunctions/http/request';
+import { FunctionInfo } from './nodejsWorker';
 import LogLevel = rpc.RpcLog.Level;
 
 export interface Log {
@@ -78,31 +79,29 @@ export class Context {
     }
     this._done = true;
 
-    if (this.res && this.bindings.res === undefined) {
-      this.bindings.res = this.res;
-    }
     this._callback(err, result);
   }
 }
 
-export function invokeRequest(invocationRequest: rpc.InvocationRequest, call: EventStream, requestId, functionMetadata: rpc.RpcFunctionMetadata$Properties) {
+export function invokeRequest(request: rpc.InvocationRequest, call: EventStream, requestId, info: FunctionInfo) {
   // TODO handle updating non-existing function_id
-  if (!invocationRequest.functionId || !invocationRequest.triggerMetadata) {
+  if (!request.functionId || !request.triggerMetadata) {
     throw new Error("Invalid invocation");
   }
 
-  let scriptFilePath = <string>functionMetadata.scriptFile;
+  let scriptFilePath = <string>info.metadata.scriptFile;
 
-  let triggerMetadata = invocationRequest.triggerMetadata || {};
   let bindingData: Dict = {};
-  for (let key in triggerMetadata) {
-    bindingData[key] = converters.fromTypedData(triggerMetadata[key]);
+  for (let key in request.triggerMetadata) {
+    let modifiedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
+    bindingData[modifiedKey] = converters.fromTypedData(request.triggerMetadata[key]);
   }
+  bindingData['invocationId'] = request.invocationId;
 
   let bindings: Dict = {};
   let inputs: any[] = [];
   let httpInput: any;
-  for (let binding of invocationRequest.inputData || []) {
+  for (let binding of request.inputData || []) {
     if (binding.data && binding.name) {
       let input: any;
       if (binding.data.http) {
@@ -127,29 +126,22 @@ export function invokeRequest(invocationRequest: rpc.InvocationRequest, call: Ev
         message: err.toString(),
         stackTrace: err.stack
       };
-    } else if (result) {
-      context.bindings.$return = result;
-      status.result = result.toString();
+    }
+
+    if (info.httpOutputName && context.res && context.bindings[info.httpOutputName] === undefined) {
+      context.bindings[info.httpOutputName] = context.res;
     }
 
     let response: rpc.InvocationResponse$Properties = {
-      invocationId: invocationRequest.invocationId,
+      invocationId: request.invocationId,
       result: status,
-      outputData: Object.keys(context.bindings)
-        .map(key => {
-        let data: rpc.TypedData$Properties;
-        if (key == 'res' && context.bindings[key].body) {
-          data = {
-            http: converters.toRpcHttp(context.bindings[key])
-          };
-        } else {
-          data = converters.toTypedData(context.bindings[key]);
-        }
-        return <rpc.ParameterBinding$Properties>{
-          name: key,
-          data: data
-        }
-      })
+      returnValue: converters.toTypedData(result),
+      outputData: Object.keys(info.outputBindings)
+        .filter(key => context.bindings[key] !== undefined)
+        .map(key => <rpc.ParameterBinding$Properties>{
+            name: key,
+            data: info.outputBindings[key].converter(context.bindings[key])
+        })
     };
 
     call.write({
@@ -170,9 +162,9 @@ export function invokeRequest(invocationRequest: rpc.InvocationRequest, call: Ev
   }
 
   let executionContext: ExecutionContext = {
-    invocationId: <string>invocationRequest.invocationId,
-    functionName: <string>functionMetadata.name,
-    functionDirectory: <string>functionMetadata.directory
+    invocationId: <string>request.invocationId,
+    functionName: <string>info.metadata.name,
+    functionDirectory: <string>info.metadata.directory
   };
 
   let context = new Context(resultCallback, log, executionContext, bindingData, bindings);
@@ -182,7 +174,7 @@ export function invokeRequest(invocationRequest: rpc.InvocationRequest, call: Ev
   }
 
   let script = require(scriptFilePath);
-  let userFunction = getEntryPoint(script, functionMetadata.entryPoint);
+  let userFunction = getEntryPoint(script, info.metadata.entryPoint);
 
   let result = userFunction(context, ...inputs);
   if (result && util.isFunction(result.then)) {

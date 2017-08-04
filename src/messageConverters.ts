@@ -16,12 +16,16 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
   return httpContext;
 }
 
-export function toRpcHttp(inputMessage): rpc.RpcHttp$Properties {
-  let httpMessage: rpc.RpcHttp$Properties =  inputMessage;
-  let status = inputMessage.statusCode || inputMessage.status;
-  httpMessage.statusCode = status && status.toString();
-  httpMessage.body = toTypedData(inputMessage.body);
-  return httpMessage;
+export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
+  if (inputMessage.body !== undefined) {
+    let httpMessage: rpc.RpcHttp$Properties =  inputMessage;
+    let status = inputMessage.statusCode || inputMessage.status;
+    httpMessage.statusCode = status && status.toString();
+    httpMessage.body = toTypedData(inputMessage.body);
+    return { http: httpMessage };
+  } else {
+    return toTypedData(inputMessage);
+  }
 }
 
 export function fromTypedData(typedData?: rpc.TypedData$Properties) {

@@ -5,8 +5,36 @@ import { FunctionRpc as rpc } from '../protos/rpc';
 import Status = rpc.StatusResult.Status;
 import { CreateEventStream } from './rpcService';
 import * as handle from './messageHandlers';
+import { toTypedData, toRpcHttp } from './messageConverters';
 
-let loadedFunctions = {};
+export class FunctionInfo {
+  public metadata: rpc.RpcFunctionMetadata$Properties;
+  public outputBindings: {
+    [key: string]: rpc.BindingInfo$Properties & { converter: (any) => rpc.TypedData$Properties }
+  };
+  public httpOutputName: string;
+
+  constructor(metadata: rpc.RpcFunctionMetadata$Properties) {
+    this.metadata = metadata;
+    this.outputBindings = {};
+    if (metadata.bindings) {
+      let bindings = metadata.bindings;
+      let httpBindingName = Object.keys(bindings)
+        .filter(name => bindings[name].direction !== rpc.BindingInfo.Direction.in)
+        .forEach(name => {
+          if (bindings[name].type === 'http') {
+            this.httpOutputName = name;
+            this.outputBindings[name] = Object.assign(bindings[name], { converter: toRpcHttp });
+          } else {
+            this.outputBindings[name] = Object.assign(bindings[name], { converter: toTypedData });
+          }
+        });
+      }
+    }
+  }
+}
+
+let loadedFunctions: {[k: string]: FunctionInfo } = {};
 
 let { host, port, workerId, requestId } = parseArgs(process.argv.slice(2));
 if (!host || !port || !workerId || !requestId) {
@@ -38,7 +66,8 @@ eventStream.on('workerInitRequest', (id, msg) => {
 });
 eventStream.on('functionLoadRequest', (id, msg) => {
   if (msg.functionId && msg.metadata) {
-    loadedFunctions[msg.functionId] = msg.metadata;
+    loadedFunctions[msg.functionId] = new FunctionInfo(msg.metadata);
+
     eventStream.write({
       requestId: id,
       functionLoadResponse: {
