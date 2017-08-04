@@ -29,7 +29,14 @@ export class FunctionInfo {
             this.outputBindings[name] = Object.assign(bindings[name], { converter: toTypedData });
           }
         });
-      }
+    }
+  }
+
+  getBinding(name: string) {
+    if (this.metadata && this.metadata.bindings) {
+      return this.metadata.bindings[name];
+    } else {
+      throw `Binding ${name} not found`;
     }
   }
 }

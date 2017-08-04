@@ -105,8 +105,13 @@ export function invokeRequest(request: rpc.InvocationRequest, call: EventStream,
     if (binding.data && binding.name) {
       let input: any;
       if (binding.data.http) {
-        input = converters.fromRpcHttp(binding.data.http);
-        httpInput = input;
+        httpInput = converters.fromRpcHttp(binding.data.http);
+        let bindingInfo = info.getBinding(binding.name);
+        if (bindingInfo.type == 'webhook') {
+          input = (<any>httpInput).body;
+        } else {
+          input = httpInput;
+        }
       } else {
         input = converters.fromTypedData(binding.data);
       }
