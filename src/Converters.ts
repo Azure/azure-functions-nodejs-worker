@@ -1,8 +1,6 @@
 import { FunctionRpc as rpc } from '../protos/rpc';
-import { HttpRequest } from '../azurefunctions/http/request';
-
+import { HttpRequest } from './http/request'
 export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
-  // Get Request
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
@@ -18,7 +16,7 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
 
 export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
   if (inputMessage.body !== undefined) {
-    let httpMessage: rpc.RpcHttp$Properties =  inputMessage;
+    let httpMessage: rpc.RpcHttp$Properties = inputMessage;
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
@@ -34,7 +32,7 @@ export function fromTypedData(typedData?: rpc.TypedData$Properties) {
   if (str !== undefined) {
     try {
       str = JSON.parse(str);
-    } catch (err) {}
+    } catch (err) { }
     return str;
   } else if (typedData.bytes) {
     return new Buffer(typedData.bytes);

@@ -13,7 +13,7 @@
             "outFiles": [
                 "${workspaceRoot}/dist/src/*.js"
             ],
-            "args": ["--host", "127.0.0.1", "--port", "50051", "--requestId", "100a"]
+            "args": ["--host", "127.0.0.1", "--port", "50051", "--requestId", "100a", "--workerId", "worker1"]
         }
     ]
 }
