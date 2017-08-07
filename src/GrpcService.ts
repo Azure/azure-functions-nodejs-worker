@@ -20,10 +20,11 @@ interface GrpcClient {
     eventStream(): IEventStream
 }
 
-export interface IEventStream extends Duplex {
+export interface IEventStream {
     write(message: rpc.StreamingMessage$Properties);
     on(event: 'data', listener: (message: rpc.StreamingMessage) => void);
     on(event: string, listener: Function);
+    end(): void;
 }
 
 export function CreateGrpcEventStream(connection: string): IEventStream {

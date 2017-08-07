@@ -5,21 +5,32 @@ import { FunctionInfo } from './FunctionInfo'
 
 export interface IFunctionLoader {
   load(functionId: string, metadata: rpc.RpcFunctionMetadata$Properties): void;
-  get(functionId: string): FunctionInfo;
+  getInfo(functionId: string): FunctionInfo;
+  getFunc(functionId: string): Function;
 }
 
 export class FunctionLoader implements IFunctionLoader {
-    private _loadedFunctions: { [k: string]: FunctionInfo } = {};
+    private _loadedFunctions: { [k: string]: {
+        info: FunctionInfo,
+        func: Function
+    }} = {};
 
     load(functionId: string, metadata: rpc.RpcFunctionMetadata$Properties): void {
       let scriptFilePath = <string>metadata.scriptFile;
       let script = require(scriptFilePath);
       let userFunction = getEntryPoint(script, metadata.entryPoint);
-      this._loadedFunctions[functionId] = new FunctionInfo(userFunction, metadata);
+      this._loadedFunctions[functionId] = {
+          info: new FunctionInfo(metadata),
+          func: userFunction
+      };
     }
 
-    get(functionId: string): FunctionInfo {
-      return this._loadedFunctions[functionId];
+    getInfo(functionId: string): FunctionInfo {
+      return this._loadedFunctions[functionId].info;
+    }
+
+    getFunc(functionId: string): Function {
+        return this._loadedFunctions[functionId].func;
     }
 }
 

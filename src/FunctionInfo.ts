@@ -2,7 +2,6 @@ import { FunctionRpc as rpc } from '../protos/rpc';
 import { toTypedData, toRpcHttp } from './Converters';
 
 export class FunctionInfo {
-  public userFunction: Function;
   public name: string;
   public directory: string;
   public bindings: {
@@ -13,8 +12,7 @@ export class FunctionInfo {
   };
   public httpOutputName: string;
 
-  constructor(userFunction: Function, metadata: rpc.RpcFunctionMetadata$Properties) {
-    this.userFunction = userFunction;
+  constructor(metadata: rpc.RpcFunctionMetadata$Properties) {
     this.name = <string>metadata.name;
     this.directory = <string>metadata.directory;
     this.outputBindings = {};

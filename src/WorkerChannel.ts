@@ -77,7 +77,7 @@ export class WorkerChannel {
   }
 
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
-    let info = this._functionLoader.get(<string>msg.functionId);
+    let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: ILogCallback = (level, ...args) => {
       this.log({
         invocationId: msg.invocationId,
@@ -124,11 +124,12 @@ export class WorkerChannel {
     }
 
     let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
+    let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
-      let result = info.userFunction(context, ...inputs);
+      let result = userFunction(context, ...inputs);
 
       if (result && isFunction(result.then)) {
         result.then(result => (<any>context.done)(null, result, true))
