@@ -1,7 +1,7 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, toTypedData } from './Converters';
 import { FunctionRpc as rpc } from '../protos/rpc';
-import { Request } from './http/Request';
+import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 
@@ -21,18 +21,12 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.Invocati
 
   let bindings: IDict = {};
   let inputs: any[] = [];
-  let httpInput: any;
+  let httpInput: HttpRequest | undefined;
   for (let binding of <rpc.ParameterBinding$Properties[]>request.inputData) {
     if (binding.data && binding.name) {
       let input: any;
       if (binding.data && binding.data.http) {
-        httpInput = fromRpcHttp(binding.data.http);
-        let bindingInfo = info.bindings[binding.name];
-        if (bindingInfo.type == 'webhook') {
-          input = (<any>httpInput).body;
-        } else {
-          input = httpInput;
-        }
+        input = httpInput = fromRpcHttp(binding.data.http);
       } else {
         input = fromTypedData(binding.data);
       }
