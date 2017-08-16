@@ -5,7 +5,7 @@
     "google-protobuf": "^3.0.0",
     "grpc": "^1.0.0",
     "minimist": "^1.2.0",
-    "protobufjs": "^6.7.0"
+    "protobufjs": "6.7.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.41",
@@ -13,12 +13,15 @@
     "@types/sinon": "^2.3.3",
     "chai": "^4.1.1",
     "mocha": "^3.5.0",
+    "rimraf": "^2.6.1",
     "sinon": "^3.0.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.3.4"
   },
   "scripts": {
-    "build": "npm run gen && tsc",
+    "clean": "rimraf dist && rimraf protos/rpc*",
+    "build": "rimraf dist && npm run gen && tsc",
+    "pack": "rimraf pkg && npm run gen && tsc --outDir pkg/contentFiles/any/any --sourceMap false --watch false && nuget pack -BasePath pkg -OutputDirectory pkg",
     "gen": "npm run genJs && npm run genTs",
     "genJs": "pbjs -t json-module -w commonjs -o protos/rpc.js protos/FunctionRpc.proto",
     "genTs": "pbjs -t static-module protos/FunctionRpc.proto -o protos/rpc_static.js && pbts -o protos/rpc.d.ts protos/rpc_static.js",

@@ -39,3 +39,4 @@ protos/*
 !protos/FunctionRpc.proto
 
 dist
+pkg

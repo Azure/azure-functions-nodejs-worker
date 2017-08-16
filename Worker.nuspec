@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Azure.Functions.NodeJsWorker</id>
+    <version>1.0.0-beta1-$version$</version>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Microsoft Azure Functions NodeJs Worker</description>
+    <copyright>© .NET Foundation. All rights reserved.</copyright>
+    <contentFiles>
+      <files include="any/any/**/*" buildAction="None" copyToOutput="true" flatten="false"/>
+    </contentFiles>
+  </metadata>
+</package>

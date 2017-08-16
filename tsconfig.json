@@ -11,7 +11,6 @@
     },
     "include": [
         "src/**/*",
-        "azurefunctions/**/*",
         "protos/**/*"
     ],
     "compileOnSave": true

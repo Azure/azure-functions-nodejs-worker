@@ -1,0 +1,18 @@
+version: 1.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - dev
+image: Visual Studio 2017
+clone_folder: c:\azure-functions-nodejs-worker
+install:
+- ps: Install-Product node 6.5.0 x86
+cache: 'node_modules'
+build_script:
+- npm i
+- npm run pack -- -Properties version=%APPVEYOR_BUILD_NUMBER%
+test_script:
+- npm run test
+artifacts:
+- path: 'pkg\*.nupkg'
