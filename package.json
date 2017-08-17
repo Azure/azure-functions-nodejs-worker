@@ -21,7 +21,7 @@
   "scripts": {
     "clean": "rimraf dist && rimraf protos/rpc*",
     "build": "rimraf dist && npm run gen && tsc",
-    "pack": "rimraf pkg && npm run gen && tsc --outDir pkg/contentFiles/any/any --sourceMap false --watch false && nuget pack -BasePath pkg -OutputDirectory pkg",
+    "pack": "rimraf pkg && npm run gen && tsc --outDir pkg/contentFiles/any/any/workers/node --sourceMap false --watch false && nuget pack -BasePath pkg -OutputDirectory pkg",
     "gen": "npm run genJs && npm run genTs",
     "genJs": "pbjs -t json-module -w commonjs -o protos/rpc.js protos/FunctionRpc.proto",
     "genTs": "pbjs -t static-module protos/FunctionRpc.proto -o protos/rpc_static.js && pbts -o protos/rpc.d.ts protos/rpc_static.js",
