@@ -1,10 +1,10 @@
 # Getting Started
 
-`git clone https://github.com/Azure/azure-functions-nodejs-worker`
-`cd azure-functions-nodejs-worker`
-`npm install`
-`npm run build`
-`$env:NodeJSWorkerPath = path/to/dist/nodejsWorker.js`
+- `git clone https://github.com/Azure/azure-functions-nodejs-worker`
+- `cd azure-functions-nodejs-worker`
+- `npm install`
+- `npm run build`
+- `$env:NodeJSWorkerPath = path/to/dist/nodejsWorker.js`
 
 # Contributing
 
