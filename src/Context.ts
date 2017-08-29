@@ -122,16 +122,16 @@ function getNormalizedBindingData(request: rpc.InvocationRequest$Properties, inf
   return bindingData;
 }
 
-interface IInvocationResult {
+export interface IInvocationResult {
   return: any;
   bindings: IDict;
 }
 
-interface ILog {
+export interface ILog {
   (...args: any[]): void;
 }
 
-interface ILogger extends ILog {
+export interface ILogger extends ILog {
   error: ILog;
   warn: ILog;
   info: ILog;
@@ -146,17 +146,17 @@ export interface IResultCallback {
   (err?: any, result?: IInvocationResult): void;
 }
 
-interface IDoneCallback {
+export interface IDoneCallback {
   (err?: any, result?: any): void;
 }
 
-interface IExecutionContext {
+export interface IExecutionContext {
   invocationId: string;
   functionName: string;
   functionDirectory: string;
 }
 
-interface IDict {
+export interface IDict {
   [key: string]: any
 }
 

@@ -5,5 +5,8 @@
     "command": "${cwd}/node_modules/.bin/tsc",
     "isShellCommand": true,
     "showOutput": "silent",
-    "problemMatcher": "$tsc"
+    "problemMatcher": "$tsc",
+    "args": [
+        "--watch"
+    ]
 }
