@@ -9,7 +9,7 @@
     <description>Microsoft Azure Functions NodeJs Worker</description>
     <copyright>© .NET Foundation. All rights reserved.</copyright>
     <contentFiles>
-      <files include="any/any/**/*" buildAction="None" copyToOutput="true" flatten="false"/>
+      <files include="**/*" buildAction="None" copyToOutput="true" flatten="false"/>
     </contentFiles>
   </metadata>
 </package>

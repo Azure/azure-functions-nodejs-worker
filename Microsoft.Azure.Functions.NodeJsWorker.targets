@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="AfterRestore" AfterTargets="Restore">
+    <Message Text="Installing azure-functions-nodejsworker node modules in package cache" Importance="high" />
+    <Message Text="cd $(MSBuildThisFileDirectory)../contentFiles/workers/node &amp; npm install --production" Importance="high" />
+    <Exec Command="npm install --production" ConsoleToMSBuild="true" WorkingDirectory="$(MSBuildThisFileDirectory)../contentFiles/workers/node" >
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    </Exec>
+  </Target>
+</Project>
