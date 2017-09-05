@@ -12,4 +12,9 @@
       <files include="**/*" buildAction="None" copyToOutput="true" flatten="false"/>
     </contentFiles>
   </metadata>
+  <files>
+    <file src="dist/**" target="contentFiles/any/any/workers/node" />
+    <file src="package.json" target="contentFiles/any/any/workers/node" />
+    <file src="Microsoft.Azure.Functions.NodeJsWorker.targets" target="build" />
+  </files>
 </package>

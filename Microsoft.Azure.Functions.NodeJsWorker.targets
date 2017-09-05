@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="AfterRestore" AfterTargets="Restore">
-    <Message Text="Installing azure-functions-nodejsworker node modules in package cache" Importance="high" />
-    <Message Text="cd $(MSBuildThisFileDirectory)../contentFiles/workers/node &amp; npm install --production" Importance="high" />
-    <Exec Command="npm install --production" ConsoleToMSBuild="true" WorkingDirectory="$(MSBuildThisFileDirectory)../contentFiles/workers/node" >
+  <Target Name="InstallModulesInPackageContent" BeforeTargets="Build" Condition="!Exists('$(OutputPath)workers/node/package.lock.json')">
+    <Message Text="Installing azure-functions-nodejsworker node modules in package cache if package.lock.json not found" Importance="high" />
+    <Message Text="cd $(MSBuildThisFileDirectory)../contentFiles/any/any/workers/node &amp; npm install --production" Importance="high" />
+    <Exec Command="npm install --production" ConsoleToMSBuild="true" WorkingDirectory="$(MSBuildThisFileDirectory)../contentFiles/any/any/workers/node" >
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
     </Exec>
+	  <Message Text="Deleting $(BaseIntermediateOutputPath)project.assets.json" Importance="high" />
+    <Delete Files="$(BaseIntermediateOutputPath)project.assets.json" />
+	  <Message Text="Running restore to regenerate project.assets.json with copy node modules tasks" Importance="high" />
+    <CallTarget Targets="Restore" />
   </Target>
 </Project>
