@@ -1,35 +1,3 @@
-import * as parseArgs from 'minimist';
-import * as grpc from 'grpc';
+var worker = require("../../worker-bundle.js")
 
-import { FunctionRpc as rpc } from '../protos/rpc';
-import Status = rpc.StatusResult.Status;
-import { CreateGrpcEventStream } from './GrpcService';
-import { WorkerChannel } from './WorkerChannel';
-import { FunctionLoader } from './FunctionLoader';
-
-let { host, port, workerId, requestId } = parseArgs(process.argv.slice(2));
-if (!host || !port || !workerId || !requestId) {
-  console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId');
-  throw new Error('Connection info missing');
-}
-
-let connection = `${host}:${port}`;
-console.log(`Worker ${workerId} connecting on ${connection}`);
-let eventStream = CreateGrpcEventStream(connection);
-
-let workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
-
-eventStream.write({
-  requestId: requestId,
-  startStream: {
-    workerId: workerId
-  }
-});
-
-process.on('uncaughtException', err => {
-  console.error(`Worker ${workerId} uncaught exception: `, err);
-  process.exit(1);
-});
-process.on('exit', code => {
-  console.log(`Worker ${workerId} exited with code ${code}`);
-});
+worker.startNodeWorker(process.argv);

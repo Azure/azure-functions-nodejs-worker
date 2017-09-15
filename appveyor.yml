@@ -7,12 +7,11 @@ branches:
 image: Visual Studio 2017
 clone_folder: c:\azure-functions-nodejs-worker
 install:
-- ps: Install-Product node 6.5.0 x86
+- ps: Install-Product node 8.4.0 x86
 cache: 'node_modules'
 build_script:
-- npm i
-- npm run pack -- -Properties version=%APPVEYOR_BUILD_NUMBER%
+- ps: '& .\package.ps1'
 test_script:
 - npm run test
 artifacts:
-- path: '*.nupkg'
+- path: 'pkg/*.nupkg'
