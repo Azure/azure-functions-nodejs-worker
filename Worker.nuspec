@@ -13,8 +13,8 @@
     </contentFiles>
   </metadata>
   <files>
-    <file src="dist/**" target="contentFiles/any/any/workers/node" />
-    <file src="package.json" target="contentFiles/any/any/workers/node" />
+    <file src="**" target="contentFiles/any/any/workers/node" />
+    <file src="Microsoft.Azure.Functions.NodeJsWorker.targets" target="contentFiles/any/any/workers/node" />
     <file src="Microsoft.Azure.Functions.NodeJsWorker.targets" target="build" />
   </files>
 </package>

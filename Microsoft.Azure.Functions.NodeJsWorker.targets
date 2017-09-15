@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="InstallModulesInPackageContent" BeforeTargets="Build" Condition="!Exists('$(OutputPath)workers/node/package.lock.json')">
-    <Message Text="Installing azure-functions-nodejsworker node modules in package cache if package.lock.json not found" Importance="high" />
-    <Message Text="cd $(MSBuildThisFileDirectory)../contentFiles/any/any/workers/node &amp; npm install --production" Importance="high" />
-    <Exec Command="npm install --production" ConsoleToMSBuild="true" WorkingDirectory="$(MSBuildThisFileDirectory)../contentFiles/any/any/workers/node" >
-      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
-    </Exec>
-	  <Message Text="Deleting $(BaseIntermediateOutputPath)project.assets.json" Importance="high" />
-    <Delete Files="$(BaseIntermediateOutputPath)project.assets.json" />
-	  <Message Text="Running restore to regenerate project.assets.json with copy node modules tasks" Importance="high" />
-    <CallTarget Targets="Restore" />
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="InstallGrpc">
+  <!-- Run from .sln / .csproj context -->
+  <PropertyGroup Condition="$(ProjectDir)!=''">
+    <BaseDir>$(ProjectDir)../../</BaseDir>
+    <GrpcPath>$(ProjectDir)$(OutputPath)workers/node/grpc/</GrpcPath>
+  </PropertyGroup>
+  <!-- Run from worker/node folder  -->
+  <PropertyGroup Condition="$(ProjectDir)==''">
+    <BaseDir>$(MSBuildThisFileDirectory)</BaseDir>
+    <GrpcPath>$(MSBuildThisFileDirectory)grpc/</GrpcPath>
+  </PropertyGroup>
+
+  <Target Name="CreateModulesDir" Condition="!Exists('$(BaseDir)node_modules')">
+    <MakeDir Directories="$(BaseDir)node_modules" />
   </Target>
+
+  <Target Name="InstallNodeAbi"  Condition="!Exists('$(BaseDir)node_modules/node-abi')">
+    <Exec Command="npm install node-abi --production" WorkingDirectory="$(BaseDir)" />
+  </Target>
+
+  <Target Name="GetGrpcBinPath" Condition="$(GrpcBinary)==''">
+    <Exec Command="node -p &quot;`node-v${require('node-abi').getAbi(process.version, 'node')}-${process.platform}-${process.arch}`&quot;" ConsoleToMSBuild="true" >
+      <Output TaskParameter="ConsoleOutput" PropertyName="GrpcBinary" />
+    </Exec>
+  </Target>
+
+  <Target Name="InstallGrpcNative" Condition="!Exists('$(GrpcPath)src/node/extension_binary/$(GrpcBinary)')" >
+    <Message Text="Installing node-pre-gyp and native grpc module" Importance="high" />
+    <Exec Command="npm install node-pre-gyp --production" WorkingDirectory="$(BaseDir)" Condition="!Exists('$(BaseDir)node_modules/node-pre-gyp')" />
+    <Message Text="$(BaseDir)node_modules/.bin/node-pre-gyp install --directory $(GrpcPath)" Importance="high" />
+    <Exec Command="$(BaseDir)node_modules/.bin/node-pre-gyp install --directory $(GrpcPath)" />
+  </Target>
+
+  <Target Name="InstallGrpc" AfterTargets="Build" DependsOnTargets="CreateModulesDir;InstallNodeAbi;GetGrpcBinPath;InstallGrpcNative" />
 </Project>
