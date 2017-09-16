@@ -1,3 +1,4 @@
+npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
 mkdir ./pkg/grpc/etc
