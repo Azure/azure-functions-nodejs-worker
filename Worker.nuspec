@@ -14,7 +14,6 @@
   </metadata>
   <files>
     <file src="**" target="contentFiles/any/any/workers/node" />
-    <file src="Microsoft.Azure.Functions.NodeJsWorker.targets" target="contentFiles/any/any/workers/node/Worker.targets" />
     <file src="Microsoft.Azure.Functions.NodeJsWorker.targets" target="build" />
   </files>
 </package>
