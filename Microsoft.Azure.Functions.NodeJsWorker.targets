@@ -7,8 +7,11 @@
   </PropertyGroup>
   <!-- Run from worker/node folder  -->
   <PropertyGroup Condition="$(ProjectDir)==''">
-    <BaseDir>$(MSBuildThisFileDirectory)</BaseDir>
+    <BaseDir>$(MSBuildThisFileDirectory)grpc/</BaseDir>
     <GrpcPath>$(MSBuildThisFileDirectory)grpc/</GrpcPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(OS)!='Windows_NT'">
+    <ModulesPrefix>lib/</ModulesPrefix>
   </PropertyGroup>
 
   <Target Name="CreateModulesDir" Condition="!Exists('$(BaseDir)node_modules')">
@@ -28,8 +31,8 @@
   <Target Name="InstallGrpcNative" Condition="!Exists('$(GrpcPath)src/node/extension_binary/$(GrpcBinary)')" >
     <Message Text="Installing node-pre-gyp and native grpc module" Importance="high" />
     <Exec Command="npm install --prefix $(BaseDir) node-pre-gyp --production" WorkingDirectory="$(BaseDir)" Condition="!Exists('$(BaseDir)node_modules/node-pre-gyp')" />
-    <Message Text="$(BaseDir)node_modules/node-pre-gyp/bin/node-pre-gyp install --directory $(GrpcPath)" Importance="high" />
-    <Exec Command="$(BaseDir)node_modules/node-pre-gyp/bin/node-pre-gyp install --directory $(GrpcPath)" />
+    <Message Text="$(BaseDir)$(ModulesPrefix)node_modules/node-pre-gyp/bin/node-pre-gyp install --directory $(GrpcPath)" Importance="high" />
+    <Exec Command="$(BaseDir)$(ModulesPrefix)node_modules/node-pre-gyp/bin/node-pre-gyp install --directory $(GrpcPath)" />
   </Target>
 
   <Target Name="InstallGrpc" AfterTargets="Build" DependsOnTargets="CreateModulesDir;InstallNodeAbi;GetGrpcBinPath;InstallGrpcNative" />
