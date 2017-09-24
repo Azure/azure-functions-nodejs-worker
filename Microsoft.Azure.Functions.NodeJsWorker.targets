@@ -23,7 +23,7 @@
   </Target>
 
   <Target Name="GetGrpcBinPath" Condition="$(GrpcBinary)==''">
-    <Exec Command="node getNativeFile.js" ConsoleToMSBuild="true" WorkingDirectory="$(GrpcPath)">
+    <Exec Command="node ./getNativeFile.js" ConsoleToMSBuild="true" WorkingDirectory="$(GrpcPath)">
       <Output TaskParameter="ConsoleOutput" PropertyName="GrpcBinary" />
     </Exec>
   </Target>
