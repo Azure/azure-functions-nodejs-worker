@@ -20,7 +20,7 @@ export class FunctionLoader implements IFunctionLoader {
       let script = require(scriptFilePath);
       let userFunction = getEntryPoint(script, metadata.entryPoint);
       if(!isFunction(userFunction)) {
-        throw "Unable to determine function. Make sure the function has been correctly exported";
+        throw "The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.";
       }
       this._loadedFunctions[functionId] = {
           info: new FunctionInfo(metadata),
