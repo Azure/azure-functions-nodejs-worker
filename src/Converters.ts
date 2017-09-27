@@ -1,5 +1,5 @@
 import { FunctionRpc as rpc } from '../protos/rpc';
-import { HttpRequest } from './http/request'
+import { HttpRequest } from './http/Request'
 export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
