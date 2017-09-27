@@ -19,6 +19,9 @@ export class FunctionLoader implements IFunctionLoader {
       let scriptFilePath = <string>metadata.scriptFile;
       let script = require(scriptFilePath);
       let userFunction = getEntryPoint(script, metadata.entryPoint);
+      if(!isFunction(userFunction)) {
+        throw "Unable to determine function. Make sure the function has been correctly exported";
+      }
       this._loadedFunctions[functionId] = {
           info: new FunctionInfo(metadata),
           func: userFunction
@@ -53,8 +56,8 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
         }
     }
 
-    if (!isFunction(f)) {
-        throw "Unable to determine function entry point. If multiple functions are exported, " +
+    if (!f) {
+        throw (entryPoint ? `Unable to determine function entry point: ${entryPoint}. `: "Unable to determine function entry point. ") + "If multiple functions are exported, " +
             "you must indicate the entry point, either by naming it 'run' or 'index', or by naming it " +
             "explicitly via the 'entryPoint' metadata property.";
     }
