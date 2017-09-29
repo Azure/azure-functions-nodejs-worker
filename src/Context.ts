@@ -27,9 +27,6 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.Invocati
       let input: any;
       if (binding.data && binding.data.http) {
         input = httpInput = fromRpcHttp(binding.data.http);
-        if (request.triggerMetadata && request.triggerMetadata.rawBody) {
-          httpInput.rawBody = request.triggerMetadata.rawBody.string;
-        }
       } else {
         input = fromTypedData(binding.data);
       }
