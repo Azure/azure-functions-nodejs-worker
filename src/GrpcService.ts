@@ -1,3 +1,11 @@
+import * as semver from 'semver';
+
+if (!semver.satisfies(process.version, '>=8.4.0')) {
+  console.error(`azure-functions-nodejs-worker officially supports node version >=8.4.0. Current version ${process.version}.
+To install required native modules for ${process.version}, install node-pre-gyp via 'npm i -g node-pre-gyp'.
+Navigate to '<node-worker-dir>/grpc' and run 'node-pre-gyp install'`);
+}
+
 import { Duplex } from 'stream';
 import * as grpc from 'grpc';
 import * as protobuf from 'protobufjs';
