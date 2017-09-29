@@ -9,6 +9,7 @@ export class HttpRequest {
     query?: {[key:string]: string};
     params?: {[key:string]: string};
     body?: any;
+    rawBody?: string;
     [key:string]: any;
 }
 
