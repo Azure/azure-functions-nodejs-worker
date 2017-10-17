@@ -1,4 +1,8 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/inqsg64h792agrji?svg=true)](https://ci.appveyor.com/project/appsvc/azure-functions-nodejs-worker/branch/dev)
+
 ## Getting Started
+
+[Azure Functions Language Extensibility Wiki](https://github.com/Azure/azure-webjobs-sdk-script/wiki/Language-Extensibility)
 
 - `git clone https://github.com/Azure/azure-functions-nodejs-worker`
 - `cd azure-functions-nodejs-worker`
@@ -15,6 +19,8 @@
 
 It builds and webpacks the generated node files into a bundle.
 We include several grpc native modules, for x86/x64 versions of windows, osx, linux
+
+The nuget package can be deployed from the appveyor job at: https://ci.appveyor.com/project/appsvc/azure-functions-nodejs-worker
 
 ## Contributing
 
