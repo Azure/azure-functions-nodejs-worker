@@ -8,7 +8,8 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
     headers: rpcHttp.headers,
     query: rpcHttp.query,
     params: rpcHttp.params,
-    body: fromTypedData(rpcHttp.body)
+    body: fromTypedData(rpcHttp.body),
+    rawBody: rpcHttp.rawBody,
   };
 
   return httpContext;
