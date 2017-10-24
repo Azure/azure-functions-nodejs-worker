@@ -9,7 +9,7 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
     query: rpcHttp.query,
     params: rpcHttp.params,
     body: fromTypedData(rpcHttp.body),
-    rawBody: rpcHttp.rawBody,
+    rawBody: fromTypedData(rpcHttp.rawBody, false),
   };
 
   return httpContext;
@@ -27,13 +27,15 @@ export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
   }
 }
 
-export function fromTypedData(typedData?: rpc.TypedData$Properties) {
+export function fromTypedData(typedData?: rpc.TypedData$Properties, convertStringToJson: boolean = true) {
   typedData = typedData || {};
   let str = typedData.string || typedData.json;
   if (str !== undefined) {
-    try {
-      str = JSON.parse(str);
-    } catch (err) { }
+    if (convertStringToJson) {
+      try {
+        str = JSON.parse(str);
+      } catch (err) { }
+    }
     return str;
   } else if (typedData.bytes) {
     return new Buffer(typedData.bytes);
