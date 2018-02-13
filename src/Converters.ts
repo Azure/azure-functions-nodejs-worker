@@ -16,15 +16,11 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
 }
 
 export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
-  if (inputMessage.body !== undefined) {
     let httpMessage: rpc.RpcHttp$Properties = inputMessage;
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
     return { http: httpMessage };
-  } else {
-    return toTypedData(inputMessage);
-  }
 }
 
 export function fromTypedData(typedData?: rpc.TypedData$Properties, convertStringToJson: boolean = true) {
