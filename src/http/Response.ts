@@ -5,18 +5,13 @@ export class Response {
     statusCode?: string | number;
     headers: {[key:string]: any} = {};
     body?: any;
-    isRaw?: boolean;
+    enableContentNegotiation?: boolean;
     [key:string]: any;
 
     private _done: Function;
 
     constructor(done: Function) {
         this._done = done;
-    }
-
-    raw(body: any) {
-        this.isRaw = true;
-        return this.send(body);
     }
 
     end(body?: any) {
