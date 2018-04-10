@@ -73,13 +73,11 @@ export class WorkerChannel {
       catch(exception) {
         console.error(`Worker was unable to load function ${msg.metadata.name}: '${exception}'`)
         result = {
-          ...result,
           exception: {
             source: 'nodeJsWorker',
-            message: exception
+            message: exception.toString()
           },
-          status: Status.Failure,
-          result: exception,
+          status: Status.Failure
         };
       }
 
