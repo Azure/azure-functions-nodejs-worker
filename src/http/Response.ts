@@ -14,11 +14,6 @@ export class Response {
         this._done = done;
     }
 
-    raw(body: any) {
-        this.enableContentNegotiation = false;
-        return this.send(body);
-    }
-
     end(body?: any) {
         if (body !== undefined) {
             this.body = body;
