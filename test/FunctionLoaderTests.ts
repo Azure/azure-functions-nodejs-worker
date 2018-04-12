@@ -3,7 +3,7 @@ import { FunctionLoader } from '../src/FunctionLoader';
 import { TestEventStream } from './TestEventStream';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 import mock = require('mock-require');
 

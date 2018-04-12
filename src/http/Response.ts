@@ -5,7 +5,7 @@ export class Response {
     statusCode?: string | number;
     headers: {[key:string]: any} = {};
     body?: any;
-    isRaw?: boolean;
+    enableContentNegotiation?: boolean;
     [key:string]: any;
 
     private _done: Function;
@@ -15,7 +15,7 @@ export class Response {
     }
 
     raw(body: any) {
-        this.isRaw = true;
+        this.enableContentNegotiation = false;
         return this.send(body);
     }
 

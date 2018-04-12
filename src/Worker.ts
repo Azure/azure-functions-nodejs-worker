@@ -1,6 +1,6 @@
 import * as parseArgs from 'minimist';
 
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import Status = rpc.StatusResult.Status;
 import { WorkerChannel } from './WorkerChannel';
 import { FunctionLoader } from './FunctionLoader';

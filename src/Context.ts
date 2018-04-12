@@ -1,6 +1,6 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, toTypedData } from './Converters';
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;

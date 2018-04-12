@@ -35,8 +35,7 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
-protos/*
-!protos/FunctionRpc.proto
+azure-functions-language-worker-protobuf/*
 
 dist
 pkg

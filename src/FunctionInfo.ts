@@ -1,4 +1,4 @@
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { toTypedData, toRpcHttp } from './Converters';
 
 export class FunctionInfo {

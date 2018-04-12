@@ -1,4 +1,4 @@
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { HttpRequest } from './http/Request'
 export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
   let httpContext: HttpRequest = {

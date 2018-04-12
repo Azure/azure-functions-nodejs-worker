@@ -1,7 +1,7 @@
 import { Duplex } from 'stream';
 import { format, isFunction } from 'util';
 
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, ILogCallback, IResultCallback } from './Context';
