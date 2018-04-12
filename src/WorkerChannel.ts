@@ -63,7 +63,7 @@ export class WorkerChannel {
 
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
-      let status: rpc.StatusResult$Properties = {
+      let functionLoadStatus: rpc.StatusResult$Properties = {
         status: Status.Success
       };
 
@@ -73,8 +73,8 @@ export class WorkerChannel {
       catch(exception) {
         let errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
         console.error(errorMessage)
-        status.status = Status.Failure;
-        status.exception =  {
+        functionLoadStatus.status = Status.Failure;
+        functionLoadStatus.exception =  {
           message: errorMessage,
           stackTrace: exception.stack
         };
@@ -84,7 +84,7 @@ export class WorkerChannel {
         requestId: requestId,
         functionLoadResponse: {
           functionId: msg.functionId,
-          result: status
+          result: functionLoadStatus
         }
       });
     }
