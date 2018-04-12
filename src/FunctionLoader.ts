@@ -1,6 +1,6 @@
 import { isObject, isFunction } from 'util';
 
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
 
 export interface IFunctionLoader {

@@ -11,7 +11,7 @@ import * as grpc from 'grpc';
 import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
-import * as jsonModule from '../protos/rpc';
+import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
 import rpc = jsonModule.FunctionRpc;
 
 interface GrpcClientConstructor {

@@ -1,6 +1,6 @@
 import { IEventStream } from '../src/GrpcService';
 import { EventEmitter } from 'events';
-import { FunctionRpc as rpc } from '../protos/rpc';
+import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import * as sinon from 'sinon';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
