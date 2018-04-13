@@ -27,7 +27,7 @@
   },
   "scripts": {
     "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
-    "build": "rimraf dist && npm run gen && shx mkdir -p dist/protos && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/protos/. && tsc",
+    "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
     "build-nomaps": "npm run build -- --sourceMap false",
     "gen": "npm run genJs && npm run genTs",
     "genJs": "pbjs -t json-module -w commonjs -o azure-functions-language-worker-protobuf/src/rpc.js azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto",
