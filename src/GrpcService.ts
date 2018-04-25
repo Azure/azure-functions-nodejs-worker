@@ -15,7 +15,7 @@ import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc
 import rpc = jsonModule.FunctionRpc;
 
 interface GrpcClientConstructor {
-    new(connection: string, credentials: any): GrpcClient;
+    new(connection: string, credentials: any, options: any): GrpcClient;
 }
 
 function GetGrpcClientConstructor(): GrpcClientConstructor {
@@ -35,9 +35,13 @@ export interface IEventStream {
     end(): void;
 }
 
-export function CreateGrpcEventStream(connection: string): IEventStream {
+export function CreateGrpcEventStream(connection: string, grpcMaxMessageLength: number): IEventStream {
     let GrpcClient = GetGrpcClientConstructor();
-    let client = new GrpcClient(connection, grpc.credentials.createInsecure());
+    let clientOptions = { 
+        'grpc.max_send_message_length': grpcMaxMessageLength, 
+        'grpc.max_receive_message_length': grpcMaxMessageLength 
+    };
+    let client = new GrpcClient(connection, grpc.credentials.createInsecure(), clientOptions);
     process.on('exit', code => {
         grpc.closeClient(client);
     });

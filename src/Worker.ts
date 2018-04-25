@@ -7,15 +7,15 @@ import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcService';
 
 export function startNodeWorker(args) {
-  let { host, port, workerId, requestId } = parseArgs(args.slice(2));
-  if (!host || !port || !workerId || !requestId) {
-    console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId');
+  let { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
+  if (!host || !port || !workerId || !requestId || !grpcMaxMessageLength) {
+    console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId --grpcMaxMessageLength grpcMaxMessageLength');
     throw new Error('Connection info missing');
   }
 
   let connection = `${host}:${port}`;
   console.log(`Worker ${workerId} connecting on ${connection}`);
-  let eventStream = CreateGrpcEventStream(connection);
+  let eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
 
   let workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
 
