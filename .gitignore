@@ -39,3 +39,4 @@ azure-functions-language-worker-protobuf/*
 
 dist
 pkg
+/package-lock.json
