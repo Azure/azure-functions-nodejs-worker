@@ -5,7 +5,7 @@ export class HttpRequest {
     method: string;
     url: string;
     originalUrl: string;
-    headers?: {[key:string]: string};
+    headers?: {[key:string]: any};
     query?: {[key:string]: string};
     params?: {[key:string]: string};
     body?: any;
