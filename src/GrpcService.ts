@@ -1,8 +1,8 @@
 import * as semver from 'semver';
 
 if (!semver.satisfies(process.version, '8.x')) {
-  let errorMessage = `Your Function App is currently set to use Current version ${process.version}, but the runtime requires Node 8.x.
-  Please try setting WEBSITE_NODE_DEFAULT_VERSION to 8.11.1 or run 'nvm use 8.11.1'`;
+  let errorMessage = `Your Function App is currently set to use current version ${process.version}, but the runtime requires Node 8.x.
+  Please change the app setting WEBSITE_NODE_DEFAULT_VERSION to 8.11.1 or change your local node version using 'nvm'`;
   console.error(errorMessage);
   throw new Error(errorMessage);
 } 
