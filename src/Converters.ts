@@ -5,7 +5,7 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
-    headers: rpcHttp.headers,
+    headers: fromRpcHttpHeaders(rpcHttp.headers),
     query: rpcHttp.query,
     params: rpcHttp.params,
     body: fromTypedData(rpcHttp.body),
@@ -15,12 +15,29 @@ export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
   return httpContext;
 }
 
+export function fromRpcHttpHeaders(inputRpcHttpHeaders) {
+  let httpHeaders: {[key: string]: any} = {};
+  for (let key in inputRpcHttpHeaders) {
+    httpHeaders[key] = fromTypedData(inputRpcHttpHeaders[key]);
+  }
+  return httpHeaders;
+}
+
 export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
     let httpMessage: rpc.RpcHttp$Properties = inputMessage;
+    httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
     return { http: httpMessage };
+}
+
+export function toRpcHttpHeaders(inputHeaders: rpc.TypedData$Properties) {
+  let rpcHttpHeaders: {[key: string]: rpc.TypedData$Properties} = {};
+  for (let key in inputHeaders) {
+    rpcHttpHeaders[key] = toTypedData(inputHeaders[key]);
+  }
+  return rpcHttpHeaders;
 }
 
 export function fromTypedData(typedData?: rpc.TypedData$Properties, convertStringToJson: boolean = true) {
