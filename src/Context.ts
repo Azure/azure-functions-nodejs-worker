@@ -1,5 +1,5 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, toTypedData } from './Converters';
+import { fromRpcHttp, fromTypedData, toTypedData, getNormalizedBindingData } from './Converters';
 import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
@@ -104,35 +104,6 @@ function getLogger(invocationId: string, functionName: string, log: ILogCallback
         verbose: <ILog>(...args: any[]) => log(LogLevel.Trace, ...args)
       }
     );
-}
-
-function getNormalizedBindingData(request: rpc.InvocationRequest$Properties): IDict {
-  let bindingData: IDict = {
-    invocationId: request.invocationId
-  };
-
-  // node binding data is camel cased due to language convention
-  if (request.triggerMetadata) {
-    Object.assign(bindingData, convertKeysToCamelCase(request.triggerMetadata))
-  }
-
-  return bindingData;
-}
-
-// Recursively convert keys of objects to camel case
-function convertKeysToCamelCase(obj: any) {
-  var output = {};
-  for (var key in obj) {
-      let value = fromTypedData(obj[key]) || obj[key];
-      let camelCasedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
-      // If the value is a JSON object, convert keys to camel case
-      if (typeof value === 'object') {
-          output[camelCasedKey] = convertKeysToCamelCase(value);
-        } else {
-          output[camelCasedKey] = value;
-      }
-  }
-  return output;
 }
 
 export interface IInvocationResult {
