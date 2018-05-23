@@ -1,5 +1,6 @@
 import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { HttpRequest } from './http/Request'
+import { HttpRequest } from './http/Request';
+import { IDict } from './Context';
 export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
@@ -72,4 +73,31 @@ export function toTypedData(inputObject): rpc.TypedData$Properties {
   } else {
     return { json: JSON.stringify(inputObject) };
   }
+}
+
+export function getNormalizedBindingData(request: rpc.InvocationRequest$Properties): IDict {
+  let bindingData: IDict = {
+    invocationId: request.invocationId
+  };
+  // node binding data is camel cased due to language convention
+  if (request.triggerMetadata) {
+    Object.assign(bindingData, convertKeysToCamelCase(request.triggerMetadata))
+  }
+  return bindingData;
+}
+
+// Recursively convert keys of objects to camel case
+function convertKeysToCamelCase(obj: any) {
+  var output = {};
+  for (var key in obj) {
+      let value = fromTypedData(obj[key]) || obj[key];
+      let camelCasedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
+      // If the value is a JSON object (and not http, which is already cased), convert keys to camel case
+      if (typeof value === 'object' && value.http == undefined) {
+        output[camelCasedKey] = convertKeysToCamelCase(value);
+      } else {
+        output[camelCasedKey] = value;
+    }
+  }
+  return output;
 }

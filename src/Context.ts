@@ -1,5 +1,5 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, toTypedData } from './Converters';
+import { fromRpcHttp, fromTypedData, toTypedData, getNormalizedBindingData } from './Converters';
 import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
@@ -65,7 +65,7 @@ class Context implements IContext {
     };
 
     this.log = getLogger(this.invocationId, this.executionContext.functionName, logCallback);
-    this.bindingData = getNormalizedBindingData(request, info);
+    this.bindingData = getNormalizedBindingData(request);
 
     let _done = false;
     let _promise = false;
@@ -104,22 +104,6 @@ function getLogger(invocationId: string, functionName: string, log: ILogCallback
         verbose: <ILog>(...args: any[]) => log(LogLevel.Trace, ...args)
       }
     );
-}
-
-function getNormalizedBindingData(request: rpc.InvocationRequest$Properties, info: FunctionInfo): IDict {
-  let bindingData: IDict = {
-    invocationId: request.invocationId
-  };
-
-  // node binding data is camel cased due to language convention
-  if (request.triggerMetadata) {
-    for (let key in request.triggerMetadata) {
-      let camelCasedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
-      bindingData[camelCasedKey] = fromTypedData(request.triggerMetadata[key]);
-    }
-  }
-
-  return bindingData;
 }
 
 export interface IInvocationResult {
