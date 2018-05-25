@@ -22,10 +22,10 @@ interface GrpcClientConstructor {
 function GetGrpcClientConstructor(): GrpcClientConstructor {
     let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.NamespaceDescriptor);
     let rpcs = grpc.loadObject(reflectionObject, { enumsAsStrings: false, protobufjsVersion: 6 });
-    return rpcs.FunctionRpc.FunctionRpc;
+    return rpcs.FunctionRpc["FunctionRpc"];
 }
 
-interface GrpcClient {
+interface GrpcClient extends grpc.Client {
     eventStream(): IEventStream
 }
 
