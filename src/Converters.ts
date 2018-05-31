@@ -28,7 +28,9 @@ export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
 export function toRpcHttpHeaders(inputHeaders: rpc.TypedData$Properties) {
   let rpcHttpHeaders: {[key: string]: string} = {};
   for (let key in inputHeaders) {
-    rpcHttpHeaders[key] = inputHeaders[key].toString();
+    if (inputHeaders[key] != null) {
+      rpcHttpHeaders[key] = inputHeaders[key].toString();
+    }
   }
   return rpcHttpHeaders;
 }
