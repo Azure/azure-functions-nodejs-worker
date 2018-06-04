@@ -10,7 +10,18 @@ install:
 - ps: Install-Product node 8.4.0 x86
 cache: 'node_modules'
 build_script:
-- ps: '& .\package.ps1'
+- ps: |
+      $buildNumber = 0      
+      if($env:APPVEYOR_REPO_TAG -eq "true") {
+       $buildNumber = $env:APPVEYOR_REPO_TAG_NAME
+       Write-Host “Found git tag. Setting package suffix to '$buildNumber'"
+      } 
+      else {
+       $buildNumber = "-$env:APPVEYOR_BUILD_NUMBER"
+       Write-Host “No git tag found. Setting package suffix to '$buildNumber'"
+      }     
+      nuget pack ./tools/AzureFunctionsJavaWorker.nuspec -Properties versionsuffix=$buildNumber
+      .\package.ps1 -buildNumber $buildNumber
 test_script:
 - npm run test
 artifacts:

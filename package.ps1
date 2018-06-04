@@ -1,3 +1,8 @@
+param (
+  [string]$buildNumber = $env:APPVEYOR_BUILD_NUMBER
+)
+
+ Write-Host "buildNumber: " $buildNumber
 npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
@@ -16,5 +21,5 @@ copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=linux
 copy-item Worker.nuspec pkg/
 set-location pkg
-nuget pack -Properties version=$env:APPVEYOR_BUILD_NUMBER
+nuget pack -Properties version=$buildNumber
 set-location ..
