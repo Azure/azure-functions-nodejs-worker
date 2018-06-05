@@ -1,6 +1,9 @@
 {
   "name": "azure-functions-nodejs-worker",
-  "version": "0.1.1-0",
+  "author": "Microsoft Corporation",
+  "version": "1.0.0-beta1",
+  "description": "Microsoft Azure Functions NodeJS Worker",
+  "license": "(MIT OR Apache-2.0)",
   "dependencies": {
     "google-protobuf": "^3.0.0",
     "grpc": "^1.6.0",
@@ -24,6 +27,14 @@
     "ts-node": "^3.3.0",
     "typescript": "^2.3.4",
     "webpack": "^3.5.6"
+  },
+  "homepage": "https://github.com/Azure/azure-functions-nodejs-worker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Azure/azure-functions-nodejs-worker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Azure/azure-functions-nodejs-worker/issues"
   },
   "scripts": {
     "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
