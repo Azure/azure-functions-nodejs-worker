@@ -15,8 +15,8 @@ build_script:
 - ps: |
       $buildNumber = 0      
       if($env:APPVEYOR_REPO_TAG -eq "true") {
-       $buildNumber = $env:APPVEYOR_REPO_TAG_NAME
-       Write-Host “Found git tag. Setting package suffix to '$buildNumber'"
+       $buildNumber = ""
+       Write-Host “Found git tag. Not setting package suffix"
       } 
       else {
        $buildNumber = "-$env:APPVEYOR_BUILD_NUMBER"
