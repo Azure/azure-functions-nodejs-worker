@@ -4,6 +4,8 @@ pull_requests:
 branches:
   only:
   - dev
+  - master
+
 image: Visual Studio 2017
 clone_folder: c:\azure-functions-nodejs-worker
 install:
@@ -20,7 +22,6 @@ build_script:
        $buildNumber = "-$env:APPVEYOR_BUILD_NUMBER"
        Write-Host “No git tag found. Setting package suffix to '$buildNumber'"
       }     
-      nuget pack ./tools/AzureFunctionsJavaWorker.nuspec -Properties versionsuffix=$buildNumber
       .\package.ps1 -buildNumber $buildNumber
 test_script:
 - npm run test
