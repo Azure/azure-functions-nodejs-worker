@@ -1,7 +1,7 @@
 import { Duplex } from 'stream';
 import { format, isFunction } from 'util';
 
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, ILogCallback, IResultCallback } from './Context';
@@ -14,6 +14,7 @@ export class WorkerChannel {
   private _workerId: string;
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
+    this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
 
@@ -44,7 +45,7 @@ export class WorkerChannel {
     }
   }
 
-  private log(log: rpc.RpcLog$Properties) {
+  private log(log: rpc.IRpcLog) {
     this._eventStream.write({
       rpcLog: log
     });
@@ -63,7 +64,7 @@ export class WorkerChannel {
 
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
-      let functionLoadStatus: rpc.StatusResult$Properties = {
+      let functionLoadStatus: rpc.IStatusResult = {
         status: Status.Success
       };
 
@@ -102,7 +103,7 @@ export class WorkerChannel {
     }
 
     let resultCallback: IResultCallback = (err, result) => {
-      let status: rpc.StatusResult$Properties = {
+      let status: rpc.IStatusResult = {
         status: rpc.StatusResult.Status.Success
       };
       if (err) {
@@ -113,7 +114,7 @@ export class WorkerChannel {
         }
       }
 
-      let response: rpc.InvocationResponse$Properties = {
+      let response: rpc.IInvocationResponse = {
         invocationId: msg.invocationId,
         result: status
       }
@@ -124,7 +125,7 @@ export class WorkerChannel {
         if (result.bindings) {
           response.outputData = Object.keys(info.outputBindings)
             .filter(key => result.bindings[key] !== undefined)
-            .map(key => <rpc.ParameterBinding$Properties>{
+            .map(key => <rpc.IParameterBinding>{
               name: key,
               data: info.outputBindings[key].converter(result.bindings[key])
             });

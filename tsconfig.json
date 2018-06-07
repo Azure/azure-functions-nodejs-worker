@@ -4,14 +4,12 @@
         "target": "es6",
         "noImplicitAny": false,
         "strict": true,
+        "strictNullChecks": false,
         "outDir": "dist/src",
         "sourceMap": true
     },
     "include": [
         "src/**/*"
-    ],
-    "exclude": [
-        "node_modules"
     ],
     "compileOnSave": true
 }

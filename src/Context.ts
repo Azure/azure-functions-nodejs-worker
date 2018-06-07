@@ -1,6 +1,6 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, toTypedData, getNormalizedBindingData } from './Converters';
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
@@ -16,13 +16,13 @@ export interface IContext {
   done: IDoneCallback;
 };
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.InvocationRequest$Properties, logCallback: ILogCallback, callback: IResultCallback) {
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
   let context = new Context(info, request, logCallback, callback);
 
   let bindings: IDict = {};
   let inputs: any[] = [];
   let httpInput: HttpRequest | undefined;
-  for (let binding of <rpc.ParameterBinding$Properties[]>request.inputData) {
+  for (let binding of <rpc.IParameterBinding[]>request.inputData) {
     if (binding.data && binding.name) {
       let input: any;
       if (binding.data && binding.data.http) {
@@ -56,13 +56,14 @@ class Context implements IContext {
   res?: Response;
   done: IDoneCallback;
 
-  constructor(info: FunctionInfo, request: rpc.InvocationRequest$Properties, logCallback: ILogCallback, callback: IResultCallback) {
+  constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
     this.invocationId = <string>request.invocationId;
     this.executionContext = {
       invocationId: this.invocationId,
       functionName: <string>info.name,
       functionDirectory: <string>info.directory
     };
+    this.bindings = {};
 
     this.log = getLogger(this.invocationId, this.executionContext.functionName, logCallback);
     this.bindingData = getNormalizedBindingData(request);

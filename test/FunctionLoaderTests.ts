@@ -3,7 +3,7 @@ import { FunctionLoader } from '../src/FunctionLoader';
 import { TestEventStream } from './TestEventStream';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 import mock = require('mock-require');
 
@@ -20,7 +20,7 @@ describe('FunctionLoader', () => {
   it ('throws unable to determine function entry point', () => {
     mock('test', {});
      expect(() => {
-        loader.load('functionId', <rpc.RpcFunctionMetadata$Properties> {
+        loader.load('functionId', <rpc.IRpcFunctionMetadata> {
             scriptFile: 'test'
         })
      }).to.throw("Unable to determine function entry point. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.");
@@ -30,7 +30,7 @@ describe('FunctionLoader', () => {
     mock('test', { test: {} });
     let entryPoint = 'wrongEntryPoint'
     expect(() => {
-        loader.load('functionId', <rpc.RpcFunctionMetadata$Properties> {
+        loader.load('functionId', <rpc.IRpcFunctionMetadata> {
             scriptFile: 'test',
             entryPoint: entryPoint
         })
@@ -41,7 +41,7 @@ describe('FunctionLoader', () => {
     mock('test', { test: {} });
     let entryPoint = 'test'
     expect(() => {
-        loader.load('functionId', <rpc.RpcFunctionMetadata$Properties> {
+        loader.load('functionId', <rpc.IRpcFunctionMetadata> {
             scriptFile: 'test',
             entryPoint: entryPoint
         })

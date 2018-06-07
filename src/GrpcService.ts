@@ -13,16 +13,16 @@ import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
 import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
-import rpc = jsonModule.FunctionRpc;
+import rpc = jsonModule.AzureFunctionsRpcMessages;
 
 interface GrpcClientConstructor {
     new(connection: string, credentials: any, options: any): GrpcClient;
 }
 
 function GetGrpcClientConstructor(): GrpcClientConstructor {
-    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.NamespaceDescriptor);
+    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.INamespace);
     let rpcs = grpc.loadObject(reflectionObject, { enumsAsStrings: false, protobufjsVersion: 6 });
-    return rpcs.FunctionRpc["FunctionRpc"];
+    return rpcs.AzureFunctionsRpcMessages["FunctionRpc"];
 }
 
 interface GrpcClient extends grpc.Client {
@@ -30,7 +30,7 @@ interface GrpcClient extends grpc.Client {
 }
 
 export interface IEventStream {
-    write(message: rpc.StreamingMessage$Properties);
+    write(message: rpc.IStreamingMessage);
     on(event: 'data', listener: (message: rpc.StreamingMessage) => void);
     on(event: string, listener: Function);
     end(): void;

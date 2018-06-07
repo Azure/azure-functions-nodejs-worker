@@ -6,9 +6,9 @@
   "license": "(MIT OR Apache-2.0)",
   "dependencies": {
     "google-protobuf": "^3.0.0",
-    "grpc": "^1.6.0",
+    "grpc": "^1.12.2",
     "minimist": "^1.2.0",
-    "protobufjs": "6.7.0",
+    "protobufjs": "^6.8.0",
     "semver": "^5.4.1"
   },
   "devDependencies": {
@@ -18,8 +18,8 @@
     "chai": "^4.1.1",
     "mocha": "^3.5.0",
     "mock-require": "^2.0.2",
-    "node-pre-gyp": "0.6.37",
     "node-abi": "2.1.1",
+    "node-pre-gyp": "0.6.37",
     "rimraf": "^2.6.1",
     "shx": "^0.2.2",
     "sinon": "^3.0.0",
@@ -43,7 +43,7 @@
     "gen": "npm run genJs && npm run genTs",
     "genJs": "pbjs -t json-module -w commonjs -o azure-functions-language-worker-protobuf/src/rpc.js azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto",
     "genTs": "pbjs -t static-module azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto -o azure-functions-language-worker-protobuf/src/rpc_static.js && pbts -o azure-functions-language-worker-protobuf/src/rpc.d.ts azure-functions-language-worker-protobuf/src/rpc_static.js",
-    "test": "mocha -r ts-node/register ./test/**/*.ts"
+    "test": "mocha --trace -r ts-node/register ./test/**/*.ts"
   },
   "files": [
     "dist"

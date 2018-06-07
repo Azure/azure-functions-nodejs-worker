@@ -2,9 +2,9 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 export class HttpRequest {
-    method: string;
-    url: string;
-    originalUrl: string;
+    method: string = "";
+    url: string = "";
+    originalUrl: string = "";
     headers?: {[key:string]: any};
     query?: {[key:string]: string};
     params?: {[key:string]: string};
