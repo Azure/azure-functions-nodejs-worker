@@ -14,12 +14,20 @@ copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
 ./node_modules/.bin/webpack
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=6.11.2 --target_platform=win32
+# Node 8 support
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=win32
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=darwin
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=linux
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=win32
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=darwin
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=linux
+# Node 10 support
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=win32
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=darwin
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=linux
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=win32
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=darwin
+./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=linux
 copy-item Worker.nuspec pkg/
 set-location pkg
 nuget pack -Properties version=$buildNumber
