@@ -5,16 +5,16 @@
   "description": "Microsoft Azure Functions NodeJS Worker",
   "license": "(MIT OR Apache-2.0)",
   "dependencies": {
-    "google-protobuf": "^3.0.0",
+    "google-protobuf": "^3.5.0",
     "grpc": "^1.12.2",
     "minimist": "^1.2.0",
     "protobufjs": "^6.8.0",
-    "semver": "^5.4.1"
+    "semver": "^5.5.0"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^6.0.78",
-    "@types/sinon": "^2.3.3",
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^6.0.112",
+    "@types/sinon": "^2.3.7",
     "chai": "^4.1.1",
     "mocha": "^3.5.0",
     "mock-require": "^2.0.2",
@@ -22,11 +22,11 @@
     "node-pre-gyp": "0.6.37",
     "rimraf": "^2.6.1",
     "shx": "^0.2.2",
-    "sinon": "^3.0.0",
+    "sinon": "^3.3.0",
     "string-replace-webpack-plugin": "^0.1.3",
     "ts-node": "^3.3.0",
-    "typescript": "^2.3.4",
-    "webpack": "^3.5.6"
+    "typescript": "^2.9.1",
+    "webpack": "^3.12.0"
   },
   "homepage": "https://github.com/Azure/azure-functions-nodejs-worker",
   "repository": {
@@ -43,7 +43,7 @@
     "gen": "npm run genJs && npm run genTs",
     "genJs": "pbjs -t json-module -w commonjs -o azure-functions-language-worker-protobuf/src/rpc.js azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto",
     "genTs": "pbjs -t static-module azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto -o azure-functions-language-worker-protobuf/src/rpc_static.js && pbts -o azure-functions-language-worker-protobuf/src/rpc.d.ts azure-functions-language-worker-protobuf/src/rpc_static.js",
-    "test": "mocha --trace -r ts-node/register ./test/**/*.ts"
+    "test": "mocha -r ts-node/register ./test/**/*.ts"
   },
   "files": [
     "dist"
