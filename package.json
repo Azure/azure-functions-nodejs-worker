@@ -19,7 +19,7 @@
     "mocha": "^3.5.0",
     "mock-require": "^2.0.2",
     "node-abi": "2.1.1",
-    "node-pre-gyp": "0.6.37",
+    "node-pre-gyp": "0.10.0",
     "rimraf": "^2.6.1",
     "shx": "^0.2.2",
     "sinon": "^3.3.0",

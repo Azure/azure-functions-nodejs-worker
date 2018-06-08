@@ -6,9 +6,10 @@ param (
 npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
-mkdir ./pkg/grpc/etc
+mkdir ./pkg/deps/grpc/etc/
+mkdir ./pkg/grpc/
 mkdir ./pkg/dist/src
-copy-item ./node_modules/grpc/etc/roots.pem ./pkg/grpc/etc/
+copy-item ./node_modules/grpc/deps/grpc/etc/roots.pem ./pkg/deps/grpc/etc/
 copy-item ./node_modules/grpc/package.json ./pkg/grpc/
 copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
