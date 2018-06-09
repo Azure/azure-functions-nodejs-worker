@@ -2,7 +2,7 @@ import * as semver from 'semver';
 
 if (!semver.satisfies(process.version, '8.x')) {
   let errorMessage = `Your Function App is currently set to use current version ${process.version}, but the runtime requires Node 8.x.
-  For delpoyed code, please change WEBSITE_NODE_DEFAULT_VERSION in App Settings. On your local machine, you can change node version using 'nvm' (make sure to 'Quit' VSCode and start again instead of reloading it when you change the node version)`;
+  For deployed code, please change WEBSITE_NODE_DEFAULT_VERSION in App Settings. On your local machine, you can change node version using 'nvm' (make sure to 'Quit' VSCode and start again instead of reloading it when you change the node version)`;
   console.error(errorMessage);
   throw new Error(errorMessage);
 } 
