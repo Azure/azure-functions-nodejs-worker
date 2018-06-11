@@ -8,8 +8,8 @@ import LogLevel = rpc.RpcLog.Level;
 export interface IContext {
   invocationId: string;
   executionContext: IExecutionContext;
-  bindings: IDict;
-  bindingData: IDict;
+  bindings: IDict<any>;
+  bindingData: IDict<any>;
   log: ILogger;
   req?: Request;
   res?: Response;
@@ -19,7 +19,7 @@ export interface IContext {
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
   let context = new Context(info, request, logCallback, callback);
 
-  let bindings: IDict = {};
+  let bindings: IDict<any> = {};
   let inputs: any[] = [];
   let httpInput: HttpRequest | undefined;
   for (let binding of <rpc.IParameterBinding[]>request.inputData) {
@@ -49,8 +49,8 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
 class Context implements IContext {
   invocationId: string;
   executionContext: IExecutionContext;
-  bindings: IDict;
-  bindingData: IDict;
+  bindings: IDict<any>;
+  bindingData: IDict<any>;
   log: ILogger;
   req?: Request;
   res?: Response;
@@ -109,7 +109,7 @@ function getLogger(invocationId: string, functionName: string, log: ILogCallback
 
 export interface IInvocationResult {
   return: any;
-  bindings: IDict;
+  bindings: IDict<any>;
 }
 
 export interface ILog {
@@ -141,7 +141,6 @@ export interface IExecutionContext {
   functionDirectory: string;
 }
 
-export interface IDict {
-  [key: string]: any
+export interface IDict<T> {
+  [key: string]: T
 }
-

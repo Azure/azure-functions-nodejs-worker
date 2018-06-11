@@ -6,11 +6,11 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
-    headers: rpcHttp.headers,
-    query: rpcHttp.query,
-    params: rpcHttp.params,
-    body: fromTypedData(rpcHttp.body),
-    rawBody: fromTypedData(rpcHttp.rawBody, false),
+    headers: <IDict<string>>rpcHttp.headers,
+    query: <IDict<string>>rpcHttp.query,
+    params: <IDict<string>>rpcHttp.params,
+    body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
+    rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
   };
 
   return httpContext;
@@ -71,8 +71,8 @@ export function toTypedData(inputObject): rpc.ITypedData {
   }
 }
 
-export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict {
-  let bindingData: IDict = {
+export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict<any> {
+  let bindingData: IDict<any> = {
     invocationId: request.invocationId
   };
   // node binding data is camel cased due to language convention

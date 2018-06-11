@@ -16,9 +16,10 @@ export class FunctionLoader implements IFunctionLoader {
     }} = {};
 
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void {
-      let scriptFilePath = <string>metadata.scriptFile;
+      let scriptFilePath = <string>(metadata && metadata.scriptFile);
       let script = require(scriptFilePath);
-      let userFunction = getEntryPoint(script, metadata.entryPoint);
+      let entryPoint = <string>(metadata && metadata.entryPoint);
+      let userFunction = getEntryPoint(script, entryPoint);
       if(!isFunction(userFunction)) {
         throw "The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.";
       }
