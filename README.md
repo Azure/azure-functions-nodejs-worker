@@ -3,6 +3,7 @@
 ## Getting Started
 
 [Azure Functions Language Extensibility Wiki](https://github.com/Azure/azure-webjobs-sdk-script/wiki/Language-Extensibility)
+[worker.config.json](https://github.com/Azure/azure-functions-host/wiki/Authoring-&-Testing-Language-Extensions#workerconfigjson)
 
 - `git clone https://github.com/Azure/azure-functions-nodejs-worker`
 - `cd azure-functions-nodejs-worker`
