@@ -1,13 +1,13 @@
 import { getNormalizedBindingData, toRpcHttp } from '../src/Converters';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
 describe('Context', () => {
   it('normalizes binding trigger metadata', () => {
-    var mockRequest: rpc.TypedData$Properties = toRpcHttp({ url: "https://mock"});
-    var triggerDataMock: { [k: string]: rpc.TypedData$Properties } = {
+    var mockRequest: rpc.ITypedData = toRpcHttp({ url: "https://mock"});
+    var triggerDataMock: { [k: string]: rpc.ITypedData } = {
         "Headers": {
             json: JSON.stringify({Connection: 'Keep-Alive'})
         },
@@ -19,7 +19,7 @@ describe('Context', () => {
             string: "Https://mock/"
         }
     };
-    var request: rpc.InvocationRequest$Properties = <rpc.InvocationRequest$Properties> {
+    var request: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
         triggerMetadata: triggerDataMock,
         invocationId: "12341"
     }

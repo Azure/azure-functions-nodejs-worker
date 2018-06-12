@@ -1,21 +1,24 @@
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { toTypedData, toRpcHttp } from './Converters';
 
 export class FunctionInfo {
   public name: string;
   public directory: string;
   public bindings: {
-    [key: string]: rpc.BindingInfo$Properties
+    [key: string]: rpc.IBindingInfo
   };
   public outputBindings: {
-    [key: string]: rpc.BindingInfo$Properties & { converter: (any) => rpc.TypedData$Properties }
+    [key: string]: rpc.IBindingInfo & { converter: (any) => rpc.ITypedData }
   };
   public httpOutputName: string;
 
-  constructor(metadata: rpc.RpcFunctionMetadata$Properties) {
+  constructor(metadata: rpc.IRpcFunctionMetadata) {
     this.name = <string>metadata.name;
     this.directory = <string>metadata.directory;
+    this.bindings = {};
     this.outputBindings = {};
+    this.httpOutputName = "";
+
     if (metadata.bindings) {
       let bindings = this.bindings = metadata.bindings;
 

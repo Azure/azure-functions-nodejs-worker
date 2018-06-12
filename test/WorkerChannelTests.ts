@@ -3,7 +3,7 @@ import { FunctionLoader } from '../src/FunctionLoader';
 import { TestEventStream } from './TestEventStream';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
 describe('WorkerChannel', () => {
@@ -23,7 +23,7 @@ describe('WorkerChannel', () => {
       requestId: 'id',
       workerInitRequest: {  }
     });
-    sinon.assert.calledWith(stream.written, <rpc.StreamingMessage$Properties>{
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
       requestId: 'id',
       workerInitResponse: {
         result: {
@@ -41,7 +41,7 @@ describe('WorkerChannel', () => {
         metadata: { }
       }
     });
-    sinon.assert.calledWith(stream.written, <rpc.StreamingMessage$Properties>{
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
       requestId: 'id',
       functionLoadResponse: {
         functionId: 'funcId',
@@ -67,7 +67,7 @@ describe('WorkerChannel', () => {
       }
     });
 
-    sinon.assert.calledWithMatch(stream.written, <rpc.StreamingMessage$Properties> {
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
       invocationResponse: {
         invocationId: '1',
         result:  {

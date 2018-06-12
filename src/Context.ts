@@ -1,6 +1,6 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, toTypedData, getNormalizedBindingData } from './Converters';
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
@@ -8,21 +8,21 @@ import LogLevel = rpc.RpcLog.Level;
 export interface IContext {
   invocationId: string;
   executionContext: IExecutionContext;
-  bindings: IDict;
-  bindingData: IDict;
+  bindings: IDict<any>;
+  bindingData: IDict<any>;
   log: ILogger;
   req?: Request;
   res?: Response;
   done: IDoneCallback;
 };
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.InvocationRequest$Properties, logCallback: ILogCallback, callback: IResultCallback) {
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
   let context = new Context(info, request, logCallback, callback);
 
-  let bindings: IDict = {};
+  let bindings: IDict<any> = {};
   let inputs: any[] = [];
   let httpInput: HttpRequest | undefined;
-  for (let binding of <rpc.ParameterBinding$Properties[]>request.inputData) {
+  for (let binding of <rpc.IParameterBinding[]>request.inputData) {
     if (binding.data && binding.name) {
       let input: any;
       if (binding.data && binding.data.http) {
@@ -49,20 +49,21 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.Invocati
 class Context implements IContext {
   invocationId: string;
   executionContext: IExecutionContext;
-  bindings: IDict;
-  bindingData: IDict;
+  bindings: IDict<any>;
+  bindingData: IDict<any>;
   log: ILogger;
   req?: Request;
   res?: Response;
   done: IDoneCallback;
 
-  constructor(info: FunctionInfo, request: rpc.InvocationRequest$Properties, logCallback: ILogCallback, callback: IResultCallback) {
+  constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
     this.invocationId = <string>request.invocationId;
     this.executionContext = {
       invocationId: this.invocationId,
       functionName: <string>info.name,
       functionDirectory: <string>info.directory
     };
+    this.bindings = {};
 
     this.log = getLogger(this.invocationId, this.executionContext.functionName, logCallback);
     this.bindingData = getNormalizedBindingData(request);
@@ -108,7 +109,7 @@ function getLogger(invocationId: string, functionName: string, log: ILogCallback
 
 export interface IInvocationResult {
   return: any;
-  bindings: IDict;
+  bindings: IDict<any>;
 }
 
 export interface ILog {
@@ -140,7 +141,6 @@ export interface IExecutionContext {
   functionDirectory: string;
 }
 
-export interface IDict {
-  [key: string]: any
+export interface IDict<T> {
+  [key: string]: T
 }
-

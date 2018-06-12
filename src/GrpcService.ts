@@ -1,11 +1,15 @@
 import * as semver from 'semver';
 
-if (!semver.satisfies(process.version, '8.x')) {
-  let errorMessage = `Your Function App is currently set to use current version ${process.version}, but the runtime requires Node 8.x.
-  For deployed code, please change WEBSITE_NODE_DEFAULT_VERSION in App Settings. On your local machine, you can change node version using 'nvm' (make sure to quit and restart your code editor to pick up the changes).`;
-  console.error(errorMessage);
-  throw new Error(errorMessage);
-} 
+// If user is not using Node.js v10, warn to upgrade to v10
+if (!semver.satisfies(process.version, '10.x')) {
+    let errorMessage = `Your Function App is currently set to use Node.js version ${process.version}, but the runtime requires a 10.x version.
+    For deployed code, please change WEBSITE_NODE_DEFAULT_VERSION in App Settings. On your local machine, you can change node version using 'nvm' (make sure to quit and restart your code editor to pick up the changes).`;
+    console.error(errorMessage);
+    // Don't fail Node.js v8 users for now
+    if (!semver.satisfies(process.version, '8.x')) {
+        throw new Error(errorMessage);
+    }
+}
 
 import { Duplex } from 'stream';
 import * as grpc from 'grpc';
@@ -13,24 +17,24 @@ import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
 import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
-import rpc = jsonModule.FunctionRpc;
+import rpc = jsonModule.AzureFunctionsRpcMessages;
 
 interface GrpcClientConstructor {
     new(connection: string, credentials: any, options: any): GrpcClient;
 }
 
 function GetGrpcClientConstructor(): GrpcClientConstructor {
-    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.NamespaceDescriptor);
+    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.INamespace);
     let rpcs = grpc.loadObject(reflectionObject, { enumsAsStrings: false, protobufjsVersion: 6 });
-    return rpcs.FunctionRpc.FunctionRpc;
+    return rpcs.AzureFunctionsRpcMessages["FunctionRpc"];
 }
 
-interface GrpcClient {
+interface GrpcClient extends grpc.Client {
     eventStream(): IEventStream
 }
 
 export interface IEventStream {
-    write(message: rpc.StreamingMessage$Properties);
+    write(message: rpc.IStreamingMessage);
     on(event: 'data', listener: (message: rpc.StreamingMessage) => void);
     on(event: string, listener: Function);
     end(): void;
