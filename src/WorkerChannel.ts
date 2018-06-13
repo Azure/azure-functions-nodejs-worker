@@ -148,7 +148,7 @@ export class WorkerChannel {
 
       if (result && isFunction(result.then)) {
         result.then(result => (<any>context.done)(null, result, true))
-          .catch(err => context.done(err));
+          .catch(err => (<any>context.done)(err, null, true));
       }
     } catch (err) {
       resultCallback(err);
