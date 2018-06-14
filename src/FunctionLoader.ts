@@ -1,10 +1,10 @@
 import { isObject, isFunction } from 'util';
 
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
 
 export interface IFunctionLoader {
-  load(functionId: string, metadata: rpc.RpcFunctionMetadata$Properties): void;
+  load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void;
   getInfo(functionId: string): FunctionInfo;
   getFunc(functionId: string): Function;
 }
@@ -15,10 +15,11 @@ export class FunctionLoader implements IFunctionLoader {
         func: Function
     }} = {};
 
-    load(functionId: string, metadata: rpc.RpcFunctionMetadata$Properties): void {
-      let scriptFilePath = <string>metadata.scriptFile;
+    load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void {
+      let scriptFilePath = <string>(metadata && metadata.scriptFile);
       let script = require(scriptFilePath);
-      let userFunction = getEntryPoint(script, metadata.entryPoint);
+      let entryPoint = <string>(metadata && metadata.entryPoint);
+      let userFunction = getEntryPoint(script, entryPoint);
       if(!isFunction(userFunction)) {
         throw "The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.";
       }

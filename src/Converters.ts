@@ -1,23 +1,23 @@
-import { FunctionRpc as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { HttpRequest } from './http/Request';
 import { IDict } from './Context';
-export function fromRpcHttp(rpcHttp: rpc.RpcHttp$Properties) {
+export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
-    headers: rpcHttp.headers,
-    query: rpcHttp.query,
-    params: rpcHttp.params,
-    body: fromTypedData(rpcHttp.body),
-    rawBody: fromTypedData(rpcHttp.rawBody, false),
+    headers: <IDict<string>>rpcHttp.headers,
+    query: <IDict<string>>rpcHttp.query,
+    params: <IDict<string>>rpcHttp.params,
+    body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
+    rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
   };
 
   return httpContext;
 }
 
-export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
-    let httpMessage: rpc.RpcHttp$Properties = inputMessage;
+export function toRpcHttp(inputMessage): rpc.ITypedData {
+    let httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
@@ -25,7 +25,7 @@ export function toRpcHttp(inputMessage): rpc.TypedData$Properties {
     return { http: httpMessage };
 }
 
-export function toRpcHttpHeaders(inputHeaders: rpc.TypedData$Properties) {
+export function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
   let rpcHttpHeaders: {[key: string]: string} = {};
   for (let key in inputHeaders) {
     if (inputHeaders[key] != null) {
@@ -35,13 +35,15 @@ export function toRpcHttpHeaders(inputHeaders: rpc.TypedData$Properties) {
   return rpcHttpHeaders;
 }
 
-export function fromTypedData(typedData?: rpc.TypedData$Properties, convertStringToJson: boolean = true) {
+export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: boolean = true) {
   typedData = typedData || {};
   let str = typedData.string || typedData.json;
   if (str !== undefined) {
     if (convertStringToJson) {
       try {
-        str = JSON.parse(str);
+        if (str != null) {
+          str = JSON.parse(str);
+        }
       } catch (err) { }
     }
     return str;
@@ -50,7 +52,7 @@ export function fromTypedData(typedData?: rpc.TypedData$Properties, convertStrin
   }
 }
 
-export function toTypedData(inputObject): rpc.TypedData$Properties {
+export function toTypedData(inputObject): rpc.ITypedData {
   if (typeof inputObject === 'string') {
     return { string: inputObject };
   } else if (Buffer.isBuffer(inputObject)) {
@@ -69,8 +71,8 @@ export function toTypedData(inputObject): rpc.TypedData$Properties {
   }
 }
 
-export function getNormalizedBindingData(request: rpc.InvocationRequest$Properties): IDict {
-  let bindingData: IDict = {
+export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict<any> {
+  let bindingData: IDict<any> = {
     invocationId: request.invocationId
   };
   // node binding data is camel cased due to language convention
