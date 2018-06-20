@@ -72,6 +72,7 @@ class Context implements IContext {
     let _promise = false;
     // isPromise is a hidden parameter that we set to true in the event of a returned promise
     this.done = (err?: any, result?: any, isPromise?: boolean) => {
+      _promise = isPromise === true;
       if (_done) {
         if (_promise) {
           this.log.error("Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
@@ -81,7 +82,6 @@ class Context implements IContext {
         return;
       }
       _done = true;
-      _promise = isPromise === true;
 
       if (info.httpOutputName && this.res && this.bindings[info.httpOutputName] === undefined) {
         this.bindings[info.httpOutputName] = this.res;
