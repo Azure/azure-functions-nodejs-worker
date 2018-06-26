@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
-describe('Context', () => {
+describe('Converters', () => {
   it('normalizes binding trigger metadata', () => {
     var mockRequest: rpc.ITypedData = toRpcHttp({ url: "https://mock"});
     var triggerDataMock: { [k: string]: rpc.ITypedData } = {
