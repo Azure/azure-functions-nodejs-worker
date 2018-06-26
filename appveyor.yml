@@ -6,10 +6,15 @@ branches:
   - dev
   - master
 
+environment:
+  matrix:
+    - nodejs_version: "10.0.0"
+    - nodejs_version: "8.11.1"
+
 image: Visual Studio 2017
 clone_folder: c:\azure-functions-nodejs-worker
 install:
-- ps: Install-Product node 8.4.0 x86
+- ps: Install-Product node $env:nodejs_version x86
 cache: 'node_modules'
 build_script:
 - ps: |
