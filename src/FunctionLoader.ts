@@ -2,6 +2,7 @@ import { isObject, isFunction } from 'util';
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
+import { util } from 'protobufjs';
 
 export interface IFunctionLoader {
   load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void;
@@ -40,6 +41,7 @@ export class FunctionLoader implements IFunctionLoader {
 
 function getEntryPoint(f: any, entryPoint?: string): Function {
     if (isObject(f)) {
+        var obj = f;
         if (entryPoint) {
             // the module exports multiple functions
             // and an explicit entry point was named
@@ -54,6 +56,12 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
             // finally, see if there is an exported function named
             // 'run' or 'index' by convention
             f = f.run || f.index;
+        }
+
+        if (isFunction(f)){
+            return function() {
+                f.apply(obj, arguments);
+            }
         }
     }
 
