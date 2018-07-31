@@ -2,7 +2,7 @@ import * as semver from 'semver';
 
 // If user is not using Node.js v8 or v10, fail
 if (!(semver.satisfies(process.version, '8.x') || semver.satisfies(process.version, '10.x'))) {
-    let errorMessage = `Your Function App is currently set to use Node.js version ${process.version}, but the runtime requires an 8.x or 10.x version (ex: 8.11.1 or 10.6.0).
+    let errorMessage = `Your Function App is currently set to use Node.js version ${process.version}, but the runtime requires an Active LTS or Current version (ex: 8.11.1 or 10.6.0).
     For deployed code, please change WEBSITE_NODE_DEFAULT_VERSION in App Settings. On your local machine, you can change node version using 'nvm' (make sure to quit and restart your code editor to pick up the changes).`;
     console.error(errorMessage);
     throw new Error(errorMessage);
