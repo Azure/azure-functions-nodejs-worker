@@ -2,7 +2,6 @@ import { isObject, isFunction } from 'util';
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
-import { util } from 'protobufjs';
 
 export interface IFunctionLoader {
   load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void;
