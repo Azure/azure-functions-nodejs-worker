@@ -5,11 +5,12 @@ import Status = rpc.StatusResult.Status;
 import { WorkerChannel } from './WorkerChannel';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcService';
+import { systemLog, systemError } from './utils/Logger';
 
 export function startNodeWorker(args) {
   let { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
   if (!host || !port || !workerId || !requestId || !grpcMaxMessageLength) {
-    console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId --grpcMaxMessageLength grpcMaxMessageLength');
+    systemLog('usage --host hostName --port portNumber --workerId workerId --requestId requestId --grpcMaxMessageLength grpcMaxMessageLength');
     // Find which arguments are in error
     var debugInfo: string[] = [];
     if (!host) debugInfo.push(`\'hostName\' is ${host}`);
@@ -22,7 +23,7 @@ export function startNodeWorker(args) {
   }
 
   let connection = `${host}:${port}`;
-  console.log(`Worker ${workerId} connecting on ${connection}`);
+  systemLog(`Worker ${workerId} connecting on ${connection}`);
   let eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
 
   let workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
@@ -35,11 +36,11 @@ export function startNodeWorker(args) {
   });
 
   process.on('uncaughtException', err => {
-    console.error(`Worker ${workerId} uncaught exception: `, err);
+    systemError(`Worker ${workerId} uncaught exception: `, err);
     process.exit(1);
   });
   process.on('exit', code => {
-    console.log(`Worker ${workerId} exited with code ${code}`);
+    systemLog(`Worker ${workerId} exited with code ${code}`);
   });
 }
 

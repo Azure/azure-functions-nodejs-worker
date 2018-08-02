@@ -7,6 +7,7 @@ import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, ILogCallback, IResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
+import { systemError } from './utils/Logger';
 
 export class WorkerChannel {
   private _eventStream: IEventStream;
@@ -25,11 +26,11 @@ export class WorkerChannel {
       if (eventHandler) {
         eventHandler.apply(this, [msg.requestId, msg[event]]);
       } else {
-        console.error(`Worker ${workerId} had no handler for message '${event}'`)
+        systemError(`Worker ${workerId} had no handler for message '${event}'`)
       }
     });
     eventStream.on('error', function (err) {
-      console.error(`Worker ${workerId} encountered event stream error: `, err);
+      systemError(`Worker ${workerId} encountered event stream error: `, err);
       throw err;
     });
 
@@ -38,7 +39,7 @@ export class WorkerChannel {
     eventStream.write = function checkWrite(msg) {
         let msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
-          console.error(`Worker ${workerId} malformed message`, msgError);
+          systemError(`Worker ${workerId} malformed message`, msgError);
           throw msgError;
         }
         oldWrite.apply(eventStream, arguments);
@@ -73,7 +74,7 @@ export class WorkerChannel {
       }
       catch(exception) {
         let errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
-        console.error(errorMessage)
+        systemError(errorMessage)
         functionLoadStatus.status = Status.Failure;
         functionLoadStatus.exception =  {
           message: errorMessage,
@@ -144,6 +145,10 @@ export class WorkerChannel {
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
+      console.log = context.log;
+      console.error = context.log.error;
+      console.info = context.log.info;
+      console.warn = context.log.warn;
       let result = userFunction(context, ...inputs);
 
       if (result && isFunction(result.then)) {
