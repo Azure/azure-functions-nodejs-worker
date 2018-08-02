@@ -10,7 +10,15 @@ export function startNodeWorker(args) {
   let { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
   if (!host || !port || !workerId || !requestId || !grpcMaxMessageLength) {
     console.log('usage --host hostName --port portNumber --workerId workerId --requestId requestId --grpcMaxMessageLength grpcMaxMessageLength');
-    throw new Error('Connection info missing');
+    // Find which arguments are in error
+    var debugInfo: string[] = [];
+    if (!host) debugInfo.push(`\'hostName\' is ${host}`);
+    if (!port) debugInfo.push(`\'port\' is ${port}`);
+    if (!workerId) debugInfo.push(`\'workerId\' is ${workerId}`);
+    if (!requestId) debugInfo.push(`\'requestId\' is ${requestId}`);
+    if (!grpcMaxMessageLength) debugInfo.push(`\'grpcMaxMessageLength\' is ${grpcMaxMessageLength}`);
+
+    throw new Error(`gRPC client connection info is missing or incorrect (${debugInfo.join(", ")}).`);
   }
 
   let connection = `${host}:${port}`;
