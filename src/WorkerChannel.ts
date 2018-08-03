@@ -145,10 +145,6 @@ export class WorkerChannel {
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
-      console.log = context.log;
-      console.error = context.log.error;
-      console.info = context.log.info;
-      console.warn = context.log.warn;
       let result = userFunction(context, ...inputs);
 
       if (result && isFunction(result.then)) {
