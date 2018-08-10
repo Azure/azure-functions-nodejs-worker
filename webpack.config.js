@@ -4,7 +4,7 @@ var StringReplacePlugin = require("string-replace-webpack-plugin");
 var dynamicRequire = {
     pattern: /require\(([a-zA-Z0-9_\.]+)\)/,
     replacement: function (match, p1, offset, string) {
-        console.log(`dynamic require ${p1} in ${match}`);
+        systemLog(`dynamic require ${p1} in ${match}`);
         return `__non_webpack_require__(${p1})`;
     }
 }
