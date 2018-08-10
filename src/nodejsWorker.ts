@@ -1,9 +1,9 @@
-import { systemError } from './utils/Logger';
+var logPrefix = "LanguageWorkerConsoleLog";
 var worker;
 try {
     worker = require("../../worker-bundle.js");
 } catch (err) {
-    systemError(`Couldn't require bundle, falling back to Worker.js. ${err}`);
+    console.error(`${logPrefix}Couldn't require bundle, falling back to Worker.js. ${err}`);
     worker = require("./Worker.js");
 }
 
