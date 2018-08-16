@@ -28,7 +28,6 @@ build_script:
        Write-Host “git tag not found. Setting package suffix to '$buildNumber'"
       }     
       .\package.ps1 -buildNumber $buildNumber
-      if ($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode) }
 test_script:
 - npm run test
 artifacts:
