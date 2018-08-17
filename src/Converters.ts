@@ -48,7 +48,7 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
     }
     return str;
   } else if (typedData.bytes) {
-    return new Buffer(typedData.bytes);
+    return Buffer.from(typedData.bytes);
   }
 }
 
