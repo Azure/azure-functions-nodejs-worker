@@ -16,7 +16,7 @@
 
 ## Publishing
 
-`publish.ps1` creates the nuget package for the worker.
+`package.ps1` creates the nuget package for the worker.
 
 It builds and webpacks the generated node files into a bundle.
 We include several grpc native modules, for x86/x64 versions of windows, osx, linux
