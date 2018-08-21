@@ -12,9 +12,7 @@ function StopOnFailedExecution {
 
 Write-Host "buildNumber: " $buildNumber
 npm install
-StopOnFailedExecution # fail if error
 npm run build-nomaps 
-StopOnFailedExecution # fail if error
 remove-item pkg -Recurse -ErrorAction Ignore
 mkdir ./pkg/deps/grpc/etc/
 mkdir ./pkg/grpc/
