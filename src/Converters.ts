@@ -89,7 +89,7 @@ function convertKeysToCamelCase(obj: any) {
       let value = fromTypedData(obj[key]) || obj[key];
       let camelCasedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
       // If the value is a JSON object (and not http, which is already cased), convert keys to camel case
-      if (typeof value === 'object' && value && value.http == undefined) {
+      if (!Array.isArray(value) && typeof value === 'object' && value && value.http == undefined) {
         output[camelCasedKey] = convertKeysToCamelCase(value);
       } else {
         output[camelCasedKey] = value;
