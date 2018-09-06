@@ -46,6 +46,9 @@ describe('Converters', () => {
         "SequenceNumberArray": {
             json: JSON.stringify([1, 2])
         },
+        "Properties": {
+            json: JSON.stringify({"Greetings": ["Hola", "Salut", "Konichiwa"], "SequenceNumber": [1, 2, 3]})
+        },
         "Sys": {
             json: JSON.stringify({MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212'})
         }
@@ -63,10 +66,18 @@ describe('Converters', () => {
     expect(bindingData.enqueuedMessages[1]).to.equal("Hello 2");
     expect(Array.isArray(bindingData.sequenceNumberArray)).to.be.true;
     expect(bindingData.sequenceNumberArray.length).to.equal(2);
-    expect(bindingData.sequenceNumberArray[1]).to.equal(2);
+    expect(bindingData.sequenceNumberArray[0]).to.equal(1);
     expect(bindingData.sys.methodName).to.equal('test-js');
     expect(bindingData.sys.utcNow).to.equal('2018');
     expect(bindingData.sys.randGuid).to.equal('3212');
+    // Verify that nested arrays are converted correctly
+    let properties = bindingData.properties;
+    expect(Array.isArray(properties.greetings)).to.be.true;
+    expect(properties.greetings.length).to.equal(3);
+    expect(properties.greetings[1]).to.equal("Salut");
+    expect(Array.isArray(properties.sequenceNumber)).to.be.true;
+    expect(properties.sequenceNumber.length).to.equal(3);
+    expect(properties.sequenceNumber[0]).to.equal(1);
     // Verify accessing original keys is undefined
     expect(bindingData.Sys).to.be.undefined;
     expect(bindingData.sys.UtcNow).to.be.undefined;
