@@ -89,6 +89,21 @@ describe('FunctionLoader', () => {
     });
   });
   
+  it ('allows to return a promise from async user function', () => {
+    mock('test', { test: async () => {} });
+
+    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+        scriptFile: 'test',
+        entryPoint: 'test'
+    });
+
+    var userFunction = loader.getFunc('functionId');
+    var result = userFunction();
+
+    expect(result).to.be.not.an('undefined');
+    expect(result.then).to.be.a('function');
+  });
+
   afterEach(() => {
     mock.stopAll()
   });
