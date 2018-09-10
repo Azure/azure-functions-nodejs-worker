@@ -59,7 +59,7 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
 
         if (isFunction(f)){
             return function() {
-                f.apply(obj, arguments);
+                return f.apply(obj, arguments);
             }
         }
     }
