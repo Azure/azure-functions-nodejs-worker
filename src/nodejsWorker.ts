@@ -1,9 +1,38 @@
 var logPrefix = "LanguageWorkerConsoleLog";
+var ACTIVE_LTS_VERSION = "v8";
+var CURRENT_BRANCH_VERSION = "v10";
 var worker;
+
+// Node version validation
+try {
+    var versionSplit = process.version.split(".");
+    var message;
+    if (versionSplit.length != 3) {
+        message = "Could not parse Node.js version";
+    }
+    var major = versionSplit[0];
+    if (major != ACTIVE_LTS_VERSION && major != CURRENT_BRANCH_VERSION) {
+        message = "Node.js version is too low. The version you are using is "
+                + process.version +
+                ", but the runtime requires an Active LTS or Current version (ex: 8.11.1 or 10.6.0). "
+                + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, upgrade the node version used by your machine (make sure to quit and restart your code editor to pick up the changes).";
+    }
+    if (message) {
+        console.error(message);
+        throw new Error(message);
+    }
+}
+catch (err) {
+    var unknownError = "An error has ocurred while validating Node.js version. ";
+    console.error(logPrefix + unknownError + err);
+    throw unknownError + err;
+}
+
+// Try requiring bundle
 try {
     worker = require("../../worker-bundle.js");
 } catch (err) {
-    console.error(`${logPrefix}Couldn't require bundle, falling back to Worker.js. ${err}`);
+    console.log(logPrefix + "Couldn't require bundle, falling back to Worker.js. " + err);
     worker = require("./Worker.js");
 }
 
