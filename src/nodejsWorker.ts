@@ -3,30 +3,38 @@ var ACTIVE_LTS_VERSION = "v8";
 var CURRENT_BRANCH_VERSION = "v10";
 var worker;
 
-// Node version validation
-try {
-    var versionSplit = process.version.split(".");
+// Try validating node version
+// NOTE: This method should be manually tested if changed as it is in a sensitive code path 
+//       and is JavaScript that runs on at least node version 0.10.28
+function validateNodeVersion(version) {
     var message;
-    if (versionSplit.length != 3) {
-        message = "Could not parse Node.js version";
+    try {
+        var versionSplit = version.split(".");
+        var major = versionSplit[0];
+        // process.version returns invalid output
+        if (versionSplit.length != 3){
+            message = "Could not parse Node.js version: '" + version + "'";
+        // Unsupported version
+        } else if (major != ACTIVE_LTS_VERSION && major != CURRENT_BRANCH_VERSION) {
+            message = "Node.js version is too low. The version you are using is "
+                    + version +
+                    ", but the runtime requires an Active LTS or Current version (ex: 8.11.1 or 10.6.0). "
+                    + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, upgrade the node version used by your machine (make sure to quit and restart your code editor to pick up the changes).";
+        }
+    // Unknown error
+    } catch(err) {
+        var unknownError = "Error in validating Node.js version. ";
+        console.error(logPrefix + unknownError + err);
+        throw unknownError + err;
     }
-    var major = versionSplit[0];
-    if (major != ACTIVE_LTS_VERSION && major != CURRENT_BRANCH_VERSION) {
-        message = "Node.js version is too low. The version you are using is "
-                + process.version +
-                ", but the runtime requires an Active LTS or Current version (ex: 8.11.1 or 10.6.0). "
-                + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, upgrade the node version used by your machine (make sure to quit and restart your code editor to pick up the changes).";
-    }
+    // Throw error for known version errors
     if (message) {
-        console.error(message);
-        throw new Error(message);
+        console.error(logPrefix + message);
+        throw message;
     }
 }
-catch (err) {
-    var unknownError = "An error has ocurred while validating Node.js version. ";
-    console.error(logPrefix + unknownError + err);
-    throw unknownError + err;
-}
+
+validateNodeVersion(process.version);
 
 // Try requiring bundle
 try {
