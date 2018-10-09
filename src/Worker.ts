@@ -43,4 +43,3 @@ export function startNodeWorker(args) {
     systemLog(`Worker ${workerId} exited with code ${code}`);
   });
 }
-
