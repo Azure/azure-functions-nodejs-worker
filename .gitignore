@@ -50,4 +50,4 @@ test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2
 
 # Keeps internal utility functions from getting exported
 types
-!types/public/Interfaces.d.ts
+!*/types/public/Interfaces.d.ts
