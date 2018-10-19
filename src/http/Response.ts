@@ -1,7 +1,8 @@
 // Copyright (c) .NET Foundation. All rights thiserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
+import { IResponse } from '../public/Interfaces';
 
-export class Response {
+export class Response implements IResponse {
     statusCode?: string | number;
     headers: {[key:string]: any} = {};
     body?: any;
@@ -23,28 +24,28 @@ export class Response {
         return this;
     }
 
-    setHeader(field: string, val: any) {
+    setHeader(field: string, val: any): IResponse  {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
 
-    getHeader(field: string) {
+    getHeader(field: string): IResponse {
         return this.headers[field.toLowerCase()];
     }
 
-    removeHeader(field: string){
+    removeHeader(field: string) {
         delete this.headers[field.toLowerCase()];
         return this;
     }
 
-    status(statusCode: string | number){
+    status(statusCode: string | number): IResponse {
         this.statusCode = statusCode;
         return this;
     }
 
-    sendStatus(statusCode: string | number){
-        return this.status(statusCode)
-            .end();
+    sendStatus(statusCode: string | number) {
+        this.status(statusCode);
+        return this.end();
     }
 
     type(type){
@@ -52,12 +53,14 @@ export class Response {
     }
 
     json(body){
-        return this.type('application/json')
-            .send(body);
+        this.type('application/json');
+        this.send(body);
+        return;
     }
 
     send = this.end;
-    header = this.set = this.setHeader;
+    header = this.setHeader;
+    set = this.setHeader;
     get = this.getHeader;
     
     private setContentType() {
