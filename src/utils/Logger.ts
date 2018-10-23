@@ -5,5 +5,5 @@ export function systemLog(message?: any, ...optionalParams: any[]) {
 };
 
 export function systemError(message?: any, ...optionalParams: any[]) { 
-    console.error(logPrefix + message, ...optionalParams); 
+    console.error(logPrefix + "[error] " + message, ...optionalParams); 
 };
