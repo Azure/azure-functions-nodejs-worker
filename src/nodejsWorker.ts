@@ -1,4 +1,5 @@
 var logPrefix = "LanguageWorkerConsoleLog";
+var errorPrefix = logPrefix + "[error] ";
 var ACTIVE_LTS_VERSION = "v8";
 var CURRENT_BRANCH_VERSION = "v10";
 var worker;
@@ -24,12 +25,12 @@ function validateNodeVersion(version) {
     // Unknown error
     } catch(err) {
         var unknownError = "Error in validating Node.js version. ";
-        console.error(logPrefix + unknownError + err);
+        console.error(errorPrefix + unknownError + err);
         throw unknownError + err;
     }
     // Throw error for known version errors
     if (message) {
-        console.error(logPrefix + message);
+        console.error(errorPrefix + message);
         throw message;
     }
 }
