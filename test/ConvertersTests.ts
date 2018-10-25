@@ -1,4 +1,5 @@
-import { getNormalizedBindingData, toRpcHttp } from '../src/Converters';
+import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/Converters';
+import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
@@ -81,5 +82,49 @@ describe('Converters', () => {
     // Verify accessing original keys is undefined
     expect(bindingData.Sys).to.be.undefined;
     expect(bindingData.sys.UtcNow).to.be.undefined;
+  });
+
+  it('catologues binding definitions', () => {
+    let functionMetaData: rpc.IRpcFunctionMetadata = <rpc.IRpcFunctionMetadata> {
+        name: "MyFunction",
+        directory: ".",
+        scriptFile: "index.js",
+        bindings: {
+            req: {
+                type: "httpTrigger",
+                direction: rpc.BindingInfo.Direction.in
+            },
+            res: {
+                type: "http",
+                direction: rpc.BindingInfo.Direction.out
+            },
+            firstQueueOutput: {
+                type: "queue",
+                direction: rpc.BindingInfo.Direction.out
+            },
+            secondQueueOutput: {
+                type: "queue",
+                direction: rpc.BindingInfo.Direction.out
+            }
+        }
+    };
+
+    let functionInfo: FunctionInfo = new FunctionInfo(functionMetaData);
+    
+    var bindingDefinitions = getBindingDefinitions(functionInfo);
+    // Verify conversion to camelCase
+    expect(bindingDefinitions.length).to.equal(4);
+    expect(bindingDefinitions[0].name).to.equal("req");
+    expect(bindingDefinitions[0].direction).to.equal("in");
+    expect(bindingDefinitions[0].type).to.equal("httpTrigger");
+    expect(bindingDefinitions[1].name).to.equal("res");
+    expect(bindingDefinitions[1].direction).to.equal("out");
+    expect(bindingDefinitions[1].type).to.equal("http");
+    expect(bindingDefinitions[2].name).to.equal("firstQueueOutput");
+    expect(bindingDefinitions[2].direction).to.equal("out");
+    expect(bindingDefinitions[2].type).to.equal("queue");
+    expect(bindingDefinitions[3].name).to.equal("secondQueueOutput");
+    expect(bindingDefinitions[3].direction).to.equal("out");
+    expect(bindingDefinitions[3].type).to.equal("queue");
   });
 })
