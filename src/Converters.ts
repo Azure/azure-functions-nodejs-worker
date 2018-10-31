@@ -81,7 +81,7 @@ export function getBindingDefinitions(info: FunctionInfo): IDict<any>[] {
     .map(name => { return { 
       name: name,
       type: bindings[name].type, 
-      direction: getEnumName(bindings[name].direction) }; 
+      direction: getDirectionName(bindings[name].direction) }; 
     });
 }
 
@@ -96,15 +96,8 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict
   return bindingData;
 }
 
-function getEnumName(direction: rpc.BindingInfo.Direction|null|undefined) {
-  switch (direction){
-    case rpc.BindingInfo.Direction.in:
-      return "in";
-    case rpc.BindingInfo.Direction.out:
-      return "out";
-    case rpc.BindingInfo.Direction.inout:
-      return "inout";
-  }
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined) {
+  return Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
 }
 
 // Recursively convert keys of objects to camel case
