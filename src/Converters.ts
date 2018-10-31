@@ -1,4 +1,5 @@
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { FunctionInfo } from './FunctionInfo';
 import { HttpRequest } from './http/Request';
 import { IDict } from './Context';
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
@@ -71,6 +72,19 @@ export function toTypedData(inputObject): rpc.ITypedData {
   }
 }
 
+export function getBindingDefinitions(info: FunctionInfo): IDict<any>[] {
+  let bindings = info.bindings;
+  if (!bindings) {
+    return [];
+  }
+  return Object.keys(bindings)
+    .map(name => { return { 
+      name: name,
+      type: bindings[name].type, 
+      direction: getDirectionName(bindings[name].direction) }; 
+    });
+}
+
 export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict<any> {
   let bindingData: IDict<any> = {
     invocationId: request.invocationId
@@ -80,6 +94,10 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict
     Object.assign(bindingData, convertKeysToCamelCase(request.triggerMetadata))
   }
   return bindingData;
+}
+
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined) {
+  return Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
 }
 
 // Recursively convert keys of objects to camel case

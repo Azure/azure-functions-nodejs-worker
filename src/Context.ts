@@ -1,5 +1,5 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, toTypedData, getNormalizedBindingData } from './Converters';
+import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './Converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
@@ -10,6 +10,7 @@ export interface IContext {
   executionContext: IExecutionContext;
   bindings: IDict<any>;
   bindingData: IDict<any>;
+  bindingDefinitions: IDict<any>[];
   log: ILogger;
   req?: Request;
   res?: Response;
@@ -51,6 +52,7 @@ class Context implements IContext {
   executionContext: IExecutionContext;
   bindings: IDict<any>;
   bindingData: IDict<any>;
+  bindingDefinitions: IDict<any>[];
   log: ILogger;
   req?: Request;
   res?: Response;
@@ -67,6 +69,7 @@ class Context implements IContext {
 
     this.log = getLogger(this.invocationId, this.executionContext.functionName, logCallback);
     this.bindingData = getNormalizedBindingData(request);
+    this.bindingDefinitions = getBindingDefinitions(info);
 
     let _done = false;
     let _promise = false;
