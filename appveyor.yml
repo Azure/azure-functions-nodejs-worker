@@ -35,8 +35,10 @@ build_script:
 
 after_build:
 - ps: |
-      .\setup-e2e-tests.ps1
-      $proc = start-process -filepath c:\projects\azure-functions-nodejs-worker\test\end-to-end\Azure.Functions.Cli\func.exe -WorkingDirectory "c:\projects\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "host start" -PassThru
+      .\get-latest-cli.ps1
+      $extensions_proc = start-process -filepath c:\projects\azure-functions-nodejs-worker\test\end-to-end\Azure.Functions.Cli\func.exe -WorkingDirectory "c:\projects\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install"
+      Start-Sleep -s 30
+      $host_proc = start-process -filepath c:\projects\azure-functions-nodejs-worker\test\end-to-end\Azure.Functions.Cli\func.exe -WorkingDirectory "c:\projects\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "host start" -PassThru
       # wait for host to start
       Start-Sleep -s 30
 
@@ -49,4 +51,6 @@ artifacts:
 - path: 'pkg/*.nupkg'
 
 on_finish:
-  - ps: Stop-Process -Id $proc.Id -Erroraction Ignore
+- ps: |
+      Stop-Process -Id $extensions_proc.Id -Erroraction Ignore
+      Stop-Process -Id $host_proc.Id -Erroraction Ignore

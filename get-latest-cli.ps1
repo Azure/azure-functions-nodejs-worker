@@ -39,7 +39,7 @@ Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers dire
 $configuration = if ($env:CONFIGURATION) { $env:CONFIGURATION } else { 'Debug' }
 Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$FUNC_CLI_DIRECTORY/workers/node"
 
-Write-Host "Installing extensions..."
+Write-Host "Set up func.exe..."
 
 $Env:AzureWebJobsScriptRoot = "$TEST_SCRIPT_ROOT/testFunctionApp"
 $Env:FUNCTIONS_WORKER_RUNTIME = "node"
@@ -52,7 +52,3 @@ Push-Location $Env:AzureWebJobsScriptRoot
 if ($IsMacOS -or $IsLinux) {
     chmod +x $funcExePath
 }
-
-Write-Host "Installing extensions..."
-start-process -filepath $funcExePath -WorkingDirectory "$TEST_SCRIPT_ROOT/testFunctionApp" -ArgumentList "extensions install"
-Start-Sleep -s 30
