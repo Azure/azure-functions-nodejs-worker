@@ -55,10 +55,12 @@ if ($IsMacOS -or $IsLinux) {
 
 Write-Host "Installing extensions..."
 start-process -filepath $funcExePath -WorkingDirectory "$TEST_SCRIPT_ROOT/testFunctionApp" -ArgumentList "extensions install"
+Start-Sleep -s 30
+
 $proc = start-process -filepath $funcExePath -WorkingDirectory $TEST_SCRIPT_ROOT -ArgumentList "host start" -PassThru
 
 Write-Host "Wait for Functions Host to start..."
-Start-Sleep -s 10
+Start-Sleep -s 30
 
 Write-Host "Beginning tests..."
 $TestScript = Join-Path $TEST_SCRIPT_ROOT "e2e-tests.ps1"
