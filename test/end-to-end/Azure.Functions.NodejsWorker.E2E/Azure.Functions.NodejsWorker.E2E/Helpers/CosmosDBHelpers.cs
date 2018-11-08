@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public class TestDocument
     {

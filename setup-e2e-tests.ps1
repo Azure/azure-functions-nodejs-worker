@@ -39,7 +39,7 @@ Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers dire
 $configuration = if ($env:CONFIGURATION) { $env:CONFIGURATION } else { 'Debug' }
 Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$FUNC_CLI_DIRECTORY/workers/node"
 
-Write-Host "Staring Functions Host..."
+Write-Host "Installing extensions..."
 
 $Env:AzureWebJobsScriptRoot = "$TEST_SCRIPT_ROOT/testFunctionApp"
 $Env:FUNCTIONS_WORKER_RUNTIME = "node"
@@ -56,15 +56,3 @@ if ($IsMacOS -or $IsLinux) {
 Write-Host "Installing extensions..."
 start-process -filepath $funcExePath -WorkingDirectory "$TEST_SCRIPT_ROOT/testFunctionApp" -ArgumentList "extensions install"
 Start-Sleep -s 30
-
-$proc = start-process -filepath $funcExePath -WorkingDirectory $TEST_SCRIPT_ROOT -ArgumentList "host start" -PassThru
-
-Write-Host "Wait for Functions Host to start..."
-Start-Sleep -s 30
-
-Write-Host "Beginning tests..."
-$TestScript = Join-Path $TEST_SCRIPT_ROOT "e2e-tests.ps1"
-& $TestScript
-
-Write-Host "Stopping Functions Host."
-Stop-Process -Id $proc.Id -Erroraction Ignore

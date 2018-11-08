@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public class EventHubsHelpers
     {

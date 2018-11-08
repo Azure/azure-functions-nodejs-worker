@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public class HttpEndToEndTests 
     {

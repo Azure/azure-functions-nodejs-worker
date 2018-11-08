@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public static class Constants
     {

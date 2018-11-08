@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public static class Utilities
     {

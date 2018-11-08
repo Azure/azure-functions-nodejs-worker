@@ -6,7 +6,7 @@ using Microsoft.WindowsAzure.Storage.Queue;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Azure.Functions.Java.Tests.E2E
+namespace Azure.Functions.NodeJs.Tests.E2E
 {
     class StorageHelpers
     {
