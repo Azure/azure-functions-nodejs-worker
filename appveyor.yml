@@ -36,7 +36,7 @@ build_script:
 after_build:
 - ps: |
       .\setup-e2e-tests.ps1
-      $proc = start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "host start" -PassThru
+      $proc = start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "host start" -NoNewWindow -PassThru
       # wait for host to start
       Start-Sleep -s 30
 

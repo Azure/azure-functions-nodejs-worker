@@ -38,11 +38,9 @@ Expand-Archive ".\Azure.Functions.Cli.zip" -DestinationPath ".\Azure.Functions.C
 }
 
 Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers directory..."
-
-$configuration = if ($env:CONFIGURATION) { $env:CONFIGURATION } else { 'Debug' }
 Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
 
 Write-Host "Installing extensions..."
-start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install"
+start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install" -NoNewWindow
 StopOnFailedExecution
 Start-Sleep -s 30
