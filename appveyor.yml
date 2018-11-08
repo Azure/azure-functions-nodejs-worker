@@ -30,5 +30,7 @@ build_script:
       .\package.ps1 -buildNumber $buildNumber
 test_script:
 - npm run test
+- ps: | 
+      .\run-e2e-tests.ps1
 artifacts:
 - path: 'pkg/*.nupkg'
