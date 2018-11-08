@@ -42,22 +42,7 @@ Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers dire
 $configuration = if ($env:CONFIGURATION) { $env:CONFIGURATION } else { 'Debug' }
 Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
 
-Write-Host "Set up func.exe..."
-
-$Env:AzureWebJobsScriptRoot = "$TEST_SCRIPT_ROOT/testFunctionApp"
-$Env:FUNCTIONS_WORKER_RUNTIME = "node"
-$Env:AZURE_FUNCTIONS_ENVIRONMENT = "development"
-$Env:Path = "$Env:Path$([System.IO.Path]::PathSeparator)$FUNC_CLI_DIRECTORY"
-$funcExePath = Join-Path $FUNC_CLI_DIRECTORY $FUNC_EXE_NAME
-
-Push-Location $Env:AzureWebJobsScriptRoot
-
-if ($IsMacOS -or $IsLinux) {
-    chmod +x $funcExePath
-}
-
 Write-Host "Installing extensions..."
-
-start-process -filepath "c:\projects\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\projects\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install"
+start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install"
 StopOnFailedExecution
 Start-Sleep -s 30
