@@ -67,3 +67,4 @@ Write-Host "Host Logs:"
 $host_logs = Get-Content -Path "output.txt" -Raw
 Write-Host $host_logs
 Remove-Item -Path "output.txt"
+StopOnFailedExecution
