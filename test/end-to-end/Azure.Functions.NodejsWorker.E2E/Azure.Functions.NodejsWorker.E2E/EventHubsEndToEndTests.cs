@@ -41,19 +41,19 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             string expectedEventId = Guid.NewGuid().ToString();
             try
             {
-                await SetupQueue(Constants.StringOutputEventHubQueueName);
+                await SetupQueue(Constants.OutputCardinalityOneEventHubName);
 
-                // Need to setup EventHubs: test-input-java and test-output-java
-                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.InputStringEventHubName);
+                // Need to setup EventHubs: test-input-one-node
+                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.InputCardinalityOneEventHubName);
 
                 //Verify
-                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.StringOutputEventHubQueueName);
+                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.OutputCardinalityOneEventHubName);
                 Assert.Contains(expectedEventId, queueMessage);
             }
             finally
             {
                 //Clear queue
-                await StorageHelpers.ClearQueue(Constants.StringOutputEventHubQueueName);
+                await StorageHelpers.ClearQueue(Constants.OutputCardinalityOneEventHubName);
             }
         }
 

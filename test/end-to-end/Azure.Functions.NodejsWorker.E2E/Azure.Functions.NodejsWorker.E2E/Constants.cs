@@ -26,6 +26,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         public static string StringOutputEventHubQueueName = "test-output-string-node";
         public static string InputObjectEventHubName = "test-input-object-node";
         public static string InputStringEventHubName = "test-input-string-node";
+        public static string InputCardinalityOneEventHubName = "test-input-one-node";
+        public static string OutputCardinalityOneEventHubName = "test-output-one-node";
         public static string EventHubsConnectionStringSetting = Environment.GetEnvironmentVariable("AzureWebJobsEventHubSender");
     }
 }
