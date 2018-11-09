@@ -4,7 +4,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-import { IContext, IDict, IExecutionContext, ILogger, IDoneCallback } from './public/Interfaces' 
+import { IContext, IExecutionContext, ILogger, IDoneCallback } from './public/Interfaces' 
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
   let context = new Context(info, request, logCallback, callback);
@@ -110,4 +110,8 @@ export interface ILogCallback {
 
 export interface IResultCallback {
   (err?: any, result?: IInvocationResult): void;
+}
+
+export interface IDict<T> {
+  [key: string]: T
 }

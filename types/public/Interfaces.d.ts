@@ -1,9 +1,15 @@
 export interface IContext {
     invocationId: string;
     executionContext: IExecutionContext;
-    bindings: IDict<any>;
-    bindingData: IDict<any>;
-    bindingDefinitions: IDict<any>[];
+    bindings: {
+        [key: string]: any;
+    };
+    bindingData: {
+        [key: string]: any;
+    };
+    bindingDefinitions: {
+        [key: string]: any;
+    };
     log: ILogger;
     req?: IRequest;
     res?: IResponse;
@@ -13,9 +19,6 @@ export interface IExecutionContext {
     invocationId: string;
     functionName: string;
     functionDirectory: string;
-}
-export interface IDict<T> {
-    [key: string]: T;
 }
 export interface ILog {
     (...args: any[]): void;
