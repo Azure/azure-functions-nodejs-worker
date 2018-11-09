@@ -3,6 +3,7 @@ export interface IContext {
     executionContext: IExecutionContext;
     bindings: IDict<any>;
     bindingData: IDict<any>;
+    bindingDefinitions: IDict<any>[];
     log: ILogger;
     req?: IRequest;
     res?: IResponse;
