@@ -41,6 +41,29 @@ Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers dire
 Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
 
 Write-Host "Installing extensions..."
-start-process -filepath "c:\azure-functions-nodejs-worker\Azure.Functions.Cli\func.exe" -WorkingDirectory "c:\azure-functions-nodejs-worker\test\end-to-end\testFunctionApp" -ArgumentList "extensions install" -NoNewWindow
+cd "$currDir\test\end-to-end\testFunctionApp"
+& "$currDir\Azure.Functions.Cli\func.exe" extensions install | %{    
+  if ($_ -match 'OK')    
+  { Write-Host $_ -f Green }    
+  elseif ($_ -match 'FAIL|ERROR')   
+  { Write-Host $_ -f Red }   
+  else    
+  { Write-Host $_ }    
+}
 StopOnFailedExecution
+cd $currDir
+
+Write-Host "Starting functions host..."
+$proc = start-process -NoNewWindow -PassThru -filepath "$currDir\Azure.Functions.Cli\func.exe" -WorkingDirectory "$currDir\test\end-to-end\testFunctionApp" -ArgumentList "host start" -RedirectStandardOutput "output.txt"
 Start-Sleep -s 30
+
+Write-Host "Running E2E tests..."
+./run-e2e-tests.ps1
+
+Write-Host "Closing process..."
+Stop-Process -Id $proc.Id -Erroraction Ignore 
+
+Write-Host "Host Logs:"
+$host_logs = Get-Content -Path "output.txt" -Raw
+Write-Host $host_logs
+Remove-Item -Path "output.txt"

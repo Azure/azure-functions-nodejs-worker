@@ -40,8 +40,8 @@ azure-functions-language-worker-protobuf/*
 dist
 pkg
 
-test/end-to-end/Azure.Functions.Cli
-test/end-to-end/Azure.Functions.Cli.zip
+Azure.Functions.Cli
+Azure.Functions.Cli.zip
 test/end-to-end/testFunctionApp/bin
 test/end-to-end/testFunctionApp/obj
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/.vs
