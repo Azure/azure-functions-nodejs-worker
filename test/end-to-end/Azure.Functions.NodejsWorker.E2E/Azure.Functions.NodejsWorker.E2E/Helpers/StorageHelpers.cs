@@ -10,7 +10,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
 {
     class StorageHelpers
     {
-        public static CloudStorageAccount _storageAccount = CloudStorageAccount.Parse(Constants.StorageConnectionStringSetting);
+        public static CloudStorageAccount _storageAccount = CloudStorageAccount.Parse(Constants.Queue.StorageConnectionStringSetting);
         public static CloudQueueClient _queueClient = _storageAccount.CreateCloudQueueClient();
 
         public async static Task DeleteQueue(string queueName)

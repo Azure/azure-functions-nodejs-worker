@@ -29,7 +29,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 events.Add(evt);
             }
 
-            EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(Constants.EventHubsConnectionStringSetting);
+            EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(Constants.EventHubs.EventHubsConnectionStringSetting);
             builder.EntityPath = eventHubName;
             EventHubClient eventHubClient = EventHubClient.CreateFromConnectionString(builder.ToString());
             await eventHubClient.SendAsync(events);
@@ -48,7 +48,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 events.Add(evt);
             }
 
-            EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(Constants.EventHubsConnectionStringSetting);
+            EventHubsConnectionStringBuilder builder = new EventHubsConnectionStringBuilder(Constants.EventHubs.EventHubsConnectionStringSetting);
             builder.EntityPath = evenHubName;
             EventHubClient eventHubClient = EventHubClient.CreateFromConnectionString(builder.ToString());
             await eventHubClient.SendAsync(events);

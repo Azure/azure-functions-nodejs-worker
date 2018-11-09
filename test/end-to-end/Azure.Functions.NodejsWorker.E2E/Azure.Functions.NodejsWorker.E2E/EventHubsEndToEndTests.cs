@@ -18,20 +18,20 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             string expectedEventId = Guid.NewGuid().ToString();
             try
             {
-                await SetupQueue(Constants.OutputEventHubQueueName);
+                await SetupQueue(Constants.EventHubs.Json_Test.OutputName);
 
                 // Need to setup EventHubs: test-inputjson-java and test-outputjson-java
-                await EventHubsHelpers.SendJSONMessagesAsync(expectedEventId, Constants.InputObjectEventHubName);
+                await EventHubsHelpers.SendJSONMessagesAsync(expectedEventId, Constants.EventHubs.Json_Test.InputName);
 
                 //Verify
-                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.OutputEventHubQueueName);
+                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.EventHubs.Json_Test.OutputName);
                 JObject json = JObject.Parse(queueMessage);
                 Assert.Contains(expectedEventId, json["value"].ToString());
             }
             finally
             {
                 //Clear queue
-                await StorageHelpers.ClearQueue(Constants.OutputEventHubQueueName);
+                await StorageHelpers.ClearQueue(Constants.EventHubs.Json_Test.OutputName);
             }
         }
 
@@ -41,19 +41,19 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             string expectedEventId = Guid.NewGuid().ToString();
             try
             {
-                await SetupQueue(Constants.OutputCardinalityOneEventHubName);
+                await SetupQueue(Constants.EventHubs.String_Test.OutputName);
 
                 // Need to setup EventHubs: test-input-one-node
-                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.InputCardinalityOneEventHubName);
+                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.EventHubs.String_Test.InputName);
 
                 //Verify
-                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.OutputCardinalityOneEventHubName);
+                var queueMessage = await StorageHelpers.ReadFromQueue(Constants.EventHubs.String_Test.OutputName);
                 Assert.Contains(expectedEventId, queueMessage);
             }
             finally
             {
                 //Clear queue
-                await StorageHelpers.ClearQueue(Constants.OutputCardinalityOneEventHubName);
+                await StorageHelpers.ClearQueue(Constants.EventHubs.String_Test.OutputName);
             }
         }
 
@@ -63,19 +63,19 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             string expectedEventId = Guid.NewGuid().ToString();
             try
             {
-                await SetupQueue(Constants.OutputEventHubQueueName);
+                await SetupQueue(Constants.EventHubs.Cardinality_One_Test.OutputName);
 
                 // Need to setup EventHubs: test-inputOne-java and test-outputone-java
-                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.OutputEventHubQueueName);
+                await EventHubsHelpers.SendMessagesAsync(expectedEventId, Constants.EventHubs.Cardinality_One_Test.InputName);
 
                 //Verify
-                IEnumerable<string> queueMessages = await StorageHelpers.ReadMessagesFromQueue(Constants.OutputEventHubQueueName);
+                IEnumerable<string> queueMessages = await StorageHelpers.ReadMessagesFromQueue(Constants.EventHubs.Cardinality_One_Test.OutputName);
                 Assert.True(queueMessages.All(msg => msg.Contains(expectedEventId)));
             }
             finally
             {
                 //Clear queue
-                await StorageHelpers.ClearQueue(Constants.OutputEventHubQueueName);
+                await StorageHelpers.ClearQueue(Constants.EventHubs.Cardinality_One_Test.OutputName);
             }
         }
 

@@ -14,15 +14,15 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         {
             string expectedQueueMessage = Guid.NewGuid().ToString();
             //Clear queue
-            await StorageHelpers.ClearQueue(Constants.OutputBindingQueueName);
-            await StorageHelpers.ClearQueue(Constants.InputBindingQueueName);
+            await StorageHelpers.ClearQueue(Constants.Queue.OutputBindingName);
+            await StorageHelpers.ClearQueue(Constants.Queue.InputBindingName);
 
             //Set up and trigger            
-            await StorageHelpers.CreateQueue(Constants.OutputBindingQueueName);
-            await StorageHelpers.InsertIntoQueue(Constants.InputBindingQueueName, expectedQueueMessage);
+            await StorageHelpers.CreateQueue(Constants.Queue.OutputBindingName);
+            await StorageHelpers.InsertIntoQueue(Constants.Queue.InputBindingName, expectedQueueMessage);
             
             //Verify
-            var queueMessage = await StorageHelpers.ReadFromQueue(Constants.OutputBindingQueueName);
+            var queueMessage = await StorageHelpers.ReadFromQueue(Constants.Queue.OutputBindingName);
             Assert.Equal(expectedQueueMessage, queueMessage);
         }
     }

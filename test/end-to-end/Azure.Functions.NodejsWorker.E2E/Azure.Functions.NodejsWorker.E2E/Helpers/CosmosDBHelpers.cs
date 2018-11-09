@@ -17,14 +17,14 @@ namespace Azure.Functions.NodeJs.Tests.E2E
     public static class CosmosDBHelpers
     {
         private static DocumentClient _docDbClient;
-        private static Uri inputCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.DocDbDatabaseName, Constants.InputDocDbCollectionName);
-        private static Uri outputCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.DocDbDatabaseName, Constants.OutputDocDbCollectionName);
-        private static Uri leasesCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.DocDbDatabaseName, Constants.DocDbLeaseCollectionName);
+        private static Uri inputCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.CosmosDB.DbName, Constants.CosmosDB.InputCollectionName);
+        private static Uri outputCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.CosmosDB.DbName, Constants.CosmosDB.OutputCollectionName);
+        private static Uri leasesCollectionsUri = UriFactory.CreateDocumentCollectionUri(Constants.CosmosDB.DbName, Constants.CosmosDB.LeaseCollectionName);
 
         static CosmosDBHelpers()
         {
             var builder = new System.Data.Common.DbConnectionStringBuilder();
-            builder.ConnectionString = Constants.CosmosDBConnectionStringSetting;
+            builder.ConnectionString = Constants.CosmosDB.CosmosDBConnectionStringSetting;
             var serviceUri = new Uri(builder["AccountEndpoint"].ToString());
             _docDbClient = new DocumentClient(serviceUri, builder["AccountKey"].ToString());
         }
@@ -37,18 +37,18 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 Id = docId
             };
 
-            Document insertedDoc = await _docDbClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(Constants.DocDbDatabaseName, Constants.InputDocDbCollectionName), documentToTest);
+            Document insertedDoc = await _docDbClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(Constants.CosmosDB.DbName, Constants.CosmosDB.InputCollectionName), documentToTest);
         }
 
         public async static Task CreateDocument(TestDocument testDocument)
         {
-            Document insertedDoc = await _docDbClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(Constants.DocDbDatabaseName, Constants.InputDocDbCollectionName), testDocument);
+            Document insertedDoc = await _docDbClient.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(Constants.CosmosDB.DbName, Constants.CosmosDB.InputCollectionName), testDocument);
         }
 
         // keep
         public async static Task<string> ReadDocument(string docId)
         {
-            var docUri = UriFactory.CreateDocumentUri(Constants.DocDbDatabaseName, Constants.OutputDocDbCollectionName, docId);
+            var docUri = UriFactory.CreateDocumentUri(Constants.CosmosDB.DbName, Constants.CosmosDB.OutputCollectionName, docId);
             Document retrievedDocument = null;
             await Utilities.RetryAsync(async () =>
             {
@@ -68,9 +68,9 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         // keep
         public async static Task DeleteTestDocuments(string docId)
         {
-            var inputDocUri = UriFactory.CreateDocumentUri(Constants.DocDbDatabaseName, Constants.InputDocDbCollectionName, docId);
+            var inputDocUri = UriFactory.CreateDocumentUri(Constants.CosmosDB.DbName, Constants.CosmosDB.InputCollectionName, docId);
             await DeleteDocument(inputDocUri);
-            var outputDocUri = UriFactory.CreateDocumentUri(Constants.DocDbDatabaseName, Constants.OutputDocDbCollectionName, docId);
+            var outputDocUri = UriFactory.CreateDocumentUri(Constants.CosmosDB.DbName, Constants.CosmosDB.OutputCollectionName, docId);
             await DeleteDocument(outputDocUri);
         }
 
@@ -89,12 +89,12 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         // keep
         public async static Task CreateDocumentCollections()
         {
-            Database db = await _docDbClient.CreateDatabaseIfNotExistsAsync(new Database { Id = Constants.DocDbDatabaseName });
+            Database db = await _docDbClient.CreateDatabaseIfNotExistsAsync(new Database { Id = Constants.CosmosDB.DbName });
             Uri dbUri = UriFactory.CreateDatabaseUri(db.Id);
 
-            await CreateCollection(dbUri, Constants.InputDocDbCollectionName);
-            await CreateCollection(dbUri, Constants.OutputDocDbCollectionName);
-            await CreateCollection(dbUri, Constants.DocDbLeaseCollectionName);
+            await CreateCollection(dbUri, Constants.CosmosDB.InputCollectionName);
+            await CreateCollection(dbUri, Constants.CosmosDB.OutputCollectionName);
+            await CreateCollection(dbUri, Constants.CosmosDB.LeaseCollectionName);
 
         }
         public async static Task DeleteDocumentCollections()
