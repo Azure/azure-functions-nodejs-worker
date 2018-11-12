@@ -12,10 +12,14 @@ environment:
     - nodejs_version: "8.11.1"
 
 image: Visual Studio 2017
+
 clone_folder: c:\azure-functions-nodejs-worker
+
 install:
 - ps: Install-Product node $env:nodejs_version x86
+
 cache: 'node_modules'
+
 build_script:
 - ps: |
       $buildNumber = 0      
@@ -28,7 +32,10 @@ build_script:
        Write-Host “git tag not found. Setting package suffix to '$buildNumber'"
       }     
       .\package.ps1 -buildNumber $buildNumber
+
 test_script:
 - npm run test
+- ps: .\setup-e2e-tests.ps1
+
 artifacts:
 - path: 'pkg/*.nupkg'
