@@ -47,3 +47,10 @@ test/end-to-end/testFunctionApp/obj
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/.vs
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/bin
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/obj
+
+# Commit external interfaces
+types/*
+
+!types/public
+types/public/*
+!types/public/Interfaces.d.ts

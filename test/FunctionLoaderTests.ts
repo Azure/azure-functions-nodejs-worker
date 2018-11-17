@@ -1,11 +1,9 @@
 import { WorkerChannel } from '../src/WorkerChannel';
 import { FunctionLoader } from '../src/FunctionLoader';
 import { expect } from 'chai';
-import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 import mock = require('mock-require');
-import { isObject } from 'util';
 
 describe('FunctionLoader', () => {
   var channel: WorkerChannel;

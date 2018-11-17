@@ -1,4 +1,3 @@
-import { Duplex } from 'stream';
 import { format, isFunction } from 'util';
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';

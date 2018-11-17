@@ -4,18 +4,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Request, HttpRequest } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-
-export interface IContext {
-  invocationId: string;
-  executionContext: IExecutionContext;
-  bindings: IDict<any>;
-  bindingData: IDict<any>;
-  bindingDefinitions: IDict<any>[];
-  log: ILogger;
-  req?: Request;
-  res?: Response;
-  done: IDoneCallback;
-};
+import { IContext, IExecutionContext, ILogger, IDoneCallback } from './public/Interfaces' 
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
   let context = new Context(info, request, logCallback, callback);
@@ -115,33 +104,12 @@ export interface IInvocationResult {
   bindings: IDict<any>;
 }
 
-export interface ILog {
-  (...args: any[]): void;
-}
-
-export interface ILogger extends ILog {
-  error: ILog;
-  warn: ILog;
-  info: ILog;
-  verbose: ILog;
-}
-
 export interface ILogCallback {
   (level: LogLevel, ...args: any[]): void;
 }
 
 export interface IResultCallback {
   (err?: any, result?: IInvocationResult): void;
-}
-
-export interface IDoneCallback {
-  (err?: any, result?: any): void;
-}
-
-export interface IExecutionContext {
-  invocationId: string;
-  functionName: string;
-  functionDirectory: string;
 }
 
 export interface IDict<T> {

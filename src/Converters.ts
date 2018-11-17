@@ -1,7 +1,7 @@
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { HttpRequest } from './http/Request';
-import { IDict } from './Context';
+import { IDict } from '../src/Context';
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,

@@ -1,5 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
+import { IRequest } from '../public/Interfaces';
 
 export class HttpRequest {
     method: string = "";
@@ -13,13 +14,13 @@ export class HttpRequest {
     [key:string]: any;
 }
 
-export class Request extends HttpRequest {
+export class Request extends HttpRequest implements IRequest {
     constructor(httpInput: HttpRequest) {
         super();
         Object.assign(this, httpInput);
     }
 
-    get(field: string) {
+    get(field: string): string | undefined {
         return this.headers && this.headers[field.toLowerCase()];
     }
 }

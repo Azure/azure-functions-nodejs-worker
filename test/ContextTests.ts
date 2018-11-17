@@ -1,7 +1,7 @@
-import { IContext, CreateContextAndInputs, ILogCallback, IResultCallback } from '../src/Context';
+import { CreateContextAndInputs, ILogCallback, IResultCallback } from '../src/Context';
+import { IContext } from "../src/public/Interfaces";
 import { FunctionInfo } from '../src/FunctionInfo';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { expect } from 'chai';
 import * as sinon from 'sinon';
 import 'mocha';
 
