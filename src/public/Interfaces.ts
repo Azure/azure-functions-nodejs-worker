@@ -3,7 +3,7 @@ export interface IContext {
     executionContext: IExecutionContext;
     bindings: { [key: string]: any };
     bindingData: { [key: string]: any };
-    bindingDefinitions: { [key: string]: any };
+    bindingDefinitions: IBindingDefinition[];
     log: ILogger;
     req?: IRequest;
     res?: IResponse;
@@ -14,6 +14,12 @@ export interface IExecutionContext {
     invocationId: string;
     functionName: string;
     functionDirectory: string;
+}
+
+export interface IBindingDefinition {
+    name: string,
+    type: string, 
+    direction: string
 }
 
 export interface ILog {
