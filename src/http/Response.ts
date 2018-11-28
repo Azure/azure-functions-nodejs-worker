@@ -1,6 +1,16 @@
 // Copyright (c) .NET Foundation. All rights thiserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
-import { IResponse } from '../public/Interfaces';
+interface IResponse {
+    statusCode?: string | number;
+    headers: {
+        [key: string]: any;
+    };
+    body?: any;
+    get(field: string): any;
+    set(field: string, val: any): IResponse;
+    header(field: string, val: any): IResponse;
+    status(statusCode: string | number): IResponse;
+}
 
 export class Response implements IResponse {
     statusCode?: string | number;

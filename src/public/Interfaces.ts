@@ -1,3 +1,7 @@
+export interface IFunction {
+    (context: IContext, ...args: any[]): void;
+}
+
 export interface IContext {
     invocationId: string;
     executionContext: IExecutionContext;
@@ -5,10 +9,25 @@ export interface IContext {
     bindingData: { [key: string]: any };
     bindingDefinitions: IBindingDefinition[];
     log: ILogger;
-    req?: IRequest;
-    res?: IResponse;
     done: IDoneCallback;
-};
+}
+
+export interface IHttpContext extends IContext {
+    req: IRequest;
+    res: { [key: string]: any };
+}
+
+export interface IRequest {
+    method: string;
+    url: string;
+    originalUrl: string;
+    headers: {[key:string]: string};
+    query: {[key:string]: string};
+    params: {[key:string]: string};
+    body?: any;
+    rawbody?: any;
+    get(field: string): string | undefined;
+}
 
 export interface IExecutionContext {
     invocationId: string;
@@ -31,28 +50,6 @@ export interface ILogger extends ILog {
     warn: ILog;
     info: ILog;
     verbose: ILog;
-}
-
-export interface IRequest {
-    method: string;
-    url: string;
-    originalUrl: string;
-    headers?: {[key:string]: string};
-    query?: {[key:string]: string};
-    params?: {[key:string]: string};
-    body?: any;
-    rawbody?: any;
-    get(field: string): string | undefined;
-}
-
-export interface IResponse {
-    statusCode?: string | number;
-    headers: {[key:string]: any};
-    body?: any;
-    get(field: string): any;
-    set(field: string, val: any): IResponse;
-    header(field: string, val: any): IResponse;
-    status(statusCode: string | number): IResponse;
 }
 
 export interface IDoneCallback {

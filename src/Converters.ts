@@ -3,7 +3,7 @@ import { FunctionInfo } from './FunctionInfo';
 import { HttpRequest } from './http/Request';
 import { IDict } from '../src/Context';
 import { IBindingDefinition } from './public/Interfaces';
-export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
+export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): HttpRequest {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
