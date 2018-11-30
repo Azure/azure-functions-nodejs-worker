@@ -1,9 +1,9 @@
 /**
- * The Azure Function that is exported (via module.exports or exports). This is the function that will 
- * execute when triggered. It is recommended that you declare this as an async function that implicitly
- * returns a Promise.
+ * Interface for your Azure Function code. This function must be exported (via module.exports or exports) 
+ * and will execute when triggered. It is recommended that you declare this as an async function that 
+ * implicitly returns a Promise.
  * @param context An IContext object passed to your function from the Azure Function runtime.
- * @returns Any output bindings or nothing.
+ * @returns Optional output bindings.
  */
 export interface IFunction {
     (context: IContext, ...args: any[]): Promise<any> | void;
@@ -16,7 +16,7 @@ export interface IFunction {
  */
 export interface IContext {
     /**
-     * A unique GUID per function invocation and execution.
+     * A unique GUID per function invocation.
      */
     invocationId: string;
     /**
@@ -50,12 +50,11 @@ export interface IContext {
      */
     done: IDoneCallback;
     /**
-     * Properties of the HTTP request that was made to invoke this function. This property will be defined if you are
-     * using HTTP bindings.
+     * HTTP request object. Provided to your function when using HTTP Bindings.
      */
     req?: IRequest;
     /**
-     * HTTP response object to return. This property is used with HTTP bindings.
+     * HTTP response object. Provided to your function when using HTTP Bindings.
      */
     res?: { [key: string]: any };
 }
@@ -93,7 +92,7 @@ export interface IRequest {
 
 export interface IExecutionContext {
     /**
-     * A unique GUID per function invocation and execution.
+     * A unique GUID per function invocation.
      */
     invocationId: string;
     /**
@@ -117,7 +116,7 @@ export interface IBindingDefinition {
      */
     type: string, 
     /**
-     * The direction of your binding ('in' or 'out'), as defined in function.json.
+     * The direction of your binding ('in', 'out', or 'inout'), as defined in function.json.
      */
     direction: string
 }
