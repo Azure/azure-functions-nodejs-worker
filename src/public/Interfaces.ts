@@ -2,8 +2,10 @@
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports) 
  * and will execute when triggered. It is recommended that you declare this function as async, which will 
  * implicitly returns a Promise.
- * @param context An IContext object passed to your function from the Azure Functions runtime.
- * @returns Optional output bindings.
+ * @param context IContext object passed to your function from the Azure Functions runtime.
+ * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the 
+ * function in the same order that they are defined in function.json.
+ * @returns Output bindings (optional).
  */
 export interface IFunction {
     (context: IContext, ...args: any[]): Promise<any> | void;
@@ -59,6 +61,9 @@ export interface IContext {
     res?: { [key: string]: any };
 }
 
+/**
+ * HTTP request object. Provided to your function when using HTTP Bindings.
+ */
 export interface IRequest {
     /**
      * HTTP request method used to invoke this function.
@@ -125,6 +130,9 @@ export interface ILog {
     (...args: any[]): void;
 }
   
+/**
+ * Allows you to write streaming function logs. 
+ */
 export interface ILogger extends ILog {
     /**
      * Writes to error level logging or lower.
