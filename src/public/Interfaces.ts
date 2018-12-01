@@ -1,8 +1,8 @@
 /**
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports) 
- * and will execute when triggered. It is recommended that you declare this as an async function that 
+ * and will execute when triggered. It is recommended that you declare this function as async, which will 
  * implicitly returns a Promise.
- * @param context An IContext object passed to your function from the Azure Function runtime.
+ * @param context An IContext object passed to your function from the Azure Functions runtime.
  * @returns Optional output bindings.
  */
 export interface IFunction {
@@ -10,9 +10,9 @@ export interface IFunction {
 }
 
 /**
- * The context object can be used for reading and setting data from bindings, writing logs, and using the 
- * context.done callback when your exported function is declared synchronous. A context object is passed 
- * to your function from the Azure Function runtime on function invocation.
+ * The context object can be used for writing logs, reading data from bindings, setting outputs and using 
+ * the context.done callback when your exported function is declared synchronous. A context object is passed 
+ * to your function from the Azure Functions runtime on function invocation.
  */
 export interface IContext {
     /**
