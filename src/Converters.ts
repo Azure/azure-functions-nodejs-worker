@@ -2,7 +2,8 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { FunctionInfo } from './FunctionInfo';
 import { HttpRequest } from './http/Request';
 import { IDict } from '../src/Context';
-export function fromRpcHttp(rpcHttp: rpc.IRpcHttp) {
+import { IBindingDefinition } from './public/Interfaces';
+export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): HttpRequest {
   let httpContext: HttpRequest = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
@@ -72,16 +73,18 @@ export function toTypedData(inputObject): rpc.ITypedData {
   }
 }
 
-export function getBindingDefinitions(info: FunctionInfo): IDict<any>[] {
+export function getBindingDefinitions(info: FunctionInfo): IBindingDefinition[] {
   let bindings = info.bindings;
   if (!bindings) {
     return [];
   }
+
   return Object.keys(bindings)
     .map(name => { return { 
-      name: name,
-      type: bindings[name].type, 
-      direction: getDirectionName(bindings[name].direction) }; 
+        name: name,
+        type: bindings[name].type || "", 
+        direction: getDirectionName(bindings[name].direction) || ""
+      }; 
     });
 }
 
@@ -96,7 +99,7 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict
   return bindingData;
 }
 
-function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined) {
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): string | undefined {
   return Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
 }
 
