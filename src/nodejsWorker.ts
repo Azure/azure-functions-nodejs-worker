@@ -19,7 +19,7 @@ function validateNodeVersion(version) {
         } else if (major != ACTIVE_LTS_VERSION && major != CURRENT_BRANCH_VERSION) {
             message = "Incompatible Node.js version. The version you are using is "
                     + version +
-                    ", but the runtime requires an Active LTS or Current version (ex: 8.11.1 or 10.6.0). "
+                    ", but the runtime requires an even-numbered Active LTS or Current version (ex: 8.11.1 or 10.6.0). "
                     + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, upgrade the node version used by your machine (make sure to quit and restart your code editor to pick up the changes).";
         }
     // Unknown error
