@@ -1,3 +1,4 @@
+# Type definitions for Azure Functions
 These are type definitions for using TypeScript with Azure Functions.
 
 Although Azure Functions does not directly support functions written in TypeScript, running transpiled functions is supported. Read more [here](https://docs.microsoft.com/azure/azure-functions/functions-reference-node#configure-function-entry-point) on configuring the location and name of your Azure Function. 
