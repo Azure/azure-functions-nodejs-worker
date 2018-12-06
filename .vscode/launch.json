@@ -14,6 +14,12 @@
                 "${workspaceRoot}/dist/src/*.js"
             ],
             "args": ["--host", "127.0.0.1", "--port", "50051", "--requestId", "100a", "--workerId", "worker1"]
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach by Process ID",
+            "processId": "${command:PickProcess}"
         }
     ]
 }
