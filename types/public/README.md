@@ -31,7 +31,7 @@ export { index };
 ```
 
 # Versions
-Versioning of @azure/functions follows the release cadence of the [Azure Functions Node.js Worker](https://github.com/Azure/azure-functions-nodejs-worker/releases). You can find the Azure Functions Node.js Worker version of a given Function Runtime Version [here](https://github.com/Azure/azure-functions-host/releases).
+Versioning of @azure/functions is tied to the version of the [Azure Functions Node.js Worker](https://github.com/Azure/azure-functions-nodejs-worker/releases) the types were generated from. You can find the Azure Functions Node.js Worker version of a given Function Runtime Version [here](https://github.com/Azure/azure-functions-host/releases). It is recommended that you take the latest version available.
 
 # Getting Started with Azure Functions
 For developing Azure Functions to run on Node.js, it is recommended that you use Visual Studio Code as your IDE. You can follow this tutorial to [create and deploy your first JavaScript function](https://docs.microsoft.com/azure/azure-functions/functions-create-first-function-vs-code).
