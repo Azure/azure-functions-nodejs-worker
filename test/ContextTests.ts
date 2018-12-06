@@ -25,9 +25,7 @@ describe('Context', () => {
     });
 
     it ('async function logs error on calling context.done', (done) => {
-        var promise = asyncThrowsError(_context)
-        .then(result => (<any>_context.done)(null, result, true))
-        .catch(err => (<any>_context.done)(err, null, true))
+        var promise = callAsync(BasicAsync.asyncThrowsError, _context);
 
         promise.then(() => {
             sinon.assert.calledOnce(_logger);
@@ -38,9 +36,7 @@ describe('Context', () => {
     });
 
     it ('async function calls callback and returns value without context.done', (done) => {
-        var promise = asyncPlainFunction(_context)
-        .then(result => (<any>_context.done)(null, result, true))
-        .catch(err => (<any>_context.done)(err, null, true))
+        var promise = callAsync(BasicAsync.asyncPlainFunction, _context);
 
         promise.then(() => {
             sinon.assert.calledOnce(_resultCallback);
@@ -51,42 +47,66 @@ describe('Context', () => {
     });
 
     it ('function logs error on calling context.done more than once', () => {
-        callbackTwice(_context);
+        BasicCallback.callbackTwice(_context);
         sinon.assert.calledOnce(_logger);
         sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
     });
 
+    it ('function logs error on calling context.log after context.done() called', () => {
+        BasicCallback.callbackOnce(_context);
+        _context.log("");
+        sinon.assert.calledTwice(_logger);
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
+    });
+
+    it ('function logs error on calling context.log from non-awaited async call', async () => {
+        await callAsync(BasicAsync.asyncPlainFunction, _context);
+        _context.log("");
+        sinon.assert.calledTwice(_logger);
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
+    });
+
     it ('function calls callback correctly with bindings', () => {
-        callbackOnce(_context);
+        BasicCallback.callbackOnce(_context);
         sinon.assert.calledOnce(_resultCallback);
         sinon.assert.calledWith(_resultCallback, undefined, { bindings: { hello: "world" }, return: undefined });
     });
 
     it ('empty function does not call callback', () => {
-        callbackNone(_context);
+        BasicCallback.callbackNone(_context);
         sinon.assert.notCalled(_resultCallback);
     });
 })
 
 // async test functions
-async function asyncThrowsError(context) {
-    context.done();
-}
+class BasicAsync {
+    public static async asyncThrowsError(context: Context) {
+        context.done();
+    }
 
-async function asyncPlainFunction(context) { 
-    return "hello";
+    public static async asyncPlainFunction(context: Context) { 
+        return "hello";
+    }
 }
 
 // sync test functions
-function callbackTwice(context) {
-    context.done();
-    context.done();
+class BasicCallback {
+    public static callbackTwice(context) {
+        context.done();
+        context.done();
+    }
+
+    public static callbackOnce(context) {
+        context.bindings = { "hello": "world" };
+        context.done();
+    }
+
+    public static callbackNone(context) {
+    }
 }
 
-function callbackOnce(context) {
-    context.bindings = { "hello": "world" };
-    context.done();
-}
-
-function callbackNone(context) {
+// Does what we do with async functions in FunctionLoader
+async function callAsync(myFunc, context: Context): Promise<any> {
+    return myFunc(context).then(result => (<any>context.done)(null, result, true))
+        .catch(err => (<any>context.done)(err, null, true));
 }
