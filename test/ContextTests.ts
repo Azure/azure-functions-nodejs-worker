@@ -25,26 +25,16 @@ describe('Context', () => {
         _context = context;
     });
 
-    it ('async function logs error on calling context.done', async (done) => {
-        try {
-            await callUserFunc(BasicAsync.asyncThrowsError, _context);
-            sinon.assert.calledOnce(_logger);
-            sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
-            done();
-        } catch(err) {
-            done(err);
-        }
+    it ('async function logs error on calling context.done', async () => {
+        await callUserFunc(BasicAsync.asyncThrowsError, _context);
+        sinon.assert.calledOnce(_logger);
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
     });
 
-    it ('async function calls callback and returns value without context.done', async (done) => {
-        try {
-            await callUserFunc(BasicAsync.asyncPlainFunction, _context);
-            sinon.assert.calledOnce(_resultCallback);
-            sinon.assert.calledWith(_resultCallback, null, { bindings: {  }, return: "hello" });
-            done();
-        } catch (err) {
-            done(err);
-        }
+    it ('async function calls callback and returns value without context.done', async () => {
+        await callUserFunc(BasicAsync.asyncPlainFunction, _context);
+        sinon.assert.calledOnce(_resultCallback);
+        sinon.assert.calledWith(_resultCallback, null, { bindings: {  }, return: "hello" });
     });
 
     it ('function logs error on calling context.done more than once', () => {
