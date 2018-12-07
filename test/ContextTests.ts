@@ -4,6 +4,7 @@ import { FunctionInfo } from '../src/FunctionInfo';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import * as sinon from 'sinon';
 import 'mocha';
+import { isFunction } from 'util';
 
 describe('Context', () => {
     let _context: Context;
@@ -24,56 +25,56 @@ describe('Context', () => {
         _context = context;
     });
 
-    it ('async function logs error on calling context.done', (done) => {
-        var promise = callAsync(BasicAsync.asyncThrowsError, _context);
-
-        promise.then(() => {
+    it ('async function logs error on calling context.done', async (done) => {
+        try {
+            await callUserFunc(BasicAsync.asyncThrowsError, _context);
             sinon.assert.calledOnce(_logger);
             sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
             done();
-        })
-        .catch(done);
+        } catch(err) {
+            done(err);
+        }
     });
 
-    it ('async function calls callback and returns value without context.done', (done) => {
-        var promise = callAsync(BasicAsync.asyncPlainFunction, _context);
-
-        promise.then(() => {
+    it ('async function calls callback and returns value without context.done', async (done) => {
+        try {
+            await callUserFunc(BasicAsync.asyncPlainFunction, _context);
             sinon.assert.calledOnce(_resultCallback);
             sinon.assert.calledWith(_resultCallback, null, { bindings: {  }, return: "hello" });
             done();
-        })
-        .catch(done);
+        } catch (err) {
+            done(err);
+        }
     });
 
     it ('function logs error on calling context.done more than once', () => {
-        BasicCallback.callbackTwice(_context);
+        callUserFunc(BasicCallback.callbackTwice, _context);
         sinon.assert.calledOnce(_logger);
         sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
     });
 
     it ('function logs error on calling context.log after context.done() called', () => {
-        BasicCallback.callbackOnce(_context);
+        callUserFunc(BasicCallback.callbackOnce, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
         sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
     });
 
     it ('function logs error on calling context.log from non-awaited async call', async () => {
-        await callAsync(BasicAsync.asyncPlainFunction, _context);
+        await callUserFunc(BasicAsync.asyncPlainFunction, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
         sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
     });
 
     it ('function calls callback correctly with bindings', () => {
-        BasicCallback.callbackOnce(_context);
+        callUserFunc(BasicCallback.callbackOnce, _context);
         sinon.assert.calledOnce(_resultCallback);
         sinon.assert.calledWith(_resultCallback, undefined, { bindings: { hello: "world" }, return: undefined });
     });
 
     it ('empty function does not call callback', () => {
-        BasicCallback.callbackNone(_context);
+        callUserFunc(BasicCallback.callbackNone, _context);
         sinon.assert.notCalled(_resultCallback);
     });
 })
@@ -105,8 +106,12 @@ class BasicCallback {
     }
 }
 
-// Does what we do with async functions in FunctionLoader
-async function callAsync(myFunc, context: Context): Promise<any> {
-    return myFunc(context).then(result => (<any>context.done)(null, result, true))
+// Does logic in WorkerChannel to call the user function
+function callUserFunc(myFunc, context: Context): Promise<any> {
+    let result = myFunc(context);
+    if (result && isFunction(result.then)) {
+        result = result.then(result => (<any>context.done)(null, result, true))
         .catch(err => (<any>context.done)(err, null, true));
+    }
+    return result;
 }
