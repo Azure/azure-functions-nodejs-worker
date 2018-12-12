@@ -96,11 +96,11 @@ export interface IRequest {
         [key: string]: string;
     };
     /**
-     * The HTTP request body
+     * The HTTP request body.
      */
     body?: any;
     /**
-     * The HTTP request body as a UTF-8 string
+     * The HTTP request body as a UTF-8 string.
      */
     rawbody?: any;
 }
