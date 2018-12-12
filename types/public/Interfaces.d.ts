@@ -61,9 +61,7 @@ export interface IContext {
     /**
      * HTTP response object. Provided to your function when using HTTP Bindings.
      */
-    res?: {
-        [key: string]: any;
-    };
+    res?: IResponse;
 }
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
@@ -103,6 +101,31 @@ export interface IRequest {
      * The HTTP request body as a UTF-8 string
      */
     rawbody?: any;
+}
+/**
+ * HTTP response object.
+ */
+export interface IResponse {
+    /**
+     * The main content of the HTTP response.
+     * @see isRaw
+     */
+    body?: any
+    /**
+     * The headers of the HTTP response.
+     */
+    headers?: {
+        [key: string]: any
+    }
+    /**
+     * Skip formatting the body.
+     * @see body
+     */
+    isRaw?: boolean
+    /**
+     * The HTTP status code of the response. Default is `200` OK.
+     */
+    status?: number
 }
 export interface IExecutionContext {
     /**
