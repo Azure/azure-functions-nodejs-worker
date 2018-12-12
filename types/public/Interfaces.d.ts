@@ -129,9 +129,9 @@ export interface IBindingDefinition {
      */
     type: string;
     /**
-     * The direction of your binding ('in', 'out', or 'inout'), as defined in function.json.
+     * The direction of your binding, as defined in function.json.
      */
-    direction: string;
+    direction: 'in', 'out', 'inout';
 }
 export interface ILog {
     (...args: any[]): void;
