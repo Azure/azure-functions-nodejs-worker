@@ -1,7 +1,6 @@
 var logPrefix = "LanguageWorkerConsoleLog";
 var errorPrefix = logPrefix + "[error] ";
-var ACTIVE_LTS_VERSION = "v8";
-var CURRENT_BRANCH_VERSION = "v10";
+var supportedVersions:string[] = ["v8","v10"];
 var worker;
 
 // Try validating node version
@@ -15,12 +14,12 @@ function validateNodeVersion(version) {
         // process.version returns invalid output
         if (versionSplit.length != 3){
             message = "Could not parse Node.js version: '" + version + "'";
-        // Unsupported version
-        } else if (major != ACTIVE_LTS_VERSION && major != CURRENT_BRANCH_VERSION) {
+        // Unsupported version note: Documentation about Node's stable versions here: https://github.com/nodejs/Release#release-plan and an explanation here: https://medium.com/swlh/understanding-how-node-releases-work-in-2018-6fd356816db4
+        } else if (supportedVersions.indexOf(major) < 0) {
             message = "Incompatible Node.js version. The version you are using is "
-                    + version +
-                    ", but the runtime requires an even-numbered Active LTS or Current version (ex: 8.11.1 or 10.14.1). "
-                    + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, upgrade the node version used by your machine (make sure to quit and restart your code editor to pick up the changes).";
+                + version +
+                ", but the runtime requires an LTS-covered major version (ex: 8.11.1 or 10.14.1). LTS-covered versions have an even major version number (8.x, 10.x, etc.) as per https://github.com/nodejs/Release#release-plan. "
+                + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, install or switch to a supported node version (make sure to quit and restart your code editor to pick up the changes).";
         }
     // Unknown error
     } catch(err) {

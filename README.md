@@ -8,9 +8,9 @@
 - `git clone https://github.com/Azure/azure-functions-nodejs-worker`
 - `cd azure-functions-nodejs-worker`
 - `npm install`
-- `npm test`
 - `npm run build`
   - generate protobuf definitions & run typescript compiler
+- `npm test`
 - `$env:WORKERS__NODE__PATH = <path-to-nodejsWorker.js>`
   - configure the functions host to use the development version of the worker
 
