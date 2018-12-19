@@ -123,7 +123,7 @@ describe('Converters', () => {
     expect(bindingDefinitions[2].direction).to.equal("out");
     expect(bindingDefinitions[2].type).to.equal("queue");
     expect(bindingDefinitions[3].name).to.equal("noDirection");
-    expect(bindingDefinitions[3].direction).to.be.empty;
+    expect(bindingDefinitions[3].direction).to.be.undefined;
     expect(bindingDefinitions[3].type).to.equal("queue");
   });
 })

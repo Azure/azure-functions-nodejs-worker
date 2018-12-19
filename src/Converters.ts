@@ -3,6 +3,9 @@ import { FunctionInfo } from './FunctionInfo';
 import { RequestBase } from './http/Request';
 import { Dict } from '../src/Context';
 import { BindingDefinition } from './public/Interfaces';
+
+type BindingDirection = 'in' | 'out' | 'inout';
+
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestBase {
   let httpContext: RequestBase = {
     method: <string>rpcHttp.method,
@@ -83,7 +86,7 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
     .map(name => { return { 
         name: name,
         type: bindings[name].type || "", 
-        direction: getDirectionName(bindings[name].direction) || ""
+        direction: <BindingDirection> getDirectionName(bindings[name].direction)
       }; 
     });
 }

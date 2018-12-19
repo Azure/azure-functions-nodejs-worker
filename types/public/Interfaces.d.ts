@@ -7,9 +7,7 @@
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
-export interface AzureFunction{
-    (context: Context, ...args: any[]): Promise<any> | void;
-}
+export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
@@ -42,7 +40,8 @@ export interface Context {
      */
     bindingDefinitions: BindingDefinition[];
     /**
-     * Calling directly allows you to write streaming function logs at the default trace level.
+     * Allows you to write streaming function logs. Calling directly allows you to write streaming function logs
+     * at the default trace level.
      */
     log: Logger;
     /**
@@ -53,7 +52,7 @@ export interface Context {
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
      * @param result An object containing output binding data.
      */
-    done: DoneCallback;
+    done(err?: any, result?: any): void;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
@@ -96,11 +95,11 @@ export interface HttpRequest {
         [key: string]: string;
     };
     /**
-     * The HTTP request body
+     * The HTTP request body.
      */
     body?: any;
     /**
-     * The HTTP request body as a UTF-8 string
+     * The HTTP request body as a UTF-8 string.
      */
     rawbody?: any;
 }
@@ -129,34 +128,32 @@ export interface BindingDefinition {
      */
     type: string;
     /**
-     * The direction of your binding ('in', 'out', or 'inout'), as defined in function.json.
+     * The direction of your binding, as defined in function.json.
      */
-    direction: string;
-}
-export interface Log {
-    (...args: any[]): void;
+    direction: 'in' | 'out' | 'inout';
 }
 /**
  * Allows you to write streaming function logs.
  */
-export interface Logger extends Log {
+export interface Logger {
+    /**
+     * Writes streaming function logs at the default trace level.
+     */
+    (...args: any[]): void;
     /**
      * Writes to error level logging or lower.
      */
-    error: Log;
+    error(...args: any[]): void;
     /**
      * Writes to warning level logging or lower.
      */
-    warn: Log;
+    warn(...args: any[]): void;
     /**
      * Writes to info level logging or lower.
      */
-    info: Log;
+    info(...args: any[]): void;
     /**
      * Writes to verbose level logging.
      */
-    verbose: Log;
-}
-export interface DoneCallback {
-    (err?: any, result?: any): void;
+    verbose(...args: any[]): void;
 }

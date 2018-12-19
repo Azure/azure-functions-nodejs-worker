@@ -4,7 +4,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Request, RequestBase } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-import { Context, ExecutionContext, Logger, DoneCallback, BindingDefinition } from './public/Interfaces' 
+import { Context, ExecutionContext, Logger, BindingDefinition } from './public/Interfaces' 
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
@@ -45,7 +45,7 @@ export class InvocationContext implements Context {
   log: Logger;
   req?: Request;
   res?: Response;
-  done: DoneCallback;
+  done: ((err?: any, result?: any) => void);
 
   constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
     this.invocationId = <string>request.invocationId;
