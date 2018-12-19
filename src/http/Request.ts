@@ -1,8 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
-import { IRequest } from '../public/Interfaces';
+import { HttpRequest } from '../public/Interfaces';
 
-export class HttpRequest {
+export class RequestBase implements HttpRequest {
     method: string = "";
     url: string = "";
     originalUrl: string = "";
@@ -14,8 +14,8 @@ export class HttpRequest {
     [key:string]: any;
 }
 
-export class Request extends HttpRequest implements IRequest {
-    constructor(httpInput: HttpRequest) {
+export class Request extends RequestBase {
+    constructor(httpInput: RequestBase) {
         super();
         Object.assign(this, httpInput);
     }

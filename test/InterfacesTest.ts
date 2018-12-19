@@ -1,7 +1,7 @@
 // Test typescript interfaces for ts compliation errors
-import { IFunction, IContext, IRequest} from "../types/public/Interfaces";
+import { AzureFunction, Context, HttpRequest} from "../types/public/Interfaces";
 
-let runHttp: IFunction = async function (context: IContext, req: IRequest) {
+let runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
@@ -16,7 +16,7 @@ let runHttp: IFunction = async function (context: IContext, req: IRequest) {
     }
 }
 
-let runServiceBus: IFunction = function (context: IContext, myQueueItem: string) { 
+let runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) { 
     context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem); 
     context.log.verbose('EnqueuedTimeUtc =', context.bindingData.enqueuedTimeUtc); 
     context.log.verbose('DeliveryCount =', context.bindingData.deliveryCount); 
@@ -25,7 +25,7 @@ let runServiceBus: IFunction = function (context: IContext, myQueueItem: string)
 };
 
 // Assumes output binding is named '$return'
-let runHttpReturn: IFunction = async function (context: IContext, req: IRequest) {
+let runHttpReturn: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         return {

@@ -1,12 +1,12 @@
-import { CreateContextAndInputs, ILogCallback, IResultCallback } from '../src/Context';
-import { IContext } from "../src/public/Interfaces";
+import { CreateContextAndInputs, LogCallback, ResultCallback } from '../src/Context';
+import { Context } from "../src/public/Interfaces";
 import { FunctionInfo } from '../src/FunctionInfo';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import * as sinon from 'sinon';
 import 'mocha';
 
 describe('Context', () => {
-    let _context: IContext;
+    let _context: Context;
     let _logger: any;
     let _resultCallback: any;
 

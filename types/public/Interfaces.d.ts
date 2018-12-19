@@ -2,20 +2,20 @@
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
  * implicitly returns a Promise.
- * @param context IContext object passed to your function from the Azure Functions runtime.
+ * @param context Context object passed to your function from the Azure Functions runtime.
  * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
-export interface IFunction {
-    (context: IContext, ...args: any[]): Promise<any> | void;
+export interface AzureFunction{
+    (context: Context, ...args: any[]): Promise<any> | void;
 }
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
  * to your function from the Azure Functions runtime on function invocation.
  */
-export interface IContext {
+export interface Context {
     /**
      * A unique GUID per function invocation.
      */
@@ -23,7 +23,7 @@ export interface IContext {
     /**
      * Function execution metadata.
      */
-    executionContext: IExecutionContext;
+    executionContext: ExecutionContext;
     /**
      * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically
      * generated and named based off of the "name" property in function.json.
@@ -40,11 +40,11 @@ export interface IContext {
     /**
      * Bindings your function uses, as defined in function.json.
      */
-    bindingDefinitions: IBindingDefinition[];
+    bindingDefinitions: BindingDefinition[];
     /**
      * Calling directly allows you to write streaming function logs at the default trace level.
      */
-    log: ILogger;
+    log: Logger;
     /**
      * A callback function that signals to the runtime that your code has completed. If your function is synchronous,
      * you must call context.done at the end of execution. If your function is asynchronous, you should not use this
@@ -53,11 +53,11 @@ export interface IContext {
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
      * @param result An object containing output binding data.
      */
-    done: IDoneCallback;
+    done: DoneCallback;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
-    req?: IRequest;
+    req?: HttpRequest;
     /**
      * HTTP response object. Provided to your function when using HTTP Bindings.
      */
@@ -68,7 +68,7 @@ export interface IContext {
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
  */
-export interface IRequest {
+export interface HttpRequest {
     /**
      * HTTP request method used to invoke this function.
      */
@@ -104,7 +104,7 @@ export interface IRequest {
      */
     rawbody?: any;
 }
-export interface IExecutionContext {
+export interface ExecutionContext {
     /**
      * A unique GUID per function invocation.
      */
@@ -119,7 +119,7 @@ export interface IExecutionContext {
      */
     functionDirectory: string;
 }
-export interface IBindingDefinition {
+export interface BindingDefinition {
     /**
      * The name of your binding, as defined in function.json.
      */
@@ -133,30 +133,30 @@ export interface IBindingDefinition {
      */
     direction: string;
 }
-export interface ILog {
+export interface Log {
     (...args: any[]): void;
 }
 /**
  * Allows you to write streaming function logs.
  */
-export interface ILogger extends ILog {
+export interface Logger extends Log {
     /**
      * Writes to error level logging or lower.
      */
-    error: ILog;
+    error: Log;
     /**
      * Writes to warning level logging or lower.
      */
-    warn: ILog;
+    warn: Log;
     /**
      * Writes to info level logging or lower.
      */
-    info: ILog;
+    info: Log;
     /**
      * Writes to verbose level logging.
      */
-    verbose: ILog;
+    verbose: Log;
 }
-export interface IDoneCallback {
+export interface DoneCallback {
     (err?: any, result?: any): void;
 }

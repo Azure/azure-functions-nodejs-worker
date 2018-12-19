@@ -1,17 +1,17 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './Converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { Request, HttpRequest } from './http/Request';
+import { Request, RequestBase } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-import { IContext, IExecutionContext, ILogger, IDoneCallback, IBindingDefinition } from './public/Interfaces' 
+import { Context, ExecutionContext, Logger, DoneCallback, BindingDefinition } from './public/Interfaces' 
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
-  let context = new Context(info, request, logCallback, callback);
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
+  let context = new InvocationContext(info, request, logCallback, callback);
 
-  let bindings: IDict<any> = {};
+  let bindings: Dict<any> = {};
   let inputs: any[] = [];
-  let httpInput: HttpRequest | undefined;
+  let httpInput: RequestBase | undefined;
   for (let binding of <rpc.IParameterBinding[]>request.inputData) {
     if (binding.data && binding.name) {
       let input: any;
@@ -31,23 +31,23 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
     context.res = new Response(context.done);
   }
   return {
-    context: <IContext>context,
+    context: <Context>context,
     inputs: inputs
   }
 }
 
-class Context implements IContext {
+export class InvocationContext implements Context {
   invocationId: string;
-  executionContext: IExecutionContext;
-  bindings: IDict<any>;
-  bindingData: IDict<any>;
-  bindingDefinitions: IBindingDefinition[];
-  log: ILogger;
+  executionContext: ExecutionContext;
+  bindings: Dict<any>;
+  bindingData: Dict<any>;
+  bindingDefinitions: BindingDefinition[];
+  log: Logger;
   req?: Request;
   res?: Response;
-  done: IDoneCallback;
+  done: DoneCallback;
 
-  constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: ILogCallback, callback: IResultCallback) {
+  constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
     this.invocationId = <string>request.invocationId;
     this.executionContext = {
       invocationId: this.invocationId,
@@ -87,31 +87,31 @@ class Context implements IContext {
   }
 }
 
-function getLogger(invocationId: string, functionName: string, log: ILogCallback): ILogger{
+function getLogger(invocationId: string, functionName: string, log: LogCallback): Logger{
     return Object.assign(
-      <ILog>(...args: any[]) => log(LogLevel.Information, ...args),
+      <Log>(...args: any[]) => log(LogLevel.Information, ...args),
       {
-        error: <ILog>(...args: any[]) => log(LogLevel.Error, ...args),
-        warn: <ILog>(...args: any[]) => log(LogLevel.Warning, ...args),
-        info: <ILog>(...args: any[]) => log(LogLevel.Information, ...args),
-        verbose: <ILog>(...args: any[]) => log(LogLevel.Trace, ...args)
+        error: <Log>(...args: any[]) => log(LogLevel.Error, ...args),
+        warn: <Log>(...args: any[]) => log(LogLevel.Warning, ...args),
+        info: <Log>(...args: any[]) => log(LogLevel.Information, ...args),
+        verbose: <Log>(...args: any[]) => log(LogLevel.Trace, ...args)
       }
     );
 }
 
-export interface IInvocationResult {
+export interface InvocationResult {
   return: any;
-  bindings: IDict<any>;
+  bindings: Dict<any>;
 }
 
-export interface ILogCallback {
+export interface LogCallback {
   (level: LogLevel, ...args: any[]): void;
 }
 
-export interface IResultCallback {
-  (err?: any, result?: IInvocationResult): void;
+export interface ResultCallback {
+  (err?: any, result?: InvocationResult): void;
 }
 
-export interface IDict<T> {
+export interface Dict<T> {
   [key: string]: T
 }
