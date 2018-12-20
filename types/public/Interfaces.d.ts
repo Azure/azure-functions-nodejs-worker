@@ -4,7 +4,7 @@
  * and will execute when triggered. It is recommended that you declare this function as async, which
  * implicitly returns a Promise.
  * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the
+ * @param {InputTypes[]} args Optional array of input and trigger binding data. These binding data are passed to the
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
@@ -51,9 +51,10 @@ export interface Context {
      * callback.
      *
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
-     * @param result An object containing output binding data.
+     * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
+     *  a string, Buffer, ArrayBufferView, number.
      */
-    done(err?: any, result?: any): void;
+    done(err?: Error | string, result?: any): void;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
@@ -131,7 +132,7 @@ export interface BindingDefinition {
     /**
      * The direction of your binding, as defined in function.json.
      */
-    direction: 'in' | 'out' | 'inout';
+    direction: 'in' | 'out' | 'inout' | undefined;
 }
 /**
  * Allows you to write streaming function logs.

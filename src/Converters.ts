@@ -86,7 +86,7 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
     .map(name => { return { 
         name: name,
         type: bindings[name].type || "", 
-        direction: <BindingDirection> getDirectionName(bindings[name].direction)
+        direction: getDirectionName(bindings[name].direction)
       }; 
     });
 }
@@ -102,8 +102,13 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<
   return bindingData;
 }
 
-function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): string | undefined {
-  return Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): BindingDirection | undefined {
+  let directionName = Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
+  return isBindingDirection(directionName)? <BindingDirection>directionName : undefined;
+}
+
+function isBindingDirection(input: string | undefined): boolean {
+  return (input == 'in' || input == 'out' || input == 'inout')
 }
 
 // Recursively convert keys of objects to camel case

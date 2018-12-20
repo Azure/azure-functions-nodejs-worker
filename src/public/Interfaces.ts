@@ -3,7 +3,7 @@
  * and will execute when triggered. It is recommended that you declare this function as async, which 
  * implicitly returns a Promise.
  * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the 
+ * @param {InputTypes[]} args Optional array of input and trigger binding data. These binding data are passed to the 
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
@@ -123,7 +123,7 @@ export interface BindingDefinition {
     /**
      * The direction of your binding, as defined in function.json.
      */
-    direction: 'in' | 'out' | 'inout';
+    direction: 'in' | 'out' | 'inout' | undefined;
 }
 
 /**
