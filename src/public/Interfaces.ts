@@ -3,12 +3,12 @@
  * and will execute when triggered. It is recommended that you declare this function as async, which 
  * implicitly returns a Promise.
  * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {InputTypes[]} args Optional array of input and trigger binding data. These binding data are passed to the 
- * function in the same order that they are defined in function.json.
+ * @param {(HttpRequest | string | Buffer | null | undefined)[]} args Optional array of input and trigger binding 
+ * data. These binding data are passed to the function in the same order that they are defined in function.json. 
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this 
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, number.
  */
-export type AzureFunction = ((context: Context, ...args: InputTypes[]) => Promise<any> | void);
+export type AzureFunction = ((context: Context, ...args: (HttpRequest | string | Buffer | null | undefined)[]) => Promise<any> | void);
 
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using 
@@ -152,5 +152,3 @@ export interface Logger {
      */
     verbose(...args: any[]): void;
 }
-
-export type InputTypes = HttpRequest | string | Buffer | null | undefined;

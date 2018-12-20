@@ -4,7 +4,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-import { Context, ExecutionContext, Logger, BindingDefinition, InputTypes } from './public/Interfaces' 
+import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest } from './public/Interfaces' 
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
@@ -113,3 +113,5 @@ export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 export interface Dict<T> {
   [key: string]: T
 }
+
+export type InputTypes = HttpRequest | string | Buffer | null | undefined;
