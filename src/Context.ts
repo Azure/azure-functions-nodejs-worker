@@ -1,20 +1,20 @@
 import { FunctionInfo } from './FunctionInfo';
 import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './Converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { Request, RequestBase } from './http/Request';
+import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
-import { Context, ExecutionContext, Logger, BindingDefinition } from './public/Interfaces' 
+import { Context, ExecutionContext, Logger, BindingDefinition, InputTypes } from './public/Interfaces' 
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
 
   let bindings: Dict<any> = {};
-  let inputs: any[] = [];
-  let httpInput: RequestBase | undefined;
+  let inputs: InputTypes[] = [];
+  let httpInput: RequestProperties | undefined;
   for (let binding of <rpc.IParameterBinding[]>request.inputData) {
     if (binding.data && binding.name) {
-      let input: any;
+      let input: InputTypes;
       if (binding.data && binding.data.http) {
         input = httpInput = fromRpcHttp(binding.data.http);
       } else {
@@ -104,17 +104,11 @@ export interface InvocationResult {
   bindings: Dict<any>;
 }
 
-export interface DoneCallback {
-  (err?: any, result?: any): void;
-}
+export type DoneCallback = (err?: Error | string, result?: any) => void;
 
-export interface LogCallback {
-  (level: LogLevel, ...args: any[]): void;
-}
+export type LogCallback = (level: LogLevel, ...args: any[]) => void;
 
-export interface ResultCallback {
-  (err?: any, result?: InvocationResult): void;
-}
+export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 
 export interface Dict<T> {
   [key: string]: T

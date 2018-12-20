@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
@@ -7,7 +8,7 @@
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
-export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export declare type AzureFunction = ((context: Context, ...args: InputTypes[]) => Promise<any> | void);
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
@@ -157,3 +158,4 @@ export interface Logger {
      */
     verbose(...args: any[]): void;
 }
+export declare type InputTypes = HttpRequest | string | Buffer | null | undefined;

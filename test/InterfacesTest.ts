@@ -1,7 +1,7 @@
 // Test typescript interfaces for ts compliation errors
-import * as azf from "../types/public/Interfaces";
+import { AzureFunction, Context, HttpRequest } from "../types/public/Interfaces";
 
-let runHttp: azf.AzureFunction = async function (context: azf.Context, req: azf.HttpRequest) {
+let runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
@@ -16,7 +16,7 @@ let runHttp: azf.AzureFunction = async function (context: azf.Context, req: azf.
     }
 }
 
-let runServiceBus: azf.AzureFunction = function (context: azf.Context, myQueueItem: string) { 
+let runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) { 
     context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem); 
     context.log.verbose('EnqueuedTimeUtc =', context.bindingData.enqueuedTimeUtc); 
     context.log.verbose('DeliveryCount =', context.bindingData.deliveryCount); 
@@ -25,7 +25,7 @@ let runServiceBus: azf.AzureFunction = function (context: azf.Context, myQueueIt
 };
 
 // Assumes output binding is named '$return'
-let runHttpReturn: azf.AzureFunction = async function (context: azf.Context, req: azf.HttpRequest) {
+let runHttpReturn: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         return {

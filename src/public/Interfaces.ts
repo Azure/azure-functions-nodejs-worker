@@ -7,7 +7,7 @@
  * function in the same order that they are defined in function.json.
  * @returns Output bindings (optional).
  */
-export type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export type AzureFunction = ((context: Context, ...args: InputTypes[]) => Promise<any> | void);
 
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using 
@@ -47,9 +47,10 @@ export interface Context {
      * callback.
      * 
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
-     * @param result An object containing output binding data.
+     * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
+     *  a string, Buffer, ArrayBufferView, number.
      */
-    done(err?: any, result?: any): void;
+    done(err?: Error | string, result?: any): void;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
@@ -150,3 +151,5 @@ export interface Logger {
      */
     verbose(...args: any[]): void;
 }
+
+export type InputTypes = HttpRequest | string | Buffer | null | undefined;

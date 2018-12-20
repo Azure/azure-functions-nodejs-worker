@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 import { HttpRequest } from '../public/Interfaces';
 
-export class RequestBase implements HttpRequest {
+export class RequestProperties implements HttpRequest {
     method: string = "";
     url: string = "";
     originalUrl: string = "";
@@ -14,8 +14,8 @@ export class RequestBase implements HttpRequest {
     [key:string]: any;
 }
 
-export class Request extends RequestBase {
-    constructor(httpInput: RequestBase) {
+export class Request extends RequestProperties {
+    constructor(httpInput: RequestProperties) {
         super();
         Object.assign(this, httpInput);
     }
