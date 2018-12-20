@@ -1,6 +1,6 @@
 {
   "name": "@azure/functions",
-  "version": "1.0.1-preview",
+  "version": "1.0.1.1-preview",
   "description": "Azure Functions types for Typescript",
   "main": "Interfaces.d.ts",
   "repository": {
