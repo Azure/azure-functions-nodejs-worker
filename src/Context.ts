@@ -36,7 +36,7 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
   }
 }
 
-export class InvocationContext implements Context {
+class InvocationContext implements Context {
   invocationId: string;
   executionContext: ExecutionContext;
   bindings: Dict<any>;
@@ -45,7 +45,7 @@ export class InvocationContext implements Context {
   log: Logger;
   req?: Request;
   res?: Response;
-  done: ((err?: any, result?: any) => void);
+  done: DoneCallback;
 
   constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
     this.invocationId = <string>request.invocationId;
@@ -102,6 +102,10 @@ function getLogger(invocationId: string, functionName: string, log: LogCallback)
 export interface InvocationResult {
   return: any;
   bindings: Dict<any>;
+}
+
+export interface DoneCallback {
+  (err?: any, result?: any): void;
 }
 
 export interface LogCallback {
