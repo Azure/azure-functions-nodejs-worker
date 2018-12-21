@@ -114,4 +114,5 @@ export interface Dict<T> {
   [key: string]: T
 }
 
+// Allowed input types
 export type InputTypes = HttpRequest | string | Buffer | null | undefined;

@@ -1,6 +1,6 @@
 // Test typescript interfaces for ts compliation errors
 import { AzureFunction, Context, HttpRequest } from "../types/public/Interfaces";
-
+ 
 let runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
@@ -40,4 +40,15 @@ let runHttpReturn: AzureFunction = async function (context: Context, req: HttpRe
     }
 }
 
-export { runHttp, runHttpReturn, runServiceBus };
+let runFunction: AzureFunction = async function(context: Context) {
+    context.log("Ran function");
+    return "Ran function";
+}
+
+let runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
+    context.log("Http-triggered function with " + req.method + " method.");
+    context.log("Pulling in queue item " + queueItem);
+    return;
+}
+
+export { runHttp, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue };

@@ -104,7 +104,7 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<
 
 function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): BindingDirection | undefined {
   let directionName = Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
-  return isBindingDirection(directionName)? <BindingDirection>directionName : undefined;
+  return isBindingDirection(directionName)? directionName as BindingDirection : undefined;
 }
 
 function isBindingDirection(input: string | undefined): boolean {

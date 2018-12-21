@@ -3,12 +3,17 @@
  * and will execute when triggered. It is recommended that you declare this function as async, which 
  * implicitly returns a Promise.
  * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {(HttpRequest | string | Buffer)[]} args Optional array of input and trigger binding 
- * data. These binding data are passed to the function in the same order that they are defined in function.json. 
+ * @param {(string|HttpRequest|Buffer)[]} args Optional array of input and trigger binding data. These binding data are passed to the 
+ * function in the same order that they are defined in function.json. 
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this 
- * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, number.
+ * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export type AzureFunction = ((context: Context, ...args: (HttpRequest | string | Buffer)[]) => Promise<any> | void);
+export type AzureFunction = ((context: Context, ...args: InputType<any>[]) => Promise<any> | void);
+
+type InputType<T> = T extends string ? string : 
+    T extends HttpRequest ? HttpRequest : 
+    T extends Buffer ? Buffer :
+    T extends null ? null : never;
 
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using 
@@ -49,7 +54,7 @@ export interface Context {
      * 
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
      * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
-     *  a string, Buffer, ArrayBufferView, number.
+     *  a string, Buffer, ArrayBufferView, or number.
      */
     done(err?: Error | string, result?: any): void;
     /**
