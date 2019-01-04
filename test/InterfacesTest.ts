@@ -1,6 +1,6 @@
 // Test typescript interfaces for ts compliation errors
 import { AzureFunction, Context, HttpRequest } from "../types/public/Interfaces";
- 
+
 let runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {

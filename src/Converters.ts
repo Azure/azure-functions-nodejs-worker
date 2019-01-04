@@ -4,7 +4,7 @@ import { RequestProperties } from './http/Request';
 import { Dict } from '../src/Context';
 import { BindingDefinition } from './public/Interfaces';
 
-type BindingDirection = 'in' | 'out' | 'inout';
+type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
   let httpContext: RequestProperties = {
@@ -102,7 +102,7 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<
   return bindingData;
 }
 
-function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): BindingDirection | undefined {
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): BindingDirection {
   let directionName = Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
   return isBindingDirection(directionName)? directionName as BindingDirection : undefined;
 }

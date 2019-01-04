@@ -1,16 +1,15 @@
-/// <reference types="node" />
 /**
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
  * implicitly returns a Promise.
  * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {(string|HttpRequest|Buffer)[]} args Optional array of input and trigger binding data. These binding data are passed to the
- * function in the same order that they are defined in function.json.
+ * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the
+ * function in the same order that they are defined in function.json. Valid input types are string, HttpRequest,
+ * and Buffer.
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export declare type AzureFunction = ((context: Context, ...args: InputType<any>[]) => Promise<any> | void);
-declare type InputType<T> = T extends string ? string : T extends HttpRequest ? HttpRequest : T extends Buffer ? Buffer : T extends null ? null : never;
+export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
@@ -161,4 +160,3 @@ export interface Logger {
      */
     verbose(...args: any[]): void;
 }
-export {};
