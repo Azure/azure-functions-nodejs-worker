@@ -2,20 +2,20 @@
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
  * implicitly returns a Promise.
- * @param context IContext object passed to your function from the Azure Functions runtime.
+ * @param context Context object passed to your function from the Azure Functions runtime.
  * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the
- * function in the same order that they are defined in function.json.
- * @returns Output bindings (optional).
+ * function in the same order that they are defined in function.json. Valid input types are string, HttpRequest,
+ * and Buffer.
+ * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
+ * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export interface IFunction {
-    (context: IContext, ...args: any[]): Promise<any> | void;
-}
+export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
  * to your function from the Azure Functions runtime on function invocation.
  */
-export interface IContext {
+export interface Context {
     /**
      * A unique GUID per function invocation.
      */
@@ -23,7 +23,7 @@ export interface IContext {
     /**
      * Function execution metadata.
      */
-    executionContext: IExecutionContext;
+    executionContext: ExecutionContext;
     /**
      * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically
      * generated and named based off of the "name" property in function.json.
@@ -40,24 +40,26 @@ export interface IContext {
     /**
      * Bindings your function uses, as defined in function.json.
      */
-    bindingDefinitions: IBindingDefinition[];
+    bindingDefinitions: BindingDefinition[];
     /**
-     * Calling directly allows you to write streaming function logs at the default trace level.
+     * Allows you to write streaming function logs. Calling directly allows you to write streaming function logs
+     * at the default trace level.
      */
-    log: ILogger;
+    log: Logger;
     /**
      * A callback function that signals to the runtime that your code has completed. If your function is synchronous,
      * you must call context.done at the end of execution. If your function is asynchronous, you should not use this
      * callback.
      *
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
-     * @param result An object containing output binding data.
+     * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
+     *  a string, Buffer, ArrayBufferView, or number.
      */
-    done: IDoneCallback;
+    done(err?: Error | string, result?: any): void;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
-    req?: IRequest;
+    req?: HttpRequest;
     /**
      * HTTP response object. Provided to your function when using HTTP Bindings.
      */
@@ -68,7 +70,7 @@ export interface IContext {
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
  */
-export interface IRequest {
+export interface HttpRequest {
     /**
      * HTTP request method used to invoke this function.
      */
@@ -96,15 +98,15 @@ export interface IRequest {
         [key: string]: string;
     };
     /**
-     * The HTTP request body
+     * The HTTP request body.
      */
     body?: any;
     /**
-     * The HTTP request body as a UTF-8 string
+     * The HTTP request body as a UTF-8 string.
      */
     rawbody?: any;
 }
-export interface IExecutionContext {
+export interface ExecutionContext {
     /**
      * A unique GUID per function invocation.
      */
@@ -119,7 +121,7 @@ export interface IExecutionContext {
      */
     functionDirectory: string;
 }
-export interface IBindingDefinition {
+export interface BindingDefinition {
     /**
      * The name of your binding, as defined in function.json.
      */
@@ -129,34 +131,32 @@ export interface IBindingDefinition {
      */
     type: string;
     /**
-     * The direction of your binding ('in', 'out', or 'inout'), as defined in function.json.
+     * The direction of your binding, as defined in function.json.
      */
-    direction: string;
-}
-export interface ILog {
-    (...args: any[]): void;
+    direction: 'in' | 'out' | 'inout' | undefined;
 }
 /**
  * Allows you to write streaming function logs.
  */
-export interface ILogger extends ILog {
+export interface Logger {
+    /**
+     * Writes streaming function logs at the default trace level.
+     */
+    (...args: any[]): void;
     /**
      * Writes to error level logging or lower.
      */
-    error: ILog;
+    error(...args: any[]): void;
     /**
      * Writes to warning level logging or lower.
      */
-    warn: ILog;
+    warn(...args: any[]): void;
     /**
      * Writes to info level logging or lower.
      */
-    info: ILog;
+    info(...args: any[]): void;
     /**
      * Writes to verbose level logging.
      */
-    verbose: ILog;
-}
-export interface IDoneCallback {
-    (err?: any, result?: any): void;
+    verbose(...args: any[]): void;
 }

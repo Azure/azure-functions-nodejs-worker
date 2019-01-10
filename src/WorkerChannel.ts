@@ -3,7 +3,7 @@ import { format, isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
-import { CreateContextAndInputs, ILogCallback, IResultCallback } from './Context';
+import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
 import { systemError } from './utils/Logger';
@@ -93,7 +93,7 @@ export class WorkerChannel {
 
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     let info = this._functionLoader.getInfo(<string>msg.functionId);
-    let logCallback: ILogCallback = (level, ...args) => {
+    let logCallback: LogCallback = (level, ...args) => {
       this.log({
         invocationId: msg.invocationId,
         category: `${info.name}.Invocation`,
@@ -102,7 +102,7 @@ export class WorkerChannel {
       });
     }
 
-    let resultCallback: IResultCallback = (err, result) => {
+    let resultCallback: ResultCallback = (err, result) => {
       let status: rpc.IStatusResult = {
         status: rpc.StatusResult.Status.Success
       };

@@ -1,16 +1,19 @@
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
-import { HttpRequest } from './http/Request';
-import { IDict } from '../src/Context';
-import { IBindingDefinition } from './public/Interfaces';
-export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): HttpRequest {
-  let httpContext: HttpRequest = {
+import { RequestProperties } from './http/Request';
+import { Dict } from '../src/Context';
+import { BindingDefinition } from './public/Interfaces';
+
+type BindingDirection = 'in' | 'out' | 'inout' | undefined;
+
+export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
+  const httpContext: RequestProperties = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
-    headers: <IDict<string>>rpcHttp.headers,
-    query: <IDict<string>>rpcHttp.query,
-    params: <IDict<string>>rpcHttp.params,
+    headers: <Dict<string>>rpcHttp.headers,
+    query: <Dict<string>>rpcHttp.query,
+    params: <Dict<string>>rpcHttp.params,
     body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
     rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
   };
@@ -73,7 +76,7 @@ export function toTypedData(inputObject): rpc.ITypedData {
   }
 }
 
-export function getBindingDefinitions(info: FunctionInfo): IBindingDefinition[] {
+export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
   let bindings = info.bindings;
   if (!bindings) {
     return [];
@@ -83,13 +86,13 @@ export function getBindingDefinitions(info: FunctionInfo): IBindingDefinition[] 
     .map(name => { return { 
         name: name,
         type: bindings[name].type || "", 
-        direction: getDirectionName(bindings[name].direction) || ""
+        direction: getDirectionName(bindings[name].direction)
       }; 
     });
 }
 
-export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict<any> {
-  let bindingData: IDict<any> = {
+export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<any> {
+  let bindingData: Dict<any> = {
     invocationId: request.invocationId
   };
   // node binding data is camel cased due to language convention
@@ -99,8 +102,13 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): IDict
   return bindingData;
 }
 
-function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): string | undefined {
-  return Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
+function getDirectionName(direction: rpc.BindingInfo.Direction|null|undefined): BindingDirection {
+  let directionName = Object.keys(rpc.BindingInfo.Direction).find(k => rpc.BindingInfo.Direction[k] === direction);
+  return isBindingDirection(directionName)? directionName as BindingDirection : undefined;
+}
+
+function isBindingDirection(input: string | undefined): boolean {
+  return (input == 'in' || input == 'out' || input == 'inout')
 }
 
 // Recursively convert keys of objects to camel case
