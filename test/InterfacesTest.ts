@@ -1,7 +1,7 @@
 // Test typescript interfaces for ts compliation errors
 import { AzureFunction, Context, HttpRequest } from "../types/public/Interfaces";
 
-let runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
+const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
@@ -16,7 +16,7 @@ let runHttp: AzureFunction = async function (context: Context, req: HttpRequest)
     }
 }
 
-let runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) { 
+const runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) { 
     context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem); 
     context.log.verbose('EnqueuedTimeUtc =', context.bindingData.enqueuedTimeUtc); 
     context.log.verbose('DeliveryCount =', context.bindingData.deliveryCount); 
@@ -25,7 +25,7 @@ let runServiceBus: AzureFunction = function (context: Context, myQueueItem: stri
 };
 
 // Assumes output binding is named '$return'
-let runHttpReturn: AzureFunction = async function (context: Context, req: HttpRequest) {
+const runHttpReturn: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         return {
@@ -40,12 +40,12 @@ let runHttpReturn: AzureFunction = async function (context: Context, req: HttpRe
     }
 }
 
-let runFunction: AzureFunction = async function(context: Context) {
+const runFunction: AzureFunction = async function(context: Context) {
     context.log("Ran function");
     return "Ran function";
 }
 
-let runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
+const runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
     context.log("Http-triggered function with " + req.method + " method.");
     context.log("Pulling in queue item " + queueItem);
     return;

@@ -7,7 +7,7 @@ import { BindingDefinition } from './public/Interfaces';
 type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
-  let httpContext: RequestProperties = {
+  const httpContext: RequestProperties = {
     method: <string>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
