@@ -12,9 +12,9 @@ Because this package only contains TypeScript type definitions, it should be sav
 
 # Usage
 ```javascript
-import { IFunction, IContext, IRequest} from "@azure/functions";
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-const index: IFunction = async function (context: IContext, req: IRequest) {
+const index: AzureFunction = async function (context: Context, req: HttpRequest) {
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
