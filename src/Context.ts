@@ -5,6 +5,7 @@ import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest } from './public/Interfaces' 
+import { systemWarn } from './utils/Logger';
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
@@ -55,21 +56,30 @@ class InvocationContext implements Context {
       functionDirectory: <string>info.directory
     };
     this.bindings = {};
+    let _done = false;
+    let _promise = false;
 
-    this.log = getLogger(this.invocationId, this.executionContext.functionName, logCallback);
+    this.log = Object.assign(
+      <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, ...args),
+      {
+        error: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Error, ...args),
+        warn: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Warning, ...args),
+        info: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, ...args),
+        verbose: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Trace, ...args)
+      }
+    );
+
     this.bindingData = getNormalizedBindingData(request);
     this.bindingDefinitions = getBindingDefinitions(info);
 
-    let _done = false;
-    let _promise = false;
     // isPromise is a hidden parameter that we set to true in the event of a returned promise
     this.done = (err?: any, result?: any, isPromise?: boolean) => {
       _promise = isPromise === true;
       if (_done) {
         if (_promise) {
-          this.log.error("Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
+          logCallback(LogLevel.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
         } else {
-          this.log.error("Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
+          logCallback(LogLevel.Error, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
         }
         return;
       }
@@ -87,16 +97,14 @@ class InvocationContext implements Context {
   }
 }
 
-function getLogger(invocationId: string, functionName: string, log: LogCallback): Logger{
-    return Object.assign(
-      <Log>(...args: any[]) => log(LogLevel.Information, ...args),
-      {
-        error: <Log>(...args: any[]) => log(LogLevel.Error, ...args),
-        warn: <Log>(...args: any[]) => log(LogLevel.Warning, ...args),
-        info: <Log>(...args: any[]) => log(LogLevel.Information, ...args),
-        verbose: <Log>(...args: any[]) => log(LogLevel.Trace, ...args)
-      }
-    );
+// Emit warning if trying to log after function execution is done.
+function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, ...args: any[]) {
+  if (done) {
+    let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes.";
+    log(LogLevel.Warning, badAsyncMsg);
+    systemWarn(badAsyncMsg);
+  }
+  return log(level, ...args);
 }
 
 export interface InvocationResult {
