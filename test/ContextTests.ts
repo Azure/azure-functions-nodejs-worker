@@ -26,7 +26,7 @@ describe('Context', () => {
     });
 
     it ('async function logs error on calling context.done', async () => {
-        await callUserFunc(BasicAsync.asyncThrowsError, _context);
+        await callUserFunc(BasicAsync.asyncAndCallback, _context);
         sinon.assert.calledOnce(_logger);
         sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
     });
@@ -47,14 +47,14 @@ describe('Context', () => {
         callUserFunc(BasicCallback.callbackOnce, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes.");
     });
 
     it ('function logs error on calling context.log from non-awaited async call', async () => {
         await callUserFunc(BasicAsync.asyncPlainFunction, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes.");
     });
 
     it ('function calls callback correctly with bindings', () => {
@@ -71,7 +71,7 @@ describe('Context', () => {
 
 // async test functions
 class BasicAsync {
-    public static async asyncThrowsError(context: Context) {
+    public static async asyncAndCallback(context: Context) {
         context.done();
     }
 

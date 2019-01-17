@@ -5,7 +5,7 @@ import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest } from './public/Interfaces' 
-import { systemError } from './utils/Logger';
+import { systemWarn } from './utils/Logger';
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
@@ -100,9 +100,9 @@ class InvocationContext implements Context {
 // Emit warning if trying to log after function execution is done.
 function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, ...args: any[]) {
   if (done) {
-    let badAsyncMsg = "Error: Unexpected call to 'log' after function execution has completed. Please check for asynchronous calls that are not awaited or did not use the 'done' callback where expected.";
-    log(LogLevel.Error, badAsyncMsg);
-    systemError(badAsyncMsg);
+    let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes.";
+    log(LogLevel.Warning, badAsyncMsg);
+    systemWarn(badAsyncMsg);
   }
   return log(level, ...args);
 }
