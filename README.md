@@ -9,10 +9,10 @@
 - `cd azure-functions-nodejs-worker`
 - `npm install`
 - `npm run build`
-  - Generate protobuf definitions & run typescript compiler
+  - Generates protobuf definitions & runs typescript compiler
 - `npm test`
 - Add the environment variable `languageWorkers:node:workerDirectory = <path-to-nodejsWorker.js>`
-  - Configure the functions host to use the development version of the worker
+  - Configures the functions host to use the development version of the worker
 - To debug, add the environment variable `languageWorkers:node:arguments = --inspect-brk`
 
 ## Publishing
