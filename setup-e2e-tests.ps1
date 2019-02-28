@@ -52,20 +52,3 @@ cd "$currDir\test\end-to-end\testFunctionApp"
 }
 StopOnFailedExecution
 cd $currDir
-
-Write-Host "Starting functions host..."
-$proc = start-process -NoNewWindow -PassThru -filepath "$currDir\Azure.Functions.Cli\func.exe" -WorkingDirectory "$currDir\test\end-to-end\testFunctionApp" -ArgumentList "host start" -RedirectStandardOutput "output.txt"
-Start-Sleep -s 30
-
-Write-Host "Running E2E tests..."
-./run-e2e-tests.ps1
-
-Write-Host "Closing process..."
-Stop-Process -Id $proc.Id -Erroraction Ignore 
-
-Write-Host "Host Logs:"
-$host_logs = Get-Content -Path "output.txt" -Raw
-Write-Host $host_logs
-
-StopOnFailedExecution
-Remove-Item -Path "output.txt"

@@ -43,5 +43,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 public static string OutputName = "test-output-one-node";
             }
         }
+
+        // Xunit Fixtures and Collections
+        public const string FunctionAppCollectionName = "FunctionAppCollection";
     }
 }
