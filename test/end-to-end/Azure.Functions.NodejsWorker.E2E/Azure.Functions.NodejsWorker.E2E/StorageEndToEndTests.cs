@@ -7,8 +7,16 @@ using Xunit;
 
 namespace Azure.Functions.NodeJs.Tests.E2E
 {
+    [Collection(Constants.FunctionAppCollectionName)]
     public class StorageEndToEndTests 
     {
+        private FunctionAppFixture _fixture;
+
+        public StorageEndToEndTests(FunctionAppFixture fixture)
+        {
+            _fixture = fixture;
+        }
+
         [Fact]
         public async Task QueueTriggerAndOutput_Succeeds()
         {

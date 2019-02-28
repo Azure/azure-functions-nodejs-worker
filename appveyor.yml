@@ -36,6 +36,7 @@ build_script:
 test_script:
 - npm run test
 - ps: .\setup-e2e-tests.ps1
+- ps: .\run-e2e-tests.ps1
 
 artifacts:
 - path: 'pkg/*.nupkg'
