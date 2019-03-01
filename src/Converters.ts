@@ -1,4 +1,4 @@
-import { AzureFunctionsRpcMessages as rpc, INullableString } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc, INullableString, IRpcClaimsIdentity } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { RequestProperties } from './http/Request';
 import { Dict } from '../src/Context';
@@ -16,6 +16,7 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
     params: <Dict<string>>rpcHttp.params,
     body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
     rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
+    user: <IRpcClaimsIdentity[]>rpcHttp.identities,
   };
 
   return httpContext;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Collections.Generic;
 
 namespace Azure.Functions.NodeJs.Tests.E2E
 {
@@ -32,11 +33,19 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             }
         }
 
-        public static async Task<bool> InvokeHttpTrigger(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage, int expectedCode = 0)
+        public static async Task<bool> InvokeHttpTrigger(string functionName, string queryString, Dictionary<string, string> headers, HttpStatusCode expectedStatusCode, string expectedMessage, int expectedCode = 0)
         {
             string uri = $"api/{functionName}{queryString}";
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
+            }
 
             var httpClient = new HttpClient();
             httpClient.BaseAddress = new Uri(Constants.FunctionsHostUrl);

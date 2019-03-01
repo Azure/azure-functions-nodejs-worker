@@ -1,8 +1,8 @@
-import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/Converters';
+import { fromRpcHttp, getBindingDefinitions, getNormalizedBindingData, toRpcHttp } from '../src/Converters';
 import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc , IRpcClaimsIdentity } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
 describe('Converters', () => {
@@ -125,5 +125,73 @@ describe('Converters', () => {
     expect(bindingDefinitions[3].name).to.equal("noDirection");
     expect(bindingDefinitions[3].direction).to.be.undefined;
     expect(bindingDefinitions[3].type).to.equal("queue");
+  });
+
+  it('copies all properties from gRPC HTTP object', () => {
+    const bodyObj = {
+        name: "Chaz",
+        species: "Toucan",
+        toesPerFoot: 4,
+        isBird: true,
+        despises: [ "train whistles", "the young" ]
+    };
+    const bodyStr = JSON.stringify(bodyObj);
+    const bodyTypedData = { json: bodyStr };
+
+    const method = "GET";
+    const url = "http://localhost:7071";
+    const headers = {
+        "Content-Type": "application/json",
+        "foo": "bar"
+    };
+    const params = { 
+        "foo": "bar",
+        "baz": "qux"
+    };
+    const query = { "name": "Test" };
+    const identities = [
+        {
+          claims: [
+            {
+              value: "Connor McMahon",
+              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+            },
+            {
+              value: "Connor McMahon",
+              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+            },
+            {
+              value: "10241897674253170",
+              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+            }
+          ],
+          authenticationType: "facebook",
+          nameClaimType: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+          roleClaimType: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        }
+    ];
+    
+    const rpcHttpObj: rpc.IRpcHttp = {
+        method: method,
+        url: url,
+        body: bodyTypedData,
+        headers: headers,
+        params: params,
+        query: query,
+        rawBody: bodyTypedData,
+        identities: identities,
+    };
+
+    const httpContext = fromRpcHttp(rpcHttpObj);
+    // verify all fields translated
+    expect(httpContext.method).to.equal(method);
+    expect(httpContext.url).to.equal(url);
+    expect(httpContext.originalUrl).to.equal(url);
+    expect(httpContext.headers).to.deep.equal(headers);
+    expect(httpContext.query).to.deep.equal(query);
+    expect(httpContext.params).to.deep.equal(params);
+    expect(httpContext.body).to.deep.equal(bodyObj);
+    expect(httpContext.rawBody).to.equal(bodyStr);
+    expect(httpContext.user).to.deep.equal(identities);
   });
 })

@@ -46,5 +46,6 @@ namespace Azure.Functions.NodeJs.Tests.E2E
 
         // Xunit Fixtures and Collections
         public const string FunctionAppCollectionName = "FunctionAppCollection";
+        public const string EasyAuthCollectionName = "EasyAuthCollection";
     }
 }
