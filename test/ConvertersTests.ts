@@ -1,9 +1,10 @@
-import { fromRpcHttp, getBindingDefinitions, getNormalizedBindingData, toRpcHttp } from '../src/Converters';
+import { fromRpcHttp, getBindingDefinitions, getNormalizedBindingData, toRpcHttp, fromNullableString, fromRpcClaim, fromRpcClaimsIdentity } from '../src/Converters';
 import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { AzureFunctionsRpcMessages as rpc , IRpcClaimsIdentity } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc , IRpcClaim, IRpcClaimsIdentity } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
+import { Claim } from '../src/public/Interfaces';
 
 describe('Converters', () => {
   it('normalizes binding trigger metadata for HTTP', () => {
@@ -149,25 +150,77 @@ describe('Converters', () => {
         "baz": "qux"
     };
     const query = { "name": "Test" };
-    const identities = [
+    const rpcIdentities = [
         {
-          claims: [
-            {
-              value: "Connor McMahon",
-              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-            },
-            {
-              value: "Connor McMahon",
-              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
-            },
-            {
-              value: "10241897674253170",
-              type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-            }
-          ],
-          authenticationType: "facebook",
-          nameClaimType: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
-          roleClaimType: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            claims: [
+                {
+                    value: "Admin",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/authlevel"
+                },
+                {
+                    value: "master",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/keyid"
+                }
+            ],
+            authenticationType: { value: "WebJobsAuthLevel" },
+            nameClaimType: { value: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" },
+            roleClaimType: { value: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" }
+        },        
+        {
+            claims: [
+                {
+                value: "Connor McMahon",
+                type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+                },
+                {
+                value: "Connor McMahon",
+                type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+                },
+                {
+                value: "10241897674253170",
+                type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+                }
+            ],
+            authenticationType: { value: "facebook" },
+            nameClaimType: { value: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" },
+            roleClaimType: { value: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" }
+        }
+    ];
+
+    const expectedIdentities = [
+        {
+            claims: [
+                {
+                    value: "Admin",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/authlevel"
+                },
+                {
+                    value: "master",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/keyid"
+                }
+            ],
+            authenticationType: "WebJobsAuthLevel",
+            nameClaimType: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+            roleClaimType: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        },
+        {   
+            claims: [
+                {
+                    value: "Connor McMahon",
+                    type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+                },
+                {
+                    value: "Connor McMahon",
+                    type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+                },
+                {
+                    value: "10241897674253170",
+                    type: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+                }
+            ],
+            authenticationType: "facebook",
+            nameClaimType: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+            roleClaimType: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         }
     ];
     
@@ -179,7 +232,7 @@ describe('Converters', () => {
         params: params,
         query: query,
         rawBody: bodyTypedData,
-        identities: identities,
+        identities: rpcIdentities,
     };
 
     const httpContext = fromRpcHttp(rpcHttpObj);
@@ -192,6 +245,99 @@ describe('Converters', () => {
     expect(httpContext.params).to.deep.equal(params);
     expect(httpContext.body).to.deep.equal(bodyObj);
     expect(httpContext.rawBody).to.equal(bodyStr);
-    expect(httpContext.user).to.deep.equal(identities);
+    expect(httpContext.user).to.deep.equal(expectedIdentities);
+  });
+
+  describe('fromNullableString()', () => {
+    const nonexistentValues = [ undefined, null ];
+    const testValues = [ "", "peaceSign" ];
+
+    nonexistentValues.forEach(obj => it(`converts ${obj} to undefined`, () => {
+        const result = fromNullableString(obj);
+        expect(result).to.equal(undefined);
+    }));
+
+    nonexistentValues.forEach(obj => it(`converts nullableString with value ${obj} to undefined`, () => {
+        const result = fromNullableString({ value: obj });
+        expect(result).to.equal(undefined);
+    }));
+
+    testValues.forEach(testValue =>
+        it(`converts nullableString with value ${testValue === "" ? "\"\"" : testValue} to ${testValue === "" ? "\"\"" : testValue}`, () => {
+            const testObj = { value: testValue }
+            const result = fromNullableString(testObj);
+            expect(result).to.equal(testValue);
+    }));
+  });
+
+  describe('fromRpcClaim()', () => {
+    it("converts IRpcClaim with null values to Claim with empty strings", () => {
+        const rpcClaim: IRpcClaim = {
+            value: null,
+            type: null,
+        };
+        const expectedClaim: Claim = {
+            value: "",
+            type: "",
+        }
+
+        const result = fromRpcClaim(rpcClaim);
+        expect(result).to.deep.equal(expectedClaim);
+    });
+
+    it("converts IRpcClaim to Claim", () => {
+        const rpcClaim: IRpcClaim = {
+            value: "Poe",
+            type: "name",
+        };
+        const expectedClaim: Claim = {
+            value: "Poe",
+            type: "name",
+        }
+
+        const result = fromRpcClaim(rpcClaim);
+        expect(result).to.deep.equal(expectedClaim);
+    });
+  });
+
+  describe('fromRpcClaimsIdentity', () => {
+    it("converts IRpcClaimsIdentity to ClaimsIdentity", () => {
+        const rpcIdentity: IRpcClaimsIdentity =
+        {
+            claims: [
+                {
+                    value: "Admin",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/authlevel"
+                },
+                {
+                    value: "master",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/keyid"
+                }
+            ],
+            authenticationType: { value: "WebJobsAuthLevel" },
+            nameClaimType: { value: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" },
+            roleClaimType: { value: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" }
+        };
+
+        const expectedIdentity = 
+        {
+            claims: [
+                {
+                    value: "Admin",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/authlevel"
+                },
+                {
+                    value: "master",
+                    type: "http://schemas.microsoft.com/2017/07/functions/claims/keyid"
+                }
+            ],
+            authenticationType: "WebJobsAuthLevel",
+            nameClaimType: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+            roleClaimType: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        };
+
+        const result = fromRpcClaimsIdentity(rpcIdentity);
+        expect(result).to.deep.equal(expectedIdentity);
+    });
   });
 })

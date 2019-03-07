@@ -1,8 +1,8 @@
-import { AzureFunctionsRpcMessages as rpc, INullableString, IRpcClaimsIdentity } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc, IRpcClaimsIdentity, INullableString, IRpcClaim } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { RequestProperties } from './http/Request';
 import { Dict } from '../src/Context';
-import { BindingDefinition, HttpMethod } from './public/Interfaces';
+import { BindingDefinition, ClaimsIdentity, Claim, HttpMethod } from './public/Interfaces';
 
 type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 
@@ -16,14 +16,39 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
     params: <Dict<string>>rpcHttp.params,
     body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
     rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
-    user: <IRpcClaimsIdentity[]>rpcHttp.identities,
   };
+
+  if (rpcHttp.identities) {
+    httpContext.user = rpcHttp.identities.map(fromRpcClaimsIdentity);
+  }
 
   return httpContext;
 }
 
+export function fromRpcClaimsIdentity(rpcIdentity: IRpcClaimsIdentity): ClaimsIdentity {
+  const identity: ClaimsIdentity = {
+    authenticationType: fromNullableString(rpcIdentity.authenticationType),
+    nameClaimType: fromNullableString(rpcIdentity.nameClaimType),
+    roleClaimType: fromNullableString(rpcIdentity.roleClaimType),
+    claims: rpcIdentity.claims ? rpcIdentity.claims.map(fromRpcClaim) : [],
+  };
+
+  return identity;
+}
+
+export function fromRpcClaim(rpcClaim: IRpcClaim): Claim {
+  const claim: Claim = {
+    value: rpcClaim.value || "",
+    type: rpcClaim.type || "",
+  };
+
+  return claim;
+}
+
 export function fromNullableString(nullableString: INullableString | null | undefined): string | undefined {
-  if (!nullableString || !nullableString.value) {
+  if (!nullableString) {
+    return undefined;
+  } else if (nullableString.value === undefined || nullableString.value === null) {
     return undefined;
   } else {
     return nullableString.value;

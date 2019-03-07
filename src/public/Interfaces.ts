@@ -94,7 +94,55 @@ export interface HttpRequest {
     /**
      * The HTTP request body as a UTF-8 string.
      */
-    rawBody?: any;
+    rawbody?: any;
+    /**
+     * Claims-based identities for authenticated HTTP requests.
+     */
+    user?: ClaimsIdentity[];
+}
+
+/**
+ * An identity described by a collection of claims.
+ */
+export interface ClaimsIdentity {
+    /**
+     * The authentication type.
+     */
+    authenticationType: string | undefined;
+
+    /**
+     * The claim type that is used to determine which claims provide the name
+     * of this claims-based identity.
+     */
+    nameClaimType: string | undefined;
+
+    /**
+     * The claim type that is used to determine which claims provide the role
+     * of this claims-based identity.
+     */
+    roleClaimType: string | undefined;
+
+    /**
+     * The claims associated with this claims-based identity.
+     */
+    claims: Claim[];
+}
+
+/**
+ * A statement about a subject by an issuer. Represents an attribute of the
+ * subject that is part of the subject's claimed identity. For more
+ * information, see RFC 7519: https://tools.ietf.org/html/rfc7519#section-4
+ */
+export interface Claim {
+    /**
+     * The value of the claim.
+     */
+    value: string;
+
+    /**
+     * What the value of the claim means.
+     */
+    type: string;
 }
 
 /**
