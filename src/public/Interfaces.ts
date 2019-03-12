@@ -94,7 +94,7 @@ export interface HttpRequest {
     /**
      * The HTTP request body as a UTF-8 string.
      */
-    rawbody?: any;
+    rawBody?: any;
 }
 
 export interface ExecutionContext {
