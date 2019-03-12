@@ -10,7 +10,7 @@ export class RequestProperties implements HttpRequest {
     query: {[key:string]: string} = {};
     params: {[key:string]: string} = {};
     body?: any;
-    rawbody?: any;
+    rawBody?: any;
     [key:string]: any;
 }
 
