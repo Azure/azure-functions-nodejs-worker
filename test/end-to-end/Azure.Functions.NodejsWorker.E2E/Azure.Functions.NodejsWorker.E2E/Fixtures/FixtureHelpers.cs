@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace Azure.Functions.NodeJs.Tests.E2E
 {
@@ -14,6 +12,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             var rootDir = Path.GetFullPath(@"..\..\..\..\..\..\..");
 
             funcProcess.StartInfo.UseShellExecute = false;
+            funcProcess.StartInfo.RedirectStandardError = true;
+            funcProcess.StartInfo.RedirectStandardOutput = true;
             funcProcess.StartInfo.CreateNoWindow = true;
             funcProcess.StartInfo.WorkingDirectory = Path.Combine(rootDir, @"test\end-to-end\testFunctionApp");
             funcProcess.StartInfo.FileName = Path.Combine(rootDir, @"Azure.Functions.Cli\func.exe");
@@ -24,6 +24,17 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             }
 
             return funcProcess;
+        }
+
+        public static void StartProcessWithLogging(Process funcProcess)
+        {
+            funcProcess.ErrorDataReceived += (sender, e) => Console.WriteLine(e?.Data);
+            funcProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e?.Data);
+
+            funcProcess.Start();
+
+            funcProcess.BeginErrorReadLine();
+            funcProcess.BeginOutputReadLine();
         }
 
         public static void KillExistingFuncHosts()

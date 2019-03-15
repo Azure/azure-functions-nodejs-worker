@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Azure.Functions.NodeJs.Tests.E2E
@@ -32,7 +30,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 // start functions process
                 _logger.LogInformation($"Starting functions host for {Constants.FunctionAppCollectionName}..");
                 _funcProcess = FixtureHelpers.GetFuncHostProcess();
-                _funcProcess.Start();
+
+                FixtureHelpers.StartProcessWithLogging(_funcProcess);
 
                 Thread.Sleep(TimeSpan.FromSeconds(30));
             }
