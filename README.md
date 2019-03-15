@@ -11,9 +11,17 @@
 - `npm run build`
   - Generates protobuf definitions & runs typescript compiler
 - `npm test`
-- Add the environment variable `languageWorkers:node:workerDirectory = <path-to-nodejsWorker.js>`
-  - Configures the functions host to use the development version of the worker
-- To debug, add the environment variable `languageWorkers:node:arguments = --inspect-brk`
+
+## Debugging and Testing
+- In the function app you are using to test, add the App Setting in local.settings.json `languageWorkers:node:workerDirectory = <path-to-nodejsWorker.js>`
+  - This configures the functions host to use the development version of the worker
+  - You can also configure `languageWorkers:node:workerDirectory` as an environment variable.
+- To debug, add the App Setting in local.settings.json `languageWorkers:node:arguments = --inspect-brk`
+  - You can also configure `languageWorkers:node:arguments` as an environment variable.
+
+Make sure that `languageWorkers:node:workerDirectory` and `languageWorkers:node:arguments` are set correctly. When you start your functions host, you should see your custom path to workerDirectory and any arguments you passed to the node. If it was **not set** correctly, your output may look like the default output: `Starting language worker process:node  "%userprofile%\AppData\Roaming\npm\node_modules\azure-functions-core-tools\bin\workers\node\dist/src/nodejsWorker.js" --host 127.0.0.1 --port 5134 --workerId fd9b17c3-8ffb-49f7-a4e3-089a780e7a00 --requestId 14e27374-9395-42d4-a639-bd67e0e770a4 --grpcMaxMessageLength 134217728`
+
+Read more on local debugging [in our docs](https://docs.microsoft.com/azure/azure-functions/functions-reference-node#local-debugging).
 
 ## Publishing
 
