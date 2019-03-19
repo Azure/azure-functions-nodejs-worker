@@ -108,19 +108,19 @@ export interface ClaimsIdentity {
     /**
      * The authentication type.
      */
-    authenticationType: string | undefined;
+    authenticationType?: string;
 
     /**
      * The claim type that is used to determine which claims provide the name
      * of this claims-based identity.
      */
-    nameClaimType: string | undefined;
+    nameClaimType?: string;
 
     /**
      * The claim type that is used to determine which claims provide the role
      * of this claims-based identity.
      */
-    roleClaimType: string | undefined;
+    roleClaimType?: string;
 
     /**
      * The claims associated with this claims-based identity.
