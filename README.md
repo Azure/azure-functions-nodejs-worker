@@ -35,3 +35,7 @@ The nuget package can be deployed from the appveyor job at: https://ci.appveyor.
 ## Contributing
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+### Contributing to TypeScript type definitions
+
+`types/public/Interfaces.d.ts` is a generated file from `src/public/Interfaces.ts`. If you want to add a change to `Interfaces.d.ts`, please make the change first to `Interfaces.ts` and then `npm run build` to generate the appropriate type definitions. Any additional type definition tests should go in `test/InterfacesTest.ts`.
