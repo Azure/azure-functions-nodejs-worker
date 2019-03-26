@@ -51,4 +51,9 @@ const runHttpWithQueue: AzureFunction = async function (context: Context, req: H
     return;
 }
 
-export { runHttp, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue };
+const returnWithContextDone: AzureFunction = function (context: Context, req: HttpRequest) {
+    context.log.info("Writing to queue");
+    context.done(null, { myOutput: { text: 'hello there, world', noNumber: true }});
+}
+
+export { runHttp, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
