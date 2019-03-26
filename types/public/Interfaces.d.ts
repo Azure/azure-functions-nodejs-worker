@@ -55,7 +55,7 @@ export interface Context {
      * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
      *  a string, Buffer, ArrayBufferView, or number.
      */
-    done(err?: Error | string, result?: any): void;
+    done(err?: Error | string | null, result?: any): void;
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
