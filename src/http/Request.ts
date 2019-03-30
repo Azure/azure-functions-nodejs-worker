@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
-import { HttpRequest } from '../public/Interfaces';
+import { HttpRequest, HttpMethod } from '../public/Interfaces';
 
 export class RequestProperties implements HttpRequest {
-    method: string = "";
+    method: HttpMethod | null = null;
     url: string = "";
     originalUrl: string = "";
     headers: {[key:string]: string} = {};

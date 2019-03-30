@@ -70,7 +70,7 @@ export interface HttpRequest {
     /**
      * HTTP request method used to invoke this function.
      */
-    method: string;
+    method: HttpMethod | null;
     /**
      * Request URL.
      */
@@ -96,6 +96,18 @@ export interface HttpRequest {
      */
     rawBody?: any;
 }
+
+export enum HttpMethod {
+    GET = "GET",
+    POST = "POST",
+    DELETE = "DELETE",
+    HEAD = "HEAD",
+    PATCH = "PATCH",
+    PUT = "PUT",
+    OPTIONS = "OPTIONS",
+    TRACE = "TRACE",
+    CONNECT = "CONNECT"
+};
 
 export interface ExecutionContext {
     /**
