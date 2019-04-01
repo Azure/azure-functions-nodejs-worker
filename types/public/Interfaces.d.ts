@@ -106,6 +106,9 @@ export interface HttpRequest {
      */
     rawBody?: any;
 }
+/**
+ * Possible values for an HTTP request method.
+ */
 export declare enum HttpMethod {
     GET = "GET",
     POST = "POST",
