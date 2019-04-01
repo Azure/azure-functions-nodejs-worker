@@ -100,17 +100,7 @@ export interface HttpRequest {
 /**
  * Possible values for an HTTP request method.
  */
-export enum HttpMethod {
-    GET = "GET",
-    POST = "POST",
-    DELETE = "DELETE",
-    HEAD = "HEAD",
-    PATCH = "PATCH",
-    PUT = "PUT",
-    OPTIONS = "OPTIONS",
-    TRACE = "TRACE",
-    CONNECT = "CONNECT"
-};
+export type HttpMethod = "GET" | "POST" | "DELETE"| "HEAD"| "PATCH"| "PUT" | "OPTIONS" | "TRACE" | "CONNECT";
 
 export interface ExecutionContext {
     /**
