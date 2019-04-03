@@ -24,7 +24,14 @@ export function startNodeWorker(args) {
 
   let connection = `${host}:${port}`;
   systemLog(`Worker ${workerId} connecting on ${connection}`);
-  let eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
+  
+  let eventStream;
+  try {
+    eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
+  } catch (exception) {
+    exception.message = "Error creating GRPC event stream: " + exception.message;
+    throw exception;
+  }
 
   let workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
 

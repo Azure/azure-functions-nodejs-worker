@@ -30,11 +30,21 @@ export class FunctionLoader implements IFunctionLoader {
     }
 
     getInfo(functionId: string): FunctionInfo {
-      return this._loadedFunctions[functionId].info;
+      let loadedFunction = this._loadedFunctions[functionId];
+      if (loadedFunction && loadedFunction.info) {
+          return loadedFunction.info;
+      } else {
+          throw `Function info for '${functionId}' is not loaded and cannot be invoked.`;
+      }
     }
 
     getFunc(functionId: string): Function {
-        return this._loadedFunctions[functionId].func;
+        let loadedFunction = this._loadedFunctions[functionId];
+        if (loadedFunction && loadedFunction.func) {
+            return loadedFunction.func;
+        } else {
+            throw `Function code for '${functionId}' is not loaded and cannot be invoked.`;
+        }
     }
 }
 
