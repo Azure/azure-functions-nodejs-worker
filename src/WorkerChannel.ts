@@ -8,7 +8,19 @@ import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
 import { systemError } from './utils/Logger';
 
-export class WorkerChannel {
+interface IWorkerChannel {
+  startStream(requestId: string, msg: rpc.StartStream): void;
+  workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest): void;
+  workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void;
+  workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void;
+  workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void;
+  fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void;
+  functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest): void;
+  invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
+  invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
+}
+
+export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
@@ -153,5 +165,29 @@ export class WorkerChannel {
     } catch (err) {
       resultCallback(err);
     }
+  }
+
+  public startStream(requestId: string, msg: rpc.StartStream): void {
+    // Not yet implemented
+  }
+
+  public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
+    // Not yet implemented
+  }
+
+  public workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void {
+    // Not yet implemented
+  }
+
+  public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
+    // Not yet implemented
+  }
+
+  public fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void {
+    // Not yet implemented
+  }
+
+  public invocationCancel(requestId: string, msg: rpc.InvocationCancel): void {
+    // Not yet implemented
   }
 }
