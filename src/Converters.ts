@@ -2,13 +2,13 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { FunctionInfo } from './FunctionInfo';
 import { RequestProperties } from './http/Request';
 import { Dict } from '../src/Context';
-import { BindingDefinition } from './public/Interfaces';
+import { BindingDefinition, HttpMethod } from './public/Interfaces';
 
 type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
   const httpContext: RequestProperties = {
-    method: <string>rpcHttp.method,
+    method: <HttpMethod>rpcHttp.method,
     url: <string>rpcHttp.url,
     originalUrl: <string>rpcHttp.url,
     headers: <Dict<string>>rpcHttp.headers,

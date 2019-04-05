@@ -1,7 +1,12 @@
 // Test typescript interfaces for ts compliation errors
-import { AzureFunction, Context, HttpRequest } from "../types/public/Interfaces";
+import { AzureFunction, Context, HttpRequest, HttpMethod } from "../types/public/Interfaces";
+const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
+    if (req.method === get) {
+        context.log("This is a 'GET' method");
+    }
+
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
