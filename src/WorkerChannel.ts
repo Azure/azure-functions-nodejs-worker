@@ -8,6 +8,10 @@ import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
 import { systemError } from './utils/Logger';
 
+/**
+ * The worker channel should have a way to handle all incoming gRPC messages.
+ * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
+ */
 interface IWorkerChannel {
   startStream(requestId: string, msg: rpc.StartStream): void;
   workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest): void;
@@ -21,6 +25,9 @@ interface IWorkerChannel {
   functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
 }
 
+/**
+ * Initializes handlers for incoming gRPC messages on the client
+ */
 export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
@@ -58,12 +65,22 @@ export class WorkerChannel implements IWorkerChannel {
     }
   }
 
+  /**
+   * Captured logs or relevant details can use the logs property 
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   private log(log: rpc.IRpcLog) {
     this._eventStream.write({
       rpcLog: log
     });
   }
 
+  /**
+   * Host sends capabilities/init data to worker and requests the worker to initialize itself 
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     this._eventStream.write({
       requestId: requestId,
@@ -75,6 +92,11 @@ export class WorkerChannel implements IWorkerChannel {
     });
   }
 
+  /**
+   * Worker responds after loading required metadata to load function with the load result
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
       let functionLoadStatus: rpc.IStatusResult = {
@@ -104,6 +126,11 @@ export class WorkerChannel implements IWorkerChannel {
     }
   }
 
+  /**
+   * Host requests worker to invoke a Function
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, ...args) => {
