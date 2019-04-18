@@ -39,9 +39,7 @@
     "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
     "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
     "build-nomaps": "npm run build -- --sourceMap false",
-    "gen": "npm run genJs && npm run genTs",
-    "genJs": "pbjs -t json-module -w commonjs -o azure-functions-language-worker-protobuf/src/rpc.js azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto",
-    "genTs": "pbjs -t static-module azure-functions-language-worker-protobuf/src/proto/FunctionRpc.proto -o azure-functions-language-worker-protobuf/src/rpc_static.js && pbts -o azure-functions-language-worker-protobuf/src/rpc.d.ts azure-functions-language-worker-protobuf/src/rpc_static.js",
+    "gen": "node scripts/generateProtos.js",
     "test": "mocha -r ts-node/register ./test/**/*.ts"
   },
   "files": [

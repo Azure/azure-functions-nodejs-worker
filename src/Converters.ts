@@ -1,4 +1,4 @@
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc, INullableString } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { RequestProperties } from './http/Request';
 import { Dict } from '../src/Context';
@@ -19,6 +19,14 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
   };
 
   return httpContext;
+}
+
+export function fromNullableString(nullableString: INullableString | null | undefined): string | undefined {
+  if (!nullableString || !nullableString.value) {
+    return undefined;
+  } else {
+    return nullableString.value;
+  }
 }
 
 export function toRpcHttp(inputMessage): rpc.ITypedData {

@@ -18,6 +18,7 @@ interface IWorkerChannel {
   functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest): void;
   invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
   invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
+  functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
 }
 
 export class WorkerChannel implements IWorkerChannel {
@@ -167,27 +168,53 @@ export class WorkerChannel implements IWorkerChannel {
     }
   }
 
+  /**
+   * Worker sends the host information identifying itself
+   */ 
   public startStream(requestId: string, msg: rpc.StartStream): void {
     // Not yet implemented
   }
 
+  /**
+   * Message is empty by design - Will add more fields in future if needed
+   */ 
   public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
     // Not yet implemented
   }
 
+  /**
+   * Warning before killing the process after grace_period
+   * Worker self terminates ..no response on this
+   */ 
   public workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void {
     // Not yet implemented
   }
 
+  /**
+   * NOT USED
+   */ 
   public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
     // Not yet implemented
   }
 
+  /**
+   * Host notifies worker of file content change
+   */   
   public fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void {
     // Not yet implemented
   }
 
+  /**
+   * Host requests worker to cancel invocation
+   */ 
   public invocationCancel(requestId: string, msg: rpc.InvocationCancel): void {
     // Not yet implemented
+  }
+  
+  /**
+   * Environment variables from the current process
+   */ 
+  public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
+    // Not yet implementeds
   }
 }
