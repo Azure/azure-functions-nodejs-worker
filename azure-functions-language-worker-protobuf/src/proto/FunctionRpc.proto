@@ -5,10 +5,18 @@ option java_multiple_files = true;
 option java_package = "com.microsoft.azure.functions.rpc.messages";
 option java_outer_classname = "FunctionProto";
 option csharp_namespace = "Microsoft.Azure.WebJobs.Script.Grpc.Messages";
+<<<<<<< HEAD
+=======
+option go_package ="github.com/Azure/azure-functions-go-worker/internal/rpc";
+>>>>>>> proto-file/dev
 
 package AzureFunctionsRpcMessages;
 
 import "google/protobuf/duration.proto";
+<<<<<<< HEAD
+=======
+import "identity/ClaimsIdentityRpc.proto";
+>>>>>>> proto-file/dev
 
 // Interface exported by the server.
 service FunctionRpc {
@@ -64,6 +72,13 @@ message StreamingMessage {
 
     // Worker logs a message back to the host
     RpcLog rpc_log = 2;
+<<<<<<< HEAD
+=======
+
+    FunctionEnvironmentReloadRequest function_environment_reload_request = 25;
+
+    FunctionEnvironmentReloadResponse function_environment_reload_response = 26;
+>>>>>>> proto-file/dev
   }
 }
 
@@ -179,6 +194,19 @@ message WorkerStatusRequest{
 message WorkerStatusResponse {
 }
 
+<<<<<<< HEAD
+=======
+message FunctionEnvironmentReloadRequest {
+  // Environment variables from the current process
+  map<string, string> environment_variables = 1;
+}
+
+message FunctionEnvironmentReloadResponse {
+  // Status of the response
+  StatusResult result = 3;
+}
+
+>>>>>>> proto-file/dev
 // Host tells the worker to load a Function
 message FunctionLoadRequest {
   // unique function identifier (avoid name collisions, facilitate reload case)
@@ -186,6 +214,12 @@ message FunctionLoadRequest {
 
   // Metadata for the request
   RpcFunctionMetadata metadata = 2;
+<<<<<<< HEAD
+=======
+
+  // A flag indicating if managed dependency is enabled or not
+  bool managed_dependency_enabled = 3;
+>>>>>>> proto-file/dev
 }
 
 // Worker tells host result of reload
@@ -196,6 +230,12 @@ message FunctionLoadResponse {
   // Result of load operation
   StatusResult result = 2;
   // TODO: return type expected?
+<<<<<<< HEAD
+=======
+
+  // Result of load operation
+  bool is_dependency_downloaded = 3;
+>>>>>>> proto-file/dev
 }
 
 // Information on how a Function should be loaded and its bindings
@@ -286,11 +326,27 @@ message BindingInfo {
       inout = 2;
     }
 
+<<<<<<< HEAD
+=======
+    // Indicates the type of the data for the binding
+    enum DataType {
+      undefined = 0;
+      string = 1;
+      binary = 2;
+      stream = 3;
+    }
+
+>>>>>>> proto-file/dev
   // Type of binding (e.g. HttpTrigger)
   string type = 2;
 
   // Direction of the given binding
   Direction direction = 3;
+<<<<<<< HEAD
+=======
+
+  DataType data_type = 4;
+>>>>>>> proto-file/dev
 }
 
 // Used to send logs back to the Host 
@@ -354,4 +410,9 @@ message RpcHttp {
   map<string,string> query = 15;
   bool enable_content_negotiation= 16;
   TypedData rawBody = 17;
+<<<<<<< HEAD
 }
+=======
+  repeated RpcClaimsIdentity identities = 18;
+}
+>>>>>>> proto-file/dev

@@ -24,7 +24,7 @@ From within the Azure Functions language worker repo:
 
 From within the Azure Functions language worker repo:
 1.	Define remote branch for cleaner git commands
-    -	`git remote add proto-file https://github.com/mhoeger/azure-functions-language-worker-protobuf.git`
+    -	`git remote add proto-file https://github.com/azure/azure-functions-language-worker-protobuf.git`
     -	`git fetch proto-file`
 2.	Merge updates
     -   `git merge -s subtree proto-file/<version branch> --squash --allow-unrelated-histories` 
@@ -38,7 +38,7 @@ From within the Azure Functions language worker repo:
 
 ## CSharp
 ```
-set NUGET_PATH=%UserProfile%\.nuget\packages
+set NUGET_PATH="%UserProfile%\.nuget\packages"
 set GRPC_TOOLS_PATH=%NUGET_PATH%\grpc.tools\<versionNumber>\tools\windows_x86
 set PROTO_PATH=.\azure-functions-language-worker-protobuf\src\proto
 set PROTO=.\azure-functions-language-worker-protobuf\src\proto\FunctionRpc.proto
