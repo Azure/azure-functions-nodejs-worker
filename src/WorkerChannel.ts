@@ -10,10 +10,9 @@ import { systemError } from './utils/Logger';
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
- * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
+ * This includes all incoming StreamingMessage types after channel is established (exclude *Response types and RpcLog, and StartStream)
  */
 interface IWorkerChannel {
-  startStream(requestId: string, msg: rpc.StartStream): void;
   workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest): void;
   workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void;
   workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void;
@@ -196,13 +195,6 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
-   * Worker sends the host information identifying itself
-   */ 
-  public startStream(requestId: string, msg: rpc.StartStream): void {
-    // Not yet implemented
-  }
-
-  /**
    * Message is empty by design - Will add more fields in future if needed
    */ 
   public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
@@ -242,6 +234,8 @@ export class WorkerChannel implements IWorkerChannel {
    * Environment variables from the current process
    */ 
   public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
-    // Not yet implementeds
+    if (msg.environmentVariables) {
+      Object.assign(process.env, msg.environmentVariables);
+    }
   }
 }
