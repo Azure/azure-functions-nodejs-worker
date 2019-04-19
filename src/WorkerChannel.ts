@@ -6,7 +6,27 @@ import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
 import { systemError } from './utils/Logger';
+<<<<<<< HEAD
 import { IWorkerChannel } from './WorkerChannel.Interface'
+=======
+
+/**
+ * The worker channel should have a way to handle all incoming gRPC messages.
+ * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
+ */
+interface IWorkerChannel {
+  startStream(requestId: string, msg: rpc.StartStream): void;
+  workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest): void;
+  workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void;
+  workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void;
+  workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void;
+  fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void;
+  functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest): void;
+  invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
+  invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
+  functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
+}
+>>>>>>> parent of 1a1790d... environment handler
 
 /**
  * Initializes handlers for incoming gRPC messages on the client
@@ -179,6 +199,13 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
+   * Worker sends the host information identifying itself
+   */ 
+  public startStream(requestId: string, msg: rpc.StartStream): void {
+    // Not yet implemented
+  }
+
+  /**
    * Message is empty by design - Will add more fields in future if needed
    */ 
   public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
@@ -218,8 +245,6 @@ export class WorkerChannel implements IWorkerChannel {
    * Environment variables from the current process
    */ 
   public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
-    if (msg.environmentVariables) {
-      Object.assign(process.env, msg.environmentVariables);
-    }
+    // Not yet implementeds
   }
 }
