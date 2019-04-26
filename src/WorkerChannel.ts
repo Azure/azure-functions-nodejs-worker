@@ -1,5 +1,4 @@
 import { format, isFunction } from 'util';
-
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
@@ -8,7 +7,27 @@ import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
 import { systemError } from './utils/Logger';
 
-export class WorkerChannel {
+/**
+ * The worker channel should have a way to handle all incoming gRPC messages.
+ * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
+ */
+interface IWorkerChannel {
+  startStream(requestId: string, msg: rpc.StartStream): void;
+  workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest): void;
+  workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void;
+  workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void;
+  workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void;
+  fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void;
+  functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest): void;
+  invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
+  invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
+  functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
+}
+
+/**
+ * Initializes handlers for incoming gRPC messages on the client
+ */
+export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
@@ -45,12 +64,22 @@ export class WorkerChannel {
     }
   }
 
+  /**
+   * Captured logs or relevant details can use the logs property 
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   private log(log: rpc.IRpcLog) {
     this._eventStream.write({
       rpcLog: log
     });
   }
 
+  /**
+   * Host sends capabilities/init data to worker and requests the worker to initialize itself 
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     this._eventStream.write({
       requestId: requestId,
@@ -62,6 +91,11 @@ export class WorkerChannel {
     });
   }
 
+  /**
+   * Worker responds after loading required metadata to load function with the load result
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
       let functionLoadStatus: rpc.IStatusResult = {
@@ -91,6 +125,11 @@ export class WorkerChannel {
     }
   }
 
+  /**
+   * Host requests worker to invoke a Function
+   * @param requestId gRPC message request id
+   * @param msg gRPC message content
+   */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, ...args) => {
@@ -153,5 +192,55 @@ export class WorkerChannel {
     } catch (err) {
       resultCallback(err);
     }
+  }
+
+  /**
+   * Worker sends the host information identifying itself
+   */ 
+  public startStream(requestId: string, msg: rpc.StartStream): void {
+    // Not yet implemented
+  }
+
+  /**
+   * Message is empty by design - Will add more fields in future if needed
+   */ 
+  public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
+    // Not yet implemented
+  }
+
+  /**
+   * Warning before killing the process after grace_period
+   * Worker self terminates ..no response on this
+   */ 
+  public workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void {
+    // Not yet implemented
+  }
+
+  /**
+   * NOT USED
+   */ 
+  public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
+    // Not yet implemented
+  }
+
+  /**
+   * Host notifies worker of file content change
+   */   
+  public fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void {
+    // Not yet implemented
+  }
+
+  /**
+   * Host requests worker to cancel invocation
+   */ 
+  public invocationCancel(requestId: string, msg: rpc.InvocationCancel): void {
+    // Not yet implemented
+  }
+  
+  /**
+   * Environment variables from the current process
+   */ 
+  public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
+    // Not yet implementeds
   }
 }
