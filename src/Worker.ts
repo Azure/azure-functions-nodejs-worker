@@ -43,7 +43,7 @@ export function startNodeWorker(args) {
   });
 
   process.on('uncaughtException', err => {
-    systemError(`Worker ${workerId} uncaught exception: `, err);
+    systemError(`Worker ${workerId} uncaught exception: ${err}`, err.stack);
     process.exit(1);
   });
   process.on('exit', code => {

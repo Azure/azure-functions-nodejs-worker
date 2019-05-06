@@ -62,10 +62,10 @@ class InvocationContext implements Context {
     this.log = Object.assign(
       <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, ...args),
       {
-        error: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Error, ...args),
-        warn: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Warning, ...args),
-        info: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, ...args),
-        verbose: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Trace, ...args)
+        error: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Error, executionContext, ...args),
+        warn: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Warning, executionContext, ...args),
+        info: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
+        verbose: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Trace, executionContext, ...args)
       }
     );
 
@@ -98,9 +98,10 @@ class InvocationContext implements Context {
 }
 
 // Emit warning if trying to log after function execution is done.
-function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, ...args: any[]) {
+function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, executionContext: ExecutionContext, ...args: any[]) {
   if (done) {
-    let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes.";
+    let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
+    badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}`;
     log(LogLevel.Warning, badAsyncMsg);
     systemWarn(badAsyncMsg);
   }
