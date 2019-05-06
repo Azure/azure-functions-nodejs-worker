@@ -84,9 +84,7 @@ export class WorkerChannel implements IWorkerChannel {
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
-        result: {
-          status: Status.Success
-        }
+        result: this.getStatus()
       }
     });
   }
@@ -98,28 +96,21 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
-      let functionLoadStatus: rpc.IStatusResult = {
-        status: Status.Success
-      };
-
+      let err, errorMessage;
       try {
         this._functionLoader.load(msg.functionId, msg.metadata);
       }
       catch(exception) {
-        let errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
+        errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
         systemError(errorMessage)
-        functionLoadStatus.status = Status.Failure;
-        functionLoadStatus.exception =  {
-          message: errorMessage,
-          stackTrace: exception.stack
-        };
+        err = exception;
       }
 
       this._eventStream.write({
         requestId: requestId,
         functionLoadResponse: {
           functionId: msg.functionId,
-          result: functionLoadStatus
+          result: this.getStatus(err, errorMessage)
         }
       });
     }
@@ -142,11 +133,9 @@ export class WorkerChannel implements IWorkerChannel {
     }
 
     let resultCallback: ResultCallback = (err, result) => {
-      let status: rpc.IStatusResult = this.getStatus(err);
-
       let response: rpc.IInvocationResponse = {
         invocationId: msg.invocationId,
-        result: status
+        result: this.getStatus(err)
       }
       if (result) {
         if (result.return) {
@@ -254,7 +243,7 @@ export class WorkerChannel implements IWorkerChannel {
     });
   }
 
-  private getStatus(err?: any): rpc.IStatusResult{
+  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult{
     let status: rpc.IStatusResult = {
       status: rpc.StatusResult.Status.Success
     };
@@ -262,7 +251,7 @@ export class WorkerChannel implements IWorkerChannel {
     if (err) {
       status.status = rpc.StatusResult.Status.Failure;
       status.exception = {
-        message: err.toString(),
+        message: errorMessage || err.toString(),
         stackTrace: err.stack
       }
     }
