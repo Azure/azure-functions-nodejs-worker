@@ -50,17 +50,18 @@ class InvocationContext implements Context {
 
   constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
     this.invocationId = <string>request.invocationId;
-    this.executionContext = {
+    const executionContext = {
       invocationId: this.invocationId,
       functionName: <string>info.name,
       functionDirectory: <string>info.directory
     };
+    this.executionContext = executionContext;
     this.bindings = {};
     let _done = false;
     let _promise = false;
 
     this.log = Object.assign(
-      <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, ...args),
+      <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
       {
         error: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Error, executionContext, ...args),
         warn: <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Warning, executionContext, ...args),
@@ -101,7 +102,7 @@ class InvocationContext implements Context {
 function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, executionContext: ExecutionContext, ...args: any[]) {
   if (done) {
     let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
-    badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}`;
+    badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}.`;
     log(LogLevel.Warning, badAsyncMsg);
     systemWarn(badAsyncMsg);
   }
