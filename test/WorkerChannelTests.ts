@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
+import { load } from 'grpc';
 
 describe('WorkerChannel', () => {
   var channel: WorkerChannel;
@@ -50,6 +51,83 @@ describe('WorkerChannel', () => {
         }
       }
     });
+  });
+  
+  it('Handles load exception', () => {
+    var err = new Error("Function throws error");
+    err.stack = "<STACKTRACE>"
+
+    loader.load = sinon.stub().throws(err);
+    channel = new WorkerChannel('workerId', stream, loader);
+    stream.addTestMessage({
+      requestId: 'id',
+      functionLoadRequest: {  
+        functionId: 'funcId',
+        metadata: { }
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionLoadResponse: {
+        functionId: 'funcId',
+        result: {
+          status: rpc.StatusResult.Status.Failure,
+          exception: {
+            message: "Worker was unable to load function undefined: 'Error: Function throws error'",
+            stackTrace: "<STACKTRACE>"
+          }
+        }
+      }
+    });
+  });
+  
+  it ('reloads environment variables', () => {
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {
+          "hello": "world",
+          "SystemDrive": "Q:"
+        }
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env.hello).to.equal("world");
+    expect(process.env.SystemDrive).to.equal("Q:");
+  });
+
+  it ('reloads environment variables without throwing on empty input', () => {
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: {  
+          environmentVariables: {}
+        }
+      });
+    }).to.not.throw();
+
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: null
+      });
+    }).to.not.throw();
+
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: {
+          environmentVariables: null
+        }
+      });
+    }).to.not.throw();
   });
 
   it ('invokes function', () => {
