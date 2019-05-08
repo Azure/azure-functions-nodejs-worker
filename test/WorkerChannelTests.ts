@@ -34,7 +34,7 @@ describe('WorkerChannel', () => {
     });
   });
 
-  it('responds to load', () => {
+  it('responds to function load', () => {
     stream.addTestMessage({
       requestId: 'id',
       functionLoadRequest: {  
@@ -53,7 +53,7 @@ describe('WorkerChannel', () => {
     });
   });
   
-  it('Handles load exception', () => {
+  it('handles function load exception', () => {
     var err = new Error("Function throws error");
     err.stack = "<STACKTRACE>"
 
@@ -82,6 +82,7 @@ describe('WorkerChannel', () => {
   });
   
   it ('reloads environment variables', () => {
+    process.env.PlaceholderVariable = "TRUE";
     stream.addTestMessage({
       requestId: 'id',
       functionEnvironmentReloadRequest: {  
@@ -101,9 +102,30 @@ describe('WorkerChannel', () => {
     });
     expect(process.env.hello).to.equal("world");
     expect(process.env.SystemDrive).to.equal("Q:");
+    expect(process.env.PlaceholderVariable).to.be.undefined;
   });
 
-  it ('reloads environment variables without throwing on empty input', () => {
+  it ('reloading environment variables removes existing environment variables', () => {
+    process.env.PlaceholderVariable = "TRUE";
+    process.env.NODE_ENV = "Debug";
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {}
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env).to.be.empty;
+  });
+
+  it ('reloads empty environment variables without throwing', () => {
     expect(() => {
       stream.write({
         requestId: 'id',
