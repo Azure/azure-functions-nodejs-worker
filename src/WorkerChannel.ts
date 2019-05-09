@@ -227,7 +227,7 @@ export class WorkerChannel implements IWorkerChannel {
 
     let error = null;
     try {
-      process.env = msg.environmentVariables || {};
+      process.env = Object.assign({}, msg.environmentVariables);
     } catch (e)
     {
       error = e;
