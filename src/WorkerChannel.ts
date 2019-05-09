@@ -5,7 +5,7 @@ import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './Converters';
-import { systemError } from './utils/Logger';
+import { systemError, systemLog } from './utils/Logger';
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -84,9 +84,7 @@ export class WorkerChannel implements IWorkerChannel {
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
-        result: {
-          status: Status.Success
-        }
+        result: this.getStatus()
       }
     });
   }
@@ -98,28 +96,21 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
-      let functionLoadStatus: rpc.IStatusResult = {
-        status: Status.Success
-      };
-
+      let err, errorMessage;
       try {
         this._functionLoader.load(msg.functionId, msg.metadata);
       }
       catch(exception) {
-        let errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
+        errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
         systemError(errorMessage)
-        functionLoadStatus.status = Status.Failure;
-        functionLoadStatus.exception =  {
-          message: errorMessage,
-          stackTrace: exception.stack
-        };
+        err = exception;
       }
 
       this._eventStream.write({
         requestId: requestId,
         functionLoadResponse: {
           functionId: msg.functionId,
-          result: functionLoadStatus
+          result: this.getStatus(err, errorMessage)
         }
       });
     }
@@ -142,20 +133,9 @@ export class WorkerChannel implements IWorkerChannel {
     }
 
     let resultCallback: ResultCallback = (err, result) => {
-      let status: rpc.IStatusResult = {
-        status: rpc.StatusResult.Status.Success
-      };
-      if (err) {
-        status.status = rpc.StatusResult.Status.Failure;
-        status.exception = {
-          message: err.toString(),
-          stackTrace: err.stack
-        }
-      }
-
       let response: rpc.IInvocationResponse = {
         invocationId: msg.invocationId,
-        result: status
+        result: this.getStatus(err)
       }
       if (result) {
         if (result.return) {
@@ -241,6 +221,41 @@ export class WorkerChannel implements IWorkerChannel {
    * Environment variables from the current process
    */ 
   public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
-    // Not yet implementeds
+    // Add environment variables from incoming
+    let numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
+    systemLog(`Reloading environment variables. Found ${numVariables} variables to reload.`);
+
+    let error = null;
+    try {
+      process.env = Object.assign({}, msg.environmentVariables);
+    } catch (e)
+    {
+      error = e;
+    }
+
+    let functionEnvironmentReloadResponse: rpc.IFunctionEnvironmentReloadResponse = {
+      result: this.getStatus(error)
+    };
+
+    this._eventStream.write({
+      requestId: requestId,
+      functionEnvironmentReloadResponse
+    });
+  }
+
+  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult{
+    let status: rpc.IStatusResult = {
+      status: rpc.StatusResult.Status.Success
+    };
+
+    if (err) {
+      status.status = rpc.StatusResult.Status.Failure;
+      status.exception = {
+        message: errorMessage || err.toString(),
+        stackTrace: err.stack
+      }
+    }
+
+    return status;
   }
 }

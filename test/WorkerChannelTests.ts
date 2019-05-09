@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
+import { load } from 'grpc';
 
 describe('WorkerChannel', () => {
   var channel: WorkerChannel;
@@ -33,7 +34,7 @@ describe('WorkerChannel', () => {
     });
   });
 
-  it('responds to load', () => {
+  it('responds to function load', () => {
     stream.addTestMessage({
       requestId: 'id',
       functionLoadRequest: {  
@@ -50,6 +51,105 @@ describe('WorkerChannel', () => {
         }
       }
     });
+  });
+  
+  it('handles function load exception', () => {
+    var err = new Error("Function throws error");
+    err.stack = "<STACKTRACE>"
+
+    loader.load = sinon.stub().throws(err);
+    channel = new WorkerChannel('workerId', stream, loader);
+    stream.addTestMessage({
+      requestId: 'id',
+      functionLoadRequest: {  
+        functionId: 'funcId',
+        metadata: { }
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionLoadResponse: {
+        functionId: 'funcId',
+        result: {
+          status: rpc.StatusResult.Status.Failure,
+          exception: {
+            message: "Worker was unable to load function undefined: 'Error: Function throws error'",
+            stackTrace: "<STACKTRACE>"
+          }
+        }
+      }
+    });
+  });
+  
+  it ('reloads environment variables', () => {
+    process.env.PlaceholderVariable = "TRUE";
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {
+          "hello": "world",
+          "SystemDrive": "Q:"
+        }
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env.hello).to.equal("world");
+    expect(process.env.SystemDrive).to.equal("Q:");
+    expect(process.env.PlaceholderVariable).to.be.undefined;
+  });
+
+  it ('reloading environment variables removes existing environment variables', () => {
+    process.env.PlaceholderVariable = "TRUE";
+    process.env.NODE_ENV = "Debug";
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {}
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env).to.be.empty;
+  });
+
+  it ('reloads empty environment variables without throwing', () => {
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: {  
+          environmentVariables: {}
+        }
+      });
+    }).to.not.throw();
+
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: null
+      });
+    }).to.not.throw();
+
+    expect(() => {
+      stream.write({
+        requestId: 'id',
+        functionEnvironmentReloadRequest: {
+          environmentVariables: null
+        }
+      });
+    }).to.not.throw();
   });
 
   it ('invokes function', () => {
