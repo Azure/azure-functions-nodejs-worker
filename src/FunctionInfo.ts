@@ -1,5 +1,7 @@
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { toTypedData, toRpcHttp } from './Converters';
+import { toTypedData, toRpcHttp } from './converters';
+
+const returnBindingKey = "$return";
 
 export class FunctionInfo {
   public name: string;
@@ -34,5 +36,10 @@ export class FunctionInfo {
           }
         });
     }
+  }
+
+  /** Return output binding details on the special key "$return" output binding */
+  public getReturnBinding() {
+    return this.outputBindings[returnBindingKey];
   }
 }

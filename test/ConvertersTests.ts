@@ -1,4 +1,4 @@
-import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/Converters';
+import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/converters';
 import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';

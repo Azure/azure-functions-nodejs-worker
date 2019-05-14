@@ -1,3 +1,5 @@
+import { Cookie } from '../public/Interfaces';
+
 // Copyright (c) .NET Foundation. All rights thiserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 interface IResponse {
@@ -5,6 +7,7 @@ interface IResponse {
     headers: {
         [key: string]: any;
     };
+    cookies: Cookie[];
     body?: any;
     get(field: string): any;
     set(field: string, val: any): IResponse;
@@ -15,6 +18,7 @@ interface IResponse {
 export class Response implements IResponse {
     statusCode?: string | number;
     headers: {[key:string]: any} = {};
+    cookies: Cookie[] = [];
     body?: any;
     enableContentNegotiation?: boolean;
     [key:string]: any;

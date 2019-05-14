@@ -4,7 +4,7 @@ import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
-import { toTypedData } from './Converters';
+import { toTypedData } from './converters';
 import { systemError, systemLog } from './utils/Logger';
 
 /**
@@ -139,7 +139,8 @@ export class WorkerChannel implements IWorkerChannel {
       }
       if (result) {
         if (result.return) {
-          response.returnValue = toTypedData(result.return);
+          let returnBinding = info.getReturnBinding();
+          response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
         }
         if (result.bindings) {
           response.outputData = Object.keys(info.outputBindings)

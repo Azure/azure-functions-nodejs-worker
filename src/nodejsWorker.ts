@@ -44,4 +44,6 @@ try {
     worker = require("./Worker.js");
 }
 
+console.log("HELLO WORLD!!!");
+
 worker.startNodeWorker(process.argv);
