@@ -120,7 +120,8 @@ export interface Cookie {
     path?: string;
 
     /** 
-     * Sets the cookie to expire at a specific date instead of when the client closes. 
+     * Sets the cookie to expire at a specific date instead of when the client closes.
+     * This can be a Javascript Date or Unix time in milliseconds.
      * It is generally recommended that you use maxAge over expires.
      */
     expires?: Date | number;

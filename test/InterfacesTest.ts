@@ -1,5 +1,5 @@
 // Test typescript interfaces for ts compliation errors
-import { AzureFunction, Context, HttpRequest, HttpMethod } from "../types/public/Interfaces";
+import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
 const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -50,6 +50,20 @@ const runFunction: AzureFunction = async function(context: Context) {
     return "Ran function";
 }
 
+const cookieFunction: AzureFunction = async function(context: Context) {
+    let cookies: Cookie[] = [
+        {
+            name: "cookiename",
+            value: "cookievalue",
+            expires: Date.now()
+        }
+    ];
+    context.res = {
+        cookies,
+        body: "just a normal body"
+    };
+}
+
 const runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
     context.log("Http-triggered function with " + req.method + " method.");
     context.log("Pulling in queue item " + queueItem);
@@ -61,4 +75,4 @@ const returnWithContextDone: AzureFunction = function (context: Context, req: Ht
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true }});
 }
 
-export { runHttp, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
+export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
