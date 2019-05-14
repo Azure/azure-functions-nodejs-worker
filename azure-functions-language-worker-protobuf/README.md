@@ -38,7 +38,11 @@ From within the Azure Functions language worker repo:
 
 ## CSharp
 ```
+<<<<<<< HEAD
 set NUGET_PATH="%UserProfile%\.nuget\packages"
+=======
+set NUGET_PATH=%UserProfile%\.nuget\packages
+>>>>>>> v1.1.0
 set GRPC_TOOLS_PATH=%NUGET_PATH%\grpc.tools\<versionNumber>\tools\windows_x86
 set PROTO_PATH=.\azure-functions-language-worker-protobuf\src\proto
 set PROTO=.\azure-functions-language-worker-protobuf\src\proto\FunctionRpc.proto
