@@ -39,9 +39,8 @@ jobs:
   - script: |
       npm install
       npm run build
-    displayName: 'npm install and build'
-  - script: npm test
-    displayName: 'npm test'
+      npm test
+    displayName: 'npm run build and test'
 
 - job: E2ETestNodeWorker
   strategy:
