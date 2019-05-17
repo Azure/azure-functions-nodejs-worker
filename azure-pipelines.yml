@@ -8,9 +8,8 @@ trigger:
 - dev
 
 jobs:
-- job: BuildNodeWorker
+- job: UnitTestNodeWorker
   strategy:
-    maxParallel: 1
     matrix:
       UBUNTU_NODE8:
         IMAGE_TYPE: 'ubuntu-latest'
@@ -30,17 +29,36 @@ jobs:
       MAC_NODE10:
         IMAGE_TYPE: 'macos-10.13'
         NODE_VERSION: '10.x'
-
   pool:
     vmImage: $(IMAGE_TYPE)
-
   steps:
   - task: NodeTool@0
     inputs:
       versionSpec: $(NODE_VERSION)
-    displayName: 'Install Node.js'
-
+    displayName: 'Install Node.js for test'
   - script: |
       npm install
       npm run build
     displayName: 'npm install and build'
+  - script: |
+      npm run test
+    displayName: 'npm run test'
+
+- job: E2ETestNodeWorker
+  strategy:
+    maxParallel: 1
+    matrix:
+      NODE8:
+        NODE_VERSION: '8.x'
+      NODE10:
+        NODE_VERSION: '10.x'
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js for test'
+  - powershell: |
+      .\setup-e2e-tests.ps1
+      .\run-e2e-tests.ps1
