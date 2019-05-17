@@ -37,8 +37,8 @@ Write-Host "Extracting Functions Core Tools...."
 Expand-Archive ".\Azure.Functions.Cli.zip" -DestinationPath ".\Azure.Functions.Cli"
 }
 
-Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers directory..."
-Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
+# Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers directory..."
+# Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
 
 Write-Host "Installing extensions..."
 cd "$currDir\test\end-to-end\testFunctionApp"

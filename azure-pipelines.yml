@@ -59,6 +59,11 @@ jobs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
   - powershell: |
-      .\package.ps1 -SkipNugetPack
       .\setup-e2e-tests.ps1
       .\run-e2e-tests.ps1
+    env:
+      AzureWebJobsStorage: $(AzureWebJobsStorage)
+      AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
+      AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
+      FUNCTIONS_WORKER_RUNTIME: 'node'
+      languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
