@@ -36,12 +36,13 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: |
-      npm install
-      npm run build
-      npm test
-    displayName: 'npm run build and test'
-
+  - script: npm install
+    displayName: 'npm install'
+  - script: npm run build
+    displayName: 'npm run build'
+  - script: npm test
+    displayName: 'npm test'
+    
 - job: E2ETestNodeWorker
   strategy:
     maxParallel: 1
