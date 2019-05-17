@@ -1,5 +1,5 @@
 param (
-  [string]$buildNumber = $env:APPVEYOR_BUILD_NUMBER
+  [string]$buildNumber = $env:name
 )
 
 # A function that checks exit codes and fails script if an error is found 
