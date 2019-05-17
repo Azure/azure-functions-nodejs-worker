@@ -1,5 +1,5 @@
 param (
-  [Bool]$nugetPack = $true
+  [Switch]$SkipNugetPack,
   [string]$buildNumber = $env:name
 )
 
