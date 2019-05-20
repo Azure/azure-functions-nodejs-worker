@@ -77,6 +77,13 @@ jobs:
   
 - job: BuildArtifacts  
   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_HIGHER_LTS)
+    displayName: 'Install Node.js for test'
   - powershell: .\package.ps1
   - task: NuGetCommand@2
     inputs:
