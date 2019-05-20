@@ -1,5 +1,6 @@
 param (
-  [string]$buildNumber = $env:APPVEYOR_BUILD_NUMBER
+  [Switch]$NugetPack,
+  [string]$buildNumber = $env:name
 )
 
 # A function that checks exit codes and fails script if an error is found 
@@ -38,7 +39,11 @@ StopOnFailedExecution # fail if error
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=darwin
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=linux --target_libc=glibc
 copy-item Worker.nuspec pkg/
-set-location pkg
-nuget pack -Properties version=$buildNumber
-StopOnFailedExecution # fail if error
-set-location ..
+
+if ($NugetPack)
+{
+  set-location pkg
+  nuget pack -Properties version=$buildNumber
+  StopOnFailedExecution # fail if error
+  set-location ..
+}
