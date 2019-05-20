@@ -1,5 +1,7 @@
 variables: {
-  WORKER_VERSION: '1.0.3'
+  WORKER_VERSION: '1.0.3',
+  NODE_LOWER_LTS: '8.x',
+  NODE_HIGHER_LTS: '10.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -13,22 +15,22 @@ jobs:
     matrix:
       UBUNTU_NODE8:
         IMAGE_TYPE: 'ubuntu-latest'
-        NODE_VERSION: '8.x'
+        NODE_VERSION: $(NODE_LOWER_LTS)
       UBUNTU_NODE10:
         IMAGE_TYPE: 'ubuntu-latest'
-        NODE_VERSION: '10.x'
+        NODE_VERSION: $(NODE_HIGHER_LTS)
       WINDOWS_NODE8:
         IMAGE_TYPE: 'vs2017-win2016'
-        NODE_VERSION: '8.x'
+        NODE_VERSION: $(NODE_LOWER_LTS)
       WINDOWS_NODE10:
         IMAGE_TYPE: 'vs2017-win2016'
-        NODE_VERSION: '10.x'
+        NODE_VERSION: $(NODE_HIGHER_LTS)
       MAC_NODE8:
         IMAGE_TYPE: 'macos-10.13'
-        NODE_VERSION: '8.x'
+        NODE_VERSION: $(NODE_LOWER_LTS)
       MAC_NODE10:
         IMAGE_TYPE: 'macos-10.13'
-        NODE_VERSION: '10.x'
+        NODE_VERSION: $(NODE_HIGHER_LTS)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:
@@ -48,9 +50,9 @@ jobs:
     maxParallel: 1
     matrix:
       NODE8:
-        NODE_VERSION: '8.x'
+        NODE_VERSION: $(NODE_LOWER_LTS)
       NODE10:
-        NODE_VERSION: '10.x'
+        NODE_VERSION: $(NODE_HIGHER_LTS)
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -71,3 +73,12 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+    displayName: 'Run E2E Tests'
+  
+- job: BuildArtifacts  
+  # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  - powershell: .\package.ps1
+  - task: NuGetCommand@2
+    inputs:
+      command: pack
+      packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
