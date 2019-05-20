@@ -1,5 +1,3 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/inqsg64h792agrji?svg=true)](https://ci.appveyor.com/project/appsvc/azure-functions-nodejs-worker/branch/dev)
-
 |Branch|Status|
 |---|---|
 |master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=master)|
