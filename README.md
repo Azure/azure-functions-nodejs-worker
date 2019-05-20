@@ -1,7 +1,7 @@
 |Branch|Status|
 |---|---|
 |master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=master)|
-|dev|[[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=dev)|
+|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=dev)|
 
 ## Getting Started
 
