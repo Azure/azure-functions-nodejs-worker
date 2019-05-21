@@ -65,8 +65,8 @@ jobs:
   - script: npm run build
     displayName: 'npm run build'
   - powershell: |
-      .\setup-e2e-tests.ps1
-      .\run-e2e-tests.ps1
+      .\scripts\setup-e2e-tests.ps1
+      .\scripts\run-e2e-tests.ps1
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
       AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
@@ -84,7 +84,7 @@ jobs:
     inputs:
       versionSpec: $(NODE_HIGHER_LTS)
     displayName: 'Install Node.js for test'
-  - powershell: .\package.ps1
+  - powershell: .\scripts\package.ps1
   - task: NuGetCommand@2
     inputs:
       command: pack
