@@ -9,6 +9,8 @@ function StopOnFailedExecution {
 Write-Host "$args[0]"
 Write-Host $args[0]
 
+exit 1
+
 $skipCliDownload = $false
 if($args[0])
 {
