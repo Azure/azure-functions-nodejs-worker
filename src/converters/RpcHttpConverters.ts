@@ -2,7 +2,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { HttpMethod, Cookie } from '../public/Interfaces';
 import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
-import { fromTypedData, toTypedData, toNullable, toNullableTimestamp } from './CommonConverters';
+import { fromTypedData, toTypedData, toNullableString, toNullableBool, toNullableDouble, toNullableTimestamp } from './RpcConverters';
 
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
     const httpContext: RequestProperties = {
@@ -62,13 +62,13 @@ function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     const rpcCookie: rpc.IRpcHttpCookie = {
             name: inputCookie.name,
             value: inputCookie.value,
-            domain: toNullable<string>(inputCookie.domain),
-            path: toNullable<string>(inputCookie.path),
-            expires: toNullableTimestamp(inputCookie.expires),
-            secure: toNullable<boolean>(inputCookie.secure),
-            httpOnly: toNullable<boolean>(inputCookie.secure),
+            domain: toNullableString(inputCookie.domain, "domain"),
+            path: toNullableString(inputCookie.path, "path"),
+            expires: toNullableTimestamp(inputCookie.expires, "expires"),
+            secure: toNullableBool(inputCookie.secure, "secure"),
+            httpOnly: toNullableBool(inputCookie.httpOnly, "httpOnly"),
             sameSite: rpcSameSite,
-            maxAge: toNullable<Long>(inputCookie.maxAge)
+            maxAge: toNullableDouble(inputCookie.maxAge, "maxAge")
     };
 
     return rpcCookie;

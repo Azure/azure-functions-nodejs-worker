@@ -1,4 +1,3 @@
-/// <reference types="long" />
 /**
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
@@ -136,7 +135,7 @@ export interface Cookie {
     /** Can restrict the cookie to not be sent with cross-site requests */
     sameSite?: "Strict" | "Lax" | undefined;
     /** Number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. */
-    maxAge?: Long;
+    maxAge?: number;
 }
 export interface ExecutionContext {
     /**

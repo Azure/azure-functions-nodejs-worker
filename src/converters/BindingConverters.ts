@@ -2,7 +2,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { FunctionInfo } from '../FunctionInfo';
 import { Dict } from '../Context';
 import { BindingDefinition } from '../public/Interfaces';
-import { fromTypedData } from './CommonConverters';
+import { fromTypedData } from './RpcConverters';
 
 type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 

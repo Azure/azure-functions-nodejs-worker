@@ -136,7 +136,7 @@ export interface Cookie {
     sameSite?: "Strict" | "Lax" | undefined;
 
     /** Number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. */
-    maxAge?: Long;
+    maxAge?: number;
 }
 
 export interface ExecutionContext {
