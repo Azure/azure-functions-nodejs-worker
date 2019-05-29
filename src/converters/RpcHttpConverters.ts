@@ -2,8 +2,19 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { HttpMethod, Cookie } from '../public/Interfaces';
 import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
-import { fromTypedData, toTypedData, toNullableString, toNullableBool, toNullableDouble, toNullableTimestamp } from './RpcConverters';
+import { 
+    fromTypedData,
+    toTypedData,
+    toNullableString,
+    toNullableBool,
+    toNullableDouble,
+    toNullableTimestamp
+} from './RpcConverters';
 
+/**
+ * Converts 'IRpcHttp' input from the RPC layer to a JavaScript object.
+ * @param rpcHttp RPC layer representation of an HTTP request
+ */
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
     const httpContext: RequestProperties = {
       method: <HttpMethod>rpcHttp.method,
@@ -18,7 +29,11 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
   
     return httpContext;
 }
-
+/**
+ * Converts the HTTP 'Response' object to an 'ITypedData' 'http' type to be sent through the RPC layer. 
+ * 'http' types are a special case from other 'ITypedData' types, which come from primitive types. 
+ * @param inputMessage  An HTTP response object
+ */
 export function toRpcHttp(inputMessage): rpc.ITypedData {
     let httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
@@ -29,6 +44,10 @@ export function toRpcHttp(inputMessage): rpc.ITypedData {
     return { http: httpMessage };
 }
 
+/**
+ * Convert HTTP headers to a string/string mapping.
+ * @param inputHeaders 
+ */
 function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
     let rpcHttpHeaders: {[key: string]: string} = {};
     for (let key in inputHeaders) {
@@ -37,9 +56,13 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
         }
     }
     return rpcHttpHeaders;
-    }
+}
 
-    function toRpcHttpCookies(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
+/**
+ * Convert HTTP 'Cookie' array to an array of 'IRpcHttpCookie' objects to be sent through the RPC layer
+ * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
+ */
+function toRpcHttpCookies(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
     let rpcCookies: rpc.IRpcHttpCookie[] = [];
     inputCookies.forEach(cookie => {
         rpcCookies.push(toRpcHttpCookie(cookie));
