@@ -48,6 +48,10 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
     return rpcCookies;
 }
 
+/**
+ * From RFC specifications for 'Set-Cookie' response header: https://www.rfc-editor.org/rfc/rfc6265.txt
+ * @param inputCookie 
+ */
 function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     // Resolve SameSite enum, a one-off
     let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
