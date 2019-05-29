@@ -29,6 +29,7 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
   
     return httpContext;
 }
+
 /**
  * Converts the HTTP 'Response' object to an 'ITypedData' 'http' type to be sent through the RPC layer. 
  * 'http' types are a special case from other 'ITypedData' types, which come from primitive types. 
