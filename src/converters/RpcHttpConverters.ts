@@ -38,7 +38,7 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
 export function toRpcHttp(inputMessage): rpc.ITypedData {
     let httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
-    httpMessage.cookies = toRpcHttpCookies(inputMessage.cookies || []);
+    httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
@@ -63,7 +63,7 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
  * Convert HTTP 'Cookie' array to an array of 'IRpcHttpCookie' objects to be sent through the RPC layer
  * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
  */
-function toRpcHttpCookies(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
+function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
     let rpcCookies: rpc.IRpcHttpCookie[] = [];
     inputCookies.forEach(cookie => {
         rpcCookies.push(toRpcHttpCookie(cookie));

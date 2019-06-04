@@ -84,8 +84,8 @@ export function toNullableDouble(nullable: number | string | undefined, property
             value: nullable
         };
     } else if (typeof nullable === 'string') {
-        const parsedNumber = parseFloat(nullable);
-        if (!isNaN(parsedNumber)) {
+        if (!isNaN(<any>nullable)) {
+            const parsedNumber = parseFloat(nullable);
             return <INullableDouble>{
                 value: parsedNumber
             };
