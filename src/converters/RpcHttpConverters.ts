@@ -79,7 +79,7 @@ function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
 function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     // Resolve SameSite enum, a one-off
     let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
-    if (inputCookie.sameSite) {
+    if (inputCookie && inputCookie.sameSite) {
         if (inputCookie.sameSite.toLocaleLowerCase() === "lax") {
         rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
         } else if (inputCookie.sameSite.toLocaleLowerCase() === "strict") {
@@ -88,15 +88,15 @@ function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     }
 
     const rpcCookie: rpc.IRpcHttpCookie = {
-            name: inputCookie.name,
-            value: inputCookie.value,
-            domain: toNullableString(inputCookie.domain, "domain"),
-            path: toNullableString(inputCookie.path, "path"),
-            expires: toNullableTimestamp(inputCookie.expires, "expires"),
-            secure: toNullableBool(inputCookie.secure, "secure"),
-            httpOnly: toNullableBool(inputCookie.httpOnly, "httpOnly"),
+            name: inputCookie && inputCookie.name,
+            value: inputCookie && inputCookie.value,
+            domain: toNullableString(inputCookie && inputCookie.domain, "domain"),
+            path: toNullableString(inputCookie && inputCookie.path, "path"),
+            expires: toNullableTimestamp(inputCookie && inputCookie.expires, "expires"),
+            secure: toNullableBool(inputCookie && inputCookie.secure, "secure"),
+            httpOnly: toNullableBool(inputCookie && inputCookie.httpOnly, "httpOnly"),
             sameSite: rpcSameSite,
-            maxAge: toNullableDouble(inputCookie.maxAge, "maxAge")
+            maxAge: toNullableDouble(inputCookie && inputCookie.maxAge, "maxAge")
     };
 
     return rpcCookie;

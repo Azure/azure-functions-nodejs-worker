@@ -27,5 +27,14 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             // TODO: Verify exception on 500 after https://github.com/Azure/azure-functions-host/issues/3589
             Assert.True(await Utilities.InvokeHttpTrigger(functionName, queryString, expectedStatusCode, expectedMessage));
         }
+
+        [Fact]
+        public async Task HttpTriggerWithCookieTests()
+        {
+            // No cookies set
+            Assert.True(await Utilities.InvokeHttpTrigger("HttpTriggerSetsCookie", "", HttpStatusCode.OK, ""));
+            // Cookies set by previous
+            Assert.True(await Utilities.InvokeHttpTrigger("HttpTriggerSetsCookie", "", HttpStatusCode.OK, "mycookie=myvalue, mycookie2=myvalue2"));
+        }
     }
 }
