@@ -4,8 +4,9 @@ import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
-import { toTypedData } from './Converters';
 import { systemError, systemLog } from './utils/Logger';
+import { toTypedData, toRpcHttp } from './Converters';
+import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './Converters';
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -122,56 +123,42 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
-    let info = this._functionLoader.getInfo(<string>msg.functionId);
-    let logCallback: LogCallback = (level, ...args) => {
-      this.log({
-        invocationId: msg.invocationId,
-        category: `${info.name}.Invocation`,
-        message: format.apply(null, args),
-        level: level
-      });
-    }
-
-    let resultCallback: ResultCallback = (err, result) => {
-      let response: rpc.IInvocationResponse = {
-        invocationId: msg.invocationId,
-        result: this.getStatus(err)
-      }
-      if (result) {
-        if (result.return) {
-          response.returnValue = toTypedData(result.return);
+    let { functionId, inputData, invocationId } = msg;
+    let bindings = {};
+    let functionInputs: any[] = [];
+    for (let binding of inputData) {
+      if (binding.data && binding.name) {
+        let input: any;
+        if (binding.data && binding.data.http) {
+          input = fromRpcHttp(binding.data.http);
+        } else {
+          input = fromTypedData(binding.data);
         }
-        if (result.bindings) {
-          response.outputData = Object.keys(info.outputBindings)
-            .filter(key => result.bindings[key] !== undefined)
-            .map(key => <rpc.IParameterBinding>{
-              name: key,
-              data: info.outputBindings[key].converter(result.bindings[key])
-            });
-        }
+        bindings[binding.name] = input;
+        functionInputs.push(input);
       }
-
-      this._eventStream.write({
-        requestId: requestId,
-        invocationResponse: response
-      });
     }
 
-    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
-    let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
-    
-    // catch user errors from the same async context in the event loop and correlate with invocation
-    // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
-    try {
-      let result = userFunction(context, ...inputs);
+    // Code that hard code loads a function and executes it.
+    let myFunction = require('./functionCode.js');
+    myFunction(functionInputs).then((returnResult) => {
+        let httpResponse = toRpcHttp(returnResult);
 
-      if (result && isFunction(result.then)) {
-        result.then(result => (<any>context.done)(null, result, true))
-          .catch(err => (<any>context.done)(err, null, true));
-      }
-    } catch (err) {
-      resultCallback(err);
-    }
+        let response: rpc.IInvocationResponse = {
+            invocationId: msg.invocationId,
+            result:  {
+              status: rpc.StatusResult.Status.Success
+            },
+            returnValue: httpResponse
+        };
+
+        this._eventStream.write({
+            requestId: requestId,
+            invocationResponse: response
+        });
+    }).catch((err) => {
+        console.log(err);
+    });
   }
 
   /**

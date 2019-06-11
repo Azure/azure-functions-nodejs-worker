@@ -23,6 +23,7 @@ module.exports = {
     },
     externals: [
         'memcpy',
+        './functionCode.js'
     ],
     module: {
         loaders: [
