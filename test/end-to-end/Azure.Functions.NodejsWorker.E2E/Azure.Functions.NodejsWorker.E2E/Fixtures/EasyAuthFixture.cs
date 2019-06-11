@@ -37,7 +37,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                 SetEnvironmentVariables();
 
                 // start functions process
-                _logger.LogInformation($"Starting functions host for {Constants.FunctionAppCollectionName}..");
+                _logger.LogInformation($"Starting functions host for {Constants.EasyAuthCollectionName}..");
                 _funcProcess.Start();
 
                 Thread.Sleep(TimeSpan.FromSeconds(30));
@@ -50,6 +50,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             {
                 foreach (var item in _variables)
                 {
+                    _logger.LogInformation($"Setting environment variable '{item.Key}' to '{item.Value}'");
                     if (_funcProcess.StartInfo.EnvironmentVariables.ContainsKey(item.Key))
                     {
                         _funcProcess.StartInfo.EnvironmentVariables[item.Key] = item.Value;
@@ -58,7 +59,10 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                     {
                         _funcProcess.StartInfo.EnvironmentVariables.Add(item.Key, item.Value);
                     }
+                    _logger.LogInformation($"Set environment variable '{item.Key}' to '{_funcProcess.StartInfo.EnvironmentVariables[item.Key]}'");
                 }
+
+                _logger.LogInformation($"{_variables.Count} environment variables set.");
             }
         }
 
