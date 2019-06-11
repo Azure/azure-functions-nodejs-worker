@@ -51,6 +51,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                     if (_funcProcess != null)
                     {
                         _logger.LogInformation($"Shutting down functions host for {Constants.FunctionAppCollectionName}");
+                        _funcProcess.Kill();
                         _funcProcess.Dispose();
                     }
                 }
