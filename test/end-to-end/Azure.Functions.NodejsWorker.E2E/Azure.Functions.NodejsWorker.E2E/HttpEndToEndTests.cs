@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -45,12 +47,18 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         [Fact]
         public async Task HttpTrigger_Identities_Succeeds()
         {
-            var headers = new Dictionary<string, string>
-            {
-                { "x-ms-client-principal", MockEasyAuth("facebook", "Connor McMahon", "10241897674253170") },
-            };
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "api/HttpTriggerIdentities/");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+            request.Headers.Add("x-ms-client-principal", MockEasyAuth("facebook", "Connor McMahon", "10241897674253170"));
 
-            Assert.True(await Utilities.InvokeHttpTrigger("HttpTriggerIdentities", "", headers, HttpStatusCode.OK, "facebook, Connor McMahon, 10241897674253170"));
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(Constants.FunctionsHostUrl);
+            var response = await httpClient.SendAsync(request);
+
+            string actualMessage = await response.Content.ReadAsStringAsync();
+
+            Assert.True(response.StatusCode == HttpStatusCode.OK, $"Response status {response.StatusCode}");
+            Assert.True(actualMessage == "facebook, Connor McMahon, 10241897674253170", $"Response body ${actualMessage}");
         }
 
         private string MockEasyAuth(string provider, string name, string id)
