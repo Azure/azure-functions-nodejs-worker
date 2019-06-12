@@ -20,6 +20,20 @@
             "request": "attach",
             "name": "Attach by Process ID",
             "processId": "${command:PickProcess}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Mocha Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-r",
+                "ts-node/register",
+                "--colors",
+                "./test/*Tests.ts",
+            ],
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "build"
         }
     ]
 }

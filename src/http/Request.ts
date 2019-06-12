@@ -1,6 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
-import { HttpRequest, HttpMethod } from '../public/Interfaces';
+import { HttpRequest, HttpMethod, ClaimsIdentity } from '../public/Interfaces';
 
 export class RequestProperties implements HttpRequest {
     method: HttpMethod | null = null;
@@ -10,7 +10,8 @@ export class RequestProperties implements HttpRequest {
     query: {[key:string]: string} = {};
     params: {[key:string]: string} = {};
     body?: any;
-    rawBody?: any;
+    rawbody?: any;
+    user?: ClaimsIdentity[];
     [key:string]: any;
 }
 

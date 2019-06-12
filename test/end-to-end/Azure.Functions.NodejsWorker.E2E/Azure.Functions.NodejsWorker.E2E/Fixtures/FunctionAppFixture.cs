@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -63,7 +66,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         }
     }
 
-    [CollectionDefinition(Constants.FunctionAppCollectionName)]
+    [CollectionDefinition(Constants.FunctionAppCollectionName, DisableParallelization = true)]
     public class FunctionAppCollection : ICollectionFixture<FunctionAppFixture>
     {
         // This class has no code, and is never created. Its purpose is simply

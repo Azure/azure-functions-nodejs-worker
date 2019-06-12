@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -41,7 +45,10 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         {
             foreach (var func in Process.GetProcessesByName("func"))
             {
-                func.Kill();
+                if (!func.HasExited)
+                {
+                    func.Kill();
+                }
             }
         }
     }
