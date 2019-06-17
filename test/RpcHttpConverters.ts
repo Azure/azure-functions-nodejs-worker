@@ -24,7 +24,7 @@ describe('Rpc Converters', () => {
         {
             name: "mycookie3-expires",
             value: "myvalue3-expires",
-            expires: new Date('December 17, 1995 03:24:00')
+            expires: new Date('December 17, 1995 03:24:00 PST')
         }
     ];
     
