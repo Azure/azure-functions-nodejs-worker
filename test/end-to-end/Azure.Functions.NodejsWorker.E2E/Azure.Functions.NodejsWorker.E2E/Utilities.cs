@@ -53,35 +53,5 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             }
             return true;
         }
-
-        public static async Task<bool> InvokeHttpTriggerSettingCookies(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage, int expectedCode = 0)
-        {
-            string uri = $"api/{functionName}{queryString}";
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
-            // CookieContainer cookies = new CookieContainer();
-            // HttpClientHandler handler = new HttpClientHandler();
-            // handler.CookieContainer = cookies;
-
-            // var httpClient = new HttpClient(handler);
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri(Constants.FunctionsHostUrl);
-            var response1 = await httpClient.SendAsync(request);
-            // var responseCookies = cookies.GetCookies(new Uri($"{Constants.FunctionsHostUrl}/{uri}"));
-            HttpRequestMessage request2 = new HttpRequestMessage(HttpMethod.Get, uri);
-            var response = await httpClient.SendAsync(request2);
-
-            if (expectedStatusCode != response.StatusCode && expectedCode != (int)response.StatusCode)
-            {
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(expectedMessage))
-            {
-                string actualMessage = await response.Content.ReadAsStringAsync();
-                return actualMessage.Contains(expectedMessage);
-            }
-            return true;
-        }
     }
 }

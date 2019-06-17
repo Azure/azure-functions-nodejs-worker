@@ -31,7 +31,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         [Fact(Skip = "Not yet enabled.")]
         public async Task HttpTriggerWithCookieTests()
         {
-            Assert.True(await Utilities.InvokeHttpTriggerSettingCookies("HttpTriggerSetsCookie", "", HttpStatusCode.OK, "mycookie=myvalue, mycookie2=myvalue2"));
+            Assert.True(await Utilities.InvokeHttpTrigger("HttpTriggerSetsCookie", "", HttpStatusCode.OK, "mycookie=myvalue, mycookie2=myvalue2"));
         }
     }
 }
