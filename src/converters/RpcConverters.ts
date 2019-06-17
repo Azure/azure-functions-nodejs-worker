@@ -5,7 +5,6 @@ import {
     INullableDouble,
     INullableTimestamp
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { systemWarn } from '../utils/Logger';
 
 /**
  * Converts 'ITypedData' input from the RPC layer to JavaScript types.
@@ -65,8 +64,10 @@ export function toNullableBool(nullable: boolean | undefined, propertyName: stri
         return <INullableBool>{
             value: nullable
         };
-    } else if (nullable != null) {
-        systemWarn(`A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value for '${propertyName}'.`);
+    }
+    
+    if (nullable != null) {
+        throw new Error(`A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
     
     return undefined;
@@ -90,11 +91,31 @@ export function toNullableDouble(nullable: number | string | undefined, property
                 value: parsedNumber
             };
         }
-    } else if (nullable != null) {
-        systemWarn(`A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+    } 
+    
+    if (nullable != null) {
+        throw new Error(`A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
 
     return undefined;
+}
+
+/**
+ * Converts string input to an 'INullableString' to be sent through the RPC layer.
+ * Input that is not a string but is also not null or undefined logs a function app level warning.
+ * @param nullable Input to be converted to an INullableString if it is a valid string
+ * @param propertyName The name of the property that the caller will assign the output to. Used for debugging.
+ */
+export function toRpcString(nullable: string | undefined, propertyName: string): string {
+    if (typeof nullable === 'string') {
+        return <string>nullable;
+    }
+    
+    if (nullable != null) {
+        throw new Error(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+    }
+
+    return "";
 }
 
 /**
@@ -108,8 +129,10 @@ export function toNullableString(nullable: string | undefined, propertyName: str
         return <INullableString>{
             value: nullable
         };
-    } else if (nullable != null) {
-        systemWarn(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+    } 
+    
+    if (nullable != null) {
+        throw new Error(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
 
     return undefined;
@@ -134,7 +157,7 @@ export function toNullableTimestamp(dateTime: Date | number | undefined, propert
                 }
             }
         } catch(e) {
-            systemWarn(`A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`, e);
+            throw new Error(`A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`);
         }
     }
     return undefined;

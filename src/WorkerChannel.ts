@@ -137,19 +137,24 @@ export class WorkerChannel implements IWorkerChannel {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
       }
-      if (result) {
-        if (result.return) {
-          let returnBinding = info.getReturnBinding();
-          response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+
+      try {
+        if (result) {
+          if (result.return) {
+            let returnBinding = info.getReturnBinding();
+            response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+          }
+          if (result.bindings) {
+            response.outputData = Object.keys(info.outputBindings)
+              .filter(key => result.bindings[key] !== undefined)
+              .map(key => <rpc.IParameterBinding>{
+                name: key,
+                data: info.outputBindings[key].converter(result.bindings[key])
+              });
+          }
         }
-        if (result.bindings) {
-          response.outputData = Object.keys(info.outputBindings)
-            .filter(key => result.bindings[key] !== undefined)
-            .map(key => <rpc.IParameterBinding>{
-              name: key,
-              data: info.outputBindings[key].converter(result.bindings[key])
-            });
-        }
+      } catch (e) {
+        response.result = this.getStatus(e)
       }
 
       this._eventStream.write({

@@ -5,6 +5,7 @@ import { Dict } from '../Context';
 import { 
     fromTypedData,
     toTypedData,
+    toRpcString,
     toNullableString,
     toNullableBool,
     toNullableDouble,
@@ -63,7 +64,7 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
  * Convert HTTP 'Cookie' array to an array of 'IRpcHttpCookie' objects to be sent through the RPC layer
  * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
  */
-function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
+export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
     let rpcCookies: rpc.IRpcHttpCookie[] = [];
     inputCookies.forEach(cookie => {
         rpcCookies.push(toRpcHttpCookie(cookie));
@@ -88,15 +89,15 @@ function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     }
 
     const rpcCookie: rpc.IRpcHttpCookie = {
-            name: inputCookie && inputCookie.name,
-            value: inputCookie && inputCookie.value,
-            domain: toNullableString(inputCookie && inputCookie.domain, "domain"),
-            path: toNullableString(inputCookie && inputCookie.path, "path"),
-            expires: toNullableTimestamp(inputCookie && inputCookie.expires, "expires"),
-            secure: toNullableBool(inputCookie && inputCookie.secure, "secure"),
-            httpOnly: toNullableBool(inputCookie && inputCookie.httpOnly, "httpOnly"),
+            name: inputCookie && toRpcString(inputCookie.name, "cookie.name"),
+            value: inputCookie && toRpcString(inputCookie.value, "cookie.value"),
+            domain: toNullableString(inputCookie && inputCookie.domain, "cookie.domain"),
+            path: toNullableString(inputCookie && inputCookie.path, "cookie.path"),
+            expires: toNullableTimestamp(inputCookie && inputCookie.expires, "cookie.expires"),
+            secure: toNullableBool(inputCookie && inputCookie.secure, "cookie.secure"),
+            httpOnly: toNullableBool(inputCookie && inputCookie.httpOnly, "cookie.httpOnly"),
             sameSite: rpcSameSite,
-            maxAge: toNullableDouble(inputCookie && inputCookie.maxAge, "maxAge")
+            maxAge: toNullableDouble(inputCookie && inputCookie.maxAge, "cookie.maxAge")
     };
 
     return rpcCookie;

@@ -16,9 +16,10 @@ describe('Rpc Converters', () => {
     expect(nullable && nullable.value).to.equal(false);
   });
 
-  it('does not converts string to NullableBool', () => {
-    let nullable = toNullableBool(<any>"true", "test");
-    expect(nullable && nullable.value).to.be.undefined;
+  it('throws and does not converts string to NullableBool', () => {
+    expect(() => {
+      toNullableBool(<any>"true", "test");
+    }).to.throw("A 'boolean' type was expected instead of a 'string' type. Cannot parse value of 'test'.")
   });
 
   it('does not converts null to NullableBool', () => {
@@ -39,13 +40,14 @@ describe('Rpc Converters', () => {
     expect(nullable && nullable.value).to.equal(input);
   });
 
-  it('does not convert number to NullableString', () => {
-    let nullable = toNullableBool(<any>123, "test");
-    expect(nullable && nullable.value).to.be.undefined;
+  it('throws and does not convert number to NullableString', () => {
+    expect(() => {
+      toNullableString(<any>123, "test");
+    }).to.throw("A 'string' type was expected instead of a 'number' type. Cannot parse value of 'test'.");
   });
 
   it('does not convert null to NullableString', () => {
-    let nullable = toNullableBool(<any>null, "test");
+    let nullable = toNullableString(<any>null, "test");
     expect(nullable && nullable.value).to.be.undefined;
   });
 
@@ -80,9 +82,10 @@ describe('Rpc Converters', () => {
     expect(nullable && nullable.value).to.equal(1234567.002);
   });
 
-  it('does not convert non-number string to NullableDouble', () => {
-    let nullable = toNullableDouble(<any>"123hellohello!!111", "test");
-    expect(nullable && nullable.value).to.be.undefined;
+  it('throws and does not convert non-number string to NullableDouble', () => {
+    expect(() => {
+      toNullableDouble(<any>"123hellohello!!111", "test");
+    }).to.throw("A 'number' type was expected instead of a 'string' type. Cannot parse value of 'test'.");
   });
 
   it('does not convert undefined to NullableDouble', () => {
@@ -113,13 +116,15 @@ describe('Rpc Converters', () => {
   });
 
   it('does not convert string to NullableTimestamp', () => {
-    let nullable = toNullableTimestamp(<any>"1/2/3 2014", "test");
-    expect(nullable && nullable.value && nullable.value.seconds).to.be.undefined;
+    expect(() => {
+      toNullableTimestamp(<any>"1/2/3 2014", "test");
+    }).to.throw("A 'number' or 'Date' input was expected instead of a 'string'. Cannot parse value of 'test'.");
   });
 
   it('does not convert object to NullableTimestamp', () => {
-    let nullable = toNullableTimestamp(<any>{ time: 100 }, "test");
-    expect(nullable && nullable.value).to.be.undefined;
+    expect(() => {
+      toNullableTimestamp(<any>{ time: 100 }, "test");
+    }).to.throw("A 'number' or 'Date' input was expected instead of a 'object'. Cannot parse value of 'test'.");
   });
 
   it('does not convert undefined to NullableTimestamp', () => {
