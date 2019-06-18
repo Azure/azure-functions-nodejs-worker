@@ -46,7 +46,6 @@ jobs:
     displayName: 'npm test'
 
 - job: E2ETests
-  condition: false
   strategy:
     maxParallel: 1
     matrix:
