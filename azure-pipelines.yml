@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '1.0.3',
+  WORKER_VERSION: '1.1.0',
   NODE_LOWER_LTS: '8.x',
   NODE_HIGHER_LTS: '10.x'
 }
@@ -76,7 +76,7 @@ jobs:
     displayName: 'Run E2E Tests'
   
 - job: BuildArtifacts  
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   pool:
     vmImage: 'vs2017-win2016'
   steps:
