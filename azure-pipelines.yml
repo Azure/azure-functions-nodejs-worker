@@ -90,3 +90,8 @@ jobs:
     inputs:
       command: pack
       packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
