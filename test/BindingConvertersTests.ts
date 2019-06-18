@@ -1,11 +1,11 @@
-import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/Converters';
+import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/converters';
 import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
-describe('Converters', () => {
+describe('Binding Converters', () => {
   it('normalizes binding trigger metadata for HTTP', () => {
     var mockRequest: rpc.ITypedData = toRpcHttp({ url: "https://mock"});
     var triggerDataMock: { [k: string]: rpc.ITypedData } = {

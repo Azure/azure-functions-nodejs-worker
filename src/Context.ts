@@ -1,5 +1,5 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './Converters';
+import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions } from './converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
@@ -59,7 +59,8 @@ class InvocationContext implements Context {
     this.bindings = {};
     let _done = false;
     let _promise = false;
-
+    
+    // Log message that is tied to function invocation
     this.log = Object.assign(
       <ILog>(...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
       {
@@ -86,6 +87,7 @@ class InvocationContext implements Context {
       }
       _done = true;
 
+      // Allow HTTP response from context.res if HTTP response is not defined from the context.bindings object
       if (info.httpOutputName && this.res && this.bindings[info.httpOutputName] === undefined) {
         this.bindings[info.httpOutputName] = this.res;
       }
