@@ -142,8 +142,7 @@ export class WorkerChannel implements IWorkerChannel {
       try {
         if (result) {
           if (result.return) {
-            let returnBinding = info.getReturnBinding();
-            response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+            response.returnValue = toTypedData(result.return);
           }
           if (result.bindings) {
             response.outputData = Object.keys(info.outputBindings)
