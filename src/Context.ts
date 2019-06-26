@@ -104,7 +104,8 @@ class InvocationContext implements Context {
 function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, executionContext: ExecutionContext, ...args: any[]) {
   if (done) {
     let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
-    badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}.`;
+    badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}. `;
+    badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
     log(LogLevel.Warning, badAsyncMsg);
     systemWarn(badAsyncMsg);
   }
