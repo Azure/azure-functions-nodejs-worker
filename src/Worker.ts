@@ -6,6 +6,7 @@ import { WorkerChannel } from './WorkerChannel';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcService';
 import { systemLog, systemError } from './utils/Logger';
+import { InternalException } from './utils/InternalException';
 
 export function startNodeWorker(args) {
   let { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
@@ -19,7 +20,7 @@ export function startNodeWorker(args) {
     if (!requestId) debugInfo.push(`\'requestId\' is ${requestId}`);
     if (!grpcMaxMessageLength) debugInfo.push(`\'grpcMaxMessageLength\' is ${grpcMaxMessageLength}`);
 
-    throw new Error(`gRPC client connection info is missing or incorrect (${debugInfo.join(", ")}).`);
+    throw new InternalException(`gRPC client connection info is missing or incorrect (${debugInfo.join(", ")}).`);
   }
 
   let connection = `${host}:${port}`;
@@ -30,7 +31,7 @@ export function startNodeWorker(args) {
     eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
   } catch (exception) {
     exception.message = "Error creating GRPC event stream: " + exception.message;
-    throw exception;
+    throw new InternalException(exception);
   }
 
   let workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
@@ -43,7 +44,14 @@ export function startNodeWorker(args) {
   });
 
   process.on('uncaughtException', err => {
-    systemError(`Worker ${workerId} uncaught exception: ${err}`, err.stack);
+    let errorMessage: string;
+    if ((<InternalException>err).isAzureFunctionsInternalException) {
+      errorMessage = `Worker ${workerId} uncaught exception: ${err}`;
+    } else {
+      errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${err}`;
+    }
+
+    systemError(errorMessage, err.stack);
     process.exit(1);
   });
   process.on('exit', code => {

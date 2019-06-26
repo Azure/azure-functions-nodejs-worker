@@ -6,6 +6,7 @@ import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
 import { systemError, systemLog } from './utils/Logger';
+import { InternalException } from './utils/InternalException';
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -49,7 +50,7 @@ export class WorkerChannel implements IWorkerChannel {
     });
     eventStream.on('error', function (err) {
       systemError(`Worker ${workerId} encountered event stream error: `, err);
-      throw err;
+      throw new InternalException(err);
     });
 
     // wrap event stream write to validate message correctness
@@ -58,7 +59,7 @@ export class WorkerChannel implements IWorkerChannel {
         let msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
           systemError(`Worker ${workerId} malformed message`, msgError);
-          throw msgError;
+          throw new InternalException(msgError);
         }
         oldWrite.apply(eventStream, arguments);
     }

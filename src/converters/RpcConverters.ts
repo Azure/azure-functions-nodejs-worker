@@ -5,6 +5,7 @@ import {
     INullableDouble,
     INullableTimestamp
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { InternalException } from "../utils/InternalException";
 
 /**
  * Converts 'ITypedData' input from the RPC layer to JavaScript types.
@@ -67,7 +68,7 @@ export function toNullableBool(nullable: boolean | undefined, propertyName: stri
     }
     
     if (nullable != null) {
-        throw new Error(`A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(`A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
     
     return undefined;
@@ -94,7 +95,7 @@ export function toNullableDouble(nullable: number | string | undefined, property
     } 
     
     if (nullable != null) {
-        throw new Error(`A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(`A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
 
     return undefined;
@@ -112,7 +113,7 @@ export function toRpcString(nullable: string | undefined, propertyName: string):
     }
     
     if (nullable != null) {
-        throw new Error(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
 
     return "";
@@ -132,7 +133,7 @@ export function toNullableString(nullable: string | undefined, propertyName: str
     } 
     
     if (nullable != null) {
-        throw new Error(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
     }
 
     return undefined;
@@ -157,7 +158,7 @@ export function toNullableTimestamp(dateTime: Date | number | undefined, propert
                 }
             }
         } catch(e) {
-            throw new Error(`A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`);
+            throw new InternalException(`A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`);
         }
     }
     return undefined;

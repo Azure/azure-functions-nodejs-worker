@@ -2,6 +2,7 @@ import { isObject, isFunction } from 'util';
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
+import { InternalException } from "./utils/InternalException";
 
 export interface IFunctionLoader {
   load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void;
@@ -21,7 +22,7 @@ export class FunctionLoader implements IFunctionLoader {
       let entryPoint = <string>(metadata && metadata.entryPoint);
       let userFunction = getEntryPoint(script, entryPoint);
       if(!isFunction(userFunction)) {
-        throw "The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.";
+        throw new InternalException("The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.");
       }
       this._loadedFunctions[functionId] = {
           info: new FunctionInfo(metadata),
@@ -34,7 +35,7 @@ export class FunctionLoader implements IFunctionLoader {
       if (loadedFunction && loadedFunction.info) {
           return loadedFunction.info;
       } else {
-          throw `Function info for '${functionId}' is not loaded and cannot be invoked.`;
+          throw new InternalException(`Function info for '${functionId}' is not loaded and cannot be invoked.`);
       }
     }
 
@@ -43,7 +44,7 @@ export class FunctionLoader implements IFunctionLoader {
         if (loadedFunction && loadedFunction.func) {
             return loadedFunction.func;
         } else {
-            throw `Function code for '${functionId}' is not loaded and cannot be invoked.`;
+            throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
     }
 }
@@ -75,9 +76,10 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
     }
 
     if (!f) {
-        throw (entryPoint ? `Unable to determine function entry point: ${entryPoint}. `: "Unable to determine function entry point. ") + "If multiple functions are exported, " +
+        let msg = (entryPoint ? `Unable to determine function entry point: ${entryPoint}. `: "Unable to determine function entry point. ") + "If multiple functions are exported, " +
             "you must indicate the entry point, either by naming it 'run' or 'index', or by naming it " +
             "explicitly via the 'entryPoint' metadata property.";
+        throw new InternalException(msg);
     }
 
     return f;
