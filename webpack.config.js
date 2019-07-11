@@ -23,7 +23,7 @@ module.exports = {
     },
     externals: [
         'memcpy',
-        'D:/home/site/wwwroot/serverless-workload-function/index.js'
+        './functionCode.js'
     ],
     module: {
         loaders: [
