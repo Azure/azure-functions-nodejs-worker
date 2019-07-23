@@ -82,10 +82,13 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
+    let capabilitiesDictionary = {};
+    capabilitiesDictionary['RpcHttpBodyOnly'] = "true";
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
-        result: this.getStatus()
+        result: this.getStatus(),
+        capabilities : capabilitiesDictionary,
       }
     });
   }

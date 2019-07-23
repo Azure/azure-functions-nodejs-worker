@@ -28,6 +28,17 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             Assert.True(await Utilities.InvokeHttpTrigger(functionName, queryString, expectedStatusCode, expectedMessage));
         }
 
+        [Theory]
+        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/json", HttpStatusCode.OK)]
+        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1, \"b\":}", "application/json", HttpStatusCode.OK)]
+        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/octet-stream", HttpStatusCode.OK)]
+        [InlineData("HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK)]
+
+        public async Task HttpTriggerTestsWithCustomMediaType(string functionName, string queryString, string mediaType, HttpStatusCode expectedStatusCode)
+        {
+            Assert.True(await Utilities.InvokeHttpTriggerWithBody(functionName, queryString, expectedStatusCode, mediaType));
+        }
+
         [Fact(Skip = "Not yet enabled.")]
         public async Task HttpTriggerWithCookieTests()
         {
