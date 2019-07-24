@@ -66,6 +66,8 @@ jobs:
     displayName: 'npm run build'
   - powershell: |
       .\setup-e2e-tests.ps1
+    displayName: 'setup tests'
+  - powershell: |
       .\run-e2e-tests.ps1
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
@@ -73,7 +75,17 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
-    displayName: 'Run E2E Tests'
+  - task: CopyFiles@2
+    inputs:
+     SourceFolder: '$(System.DefaultWorkingDirectory)/test/testResults'
+     Contents: '*.trx'
+     TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: PublishBuildArtifacts@1
+    inputs:
+     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+     ArtifactName: 'testResults'
+     publishLocation: 'Container'
+  displayName: 'Run tests and publish test result artifacts'
   
 - job: BuildArtifacts  
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
