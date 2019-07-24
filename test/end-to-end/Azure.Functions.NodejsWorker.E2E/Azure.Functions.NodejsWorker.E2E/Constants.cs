@@ -7,7 +7,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
 {
     public static class Constants
     {
-        public static string FunctionsHostUrl = "http://localhost:7071";
+        public static string FunctionsHostUrl = Environment.GetEnvironmentVariable("FunctionAppUrl") ?? "http://localhost:7071";
+
         //Queue tests
         public static class Queue {
             public static string StorageConnectionStringSetting = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
