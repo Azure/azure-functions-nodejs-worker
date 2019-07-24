@@ -29,10 +29,9 @@ if (-not (Test-Path env:CORE_TOOLS_URL))
 }
 
 Write-Host "Downloading Functions Core Tools...."
-Invoke-RestMethod -Uri "$env:CORE_TOOLS_URL/version.txt" -OutFile version.txt
+Invoke-RestMethod -Uri 'https://functionsclibuilds.blob.core.windows.net/builds/2/latest/version.txt' -OutFile version.txt
 Write-Host "Using Functions Core Tools version: $(Get-Content -Raw version.txt)"
 Remove-Item version.txt
-
 
 $output = "$currDir\Azure.Functions.Cli.zip"
 $wc = New-Object System.Net.WebClient
