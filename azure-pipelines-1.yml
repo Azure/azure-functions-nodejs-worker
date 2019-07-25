@@ -1,0 +1,106 @@
+variables: {
+  WORKER_VERSION: '1.0.3',
+  NODE_LOWER_LTS: '8.x',
+  NODE_HIGHER_LTS: '10.x'
+}
+name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
+
+jobs:
+- job: UnitTests
+  strategy:
+    matrix:
+      WINDOWS_NODE10:
+        IMAGE_TYPE: 'vs2017-win2016'
+        NODE_VERSION: $(NODE_HIGHER_LTS)     
+  pool:
+    vmImage: $(IMAGE_TYPE)
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js for test'
+  - script: npm install
+    displayName: 'npm install'
+  - script: npm run build
+    displayName: 'npm run build'
+  - script: npm test
+    displayName: 'npm test'
+
+- job: E2ETests
+  strategy:
+    maxParallel: 1
+    matrix:
+      NODE10:
+        NODE_VERSION: $(NODE_HIGHER_LTS)
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js for test'
+  - script: npm install
+    displayName: 'npm install'
+  - script: npm run build
+    displayName: 'npm run build'
+  - powershell: |
+      .\setup-e2e-tests.ps1
+    displayName: 'setup tests'
+  - powershell: |
+      .\run-e2e-tests.ps1
+    env:
+      AzureWebJobsStorage: $(AzureWebJobsStorage)
+      AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
+      AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
+      FUNCTIONS_WORKER_RUNTIME: 'node'
+      languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+  - task: CopyFiles@2
+    inputs:
+     SourceFolder: '$(System.DefaultWorkingDirectory)/test/testResults'
+     Contents: '*.trx'
+     TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: PublishBuildArtifacts@1
+    inputs:
+     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+     ArtifactName: 'testResults'
+     publishLocation: 'Container'
+  - pwsh: |
+      Compress-Archive -Path $(System.DefaultWorkingDirectory)\test\end-to-end\testFunctionApp\* -DestinationPath $(System.DefaultWorkingDirectory)\test\e2etestsnode.zip
+    displayName: 'Create test app zip file'
+  - pwsh: |
+      Install-Module Az.Storage -Force -Verbose -Scope CurrentUser
+      if (-not (Get-command new-azstoragecontext -ea SilentlyContinue))
+      {
+        throw "new-azstoragecontext is not present"
+      }
+      $localFile = '$(System.DefaultWorkingDirectory)\test\e2etestsnode.zip'
+      if (Test-Path $localFile)
+      {
+        Write-Host "File exists"
+      } 
+      $blobName = 'e2etestsnode.zip'
+      $Context = New-AzStorageContext -StorageAccountName $(StorageAccountName) -StorageAccountKey $(StorageAccountKey)
+      Set-AzStorageBlobContent -File $localFile -Container $(ContainerName) -Blob $blobName -Context $Context  -Force -Verbose
+    env:
+      AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
+    displayName: 'Copying test app zip artifacts to blob'
+  displayName: 'Run tests and publish test result artifacts'  
+- job: BuildArtifacts  
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_HIGHER_LTS)
+    displayName: 'Install Node.js for test'
+  - powershell: .\package.ps1
+  - task: NuGetCommand@2
+    inputs:
+      command: pack
+      packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
