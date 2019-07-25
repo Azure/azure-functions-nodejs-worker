@@ -95,6 +95,21 @@ jobs:
       versionSpec: $(NODE_HIGHER_LTS)
     displayName: 'Install Node.js for test'
   - powershell: .\package.ps1
+  - pwsh: |
+      Compress-Archive -Path '$(Build.Repository.LocalPath)\pkg\*' -DestinationPath $(System.DefaultWorkingDirectory)\nodeworker.zip
+    displayName: 'Create test app zip file'
+  - pwsh: |
+      $localFileNodeWorker = '$(System.DefaultWorkingDirectory)\nodeworker.zip'
+      if (Test-Path $localFileNodeWorker)
+      {
+        Write-Host "localFileNodeWorker file exists"
+      } 
+      $blobNameJavaWorker = 'nodeworker.zip'
+      $Context = New-AzStorageContext -StorageAccountName $(StorageAccountName) -StorageAccountKey $(StorageAccountKey)
+      Set-AzStorageBlobContent -File $localFileJavaWorker -Container $(ContainerName) -Blob $blobNameJavaWorker -Context $Context  -Force -Verbose
+    env:
+      AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
+    displayName: 'Copying java worker zip to blob'
   - task: NuGetCommand@2
     inputs:
       command: pack
