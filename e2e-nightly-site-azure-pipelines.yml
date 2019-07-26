@@ -3,6 +3,9 @@ variables: {
   NODE_LOWER_LTS: '8.x',
   NODE_HIGHER_LTS: '10.x'
 }
+name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
+
+jobs:
 - job: E2ETests
   strategy:
     maxParallel: 1
