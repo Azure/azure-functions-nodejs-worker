@@ -85,7 +85,10 @@ jobs:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
     displayName: 'Copying test app zip artifacts to blob'
   - powershell: .\package.ps1
-    displayName: 'Creating nodeworkerpackage'
+    displayName: 'Creating nodeworker package'
+  - pwsh: |
+      Compress-Archive -Path $(System.DefaultWorkingDirectory)\pkg\* -DestinationPath $(System.DefaultWorkingDirectory)\nodeworker.zip
+    displayName: 'Create nodeworker zip file'
   - pwsh: |
       $localFileNodeWorker = '$(System.DefaultWorkingDirectory)\nodeworker.zip'
       if (Test-Path $localFileNodeWorker)
