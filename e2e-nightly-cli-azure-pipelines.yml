@@ -89,6 +89,7 @@ jobs:
   - pwsh: |
       $localFileNodeWorker = '$(System.DefaultWorkingDirectory)\nodeworker.zip'
       if (Test-Path $localFileNodeWorker)
+      {
         Write-Host "localFileNodeWorker file exists"
       } 
       $blobNameNodeWorker = 'nodeworker.zip'
