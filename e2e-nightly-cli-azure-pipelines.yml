@@ -84,24 +84,11 @@ jobs:
     env:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
     displayName: 'Copying test app zip artifacts to blob'
-  displayName: 'Run tests and publish test result artifacts'  
-- job: BuildArtifacts  
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: $(NODE_HIGHER_LTS)
-    displayName: 'Install Node.js for test'
   - powershell: .\package.ps1
-  - pwsh: |
-      Compress-Archive -Path '$(System.DefaultWorkingDirectory)\pkg\*' -DestinationPath $(System.DefaultWorkingDirectory)\nodeworker.zip
-    displayName: 'Create nodeworker zip file'
+    displayName: 'Creating nodeworkerpackage'
   - pwsh: |
       $localFileNodeWorker = '$(System.DefaultWorkingDirectory)\nodeworker.zip'
       if (Test-Path $localFileNodeWorker)
-      {
         Write-Host "localFileNodeWorker file exists"
       } 
       $blobNameNodeWorker = 'nodeworker.zip'
@@ -110,12 +97,3 @@ jobs:
     env:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
     displayName: 'Copying node worker zip to blob'
-  - task: NuGetCommand@2
-    inputs:
-      command: pack
-      packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
