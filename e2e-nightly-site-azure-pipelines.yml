@@ -27,6 +27,7 @@ variables: {
       AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
+      FunctionAppUrl: $(FunctionAppUrl)
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
   - task: CopyFiles@2
     inputs:
