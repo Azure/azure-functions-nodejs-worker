@@ -96,8 +96,8 @@ jobs:
     displayName: 'Install Node.js for test'
   - powershell: .\package.ps1
   - pwsh: |
-      Compress-Archive -Path '$(Build.Repository.LocalPath)\pkg\*' -DestinationPath $(System.DefaultWorkingDirectory)\nodeworker.zip
-    displayName: 'Create test app zip file'
+      Compress-Archive -Path '$(System.DefaultWorkingDirectory)\pkg\*' -DestinationPath $(System.DefaultWorkingDirectory)\nodeworker.zip
+    displayName: 'Create nodeworker zip file'
   - pwsh: |
       $localFileNodeWorker = '$(System.DefaultWorkingDirectory)\nodeworker.zip'
       if (Test-Path $localFileNodeWorker)
@@ -109,7 +109,7 @@ jobs:
       Set-AzStorageBlobContent -File $localFileNodeWorker -Container $(ContainerName) -Blob $blobNameNodeWorker -Context $Context  -Force -Verbose
     env:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
-    displayName: 'Copying java worker zip to blob'
+    displayName: 'Copying node worker zip to blob'
   - task: NuGetCommand@2
     inputs:
       command: pack
