@@ -73,14 +73,14 @@ jobs:
       {
         throw "new-azstoragecontext is not present"
       }
-      $localFile = '$(System.DefaultWorkingDirectory)\test\e2etestsnode.zip'
-      if (Test-Path $localFile)
+      $localFileE2ETests = '$(System.DefaultWorkingDirectory)\test\e2etestsnode.zip'
+      if (Test-Path $localFileE2ETests)
       {
         Write-Host "File exists"
       } 
       $blobName = 'e2etestsnode.zip'
       $Context = New-AzStorageContext -StorageAccountName $(StorageAccountName) -StorageAccountKey $(StorageAccountKey)
-      Set-AzStorageBlobContent -File $localFile -Container $(ContainerName) -Blob $blobName -Context $Context  -Force -Verbose
+      Set-AzStorageBlobContent -File $localFileE2ETests -Container $(ContainerName) -Blob $blobName -Context $Context  -Force -Verbose
     env:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
     displayName: 'Copying test app zip artifacts to blob'
@@ -104,9 +104,9 @@ jobs:
       {
         Write-Host "localFileNodeWorker file exists"
       } 
-      $blobNameJavaWorker = 'nodeworker.zip'
+      $blobNameNodeWorker = 'nodeworker.zip'
       $Context = New-AzStorageContext -StorageAccountName $(StorageAccountName) -StorageAccountKey $(StorageAccountKey)
-      Set-AzStorageBlobContent -File $localFileJavaWorker -Container $(ContainerName) -Blob $blobNameJavaWorker -Context $Context  -Force -Verbose
+      Set-AzStorageBlobContent -File $localFileNodeWorker -Container $(ContainerName) -Blob $blobNameNodeWorker -Context $Context  -Force -Verbose
     env:
       AzureFunctionsE2ETestStorage: $(AzureFunctionsE2ETestStorage)
     displayName: 'Copying java worker zip to blob'
