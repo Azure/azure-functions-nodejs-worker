@@ -5,6 +5,7 @@ import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
+import { augmentTriggerMetadata } from './augmenters';
 import { systemError, systemLog } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
 
@@ -82,8 +83,10 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
-    let capabilitiesDictionary = {};
-    capabilitiesDictionary['RpcHttpBodyOnly'] = "true";
+    const capabilitiesDictionary = {
+      RpcHttpTriggerMetadataRemoved: "true",
+      RpcHttpBodyOnly: "true"
+    };
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
@@ -126,6 +129,9 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
+    // Repopulate triggerMetaData if http.
+    augmentTriggerMetadata(msg);
+
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, ...args) => {
       this.log({

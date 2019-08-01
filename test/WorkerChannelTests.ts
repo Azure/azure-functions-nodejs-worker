@@ -28,7 +28,8 @@ describe('WorkerChannel', () => {
       requestId: 'id',
       workerInitResponse: {
         capabilities: { 
-          'RpcHttpBodyOnly': "true" 
+              'RpcHttpBodyOnly': "true",
+              'RpcHttpTriggerMetadataRemoved': "true"
         },
         result: {
           status: rpc.StatusResult.Status.Success
@@ -161,13 +162,45 @@ describe('WorkerChannel', () => {
       name: 'test',
       outputBindings: {}
     })
+    
+    var triggerDataMock: { [k: string]: rpc.ITypedData } = {
+      "Headers": {
+          json: JSON.stringify({Connection: 'Keep-Alive'})
+      },
+      "Sys": {
+          json: JSON.stringify({MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212'})
+        }
+    };
+
+    var inputDataValue = {
+      name: "req",
+      data: {
+          data: "http",
+          http: 
+          {
+              body:
+              {
+                  data: "string",
+                  body: "blahh"
+              },
+              rawBody:
+              {
+                  data: "string",
+                  body: "blahh"
+              }
+          }
+      } 
+    };
+
+    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [inputDataValue],
+      triggerMetadata: triggerDataMock,
+    };
 
     stream.addTestMessage({
-      invocationRequest: {
-        functionId: 'id',
-        invocationId: '1',
-        inputData: []
-      }
+      invocationRequest: actualInvocationRequest
     });
 
     sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
@@ -179,6 +212,10 @@ describe('WorkerChannel', () => {
         outputData: []
       }
     });
+
+    // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(inputDataValue.data));
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(inputDataValue.data));
   });
 
   it ('throws for malformed messages', () => {

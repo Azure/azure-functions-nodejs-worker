@@ -20,6 +20,7 @@ describe('Binding Converters', () => {
             string: "Https://mock/"
         }
     };
+
     var request: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
         triggerMetadata: triggerDataMock,
         invocationId: "12341"
