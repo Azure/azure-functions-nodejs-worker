@@ -1,13 +1,14 @@
 import { format, isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import Status = rpc.StatusResult.Status;
 import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
 import { augmentTriggerMetadata } from './augmenters';
-import { systemError, systemLog } from './utils/Logger';
+import { systemError } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+import LogLevel = rpc.RpcLog.Level;
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -46,7 +47,11 @@ export class WorkerChannel implements IWorkerChannel {
       if (eventHandler) {
         eventHandler.apply(this, [msg.requestId, msg[event]]);
       } else {
-        systemError(`Worker ${workerId} had no handler for message '${event}'`)
+        this.log({
+          message: `Worker ${workerId} had no handler for message '${event}'`,
+          level: LogLevel.Error,
+          logCategory: LogCategory.System
+        });
       }
     });
     eventStream.on('error', function (err) {
@@ -109,7 +114,11 @@ export class WorkerChannel implements IWorkerChannel {
       }
       catch(exception) {
         errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
-        systemError(errorMessage)
+        this.log({
+          message: errorMessage,
+          level: LogLevel.Error,
+          logCategory: LogCategory.System
+        });
         err = exception;
       }
 
@@ -133,12 +142,13 @@ export class WorkerChannel implements IWorkerChannel {
     augmentTriggerMetadata(msg);
 
     let info = this._functionLoader.getInfo(<string>msg.functionId);
-    let logCallback: LogCallback = (level, ...args) => {
+    let logCallback: LogCallback = (level, category, ...args) => {
       this.log({
         invocationId: msg.invocationId,
         category: `${info.name}.Invocation`,
         message: format.apply(null, args),
-        level: level
+        level: level,
+        logCategory: category
       });
     }
 
@@ -238,7 +248,11 @@ export class WorkerChannel implements IWorkerChannel {
   public functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void {
     // Add environment variables from incoming
     let numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
-    systemLog(`Reloading environment variables. Found ${numVariables} variables to reload.`);
+    this.log({
+      message: `Reloading environment variables. Found ${numVariables} variables to reload.`,
+      level: LogLevel.Information,
+      logCategory: LogCategory.System
+    });
 
     let error = null;
     try {

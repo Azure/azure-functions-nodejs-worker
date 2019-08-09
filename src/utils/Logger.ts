@@ -1,3 +1,8 @@
+/**
+ *  Use these methods only if you want to guarantee the messages reach the host despite potential performance impact. 
+    Otherwise, please stick to utilizing the gRPC channel to propagate these messages with category: RpcLogCategory.System
+ **/ 
+
 const logPrefix = "LanguageWorkerConsoleLog";
 
 export function systemLog(message?: any, ...optionalParams: any[]) { 
