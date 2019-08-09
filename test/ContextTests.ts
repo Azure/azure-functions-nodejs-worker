@@ -28,7 +28,7 @@ describe('Context', () => {
     it ('async function logs error on calling context.done', async () => {
         await callUserFunc(BasicAsync.asyncAndCallback, _context);
         sinon.assert.calledOnce(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, rpc.RpcLog.RpcLogCategory.User, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
     });
 
     it ('async function calls callback and returns value without context.done', async () => {
@@ -40,21 +40,21 @@ describe('Context', () => {
     it ('function logs error on calling context.done more than once', () => {
         callUserFunc(BasicCallback.callbackTwice, _context);
         sinon.assert.calledOnce(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Error, rpc.RpcLog.RpcLogCategory.User, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
     });
 
     it ('function logs error on calling context.log after context.done() called', () => {
         callUserFunc(BasicCallback.callbackOnce, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, rpc.RpcLog.RpcLogCategory.System, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ");
     });
 
     it ('function logs error on calling context.log from non-awaited async call', async () => {
         await callUserFunc(BasicAsync.asyncPlainFunction, _context);
         _context.log("");
         sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ");
+        sinon.assert.calledWith(_logger, rpc.RpcLog.Level.Warning, rpc.RpcLog.RpcLogCategory.System, "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ");
     });
 
     it ('function calls callback correctly with bindings', () => {

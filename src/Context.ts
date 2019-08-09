@@ -4,8 +4,8 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
+import LogCategory = rpc.RpcLog.RpcLogCategory;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest } from './public/Interfaces' 
-import { systemWarn } from './utils/Logger';
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
   let context = new InvocationContext(info, request, logCallback, callback);
@@ -79,9 +79,9 @@ class InvocationContext implements Context {
       _promise = isPromise === true;
       if (_done) {
         if (_promise) {
-          logCallback(LogLevel.Error, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
+          logCallback(LogLevel.Error, LogCategory.User, "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.");
         } else {
-          logCallback(LogLevel.Error, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
+          logCallback(LogLevel.Error, LogCategory.User, "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.");
         }
         return;
       }
@@ -106,10 +106,9 @@ function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, exe
     let badAsyncMsg = "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
     badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}. `;
     badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
-    log(LogLevel.Warning, badAsyncMsg);
-    systemWarn(badAsyncMsg);
+    log(LogLevel.Warning, LogCategory.System, badAsyncMsg);
   }
-  return log(level, ...args);
+  return log(level, LogCategory.User, ...args);
 }
 
 export interface InvocationResult {
@@ -119,7 +118,7 @@ export interface InvocationResult {
 
 export type DoneCallback = (err?: Error | string, result?: any) => void;
 
-export type LogCallback = (level: LogLevel, ...args: any[]) => void;
+export type LogCallback = (level: LogLevel, category: rpc.RpcLog.RpcLogCategory, ...args: any[]) => void;
 
 export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 
