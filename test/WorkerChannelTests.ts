@@ -27,6 +27,9 @@ describe('WorkerChannel', () => {
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
       requestId: 'id',
       workerInitResponse: {
+        capabilities: { 
+          'RpcHttpBodyOnly': "true" 
+        },
         result: {
           status: rpc.StatusResult.Status.Success
         }

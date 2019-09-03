@@ -25,10 +25,25 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
       query: <Dict<string>>rpcHttp.query,
       params: <Dict<string>>rpcHttp.params,
       body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
-      rawBody: fromTypedData(<rpc.ITypedData>rpcHttp.rawBody, false),
+      rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
     };
   
     return httpContext;
+}
+
+/**
+ * Converts the provided body from the RPC layer to the appropriate javascript object.
+ * Body of type 'byte' is a special case and it's converted to it's utf-8 string representation.
+ * This is to avoid breaking changes in v2.
+ * @param body The body from the RPC layer.
+ */
+function fromRpcHttpBody(body: rpc.ITypedData) {
+    if (body && body.bytes) {
+        return (<Buffer>body.bytes).toString();
+    }
+    else {
+        return fromTypedData(body, false);
+    }
 }
 
 /**
