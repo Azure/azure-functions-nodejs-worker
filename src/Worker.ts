@@ -46,9 +46,9 @@ export function startNodeWorker(args) {
   process.on('uncaughtException', err => {
     let errorMessage: string;
     if ((<InternalException>err).isAzureFunctionsInternalException) {
-      errorMessage = `Worker ${workerId} uncaught exception: ${err.stack}`;
+      errorMessage = `Worker ${workerId} uncaught exception: ${err.stack || err}`;
     } else {
-      errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${err.stack}`;
+      errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${err.stack || err}`;
     }
 
     systemError(errorMessage);
