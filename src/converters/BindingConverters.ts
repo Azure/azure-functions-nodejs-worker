@@ -24,7 +24,8 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
 export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<any> {
   let bindingData: Dict<any> = {
     invocationId: request.invocationId
-  };
+  };  
+
   // node binding data is camel cased due to language convention
   if (request.triggerMetadata) {
     Object.assign(bindingData, convertKeysToCamelCase(request.triggerMetadata))
