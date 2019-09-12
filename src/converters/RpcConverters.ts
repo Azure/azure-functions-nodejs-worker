@@ -6,6 +6,7 @@ import {
     INullableTimestamp
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { InternalException } from "../utils/InternalException";
+import { TraceContext } from '../public/Interfaces';
 
 /**
  * Converts 'ITypedData' input from the RPC layer to JavaScript types.
@@ -28,6 +29,24 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
     } else if (typedData.bytes) {
         return Buffer.from(<Buffer>typedData.bytes);
     }
+}
+
+/**
+ * Converts 'IRpcTraceContext' input from RPC layer to dictionary of key value pairs.
+ * @param traceContext IRpcTraceContext object containing the activityId, tracestate and attributes.
+ */
+export function fromRpcTraceContext(traceContext: rpc.IRpcTraceContext | null | undefined): TraceContext
+{
+    if (traceContext)
+    {
+        return <TraceContext>{
+            traceparent: traceContext.traceParent,
+            tracestate: traceContext.traceState,
+            attributes: traceContext.attributes
+        };
+    }
+
+    return <TraceContext>{};
 }
 
 /**

@@ -1,6 +1,5 @@
-import { toNullableBool, toNullableString, toNullableDouble, toNullableTimestamp } from '../src/converters';
+import { toNullableBool, toNullableString, toNullableDouble, toNullableTimestamp, fromRpcTraceContext } from '../src/converters';
 import { expect } from 'chai';
-import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 
@@ -20,6 +19,38 @@ describe('Rpc Converters', () => {
     expect(() => {
       toNullableBool(<any>"true", "test");
     }).to.throw("A 'boolean' type was expected instead of a 'string' type. Cannot parse value of 'test'.")
+  });
+
+  it('Converts IRpcTraceContext to tracecontext', () => {
+    let traceparentvalue = "tracep";
+    let tracestatevalue = "traces";
+    let attributesvalue = {"traceparent": "traceparent", "tracestate": "tracestate"};
+
+    let input = <rpc.IRpcTraceContext>({
+      traceParent: traceparentvalue,
+      traceState: tracestatevalue,
+      attributes: attributesvalue
+    });
+
+    let traceContext = fromRpcTraceContext(input);
+    
+    expect(traceparentvalue).to.equal(traceContext.traceparent);
+    expect(tracestatevalue).to.equal(traceContext.tracestate);
+    expect(attributesvalue).to.equal(traceContext.attributes);
+  });
+
+  it('Converts null traceContext to empty values', () => {
+    let traceContext = fromRpcTraceContext(null);
+    expect(traceContext.traceparent).to.be.undefined;
+    expect(traceContext.tracestate).to.be.undefined;
+    expect(traceContext.attributes).to.be.undefined;
+  });
+
+  it('Converts undefined traceContext to empty values', () => {
+    let traceContext = fromRpcTraceContext(undefined);
+    expect(traceContext.traceparent).to.be.undefined;
+    expect(traceContext.tracestate).to.be.undefined;
+    expect(traceContext.attributes).to.be.undefined;
   });
 
   it('does not converts null to NullableBool', () => {

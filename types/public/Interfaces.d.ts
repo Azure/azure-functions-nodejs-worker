@@ -38,6 +38,10 @@ export interface Context {
         [key: string]: any;
     };
     /**
+     * TraceContext information to enable distributed tracing scenarios.
+     */
+    traceContext: TraceContext;
+    /**
      * Bindings your function uses, as defined in function.json.
      */
     bindingDefinitions: BindingDefinition[];
@@ -151,6 +155,19 @@ export interface ExecutionContext {
      * The directory your function is in (this is the parent directory of this function's function.json).
      */
     functionDirectory: string;
+}
+/**
+ * TraceContext information to enable distributed tracing scenarios.
+ */
+export interface TraceContext {
+    /** Describes the position of the incoming request in its trace graph in a portable, fixed-length format. */
+    traceparent: string | null | undefined;
+    /** Extends traceparent with vendor-specific data. */
+    tracestate: string | null | undefined;
+    /** Holds additional properties being sent as part of request telemetry. */
+    attributes: {
+        [k: string]: string;
+    } | null | undefined;
 }
 export interface BindingDefinition {
     /**
