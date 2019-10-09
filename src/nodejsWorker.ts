@@ -18,8 +18,8 @@ function validateNodeVersion(version) {
         } else if (supportedVersions.indexOf(major) < 0) {
             message = "Incompatible Node.js version. The version you are using is "
                 + version +
-                ", but the runtime requires an LTS-covered major version (ex: 8.11.1 or 10.14.1). LTS-covered versions have an even major version number (8.x, 10.x, etc.) as per https://github.com/nodejs/Release#release-plan. "
-                + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION in App Settings. Locally, install or switch to a supported node version (make sure to quit and restart your code editor to pick up the changes).";
+                ", but the runtime requires an LTS-covered major version. LTS-covered versions have an even major version number (8.x, 10.x, etc.) as per https://github.com/nodejs/Release#release-plan. "
+                + "For deployed code, change WEBSITE_NODE_DEFAULT_VERSION to '~10' in App Settings. Locally, install or switch to a supported node version (make sure to quit and restart your code editor to pick up the changes).";
         }
     // Unknown error
     } catch(err) {
