@@ -1,8 +1,8 @@
 variables: {
   WORKER_VERSION: '1.1.1',
-  NODE_LOWER_LTS: '8.x',
-  NODE_HIGHER_LTS: '10.x',
-  NODE_PREVIEW_LTS: '12.x'
+  NODE_8: '8.x',
+  NODE_10: '10.x',
+  NODE_12: '12.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -16,31 +16,31 @@ jobs:
     matrix:
       UBUNTU_NODE8:
         IMAGE_TYPE: 'ubuntu-latest'
-        NODE_VERSION: $(NODE_LOWER_LTS)
+        NODE_VERSION: $(NODE_8)
       UBUNTU_NODE10:
         IMAGE_TYPE: 'ubuntu-latest'
-        NODE_VERSION: $(NODE_HIGHER_LTS)
+        NODE_VERSION: $(NODE_10)
       UBUNTU_NODE12:
         IMAGE_TYPE: 'ubuntu-latest'
-        NODE_VERSION: $(NODE_PREVIEW_LTS)
+        NODE_VERSION: $(NODE_12)
       WINDOWS_NODE8:
         IMAGE_TYPE: 'vs2017-win2016'
-        NODE_VERSION: $(NODE_LOWER_LTS)
+        NODE_VERSION: $(NODE_8)
       WINDOWS_NODE10:
         IMAGE_TYPE: 'vs2017-win2016'
-        NODE_VERSION: $(NODE_HIGHER_LTS)
+        NODE_VERSION: $(NODE_10)
       WINDOWS_NODE12:
         IMAGE_TYPE: 'vs2017-win2016'
-        NODE_VERSION: $(NODE_PREVIEW_LTS)
+        NODE_VERSION: $(NODE_12)
       MAC_NODE8:
         IMAGE_TYPE: 'macos-10.13'
-        NODE_VERSION: $(NODE_LOWER_LTS)
+        NODE_VERSION: $(NODE_8)
       MAC_NODE10:
         IMAGE_TYPE: 'macos-10.13'
-        NODE_VERSION: $(NODE_HIGHER_LTS)
+        NODE_VERSION: $(NODE_10)
       MAC_NODE12:
         IMAGE_TYPE: 'macos-10.13'
-        NODE_VERSION: $(NODE_PREVIEW_LTS)
+        NODE_VERSION: $(NODE_12)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:
@@ -60,9 +60,11 @@ jobs:
     maxParallel: 1
     matrix:
       NODE8:
-        NODE_VERSION: $(NODE_LOWER_LTS)
+        NODE_VERSION: $(NODE_8)
       NODE10:
-        NODE_VERSION: $(NODE_HIGHER_LTS)
+        NODE_VERSION: $(NODE_10)
+      NODE12:
+        NODE_VERSION: $(NODE_12)
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -93,7 +95,7 @@ jobs:
   steps:
   - task: NodeTool@0
     inputs:
-      versionSpec: $(NODE_HIGHER_LTS)
+      versionSpec: $(NODE_10)
     displayName: 'Install Node.js for test'
   - powershell: .\package.ps1
   - task: NuGetCommand@2
