@@ -75,17 +75,6 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
-  - task: CopyFiles@2
-    inputs:
-     SourceFolder: '$(System.DefaultWorkingDirectory)/test/testResults'
-     Contents: '*.trx'
-     TargetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishBuildArtifacts@1
-    inputs:
-     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-     ArtifactName: 'testResults'
-     publishLocation: 'Container'
-  displayName: 'Run tests and publish test result artifacts'
   
 - job: BuildArtifacts  
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
