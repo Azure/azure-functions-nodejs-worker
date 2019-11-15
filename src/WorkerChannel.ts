@@ -258,9 +258,14 @@ export class WorkerChannel implements IWorkerChannel {
     try {
       process.env = Object.assign({}, msg.environmentVariables);
       // Change current working directory
-      if (msg.currentDirectory)
+      if (msg.functionAppDirectory)
       {
-        process.chdir(msg.currentDirectory);
+        this.log({
+          message: `Changing current working directory to ${msg.functionAppDirectory}`,
+          level: LogLevel.Information,
+          logCategory: LogCategory.System
+        });
+        process.chdir(msg.functionAppDirectory);
       }
     } catch (e)
     {

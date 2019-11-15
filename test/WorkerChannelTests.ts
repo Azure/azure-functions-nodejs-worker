@@ -94,7 +94,7 @@ describe('WorkerChannel', () => {
           "hello": "world",
           "SystemDrive": "Q:"
         },
-        currentDirectory: null
+        functionAppDirectory: null
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
@@ -117,7 +117,7 @@ describe('WorkerChannel', () => {
       requestId: 'id',
       functionEnvironmentReloadRequest: {  
         environmentVariables: {},
-        currentDirectory: null
+        functionAppDirectory: null
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
@@ -137,7 +137,7 @@ describe('WorkerChannel', () => {
         requestId: 'id',
         functionEnvironmentReloadRequest: {  
           environmentVariables: {},
-          currentDirectory: null
+          functionAppDirectory: null
         }
       });
     }).to.not.throw();
@@ -154,13 +154,13 @@ describe('WorkerChannel', () => {
         requestId: 'id',
         functionEnvironmentReloadRequest: {
           environmentVariables: null,
-          currentDirectory: null
+          functionAppDirectory: null
         }
       });
     }).to.not.throw();
   });
 
-  it ('reloads environment variable and keeps cwd without currentDirectory', () => {
+  it ('reloads environment variable and keeps cwd without functionAppDirectory', () => {
     let cwd = process.cwd();
     stream.addTestMessage({
       requestId: 'id',
@@ -169,7 +169,7 @@ describe('WorkerChannel', () => {
           "hello": "world",
           "SystemDrive": "Q:"
         },
-        currentDirectory: null
+        functionAppDirectory: null
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
@@ -185,7 +185,7 @@ describe('WorkerChannel', () => {
     expect(process.cwd() == cwd);
   });
 
-  it ('reloads environment variable and changes currentDirectory', () => {
+  it ('reloads environment variable and changes functionAppDirectory', () => {
     let cwd = process.cwd();
     let newDir = "/";
     stream.addTestMessage({
@@ -195,7 +195,7 @@ describe('WorkerChannel', () => {
           "hello": "world",
           "SystemDrive": "Q:"
         },
-        currentDirectory: newDir
+        functionAppDirectory: newDir
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
