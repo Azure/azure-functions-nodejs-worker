@@ -77,8 +77,8 @@ jobs:
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
   - task: CopyFiles@2
     inputs:
-     SourceFolder: '$(System.DefaultWorkingDirectory)/test/testResults'
-     Contents: '*.trx'
+     SourceFolder: '$(System.DefaultWorkingDirectory)/artifacts'
+     Contents: '*'
      TargetFolder: '$(Build.ArtifactStagingDirectory)'
   - task: PublishBuildArtifacts@1
     inputs:
