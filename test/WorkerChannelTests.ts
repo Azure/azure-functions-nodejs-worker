@@ -93,7 +93,8 @@ describe('WorkerChannel', () => {
         environmentVariables: {
           "hello": "world",
           "SystemDrive": "Q:"
-        }
+        },
+        currentDirectory: null
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
@@ -115,7 +116,8 @@ describe('WorkerChannel', () => {
     stream.addTestMessage({
       requestId: 'id',
       functionEnvironmentReloadRequest: {  
-        environmentVariables: {}
+        environmentVariables: {},
+        currentDirectory: null
       }
     });
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
@@ -134,7 +136,8 @@ describe('WorkerChannel', () => {
       stream.write({
         requestId: 'id',
         functionEnvironmentReloadRequest: {  
-          environmentVariables: {}
+          environmentVariables: {},
+          currentDirectory: null
         }
       });
     }).to.not.throw();
@@ -150,10 +153,64 @@ describe('WorkerChannel', () => {
       stream.write({
         requestId: 'id',
         functionEnvironmentReloadRequest: {
-          environmentVariables: null
+          environmentVariables: null,
+          currentDirectory: null
         }
       });
     }).to.not.throw();
+  });
+
+  it ('reloads environment variable and keeps cwd without currentDirectory', () => {
+    let cwd = process.cwd();
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {
+          "hello": "world",
+          "SystemDrive": "Q:"
+        },
+        currentDirectory: null
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env.hello).to.equal("world");
+    expect(process.env.SystemDrive).to.equal("Q:");
+    expect(process.cwd() == cwd);
+  });
+
+  it ('reloads environment variable and changes currentDirectory', () => {
+    let cwd = process.cwd();
+    let newDir = "/";
+    stream.addTestMessage({
+      requestId: 'id',
+      functionEnvironmentReloadRequest: {  
+        environmentVariables: {
+          "hello": "world",
+          "SystemDrive": "Q:"
+        },
+        currentDirectory: newDir
+      }
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      functionEnvironmentReloadResponse: {
+        result: {
+          status: rpc.StatusResult.Status.Success
+        }
+      }
+    });
+    expect(process.env.hello).to.equal("world");
+    expect(process.env.SystemDrive).to.equal("Q:");
+    expect(process.cwd() != newDir);
+    expect(process.cwd() == newDir);
+    process.chdir(cwd);
   });
 
   it ('invokes function', () => {

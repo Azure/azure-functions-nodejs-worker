@@ -257,6 +257,11 @@ export class WorkerChannel implements IWorkerChannel {
     let error = null;
     try {
       process.env = Object.assign({}, msg.environmentVariables);
+      // Change current working directory
+      if (msg.currentDirectory)
+      {
+        process.chdir(msg.currentDirectory);
+      }
     } catch (e)
     {
       error = e;
