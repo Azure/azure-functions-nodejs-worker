@@ -20,10 +20,13 @@ async function generateProtos() {
     genJs(allFiles)
         .then(data => console.log("Compiled to JavaScript."))
         .catch(err => console.log(`Could not compile to JavaScript: ${err}`));
-
-    genTs(allFiles)
+    
+    // Don't generate with Node.js v12 until resolved: https://github.com/protobufjs/protobuf.js/issues/1275
+    if (!process.version.startsWith("v12")) {
+        genTs(allFiles)
         .then(data => console.log("Compiled to TypeScript."))
         .catch(err => console.log(`Could not compile to TypeScript: ${err}`));
+    }
 };
 
 async function getFiles(root, fileFilter, directoryFilter) {
