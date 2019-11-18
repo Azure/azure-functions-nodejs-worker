@@ -34,11 +34,16 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
+  private _hostVersion: string;
+  private _hostCapabilities: {[key:string]: string};
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
+    // default value
+    this._hostVersion = "3.0";
+    this._hostCapabilities = {};
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -88,7 +93,7 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
-    const capabilitiesDictionary = {
+    const workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true"
     };
@@ -96,7 +101,7 @@ export class WorkerChannel implements IWorkerChannel {
       requestId: requestId,
       workerInitResponse: {
         result: this.getStatus(),
-        capabilities : capabilitiesDictionary,
+        capabilities : workerCapabilities,
       }
     });
   }
@@ -161,7 +166,14 @@ export class WorkerChannel implements IWorkerChannel {
       try {
         if (result) {
           if (result.return) {
-            response.returnValue = toTypedData(result.return);
+            // TODO: add capability from host to go to "non-breaking" mode
+            if (this._hostVersion === "2.0") 
+            {
+              response.returnValue = toTypedData(result.return);
+            } else {
+              let returnBinding = info.getReturnBinding();
+              response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+            }
           }
           if (result.bindings) {
             response.outputData = Object.keys(info.outputBindings)
