@@ -40,7 +40,6 @@ export class FunctionInfo {
 
   /** 
    * Return output binding details on the special key "$return" output binding
-   * Will be used in the future to address bugfix with breaking change: https://github.com/Azure/azure-functions-nodejs-worker/issues/228
    */
   public getReturnBinding() {
     return this.outputBindings[returnBindingKey];
