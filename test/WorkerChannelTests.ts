@@ -213,6 +213,74 @@ describe('WorkerChannel', () => {
     process.chdir(cwd);
   });
 
+  it ('invokes function in V2 compat mode', () => {
+    loader.getFunc.returns((context) => context.done());
+    loader.getInfo.returns({
+      name: 'test',
+      outputBindings: {}
+    })
+    
+    var triggerDataMock: { [k: string]: rpc.ITypedData } = {
+      "Headers": {
+          json: JSON.stringify({Connection: 'Keep-Alive'})
+      },
+      "Sys": {
+          json: JSON.stringify({MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212'})
+        }
+    };
+
+    var inputDataValue = {
+      name: "req",
+      data: {
+          data: "http",
+          http: 
+          {
+              body:
+              {
+                  data: "string",
+                  body: "blahh"
+              },
+              rawBody:
+              {
+                  data: "string",
+                  body: "blahh"
+              }
+          }
+      } 
+    };
+
+    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [inputDataValue],
+      triggerMetadata: triggerDataMock,
+    };
+
+    stream.addTestMessage({
+      workerInitRequest: {
+        hostVersion: "2.0"
+      }
+    })
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: []
+      }
+    });
+
+    // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(inputDataValue.data));
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(inputDataValue.data));
+  });
+
   it ('invokes function', () => {
     loader.getFunc.returns((context) => context.done());
     loader.getInfo.returns({
@@ -271,8 +339,8 @@ describe('WorkerChannel', () => {
     });
 
     // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(inputDataValue.data));
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(inputDataValue.data));
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
   });
 
   it ('throws for malformed messages', () => {

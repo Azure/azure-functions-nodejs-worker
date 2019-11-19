@@ -34,16 +34,14 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
-  private _hostVersion: string;
-  private _hostCapabilities: {[key:string]: string};
+  private _v2Compatible: boolean;
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
     // default value
-    this._hostVersion = "3.0";
-    this._hostCapabilities = {};
+    this._v2Compatible = false;
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -93,6 +91,10 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
+    // TODO: add capability from host to go to "non-breaking" mode
+    if (msg.hostVersion) {
+      this._v2Compatible = true;
+    }
     const workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true"
@@ -144,7 +146,9 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
-    augmentTriggerMetadata(msg);
+    if (this._v2Compatible) {
+      augmentTriggerMetadata(msg);
+    }
 
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, category, ...args) => {
@@ -167,8 +171,7 @@ export class WorkerChannel implements IWorkerChannel {
         if (result) {
           if (result.return) {
             // TODO: add capability from host to go to "non-breaking" mode
-            if (this._hostVersion === "2.0") 
-            {
+            if (this._v2Compatible) {
               response.returnValue = toTypedData(result.return);
             } else {
               let returnBinding = info.getReturnBinding();
@@ -294,7 +297,7 @@ export class WorkerChannel implements IWorkerChannel {
     });
   }
 
-  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult{
+  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult {
     let status: rpc.IStatusResult = {
       status: rpc.StatusResult.Status.Success
     };
