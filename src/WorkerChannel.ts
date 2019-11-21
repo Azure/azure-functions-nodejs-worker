@@ -34,14 +34,14 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
-  private _v2Compatible: boolean;
+  private _v1WorkerBehavior: boolean;
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
     // default value
-    this._v2Compatible = false;
+    this._v1WorkerBehavior = false;
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -93,7 +93,7 @@ export class WorkerChannel implements IWorkerChannel {
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // TODO: add capability from host to go to "non-breaking" mode
     if (msg.hostVersion) {
-      this._v2Compatible = true;
+      this._v1WorkerBehavior = true;
     }
     const workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
@@ -146,7 +146,7 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
-    if (this._v2Compatible) {
+    if (this._v1WorkerBehavior) {
       augmentTriggerMetadata(msg);
     }
 
@@ -170,8 +170,7 @@ export class WorkerChannel implements IWorkerChannel {
       try {
         if (result) {
           if (result.return) {
-            // TODO: add capability from host to go to "non-breaking" mode
-            if (this._v2Compatible) {
+            if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
               let returnBinding = info.getReturnBinding();
