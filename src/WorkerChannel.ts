@@ -95,10 +95,28 @@ export class WorkerChannel implements IWorkerChannel {
     if (msg.hostVersion) {
       this._v1WorkerBehavior = true;
     }
+
+    // Validate version
+    let version = process.version;
+    if (this._v1WorkerBehavior) {
+      if (version.startsWith("v12."))
+      {
+        console.warn(warnPrefix + "The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
+      }
+    } else {
+      if (version.startsWith("v8."))
+      {
+        let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
+        console.error(errorPrefix + msg);
+        throw msg;
+      }
+    }
+
     const workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true"
     };
+
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
