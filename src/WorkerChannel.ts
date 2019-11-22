@@ -92,27 +92,19 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // TODO: add capability from host to go to "non-breaking" mode
-<<<<<<< HEAD
     if (msg.capabilities && msg.capabilities.V2Compatable) {
-=======
-    if (msg.hostVersion) {
->>>>>>> updates to make 2.0 worker 1.0 compatible
       this._v1WorkerBehavior = true;
     }
 
     // Validate version
     let version = process.version;
     if (this._v1WorkerBehavior) {
-      if (version.startsWith("v12."))
-      {
+      if (version.startsWith("v12.")) {
         systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
-      }
-    } else {
-      if (version.startsWith("v8."))
-      {
+      } else if (version.startsWith("v8.")) {
         let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
         systemError(msg);
-        throw msg;
+        throw new Error(msg);
       }
     }
 
