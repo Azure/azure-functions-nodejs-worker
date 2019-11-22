@@ -1,5 +1,5 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions, fromRpcTraceContext } from './converters';
+import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions, fromRpcTraceContext, convertKeysToCamelCase } from './converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
@@ -11,15 +11,20 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
     let context = new InvocationContext(info, request, logCallback, callback);
 
     let bindings: Dict<any> = {};
-    let inputs: InputTypes[] = [];
+    let inputs: any[] = [];
     let httpInput: RequestProperties | undefined;
     for (let binding of <rpc.IParameterBinding[]>request.inputData) {
         if (binding.data && binding.name) {
-            let input: InputTypes;
+            let input;
             if (binding.data && binding.data.http) {
                 input = httpInput = fromRpcHttp(binding.data.http);
             } else {
-                input = fromTypedData(binding.data);
+                // TODO: Don't hard code fix for camelCase https://github.com/Azure/azure-functions-nodejs-worker/issues/188
+                if (info.getTimerTriggerName() === binding.name) {
+                    input = convertKeysToCamelCase(binding)["data"];
+                } else {
+                    input = fromTypedData(binding.data);
+                }
             }
             bindings[binding.name] = input;
             inputs.push(input);
@@ -127,6 +132,3 @@ export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 export interface Dict<T> {
     [key: string]: T
 }
-
-// Allowed input types
-export type InputTypes = HttpRequest | string | Buffer | null | undefined;
