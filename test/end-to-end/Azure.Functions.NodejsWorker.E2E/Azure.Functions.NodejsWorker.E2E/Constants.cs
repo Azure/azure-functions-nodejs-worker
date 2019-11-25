@@ -14,6 +14,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             public static string StorageConnectionStringSetting = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
             public static string OutputBindingName = "test-output-node";
             public static string InputBindingName = "test-input-node";
+            public static string TimerOutputBindingName = "timer-output-node";
         }
 
         // CosmosDB tests

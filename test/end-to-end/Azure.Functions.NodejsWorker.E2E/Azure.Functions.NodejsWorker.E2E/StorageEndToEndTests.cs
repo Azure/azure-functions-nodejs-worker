@@ -33,5 +33,12 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             var queueMessage = await StorageHelpers.ReadFromQueue(Constants.Queue.OutputBindingName);
             Assert.Equal(expectedQueueMessage, queueMessage);
         }
+
+        [Fact]
+        public async Task TimerTriggerRunsOnStartup()
+        {
+            var queueMessage = await StorageHelpers.ReadFromQueue(Constants.Queue.TimerOutputBindingName);
+            Assert.True(String.Equal(queueMessage, "true") || String.Equal(queueMessage, "false"));
+        }
     }
 }
