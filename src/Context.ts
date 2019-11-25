@@ -20,11 +20,7 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
                 input = httpInput = fromRpcHttp(binding.data.http);
             } else {
                 // TODO: Don't hard code fix for camelCase https://github.com/Azure/azure-functions-nodejs-worker/issues/188
-<<<<<<< HEAD
                 if (v1WorkerBehavior && info.getTimerTriggerName() === binding.name) {
-=======
-                if (info.getTimerTriggerName() === binding.name) {
->>>>>>> hard-coded solution to camelCase timer trigger while proper fix is out of scope for timeline
                     input = convertKeysToCamelCase(binding)["data"];
                 } else {
                     input = fromTypedData(binding.data);
