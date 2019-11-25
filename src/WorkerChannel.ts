@@ -188,10 +188,22 @@ export class WorkerChannel implements IWorkerChannel {
               response.returnValue = toTypedData(result.return);
             } else {
               let returnBinding = info.getReturnBinding();
-              response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+              // $return binding is found: return result data to $return binding
+              if (returnBinding) {
+                response.returnValue = returnBinding.converter(result.return);
+              // $return binding is not found: read result as object of outputs
+              } else if (result.return) {
+                response.outputData = Object.keys(info.outputBindings)
+                  .filter(key => result.return[key] !== undefined)
+                  .map(key => <rpc.IParameterBinding>{
+                    name: key,
+                    data: info.outputBindings[key].converter(result.bindings[key])
+                  });
+              }
             }
           }
-          if (result.bindings) {
+          // Data from return supersedes data from context.bindings
+          if (result.bindings && !response.outputData) {
             response.outputData = Object.keys(info.outputBindings)
               .filter(key => result.bindings[key] !== undefined)
               .map(key => <rpc.IParameterBinding>{
