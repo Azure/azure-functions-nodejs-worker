@@ -92,7 +92,7 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // TODO: add capability from host to go to "non-breaking" mode
-    if (msg.hostVersion) {
+    if (msg.capabilities["V2Compatable"]) {
       this._v1WorkerBehavior = true;
     }
 
