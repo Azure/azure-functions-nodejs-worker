@@ -26,11 +26,7 @@ describe('Context', () => {
         _context = context;
     });
 
-<<<<<<< HEAD
     it ('camelCases timer trigger input when appropriate', async () => {
-=======
-    it ('camelCases timer trigger input', async () => {
->>>>>>> adding unit test
         var inputDataValue: rpc.IParameterBinding = {
             name: "myTimer",
             data: {
