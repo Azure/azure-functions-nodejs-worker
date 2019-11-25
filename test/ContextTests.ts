@@ -26,7 +26,7 @@ describe('Context', () => {
         _context = context;
     });
 
-    it ('camelCases timer trigger input', async () => {
+    it ('camelCases timer trigger input when appropriate', async () => {
         var inputDataValue: rpc.IParameterBinding = {
             name: "myTimer",
             data: {
@@ -57,15 +57,23 @@ describe('Context', () => {
                     dataType: 0                    
                 }
             }
-        });        
-        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
-        console.log(inputs);
-        let myTimer = inputs[0];
-        expect(myTimer.schedule).to.be.empty;
-        expect(myTimer.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
-        expect(myTimer.scheduleStatus.lastUpdated).to.equal("2016-10-04T10:16:00+00:00");
-        expect(myTimer.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
-        expect(myTimer.isPastDue).to.equal(false);
+        });
+        // Node.js Worker V2 behavior
+        let workerV2Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
+        let myTimerWorkerV2 = workerV2Outputs.inputs[0];
+        expect(myTimerWorkerV2.schedule).to.be.empty;
+        expect(myTimerWorkerV2.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
+        expect(myTimerWorkerV2.scheduleStatus.lastUpdated).to.equal("2016-10-04T10:16:00+00:00");
+        expect(myTimerWorkerV2.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
+        expect(myTimerWorkerV2.isPastDue).to.equal(false);
+
+        let workerV1Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let myTimerWorkerV1 = workerV1Outputs.inputs[0];
+        expect(myTimerWorkerV1.Schedule).to.be.empty;
+        expect(myTimerWorkerV1.ScheduleStatus.Last).to.equal("2016-10-04T10:15:00+00:00");
+        expect(myTimerWorkerV1.ScheduleStatus.LastUpdated).to.equal("2016-10-04T10:16:00+00:00");
+        expect(myTimerWorkerV1.ScheduleStatus.Next).to.equal("2016-10-04T10:20:00+00:00");
+        expect(myTimerWorkerV1.IsPastDue).to.equal(false);
     });
 
     it ('async function logs error on calling context.done', async () => {
