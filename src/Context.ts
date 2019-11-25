@@ -7,7 +7,7 @@ import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, TraceContext } from './public/Interfaces' 
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, v1WorkerBehavior: boolean) {
     let context = new InvocationContext(info, request, logCallback, callback);
 
     let bindings: Dict<any> = {};
@@ -20,7 +20,7 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
                 input = httpInput = fromRpcHttp(binding.data.http);
             } else {
                 // TODO: Don't hard code fix for camelCase https://github.com/Azure/azure-functions-nodejs-worker/issues/188
-                if (info.getTimerTriggerName() === binding.name) {
+                if (v1WorkerBehavior && info.getTimerTriggerName() === binding.name) {
                     input = convertKeysToCamelCase(binding)["data"];
                 } else {
                     input = fromTypedData(binding.data);

@@ -92,7 +92,7 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // TODO: add capability from host to go to "non-breaking" mode
-    if (msg.capabilities["V2Compatable"]) {
+    if (msg.capabilities && msg.capabilities.V2Compatable) {
       this._v1WorkerBehavior = true;
     }
 
@@ -214,7 +214,7 @@ export class WorkerChannel implements IWorkerChannel {
       });
     }
 
-    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
+    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback, this._v1WorkerBehavior);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
     // catch user errors from the same async context in the event loop and correlate with invocation

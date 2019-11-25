@@ -258,7 +258,10 @@ describe('WorkerChannel', () => {
 
     stream.addTestMessage({
       workerInitRequest: {
-        hostVersion: "2.0"
+        hostVersion: "3.0.0000",
+        capabilities: {
+          V2Compatable: "true"
+        }
       }
     })
 
