@@ -38,7 +38,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         public async Task TimerTriggerRunsOnStartup()
         {
             var queueMessage = await StorageHelpers.ReadFromQueue(Constants.Queue.TimerOutputBindingName);
-            Assert.True(String.Equal(queueMessage, "true") || String.Equal(queueMessage, "false"));
+            Assert.True(string.Equals(queueMessage, "true") || string.Equals(queueMessage, "false"));
         }
     }
 }
