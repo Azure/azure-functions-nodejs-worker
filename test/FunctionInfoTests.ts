@@ -24,7 +24,6 @@ describe('FunctionInfo', () => {
     };
     
     let funcInfo = new FunctionInfo(metadata);
-    console.log(funcInfo);
     expect(funcInfo.getReturnBinding().converter.name).to.equal("toRpcHttp");
   });
 
@@ -45,7 +44,6 @@ describe('FunctionInfo', () => {
     };
     
     let funcInfo = new FunctionInfo(metadata);
-    console.log(funcInfo);
     expect(funcInfo.getReturnBinding().converter.name).to.equal("toTypedData");
   });
 })

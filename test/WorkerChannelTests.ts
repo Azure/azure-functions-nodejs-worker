@@ -20,10 +20,18 @@ describe('WorkerChannel', () => {
   });
 
   it('responds to init', () => {
-    stream.addTestMessage({
+    let initMessage = {
       requestId: 'id',
-      workerInitRequest: {  }
-    });
+      workerInitRequest: {
+        capabilities: {}
+      }
+    };
+
+    if (process.version.startsWith("v8")) {
+      initMessage.workerInitRequest.capabilities["V2Compatable"] = "true";
+    }
+    
+    stream.addTestMessage(initMessage);
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
       requestId: 'id',
       workerInitResponse: {
@@ -258,7 +266,10 @@ describe('WorkerChannel', () => {
 
     stream.addTestMessage({
       workerInitRequest: {
-        hostVersion: "2.0"
+        hostVersion: "3.0.0000",
+        capabilities: {
+          V2Compatable: "true"
+        }
       }
     })
 

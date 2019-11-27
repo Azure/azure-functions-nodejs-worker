@@ -43,7 +43,7 @@ function isBindingDirection(input: string | undefined): boolean {
 }
 
 // Recursively convert keys of objects to camel case
-function convertKeysToCamelCase(obj: any) {
+export function convertKeysToCamelCase(obj: any) {
   var output = {};
   for (var key in obj) {
       let value = fromTypedData(obj[key]) || obj[key];
