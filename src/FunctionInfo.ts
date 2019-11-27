@@ -44,4 +44,14 @@ export class FunctionInfo {
   public getReturnBinding() {
     return this.outputBindings[returnBindingKey];
   }
+
+  public getTimerTriggerName(): string | undefined {
+    for (let name in this.bindings) {
+      let type = this.bindings[name].type;
+      if (type && type.toLowerCase() === "timertrigger") {
+        return name;
+      }
+    }
+    return;
+  }
 }

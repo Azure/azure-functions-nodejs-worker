@@ -3,6 +3,7 @@ import { Context } from "../src/public/Interfaces";
 import { FunctionInfo } from '../src/FunctionInfo';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import * as sinon from 'sinon';
+import { expect } from 'chai';
 import 'mocha';
 import { isFunction } from 'util';
 
@@ -21,8 +22,58 @@ describe('Context', () => {
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
 
-        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
+        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
         _context = context;
+    });
+
+    it ('camelCases timer trigger input when appropriate', async () => {
+        var inputDataValue: rpc.IParameterBinding = {
+            name: "myTimer",
+            data: {
+                json: JSON.stringify({
+                    "Schedule":{
+                    },
+                    "ScheduleStatus": {
+                        "Last":"2016-10-04T10:15:00+00:00",
+                        "LastUpdated":"2016-10-04T10:16:00+00:00",
+                        "Next":"2016-10-04T10:20:00+00:00"
+                    },
+                    "IsPastDue":false
+                })
+            }
+        };
+        var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+            functionId: 'id',
+            invocationId: '1',
+            inputData: [inputDataValue]
+        };
+
+        let info: FunctionInfo = new FunctionInfo({ 
+            name: 'test',
+            bindings: {
+                myTimer: {
+                    type: "timerTrigger",
+                    direction: 0,
+                    dataType: 0                    
+                }
+            }
+        });
+        // Node.js Worker V2 behavior
+        let workerV2Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
+        let myTimerWorkerV2 = workerV2Outputs.inputs[0];
+        expect(myTimerWorkerV2.schedule).to.be.empty;
+        expect(myTimerWorkerV2.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
+        expect(myTimerWorkerV2.scheduleStatus.lastUpdated).to.equal("2016-10-04T10:16:00+00:00");
+        expect(myTimerWorkerV2.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
+        expect(myTimerWorkerV2.isPastDue).to.equal(false);
+
+        let workerV1Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let myTimerWorkerV1 = workerV1Outputs.inputs[0];
+        expect(myTimerWorkerV1.Schedule).to.be.empty;
+        expect(myTimerWorkerV1.ScheduleStatus.Last).to.equal("2016-10-04T10:15:00+00:00");
+        expect(myTimerWorkerV1.ScheduleStatus.LastUpdated).to.equal("2016-10-04T10:16:00+00:00");
+        expect(myTimerWorkerV1.ScheduleStatus.Next).to.equal("2016-10-04T10:20:00+00:00");
+        expect(myTimerWorkerV1.IsPastDue).to.equal(false);
     });
 
     it ('async function logs error on calling context.done', async () => {

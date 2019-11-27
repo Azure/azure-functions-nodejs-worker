@@ -5,7 +5,7 @@ import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
 import { augmentTriggerMetadata } from './augmenters';
-import { systemError } from './utils/Logger';
+import { systemError, systemWarn } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -34,14 +34,14 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
-  private _v2Compatible: boolean;
+  private _v1WorkerBehavior: boolean;
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
     // default value
-    this._v2Compatible = false;
+    this._v1WorkerBehavior = false;
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -92,13 +92,31 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // TODO: add capability from host to go to "non-breaking" mode
-    if (msg.hostVersion) {
-      this._v2Compatible = true;
+    if (msg.capabilities && msg.capabilities.V2Compatable) {
+      this._v1WorkerBehavior = true;
     }
+
+    // Validate version
+    let version = process.version;
+    if (this._v1WorkerBehavior) {
+      if (version.startsWith("v12."))
+      {
+        systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
+      }
+    } else {
+      if (version.startsWith("v8."))
+      {
+        let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
+        systemError(msg);
+        throw msg;
+      }
+    }
+
     const workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true"
     };
+
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
@@ -146,7 +164,7 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
-    if (this._v2Compatible) {
+    if (this._v1WorkerBehavior) {
       augmentTriggerMetadata(msg);
     }
 
@@ -170,8 +188,7 @@ export class WorkerChannel implements IWorkerChannel {
       try {
         if (result) {
           if (result.return) {
-            // TODO: add capability from host to go to "non-breaking" mode
-            if (this._v2Compatible) {
+            if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
               let returnBinding = info.getReturnBinding();
@@ -197,7 +214,7 @@ export class WorkerChannel implements IWorkerChannel {
       });
     }
 
-    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
+    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback, this._v1WorkerBehavior);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
     // catch user errors from the same async context in the event loop and correlate with invocation
