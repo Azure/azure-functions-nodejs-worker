@@ -106,7 +106,7 @@ export class WorkerChannel implements IWorkerChannel {
       if (version.startsWith("v8.")) {
         let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
         systemError(msg);
-        throw new Error(msg);
+        throw msg;
       }
     }
 
@@ -199,7 +199,7 @@ export class WorkerChannel implements IWorkerChannel {
                   .filter(key => result.return[key] !== undefined)
                   .map(key => <rpc.IParameterBinding>{
                     name: key,
-                    data: info.outputBindings[key].converter(result.bindings[key])
+                    data: info.outputBindings[key].converter(result.return[key])
                   });
               }
             }
@@ -217,7 +217,6 @@ export class WorkerChannel implements IWorkerChannel {
       } catch (e) {
         response.result = this.getStatus(e)
       }
-
       this._eventStream.write({
         requestId: requestId,
         invocationResponse: response
