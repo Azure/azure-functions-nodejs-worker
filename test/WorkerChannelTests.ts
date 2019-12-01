@@ -79,9 +79,8 @@ describe('WorkerChannel', () => {
       }
     };
 
-    // Test Functions Host V2 compatability with Node.js 8
-    if (process.version.startsWith("v8")) {
-      initMessage.workerInitRequest.capabilities["V2Compatable"] = "true";
+    if (process.version.startsWith('v8')) {
+      initMessage.workerInitRequest.capabilities['V2Compatable'] = 'true';
     }
     
     stream.addTestMessage(initMessage);
@@ -89,8 +88,9 @@ describe('WorkerChannel', () => {
       requestId: 'id',
       workerInitResponse: {
         capabilities: { 
-              'RpcHttpBodyOnly': "true",
-              'RpcHttpTriggerMetadataRemoved': "true"
+              'RpcHttpBodyOnly': 'true',
+              'RpcHttpTriggerMetadataRemoved': 'true',
+              'TypedDataCollection': 'true'
         },
         result: {
           status: rpc.StatusResult.Status.Success
