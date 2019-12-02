@@ -99,13 +99,11 @@ export class WorkerChannel implements IWorkerChannel {
     // Validate version
     let version = process.version;
     if (this._v1WorkerBehavior) {
-      if (version.startsWith("v12."))
-      {
+      if (version.startsWith("v12.")) {
         systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
       }
     } else {
-      if (version.startsWith("v8."))
-      {
+      if (version.startsWith("v8.")) {
         let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
         systemError(msg);
         throw msg;
@@ -192,10 +190,22 @@ export class WorkerChannel implements IWorkerChannel {
               response.returnValue = toTypedData(result.return);
             } else {
               let returnBinding = info.getReturnBinding();
-              response.returnValue = returnBinding ? returnBinding.converter(result.return) : toTypedData(result.return);
+              // $return binding is found: return result data to $return binding
+              if (returnBinding) {
+                response.returnValue = returnBinding.converter(result.return);
+              // $return binding is not found: read result as object of outputs
+              } else if (result.return) {
+                response.outputData = Object.keys(info.outputBindings)
+                  .filter(key => result.return[key] !== undefined)
+                  .map(key => <rpc.IParameterBinding>{
+                    name: key,
+                    data: info.outputBindings[key].converter(result.return[key])
+                  });
+              }
             }
           }
-          if (result.bindings) {
+          // Data from return supersedes data from context.bindings
+          if (result.bindings && !response.outputData) {
             response.outputData = Object.keys(info.outputBindings)
               .filter(key => result.bindings[key] !== undefined)
               .map(key => <rpc.IParameterBinding>{
@@ -207,7 +217,6 @@ export class WorkerChannel implements IWorkerChannel {
       } catch (e) {
         response.result = this.getStatus(e)
       }
-
       this._eventStream.write({
         requestId: requestId,
         invocationResponse: response
