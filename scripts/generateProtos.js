@@ -22,7 +22,9 @@ async function generateProtos() {
         .catch(err => console.log(`Could not compile to JavaScript: ${err}`));
     
     // Don't generate with Node.js v12 until resolved: https://github.com/protobufjs/protobuf.js/issues/1275
-    if (!process.version.startsWith("v12")) {
+    if (process.version.startsWith("v12") && process.platform === 'win32') {
+        console.warn("Warning! Could not compile to TypeScript for Node.js 12 and Windows OS. Do not change public interfaces.");
+    } else {
         genTs(allFiles)
         .then(data => console.log("Compiled to TypeScript."))
         .catch(err => console.log(`Could not compile to TypeScript: ${err}`));
