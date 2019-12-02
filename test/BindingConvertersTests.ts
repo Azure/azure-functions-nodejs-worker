@@ -1,9 +1,10 @@
-import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions } from '../src/converters';
+import { getNormalizedBindingData, toRpcHttp, getBindingDefinitions, fromTypedData } from '../src/converters';
 import { FunctionInfo } from '../src/FunctionInfo';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
+import { fromString } from 'long';
 
 describe('Binding Converters', () => {
   it('normalizes binding trigger metadata for HTTP', () => {
@@ -126,5 +127,47 @@ describe('Binding Converters', () => {
     expect(bindingDefinitions[3].name).to.equal("noDirection");
     expect(bindingDefinitions[3].direction).to.be.undefined;
     expect(bindingDefinitions[3].type).to.equal("queue");
+  });
+
+  it('deserializes string data with fromTypedData', () => {
+    let data = fromTypedData({ string: "foo" });
+    expect(data).to.equal("foo");
+  });
+
+  it('deserializes json data with fromTypedData', () => {
+    let data = fromTypedData({ json: "\{ \"foo\": \"bar\" }" });
+    expect(data && data["foo"]).to.equal("bar");
+  });
+
+  it('deserializes byte data with fromTypedData', () => {
+    let buffer = Buffer.from("hello");
+    let data = fromTypedData({ bytes: buffer });
+    expect(data && data["buffer"]).to.equal(buffer.buffer);
+  });
+
+  it('deserializes collectionBytes data with fromTypedData', () => {
+    let fooBuffer = Buffer.from("foo");
+    let barBuffer = Buffer.from("bar");
+    let data = fromTypedData({ collectionBytes: { bytes: [fooBuffer, barBuffer] } });
+    expect(data && data[0] && data[0]["buffer"]).to.equal(fooBuffer.buffer);
+    expect(data && data[1] && data[1]["buffer"]).to.equal(barBuffer.buffer);
+  });
+
+  it('deserializes collectionString data with fromTypedData', () => {
+    let data = fromTypedData({ collectionString: { string: ["foo", "bar"] } });
+    expect(data && data[0]).to.equal("foo");
+    expect(data && data[1]).to.equal("bar");
+  });
+
+  it('deserializes collectionDouble data with fromTypedData', () => {
+    let data = fromTypedData({ collectionDouble: { double: [1.1, 2.2] } });
+    expect(data && data[0]).to.equal(1.1);
+    expect(data && data[1]).to.equal(2.2);
+  });
+
+  it('deserializes collectionSint64 data with fromTypedData', () => {
+    let data = fromTypedData({ collectionSint64: { sint64: [123, fromString("9007199254740992")] } });
+    expect(data && data[0]).to.equal(123);
+    expect(data && data[1]).to.equal("9007199254740992");
   });
 })

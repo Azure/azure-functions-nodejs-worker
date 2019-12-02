@@ -79,24 +79,29 @@ describe('WorkerChannel', () => {
       }
     };
 
-    // Test Functions Host V2 compatability with Node.js 8
-    if (process.version.startsWith("v8")) {
-      initMessage.workerInitRequest.capabilities["V2Compatable"] = "true";
-    }
-    
-    stream.addTestMessage(initMessage);
-    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+    let expectedOutput = {
       requestId: 'id',
       workerInitResponse: {
         capabilities: { 
-              'RpcHttpBodyOnly': "true",
-              'RpcHttpTriggerMetadataRemoved': "true"
+              'RpcHttpBodyOnly': 'true',
+              'RpcHttpTriggerMetadataRemoved': 'true'
         },
         result: {
           status: rpc.StatusResult.Status.Success
         }
       }
-    });
+    }
+
+    // V1 worker behavior
+    if (process.version.startsWith('v8')) {
+      initMessage.workerInitRequest.capabilities['V2Compatable'] = 'true';
+    // Expect this behavior in V2 worker behavior
+    } else {
+      expectedOutput.workerInitResponse.capabilities['TypedDataCollection'] = 'true';
+    }
+    
+    stream.addTestMessage(initMessage);
+    sinon.assert.calledWith(stream.written, );
   });
 
   it('responds to function load', () => {
