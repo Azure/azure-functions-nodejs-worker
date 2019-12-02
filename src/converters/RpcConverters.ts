@@ -7,6 +7,7 @@ import {
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { InternalException } from "../utils/InternalException";
 import { TraceContext } from '../public/Interfaces';
+import { isLong } from 'long'
 
 /**
  * Converts 'ITypedData' input from the RPC layer to JavaScript types.
@@ -28,6 +29,16 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
         return str;
     } else if (typedData.bytes) {
         return Buffer.from(<Buffer>typedData.bytes);
+    } else if (typedData.collectionBytes && typedData.collectionBytes.bytes) {
+        let byteCollection = <Uint8Array[]>typedData.collectionBytes.bytes;
+        return byteCollection.map(element => Buffer.from(<Buffer>element));
+    } else if (typedData.collectionString && typedData.collectionString.string) {
+        return <string[]>typedData.collectionString.string;
+    } else if (typedData.collectionDouble && typedData.collectionDouble.double) {
+        return <number[]>typedData.collectionDouble.double;
+    } else if (typedData.collectionSint64 && typedData.collectionSint64.sint64) {
+        let longCollection = <(Long|number)[]>typedData.collectionSint64.sint64;
+        return longCollection.map(element => isLong(element) ? element.toString() : <number>element);
     }
 }
 
