@@ -88,7 +88,7 @@ jobs:
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
   
 - job: BuildArtifacts  
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
   pool:
     vmImage: 'vs2017-win2016'
   steps:
