@@ -110,11 +110,14 @@ export class WorkerChannel implements IWorkerChannel {
       }
     }
 
-    const workerCapabilities = {
+    let workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
-      RpcHttpBodyOnly: "true",
-      TypedDataCollection: "true"
+      RpcHttpBodyOnly: "true"
     };
+
+    if (!this._v1WorkerBehavior) {
+      workerCapabilities["TypedDataCollection"] = "true";
+    }
 
     this._eventStream.write({
       requestId: requestId,
