@@ -52,6 +52,11 @@ describe('WorkerChannel', () => {
     direction: 1,
     dataType: 1
   };
+  const queueOutputBinding = {
+    type: "queue",
+    direction: 1,
+    dataType: 1
+  };
   const httpReturnBinding = { 
     bindings: { 
       req: httpInputBinding, 
@@ -62,6 +67,14 @@ describe('WorkerChannel', () => {
     bindings: { 
       req: httpInputBinding, 
       res: httpOutputBinding 
+    } 
+  };
+  const multipleBinding = { 
+    bindings: { 
+      req: httpInputBinding, 
+      res: httpOutputBinding,
+      queueOutput: queueOutputBinding,
+      overriddenQueueOutput: queueOutputBinding
     } 
   };
 
@@ -472,9 +485,63 @@ describe('WorkerChannel', () => {
     });
   });
 
+  it ('serializes multiple output bindings through context.done and context.bindings', () => {
+    loader.getFunc.returns((context) => {
+      context.bindings.queueOutput = "queue message";
+      context.bindings.overriddenQueueOutput = "start message";
+      context.done(null, { 
+        res: { body: { hello: "world" } },
+        overriddenQueueOutput: "override"
+      });
+    });
+    loader.getInfo.returns(new FunctionInfo(multipleBinding));
+
+    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [httpInputData],
+      triggerMetadata: getTriggerDataMock(),
+    };
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: [{
+          data: {
+            http: {
+              body: { json: "{\"hello\":\"world\"}" },
+              cookies: [],
+              headers: { },
+              statusCode: undefined
+            }
+          },
+          name: "res"
+        },
+        {
+          data: {
+            string: "override"
+          },
+          name: "overriddenQueueOutput"
+        },
+        {
+          data: {
+            string: "queue message"
+          },
+          name: "queueOutput"
+        }]
+      }
+    });
+  });
+
   it ('serializes output binding data through context.done with V2 compat', () => {
-    let httpResponse;
-    loader.getFunc.returns((context) => { httpResponse = context.res; context.done(null, { res: { body: { hello: "world" }}})});
+    loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
 
     stream.addTestMessage({
@@ -503,12 +570,7 @@ describe('WorkerChannel', () => {
         result:  {
           status: rpc.StatusResult.Status.Success
         },
-        outputData: [{
-          data: {
-            http: httpResponse
-          },
-          name: "res"
-        }],
+        outputData: [],
         returnValue: {
           json: "{\"res\":{\"body\":{\"hello\":\"world\"}}}"
         }

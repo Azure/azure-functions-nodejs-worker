@@ -186,9 +186,12 @@ export class WorkerChannel implements IWorkerChannel {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
       }
+      // explicitly set outputData to empty array to concat later
+      response.outputData = [];
 
       try {
         if (result) {
+          // Set results from return / context.done
           if (result.return) {
             if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
@@ -208,14 +211,15 @@ export class WorkerChannel implements IWorkerChannel {
               }
             }
           }
-          // Data from return supersedes data from context.bindings
-          if (result.bindings && !response.outputData) {
-            response.outputData = Object.keys(info.outputBindings)
-              .filter(key => result.bindings[key] !== undefined)
+          // Set results from context.bindings
+          if (result.bindings) {
+            response.outputData = response.outputData.concat(Object.keys(info.outputBindings)
+              // Data from return prioritized over data from context.bindings
+              .filter(key => result.bindings[key] !== undefined && (!result.return || result.return[key] === undefined))
               .map(key => <rpc.IParameterBinding>{
                 name: key,
                 data: info.outputBindings[key].converter(result.bindings[key])
-              });
+              }));
           }
         }
       } catch (e) {
