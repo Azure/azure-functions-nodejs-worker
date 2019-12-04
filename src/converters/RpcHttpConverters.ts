@@ -2,6 +2,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { HttpMethod, Cookie } from '../public/Interfaces';
 import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
+import { InternalException } from '../utils/InternalException';
 import { 
     fromTypedData,
     toTypedData,
@@ -52,6 +53,11 @@ function fromRpcHttpBody(body: rpc.ITypedData) {
  * @param inputMessage  An HTTP response object
  */
 export function toRpcHttp(inputMessage): rpc.ITypedData {
+    // Check if we will fail to find any of these
+    if (typeof inputMessage !== 'object' || Array.isArray(inputMessage)) {
+        throw new Error("The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563");
+    }
+
     let httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);

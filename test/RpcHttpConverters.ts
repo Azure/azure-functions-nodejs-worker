@@ -1,4 +1,4 @@
-import { toRpcHttpCookieList } from '../src/converters';
+import { toRpcHttpCookieList, toRpcHttp } from '../src/converters';
 import { Cookie } from "../types/public/Interfaces";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -43,7 +43,7 @@ describe('Rpc Converters', () => {
     expect((<any>rpcCookies[2].expires).value.seconds).to.equal(819199440);
   });
 
-  it('throws on invalid input', () => {
+  it('throws on invalid cookie input', () => {
       expect(() => {
         let cookieInputs = [
                 {
@@ -71,5 +71,19 @@ describe('Rpc Converters', () => {
         
         toRpcHttpCookieList(<Cookie[]>cookieInputs);
       }).to.throw("");
+  });
+
+  it('throws on invalid http response', () => {
+    expect(() => {
+      let response = ["one", 2, "3"];
+      toRpcHttp(response);
+    }).to.throw("The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563");
+  });
+
+  it('throws on invalid http response', () => {
+      expect(() => {
+      let response = "My output string";
+      toRpcHttp(response);
+      }).to.throw("The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563");
   });
 })
