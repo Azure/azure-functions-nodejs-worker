@@ -28,7 +28,7 @@ describe('Rpc Converters', () => {
         }
     ];
     
-    let rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs);
+    let rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs, false);
     expect(rpcCookies[0].name).to.equal("mycookie");
     expect(rpcCookies[0].value).to.equal("myvalue");
     expect((<any>rpcCookies[0].maxAge).value).to.equal(200000);
@@ -41,6 +41,61 @@ describe('Rpc Converters', () => {
     expect(rpcCookies[2].name).to.equal("mycookie3-expires");
     expect(rpcCookies[2].value).to.equal("myvalue3-expires");
     expect((<any>rpcCookies[2].expires).value.seconds).to.equal(819199440);
+  });
+
+  it('converts http cookies sameSite policy with v1 worker behavior', () => {
+    let cookieInputs = <Cookie[]>[
+        {
+            name: "mycookie",
+            value: "myvalue",
+            sameSite: "None"
+        },
+        {
+            name: "mycookie2",
+            value: "myvalue2"
+        },
+        {
+            name: "mycookie3",
+            value: "myvalue3",
+            sameSite: "Lax"
+        }
+    ];
+    
+    let rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs, true);
+    expect(rpcCookies[0].name).to.equal("mycookie");
+    expect(rpcCookies[0].value).to.equal("myvalue");
+    expect(<any>rpcCookies[0].sameSite).to.equal(0);
+
+    expect(rpcCookies[1].name).to.equal("mycookie2");
+    expect(rpcCookies[1].value).to.equal("myvalue2");
+    expect(<any>rpcCookies[1].sameSite).to.equal(0);
+
+    expect(rpcCookies[2].name).to.equal("mycookie3");
+    expect(rpcCookies[2].value).to.equal("myvalue3");
+    expect(<any>rpcCookies[2].sameSite).to.equal(1);
+  });
+
+  it('converts http cookies sameSite policy with v2 worker behavior', () => {
+    let cookieInputs = <Cookie[]>[
+        {
+            name: "mycookie",
+            value: "myvalue",
+            sameSite: "None"
+        },
+        {
+            name: "mycookie2",
+            value: "myvalue2"
+        }
+    ];
+    
+    let rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs, false);
+    expect(rpcCookies[0].name).to.equal("mycookie");
+    expect(rpcCookies[0].value).to.equal("myvalue");
+    expect(<any>rpcCookies[0].sameSite).to.equal(3);
+
+    expect(rpcCookies[1].name).to.equal("mycookie2");
+    expect(rpcCookies[1].value).to.equal("myvalue2");
+    expect(<any>rpcCookies[1].sameSite).to.equal(0);
   });
 
   it('throws on invalid input', () => {
@@ -69,7 +124,7 @@ describe('Rpc Converters', () => {
                 }
             ];
         
-        toRpcHttpCookieList(<Cookie[]>cookieInputs);
+        toRpcHttpCookieList(<Cookie[]>cookieInputs, false);
       }).to.throw("");
   });
 })

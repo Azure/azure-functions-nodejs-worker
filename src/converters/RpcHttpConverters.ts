@@ -51,10 +51,10 @@ function fromRpcHttpBody(body: rpc.ITypedData) {
  * 'http' types are a special case from other 'ITypedData' types, which come from primitive types. 
  * @param inputMessage  An HTTP response object
  */
-export function toRpcHttp(inputMessage): rpc.ITypedData {
+export function toRpcHttp(inputMessage, v1WorkerBehavior: boolean): rpc.ITypedData {
     let httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
-    httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);
+    httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || [], v1WorkerBehavior);
     let status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
@@ -79,10 +79,10 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
  * Convert HTTP 'Cookie' array to an array of 'IRpcHttpCookie' objects to be sent through the RPC layer
  * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
  */
-export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
+export function toRpcHttpCookieList(inputCookies: Cookie[], v1WorkerBehavior: boolean): rpc.IRpcHttpCookie[] {
     let rpcCookies: rpc.IRpcHttpCookie[] = [];
     inputCookies.forEach(cookie => {
-        rpcCookies.push(toRpcHttpCookie(cookie));
+        rpcCookies.push(toRpcHttpCookie(cookie, v1WorkerBehavior));
     });
 
     return rpcCookies;
@@ -92,14 +92,17 @@ export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[
  * From RFC specifications for 'Set-Cookie' response header: https://www.rfc-editor.org/rfc/rfc6265.txt
  * @param inputCookie 
  */
-function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
+function toRpcHttpCookie(inputCookie: Cookie, v1WorkerBehavior: boolean): rpc.IRpcHttpCookie {
     // Resolve SameSite enum, a one-off
     let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
     if (inputCookie && inputCookie.sameSite) {
         if (inputCookie.sameSite.toLocaleLowerCase() === "lax") {
-        rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
         } else if (inputCookie.sameSite.toLocaleLowerCase() === "strict") {
-        rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
+        // Don't set explicit none with v1WorkerBehavior
+        } else if (inputCookie.sameSite.toLocaleLowerCase() === "none" && !v1WorkerBehavior) {
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.ExplicitNone;
         }
     }
 

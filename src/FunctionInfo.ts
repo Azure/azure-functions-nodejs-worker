@@ -10,7 +10,7 @@ export class FunctionInfo {
     [key: string]: rpc.IBindingInfo
   };
   public outputBindings: {
-    [key: string]: rpc.IBindingInfo & { converter: (any) => rpc.ITypedData }
+    [key: string]: rpc.IBindingInfo & { converter: (data, v1WorkerBehavior: boolean) => rpc.ITypedData }
   };
   public httpOutputName: string;
 

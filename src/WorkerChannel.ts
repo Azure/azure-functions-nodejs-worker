@@ -196,14 +196,14 @@ export class WorkerChannel implements IWorkerChannel {
               let returnBinding = info.getReturnBinding();
               // $return binding is found: return result data to $return binding
               if (returnBinding) {
-                response.returnValue = returnBinding.converter(result.return);
+                response.returnValue = returnBinding.converter(result.return, this._v1WorkerBehavior);
               // $return binding is not found: read result as object of outputs
               } else if (result.return) {
                 response.outputData = Object.keys(info.outputBindings)
                   .filter(key => result.return[key] !== undefined)
                   .map(key => <rpc.IParameterBinding>{
                     name: key,
-                    data: info.outputBindings[key].converter(result.return[key])
+                    data: info.outputBindings[key].converter(result.return[key], this._v1WorkerBehavior)
                   });
               }
             }
@@ -214,7 +214,7 @@ export class WorkerChannel implements IWorkerChannel {
               .filter(key => result.bindings[key] !== undefined)
               .map(key => <rpc.IParameterBinding>{
                 name: key,
-                data: info.outputBindings[key].converter(result.bindings[key])
+                data: info.outputBindings[key].converter(result.bindings[key], this._v1WorkerBehavior)
               });
           }
         }

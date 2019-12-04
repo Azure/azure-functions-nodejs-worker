@@ -8,7 +8,7 @@ import { fromString } from 'long';
 
 describe('Binding Converters', () => {
   it('normalizes binding trigger metadata for HTTP', () => {
-    var mockRequest: rpc.ITypedData = toRpcHttp({ url: "https://mock"});
+    var mockRequest: rpc.ITypedData = toRpcHttp({ url: "https://mock"}, false);
     var triggerDataMock: { [k: string]: rpc.ITypedData } = {
         "Headers": {
             json: JSON.stringify({Connection: 'Keep-Alive'})
