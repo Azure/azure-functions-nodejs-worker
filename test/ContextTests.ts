@@ -22,7 +22,8 @@ describe('Context', () => {
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
 
-        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
+        let v1WorkerBehavior = false;
+        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback, v1WorkerBehavior);
         _context = context;
     });
 
@@ -59,7 +60,7 @@ describe('Context', () => {
             }
         });
         // Node.js Worker V2 behavior
-        let workerV2Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
+        let workerV2Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
         let myTimerWorkerV2 = workerV2Outputs.inputs[0];
         expect(myTimerWorkerV2.schedule).to.be.empty;
         expect(myTimerWorkerV2.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
@@ -67,7 +68,8 @@ describe('Context', () => {
         expect(myTimerWorkerV2.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
         expect(myTimerWorkerV2.isPastDue).to.equal(false);
 
-        let workerV1Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        // Node.js Worker V1 behavior
+        let workerV1Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
         let myTimerWorkerV1 = workerV1Outputs.inputs[0];
         expect(myTimerWorkerV1.Schedule).to.be.empty;
         expect(myTimerWorkerV1.ScheduleStatus.Last).to.equal("2016-10-04T10:15:00+00:00");
