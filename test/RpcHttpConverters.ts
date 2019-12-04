@@ -73,14 +73,14 @@ describe('Rpc Converters', () => {
       }).to.throw("");
   });
 
-  it('throws on invalid http response', () => {
+  it('throws on array as http response', () => {
     expect(() => {
       let response = ["one", 2, "3"];
       toRpcHttp(response);
     }).to.throw("The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563");
   });
 
-  it('throws on invalid http response', () => {
+  it('throws on string as http response', () => {
       expect(() => {
       let response = "My output string";
       toRpcHttp(response);
