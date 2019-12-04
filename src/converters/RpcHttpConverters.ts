@@ -2,7 +2,6 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { HttpMethod, Cookie } from '../public/Interfaces';
 import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
-import { InternalException } from '../utils/InternalException';
 import { 
     fromTypedData,
     toTypedData,
