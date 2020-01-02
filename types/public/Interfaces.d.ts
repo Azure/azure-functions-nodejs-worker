@@ -111,6 +111,23 @@ export interface HttpRequest {
     rawBody?: any;
 }
 /**
+* HTTP response object. Provided to your function when using HTTP Bindings.
+*/
+export interface HttpResponse {
+    /**
+     * HTTP response status code
+     */
+    status: number;
+    /**
+     * HTTP response body.
+     */
+    body: unknown;
+    /**
+     * HTTP response headers.
+     */
+    headers?: object;
+}
+/**
  * Possible values for an HTTP request method.
  */
 export declare type HttpMethod = "GET" | "POST" | "DELETE" | "HEAD" | "PATCH" | "PUT" | "OPTIONS" | "TRACE" | "CONNECT";
