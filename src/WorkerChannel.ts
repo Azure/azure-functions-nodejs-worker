@@ -201,7 +201,7 @@ export class WorkerChannel implements IWorkerChannel {
               if (returnBinding) {
                 response.returnValue = returnBinding.converter(result.return);
               // $return binding is not found: read result as object of outputs
-              } else if (result.return) {
+              } else {
                 response.outputData = Object.keys(info.outputBindings)
                   .filter(key => result.return[key] !== undefined)
                   .map(key => <rpc.IParameterBinding>{
