@@ -209,6 +209,11 @@ export class WorkerChannel implements IWorkerChannel {
                     data: info.outputBindings[key].converter(result.return[key])
                   });
               }
+              // returned value does not match any output bindings - pass it along
+              // this specifically is to allow the durable binding to work
+              if (!response.returnValue && response.outputData.length == 0) {
+                response.returnValue = toTypedData(result.return);
+              }
             }
           }
           // Set results from context.bindings
