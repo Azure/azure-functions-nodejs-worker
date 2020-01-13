@@ -54,7 +54,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             {
                 try
                 {
-                    retrievedDocument = await _docDbClient.ReadDocumentAsync(docUri);
+                    retrievedDocument = await _docDbClient.ReadDocumentAsync(docUri, new RequestOptions { PartitionKey = new PartitionKey(docId) });
                     return true;
                 }
                 catch (DocumentClientException ex) when (ex.Error.Code == "NotFound")
