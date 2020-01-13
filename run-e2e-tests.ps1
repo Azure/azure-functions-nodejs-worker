@@ -3,7 +3,7 @@ function RunTest([string] $project, [string] $description,[bool] $skipBuild = $f
     Write-Host "-----------------------------------------------------------------------------" -ForegroundColor DarkCyan
     Write-Host
 
-    $cmdargs = "test", "$project", "-v", "q", "-l", "trx", "-r","..\..\..\testResults"
+    $cmdargs = "test", "$project", "-v", "q", "-l", "trx", "-r",".\testResults"
     
     if ($filter) {
        $cmdargs += "--filter", "$filter"

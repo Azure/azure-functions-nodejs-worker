@@ -80,6 +80,7 @@ jobs:
     displayName: 'setup tests'
   - powershell: |
       .\run-e2e-tests.ps1
+    displayName: 'run tests'
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
       AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
