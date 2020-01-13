@@ -25,11 +25,11 @@ Remove-Item -Recurse -Force ./Azure.Functions.Cli -ErrorAction Ignore
 
 if (-not (Test-Path env:CORE_TOOLS_URL)) 
 { 
-  $env:CORE_TOOLS_URL = "https://functionsclibuilds.blob.core.windows.net/builds/2/latest/Azure.Functions.Cli.win-x86.zip"
+  $env:CORE_TOOLS_URL = "https://functionsclibuilds.blob.core.windows.net/builds/3/latest/Azure.Functions.Cli.win-x86.zip"
 }
 
 Write-Host "Downloading Functions Core Tools...."
-Invoke-RestMethod -Uri 'https://functionsclibuilds.blob.core.windows.net/builds/2/latest/version.txt' -OutFile version.txt
+Invoke-RestMethod -Uri 'https://functionsclibuilds.blob.core.windows.net/builds/3/latest/version.txt' -OutFile version.txt
 Write-Host "Using Functions Core Tools version: $(Get-Content -Raw version.txt)"
 Remove-Item version.txt
 

@@ -33,7 +33,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
 
                 FixtureHelpers.StartProcessWithLogging(_funcProcess);
 
-                Thread.Sleep(TimeSpan.FromSeconds(30));
+                Thread.Sleep(TimeSpan.FromSeconds(20));
             }
         }
 
