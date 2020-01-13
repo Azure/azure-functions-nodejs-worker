@@ -31,10 +31,4 @@ foreach ($test in $tests){
     $success = $testRunSucceeded -and $success
 }
 
-Write-Host "Test results:"
-Get-ChildItem "..\..\..\testResults" -Filter *.trx | 
-Foreach-Object {
-    Get-Content $_.FullName
-} 
-
 if (-not $success) { exit 1 }
