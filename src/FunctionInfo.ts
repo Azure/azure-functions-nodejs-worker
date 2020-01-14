@@ -13,6 +13,7 @@ export class FunctionInfo {
     [key: string]: rpc.IBindingInfo & { converter: (any) => rpc.ITypedData }
   };
   public httpOutputName: string;
+  public isHttp: boolean;
 
   constructor(metadata: rpc.IRpcFunctionMetadata) {
     this.name = <string>metadata.name;
@@ -20,6 +21,7 @@ export class FunctionInfo {
     this.bindings = {};
     this.outputBindings = {};
     this.httpOutputName = "";
+    this.isHttp = false;
 
     if (metadata.bindings) {
       let bindings = this.bindings = metadata.bindings;
@@ -28,13 +30,21 @@ export class FunctionInfo {
       Object.keys(bindings)
         .filter(name => bindings[name].direction !== rpc.BindingInfo.Direction.in)
         .forEach(name => {
-          if (bindings[name].type === 'http') {
+          let type = bindings[name].type;
+          if (type && type.toLowerCase() === 'http') {
             this.httpOutputName = name;
             this.outputBindings[name] = Object.assign(bindings[name], { converter: toRpcHttp });
           } else {
             this.outputBindings[name] = Object.assign(bindings[name], { converter: toTypedData });
           }
         });
+      
+      this.isHttp = Object.keys(bindings)
+        .filter(name => {
+          let type = bindings[name].type;
+          return type && type.toLowerCase() == 'httpTrigger';
+        })
+        .length > 0;
     }
   }
 

@@ -77,6 +77,11 @@ describe('WorkerChannel', () => {
       overriddenQueueOutput: queueOutputBinding
     } 
   };
+  const inputOnlyBinding = {
+    bindings: {
+      test: httpInputBinding
+    }
+  };
 
   beforeEach(() => {
     stream = new TestEventStream();
@@ -294,10 +299,7 @@ describe('WorkerChannel', () => {
 
   it ('invokes function in V2 compat mode', () => {
     loader.getFunc.returns((context) => context.done());
-    loader.getInfo.returns({
-      name: 'test',
-      outputBindings: {}
-    })
+    loader.getInfo.returns(new FunctionInfo(inputOnlyBinding));
 
     var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
       functionId: 'id',
@@ -336,10 +338,7 @@ describe('WorkerChannel', () => {
 
   it ('invokes function', () => {
     loader.getFunc.returns((context) => context.done());
-    loader.getInfo.returns({
-      name: 'test',
-      outputBindings: {}
-    })
+    loader.getInfo.returns(new FunctionInfo(inputOnlyBinding));
 
     var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
       functionId: 'id',

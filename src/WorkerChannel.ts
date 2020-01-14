@@ -191,12 +191,12 @@ export class WorkerChannel implements IWorkerChannel {
 
       try {
         if (result) {
+          let returnBinding = info.getReturnBinding();
           // Set results from return / context.done
           if (result.return) {
             if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
-              let returnBinding = info.getReturnBinding();
               // $return binding is found: return result data to $return binding
               if (returnBinding) {
                 response.returnValue = returnBinding.converter(result.return);
@@ -209,9 +209,9 @@ export class WorkerChannel implements IWorkerChannel {
                     data: info.outputBindings[key].converter(result.return[key])
                   });
               }
-              // returned value does not match any output bindings - pass it along
-              // this specifically is to allow the durable binding to work
-              if (!response.returnValue && response.outputData.length == 0) {
+              // returned value does not match any output bindings (named or $return)
+              // if not http, pass along value
+              if (!response.returnValue && response.outputData.length == 0 && !info.isHttp) {
                 response.returnValue = toTypedData(result.return);
               }
             }
@@ -220,7 +220,13 @@ export class WorkerChannel implements IWorkerChannel {
           if (result.bindings) {
             response.outputData = response.outputData.concat(Object.keys(info.outputBindings)
               // Data from return prioritized over data from context.bindings
-              .filter(key => result.bindings[key] !== undefined && (!result.return || result.return[key] === undefined))
+              .filter(key => {
+                let definedInBindings: boolean = result.bindings[key] !== undefined;
+                let hasReturnValue: boolean = !!result.return;
+                let hasReturnBinding: boolean = !!returnBinding;
+                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding && result.return[key] !== undefined;
+                return definedInBindings && !definedInReturn;
+              })
               .map(key => <rpc.IParameterBinding>{
                 name: key,
                 data: info.outputBindings[key].converter(result.bindings[key])
