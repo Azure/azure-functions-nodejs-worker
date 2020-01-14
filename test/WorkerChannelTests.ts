@@ -42,8 +42,13 @@ describe('WorkerChannel', () => {
         }
     } 
   };
+  const orchestrationTriggerBinding = {
+    type: "orchestrationtrigger",
+    direction: 1,
+    dataType: 1
+  };
   const httpInputBinding = { 
-    type: "http",
+    type: "httpTrigger",
     direction: 0,
     dataType: 1
   };
@@ -77,9 +82,9 @@ describe('WorkerChannel', () => {
       overriddenQueueOutput: queueOutputBinding
     } 
   };
-  const inputOnlyBinding = {
+  const orchestratorBinding = {
     bindings: {
-      test: httpInputBinding
+      test: orchestrationTriggerBinding
     }
   };
 
@@ -299,7 +304,7 @@ describe('WorkerChannel', () => {
 
   it ('invokes function in V2 compat mode', () => {
     loader.getFunc.returns((context) => context.done());
-    loader.getInfo.returns(new FunctionInfo(inputOnlyBinding));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
     var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
       functionId: 'id',
@@ -338,7 +343,7 @@ describe('WorkerChannel', () => {
 
   it ('invokes function', () => {
     loader.getFunc.returns((context) => context.done());
-    loader.getInfo.returns(new FunctionInfo(inputOnlyBinding));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
     var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
       functionId: 'id',
@@ -402,6 +407,62 @@ describe('WorkerChannel', () => {
             statusCode: undefined
           }
         }
+      }
+    });
+  });
+
+  it ('returns returned output if not http', () => {
+    loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [],
+      triggerMetadata: getTriggerDataMock(),
+    };
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: [],
+        returnValue: { 
+          json: "[\"hello, seattle!\",\"hello, tokyo!\"]"
+        }
+      }
+    });
+  });
+
+  it ('returned output is ignored if http', () => {
+    loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
+    loader.getInfo.returns(new FunctionInfo(httpResBinding));
+
+    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [],
+      triggerMetadata: getTriggerDataMock(),
+    };
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: [],
+        returnValue: undefined
       }
     });
   });
