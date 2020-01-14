@@ -42,7 +42,7 @@ export class FunctionInfo {
       this.isHttp = Object.keys(bindings)
         .filter(name => {
           let type = bindings[name].type;
-          return type && type.toLowerCase() == 'httpTrigger';
+          return type && type.toLowerCase() == 'httptrigger';
         })
         .length > 0;
     }
