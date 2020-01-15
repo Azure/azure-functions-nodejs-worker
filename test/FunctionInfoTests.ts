@@ -11,7 +11,7 @@ describe('FunctionInfo', () => {
     let metadata: rpc.IRpcFunctionMetadata = {
         bindings: {
             req: {
-                type: "http",
+                type: "httpTrigger",
                 direction: 0,
                 dataType: 1
             },
@@ -25,6 +25,22 @@ describe('FunctionInfo', () => {
     
     let funcInfo = new FunctionInfo(metadata);
     expect(funcInfo.getReturnBinding().converter.name).to.equal("toRpcHttp");
+  });
+
+  it('"hasHttpTrigger" is true for http', () => {
+    let metadata: rpc.IRpcFunctionMetadata = {
+        bindings: {
+            req: {
+                type: "httpTrigger",
+                direction: 0,
+                dataType: 1
+            }
+        }
+    };
+    
+    let funcInfo = new FunctionInfo(metadata);
+    expect(funcInfo.getReturnBinding()).to.be.undefined;
+    expect(funcInfo.hasHttpTrigger).to.be.true;
   });
 
   it('gets $return output binding converter for TypedData', () => {
