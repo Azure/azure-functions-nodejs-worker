@@ -211,7 +211,7 @@ export class WorkerChannel implements IWorkerChannel {
               }
               // returned value does not match any output bindings (named or $return)
               // if not http, pass along value
-              if (!response.returnValue && response.outputData.length == 0 && !info.isHttp) {
+              if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
                 response.returnValue = toTypedData(result.return);
               }
             }
