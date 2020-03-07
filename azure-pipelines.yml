@@ -33,13 +33,13 @@ jobs:
         IMAGE_TYPE: 'vs2017-win2016'
         NODE_VERSION: $(NODE_12)
       MAC_NODE8:
-        IMAGE_TYPE: 'macos-10.13'
+        IMAGE_TYPE: 'macos-10.14'
         NODE_VERSION: $(NODE_8)
       MAC_NODE10:
-        IMAGE_TYPE: 'macos-10.13'
+        IMAGE_TYPE: 'macos-10.14'
         NODE_VERSION: $(NODE_10)
       MAC_NODE12:
-        IMAGE_TYPE: 'macos-10.13'
+        IMAGE_TYPE: 'macos-10.14'
         NODE_VERSION: $(NODE_12)
   pool:
     vmImage: $(IMAGE_TYPE)
@@ -91,7 +91,6 @@ jobs:
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
-      failTaskOnFailedTests: true
   
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
