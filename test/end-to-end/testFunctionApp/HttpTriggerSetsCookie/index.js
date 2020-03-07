@@ -1,7 +1,8 @@
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    return {
+    context.res = {
+        status: 200,
         cookies: [
             {
                 name: "mycookie",
@@ -10,7 +11,7 @@ module.exports = async function (context, req) {
             },
             {
                 name: "mycookie2",
-                value: "myvalue2",
+                value: "myvalue",
                 path: "/",
                 maxAge: "200000"
             },
@@ -18,8 +19,22 @@ module.exports = async function (context, req) {
                 name: "mycookie3-expires",
                 value: "myvalue3-expires",
                 maxAge: 0
+            },
+            {
+                name: "mycookie4-samesite-none",
+                value: "myvalue",
+                sameSite: "None"
+            },
+            {
+                name: "mycookie5-samesite-lax",
+                value: "myvalue",
+                sameSite: "Lax"
+            },
+            {
+                name: "mycookie6-samesite-strict",
+                value: "myvalue",
+                sameSite: "Strict"
             }
-        ],
-        body: JSON.stringify(req.headers["cookie"])
+        ]
     }
 };
