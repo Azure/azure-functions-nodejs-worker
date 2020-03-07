@@ -79,6 +79,7 @@ jobs:
     displayName: 'setup tests'
   - powershell: |
       .\run-e2e-tests.ps1
+    displayName: 'run tests'
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
       AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
@@ -88,8 +89,7 @@ jobs:
   - task: PublishTestResults@2
     inputs:
       testRunner: VSTest
-      testResultsFiles: '**/*.trx'
-      failTaskOnFailedTests: false       
+      testResultsFiles: '**/*.trx'   
   
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
