@@ -63,8 +63,6 @@ jobs:
         NODE_VERSION: $(NODE_8)
       NODE10:
         NODE_VERSION: $(NODE_10)
-      NODE12:
-        NODE_VERSION: $(NODE_12)
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -91,6 +89,7 @@ jobs:
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
+      failTaskOnFailedTests: false       
   
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
