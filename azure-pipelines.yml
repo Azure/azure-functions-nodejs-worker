@@ -87,6 +87,11 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+  - task: PublishTestResults@2
+    inputs:
+      testRunner: VSTest
+      testResultsFiles: '**/*.trx'
+      failTaskOnFailedTests: true
   
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
