@@ -87,6 +87,7 @@ jobs:
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
   - task: PublishTestResults@2
+    condition: always()
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'   
