@@ -60,9 +60,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         [Fact]
         public async Task HttpTriggerWithCookieTests()
         {
-            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerSetsCookie");
-            JObject responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
-            
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerSetsCookie");            
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             List<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value.ToList();
             Assert.Equal(cookies.Count, 5);
@@ -99,8 +97,9 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             {
                 Assert.Equal(input, (string)result["reqRawBody"]);
                 Assert.Equal(input, (string)result["reqBody"]);
+            } else {
+                Assert.Equal("Supported media types are 'text/plain' 'application/octet-stream', 'multipart/*', and 'application/json'", $"Found mediaType '{mediaType}'");
             }
-            Assert.Equal("Supported media types are 'text/plain' 'application/octet-stream', 'multipart/*', and 'application/json'", $"Found mediaType '{mediaType}'");
         }
 
         private static bool IsMediaTypeOctetOrMultipart(string mediaType)
