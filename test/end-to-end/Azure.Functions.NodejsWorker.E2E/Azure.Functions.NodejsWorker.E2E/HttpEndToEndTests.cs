@@ -63,13 +63,13 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerSetsCookie");            
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             List<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value.ToList();
-            Assert.Equal(6, cookies.Count);
+            Assert.Equal(5, cookies.Count);
             Assert.Equal("mycookie=myvalue; max-age=200000; path=/", cookies[0]);
             Assert.Equal("mycookie2=myvalue; max-age=200000; path=/", cookies[1]);
             Assert.Equal("mycookie3-expires=myvalue3-expires; max-age=0; path=/", cookies[2]);
-            Assert.Equal("mycookie4-samesite-none=myvalue; path=/; samesite=none", cookies[3]);
-            Assert.Equal("mycookie5-samesite-lax=myvalue; path=/; samesite=lax", cookies[4]);
-            Assert.Equal("mycookie6-samesite-strict=myvalue; path=/; samesite=strict", cookies[5]);
+            Assert.Equal("mycookie4-samesite-lax=myvalue; path=/; samesite=lax", cookies[3]);
+            Assert.Equal("mycookie5-samesite-strict=myvalue; path=/; samesite=strict", cookies[4]);
+            // Assert.Equal("mycookie4-samesite-none=myvalue; path=/; samesite=none", cookies[5]);
         }
 
         private static void VerifyBodyAndRawBody(JObject result, string input, string mediaType)
