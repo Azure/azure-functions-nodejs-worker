@@ -137,7 +137,7 @@ export interface Cookie {
     /** Sets the cookie to be inaccessible to JavaScript's Document.cookie API */
     httpOnly?: boolean;
     /** Can restrict the cookie to not be sent with cross-site requests */
-    sameSite?: "Strict" | "Lax" | undefined;
+    sameSite?: "Strict" | "Lax" | "None" | undefined;
     /** Number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. */
     maxAge?: number;
 }
