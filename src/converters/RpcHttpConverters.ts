@@ -101,10 +101,13 @@ function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     // Resolve SameSite enum, a one-off
     let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
     if (inputCookie && inputCookie.sameSite) {
-        if (inputCookie.sameSite.toLocaleLowerCase() === "lax") {
-        rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
-        } else if (inputCookie.sameSite.toLocaleLowerCase() === "strict") {
-        rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
+        let sameSite = inputCookie.sameSite.toLocaleLowerCase();
+        if (sameSite === "lax") {
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
+        } else if (sameSite === "strict") {
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
+        } else if (sameSite === "none") {
+            rpcSameSite = rpc.RpcHttpCookie.SameSite.ExplicitNone;
         }
     }
 
