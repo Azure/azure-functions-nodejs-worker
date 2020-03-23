@@ -106,6 +106,7 @@ jobs:
     inputs:
       command: pack
       packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
+  - bash: git log --pretty=format:" - %s [%h]" master..dev > '$(Build.ArtifactStagingDirectory)/RELEASE.md'
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
