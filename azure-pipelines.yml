@@ -87,6 +87,10 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+  - bash: git branch'
+    displayName: 'test1'
+  - bash: git log --pretty=format:" - %s [%h]" v$(PREVIOUS_WORKER_VERSION)..master > '$(Build.ArtifactStagingDirectory)/RELEASE.md'
+    displayName: 'test2'
   - task: PublishTestResults@2
     condition: always()
     inputs:
