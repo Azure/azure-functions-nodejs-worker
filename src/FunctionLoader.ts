@@ -17,6 +17,9 @@ export class FunctionLoader implements IFunctionLoader {
     }} = {};
 
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void {
+      if (metadata.isProxy) {
+          return;
+      }
       let scriptFilePath = <string>(metadata && metadata.scriptFile);
       let script = require(scriptFilePath);
       let entryPoint = <string>(metadata && metadata.entryPoint);
