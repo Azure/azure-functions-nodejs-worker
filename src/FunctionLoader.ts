@@ -17,7 +17,7 @@ export class FunctionLoader implements IFunctionLoader {
     }} = {};
 
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void {
-      if (metadata.isProxy) {
+      if (metadata.isProxy === true) {
           return;
       }
       let scriptFilePath = <string>(metadata && metadata.scriptFile);
