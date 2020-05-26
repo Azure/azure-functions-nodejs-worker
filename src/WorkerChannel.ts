@@ -104,7 +104,10 @@ export class WorkerChannel implements IWorkerChannel {
       }
     } else {
       if (version.startsWith("v8.")) {
-        let msg = "Incompatible Node.js version. The version you are using (" + version + ") is not supported with Azure Functions V3. Please use one of the following major versions: 10, 12.";
+        let msg = "Incompatible Node.js version"
+          + " (" + version + ")."
+          + " The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x."
+          + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
         systemError(msg);
         throw new InternalException(msg);
       }
