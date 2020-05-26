@@ -23,8 +23,7 @@ function validateNodeVersion(version) {
             + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
         }
         // Log a warning that v12 is not fully supported
-        if (major === "v12")
-        {
+        if (major === "v12") {
             console.warn(warnPrefix + "The Node.js version you are using (" + version + ") is not fully supported by Azure Functions V2. We recommend using one the following major versions: 8, 10.");
         }
         
