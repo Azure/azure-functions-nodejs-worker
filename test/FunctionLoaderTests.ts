@@ -36,6 +36,17 @@ describe('FunctionLoader', () => {
      }).to.throw("Unable to determine function entry point. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.");
   });
   
+  it ('does not load proxy function', () => {
+    mock('test', {});
+    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+        isProxy: true
+    });
+      
+    expect(() => {
+      loader.getFunc('functionId');
+    }).to.throw("Function code for 'functionId' is not loaded and cannot be invoked.");
+  });
+
   it ('throws unable to determine function entry point with entryPoint name', () => {
     mock('test', { test: {} });
     let entryPoint = 'wrongEntryPoint'
