@@ -29,7 +29,8 @@ describe('WorkerChannel', () => {
       workerInitResponse: {
         capabilities: { 
               'RpcHttpBodyOnly': "true",
-              'RpcHttpTriggerMetadataRemoved': "true"
+              'RpcHttpTriggerMetadataRemoved': "true",
+              'IgnoreEmptyValuedRpcHttpHeaders': "true"
         },
         result: {
           status: rpc.StatusResult.Status.Success
