@@ -17,11 +17,9 @@ function validateNodeVersion(version) {
             message = "Could not parse Node.js version: '" + version + "'";
         // Unsupported version note: Documentation about Node's stable versions here: https://github.com/nodejs/Release#release-plan and an explanation here: https://medium.com/swlh/understanding-how-node-releases-work-in-2018-6fd356816db4
         } else if (supportedVersions.indexOf(major) < 0) {
-            message = "Incompatible Node.js version. The version you are using (" 
-                + version 
-                + ") is not supported with Azure Functions. Please use one of the following major versions: 10, 12."
-                + "For deployed code on Windows, change WEBSITE_NODE_DEFAULT_VERSION to '~12' in App Settings."
-                + "Locally, install or switch to a supported node version (make sure to quit and restart your code editor to pick up the changes).";
+            message = "Incompatible Node.js version"
+            + " (" + version + ")."
+            + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
         }
     // Unknown error
     } catch(err) {
