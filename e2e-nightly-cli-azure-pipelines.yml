@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '1.2.1',
+  WORKER_VERSION: '1.2.2',
   NODE_LOWER_LTS: '8.x',
   NODE_HIGHER_LTS: '10.x'
 }
