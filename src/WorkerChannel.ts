@@ -90,7 +90,8 @@ export class WorkerChannel implements IWorkerChannel {
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     const capabilitiesDictionary = {
       RpcHttpTriggerMetadataRemoved: "true",
-      RpcHttpBodyOnly: "true"
+      RpcHttpBodyOnly: "true",
+      IgnoreEmptyValuedRpcHttpHeaders: "true"
     };
     this._eventStream.write({
       requestId: requestId,
