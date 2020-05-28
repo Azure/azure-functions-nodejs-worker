@@ -115,7 +115,8 @@ export class WorkerChannel implements IWorkerChannel {
 
     let workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
-      RpcHttpBodyOnly: "true"
+      RpcHttpBodyOnly: "true",
+      IgnoreEmptyValuedRpcHttpHeaders: "true"
     };
 
     if (!this._v1WorkerBehavior) {
