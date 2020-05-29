@@ -67,12 +67,14 @@ jobs:
       NODE12:
         NODE_VERSION: $(NODE_12)
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
+  - script: npm install request
+    displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
   - script: npm install
     displayName: 'npm install'
   - script: npm run build
@@ -98,7 +100,7 @@ jobs:
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-latest'
   steps:
   - task: NodeTool@0
     inputs:
