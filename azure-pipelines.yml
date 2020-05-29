@@ -1,6 +1,5 @@
 variables: {
   WORKER_VERSION: '1.2.2',
-  PREVIOUS_WORKER_VERSION: '1.2.0',
   NODE_8: '8.x',
   NODE_10: '10.x',
   NODE_12: '12.x'
@@ -109,7 +108,6 @@ jobs:
     inputs:
       command: pack
       packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
-  - bash: git log --pretty=format:" - %s [%h]" v$(PREVIOUS_WORKER_VERSION)..master > '$(Build.ArtifactStagingDirectory)/RELEASE.md'
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
