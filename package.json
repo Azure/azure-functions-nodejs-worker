@@ -1,13 +1,13 @@
 {
   "name": "azure-functions-nodejs-worker",
   "author": "Microsoft Corporation",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Microsoft Azure Functions NodeJS Worker",
   "license": "(MIT OR Apache-2.0)",
   "dependencies": {
     "google-protobuf": "^3.6.1",
-    "grpc": "^1.18.0",
-    "minimist": "^1.2.0",
+    "grpc": "^1.24.2",
+    "minimist": "^1.2.5",
     "protobufjs": "^6.8.8"
   },
   "devDependencies": {
