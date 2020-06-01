@@ -100,7 +100,7 @@ jobs:
 - job: BuildArtifacts  
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
   pool:
-    vmImage: 'windows-latest'
+    vmImage: 'vs2017-win2016'
   steps:
   - task: NodeTool@0
     inputs:
