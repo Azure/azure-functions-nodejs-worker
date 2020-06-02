@@ -64,6 +64,8 @@ jobs:
     matrix:
       NODE10:
         NODE_VERSION: $(NODE_10)
+      NODE12:
+        NODE_VERSION: $(NODE_12)
   pool:
     vmImage: 'windows-latest'
   steps:
