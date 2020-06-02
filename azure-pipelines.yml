@@ -34,7 +34,6 @@ jobs:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_12)
       MAC_NODE8:
-<<<<<<< HEAD
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_8)
       MAC_NODE10:
@@ -42,15 +41,6 @@ jobs:
         NODE_VERSION: $(NODE_10)
       MAC_NODE12:
         IMAGE_TYPE: 'macOS-latest'
-=======
-        IMAGE_TYPE: 'macos-10.14'
-        NODE_VERSION: $(NODE_8)
-      MAC_NODE10:
-        IMAGE_TYPE: 'macos-10.14'
-        NODE_VERSION: $(NODE_10)
-      MAC_NODE12:
-        IMAGE_TYPE: 'macos-10.14'
->>>>>>> c2f2d91... Add new SameSite property and tests (#286)
         NODE_VERSION: $(NODE_12)
   pool:
     vmImage: $(IMAGE_TYPE)
