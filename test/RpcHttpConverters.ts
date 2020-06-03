@@ -43,7 +43,45 @@ describe('Rpc Converters', () => {
     expect((<any>rpcCookies[2].expires).value.seconds).to.equal(819199440);
   });
 
-  it('throws on invalid cookie input', () => {
+  it('converts http cookie SameSite', () => {
+    let cookieInputs: Cookie[] =
+    [
+        {
+            name: "none-cookie",
+            value: "myvalue",
+            sameSite: "None"
+        },
+        {
+            name: "lax-cookie",
+            value: "myvalue",
+            sameSite: "Lax"
+        },
+        {
+            name: "strict-cookie",
+            value: "myvalue",
+            sameSite: "Strict"
+        },
+        {
+            name: "default-cookie",
+            value: "myvalue"
+        }
+    ];
+    
+    let rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs);
+    expect(rpcCookies[0].name).to.equal("none-cookie");
+    expect(rpcCookies[0].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.ExplicitNone);
+
+    expect(rpcCookies[1].name).to.equal("lax-cookie");
+    expect(rpcCookies[1].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.Lax);
+
+    expect(rpcCookies[2].name).to.equal("strict-cookie");
+    expect(rpcCookies[2].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.Strict);
+
+    expect(rpcCookies[3].name).to.equal("default-cookie");
+    expect(rpcCookies[3].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.None);
+  });
+
+  it('throws on invalid input', () => {
       expect(() => {
         let cookieInputs = [
                 {
