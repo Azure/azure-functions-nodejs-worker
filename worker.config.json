@@ -3,6 +3,7 @@
         "language":"node",
         "extensions":[".js"],
         "defaultExecutablePath":"node",
-        "defaultWorkerPath":"dist/src/nodejsWorker.js"
+        "defaultWorkerPath":"dist/src/nodejsWorker.js",
+        "useStdErrorStreamForErrorsOnly":  true
     }
 }
