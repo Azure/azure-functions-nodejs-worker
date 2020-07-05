@@ -69,6 +69,77 @@ describe('FunctionLoader', () => {
     }).to.throw("The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.");
   });
 
+  it ('allows to use a single named function in the exported object', () => {
+    var FuncObject =  (function () {
+      function FuncObject(this: any) {
+        this.testFunc = function() {
+          return 'testFunc';
+        };
+      };
+      FuncObject.prototype.run = function () {
+          return 'prototype';
+      };
+      return FuncObject;
+    }());
+
+    mock('test', new FuncObject());
+
+    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+      scriptFile: 'test'
+    });
+
+    var userFunction = loader.getFunc('functionId');
+    var result = userFunction();
+
+    expect(result).to.eql('testFunc');
+  });
+
+  it ("allows to use prototype function named 'run' if the exported object has no functions", () => {
+    var FuncObject = /** @class */ (function () {
+      function FuncObject(this: any) {
+          this.prop = true; // this object has one enumerable property, which is not a function
+      };
+      FuncObject.prototype.run = function () {
+          return 'ret';
+      };
+      return FuncObject;
+    }());
+
+    mock('test', new FuncObject());
+
+    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+      scriptFile: 'test'
+    });
+
+    var userFunction = loader.getFunc('functionId');
+    var result = userFunction();
+
+    expect(result).to.eql('ret');
+  });
+
+  it ("allows to use prototype function named 'index' if the exported object has no functions", () => {
+    var FuncObject = /** @class */ (function () {
+      function FuncObject(this: any) {
+          this.prop = true; // this object has one enumerable property, which is not a function
+      };
+      FuncObject.prototype.index = function () {
+          return 'ret';
+      };
+      return FuncObject;
+    }());
+
+    mock('test', new FuncObject());
+
+    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+      scriptFile: 'test'
+    });
+
+    var userFunction = loader.getFunc('functionId');
+    var result = userFunction();
+
+    expect(result).to.eql('ret');
+  });
+
   it ('allows use of \'this\' in loaded user function', () => {
     var FuncObject = /** @class */ (function () {
       function FuncObject(this: any) {
