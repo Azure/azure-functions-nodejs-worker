@@ -55,15 +55,15 @@ export class FunctionLoader implements IFunctionLoader {
 function getEntryPoint(f: any, entryPoint?: string): Function {
     if (isObject(f)) {
         var obj = f;
+        let keys = Object.keys(f);
         if (entryPoint) {
             // the module exports multiple functions
             // and an explicit entry point was named
             f = f[entryPoint];
         }
-        else if (Object.keys(f).length === 1) {
+        else if (keys.length === 1 && isFunction(f[keys[0]])) {
             // a single named function was exported
-            var name = Object.keys(f)[0];
-            f = f[name];
+            f = f[keys[0]];
         }
         else {
             // finally, see if there is an exported function named
