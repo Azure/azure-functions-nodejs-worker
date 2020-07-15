@@ -91,7 +91,8 @@ export class WorkerChannel implements IWorkerChannel {
     const capabilitiesDictionary = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true",
-      IgnoreEmptyValuedRpcHttpHeaders: "true"
+      IgnoreEmptyValuedRpcHttpHeaders: "true",
+      WorkerStatus: "true"
     };
     this._eventStream.write({
       requestId: requestId,
@@ -223,10 +224,14 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
-   * NOT USED
+   * When host sends a "WorkerStatusRequest," the worker needs to return the appropriate response.
+   * The latency from request to response helps inform scale decisions.
    */ 
   public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
-    // Not yet implemented
+    this._eventStream.write({
+      requestId: requestId,
+      workerStatusResponse: {}
+    });
   }
 
   /**

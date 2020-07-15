@@ -30,7 +30,8 @@ describe('WorkerChannel', () => {
         capabilities: { 
               'RpcHttpBodyOnly': "true",
               'RpcHttpTriggerMetadataRemoved': "true",
-              'IgnoreEmptyValuedRpcHttpHeaders': "true"
+              'IgnoreEmptyValuedRpcHttpHeaders': "true",
+              'WorkerStatus': "true"
         },
         result: {
           status: rpc.StatusResult.Status.Success
@@ -212,6 +213,17 @@ describe('WorkerChannel', () => {
     expect(process.cwd() != newDir);
     expect(process.cwd() == newDir);
     process.chdir(cwd);
+  });
+
+  it ('returns response to worker status request', () => {
+    stream.addTestMessage({
+      requestId: 'id',
+      workerStatusRequest: {}
+    });
+    sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+      requestId: 'id',
+      workerStatusResponse: {}
+    });
   });
 
   it ('invokes function', () => {
