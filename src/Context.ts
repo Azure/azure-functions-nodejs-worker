@@ -9,6 +9,8 @@ import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, Trac
 import { v4 as uuid } from 'uuid'
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, v1WorkerBehavior: boolean) {
+    const context = new InvocationContext(info, request, logCallback, callback);
+
     const bindings: Dict<any> = {};
     const inputs: any[] = [];
     let httpInput: RequestProperties | undefined;
@@ -31,13 +33,16 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
         }
     }
 
-    const isHttp = !!httpInput;
-    const context = new InvocationContext(info, request, logCallback, callback, isHttp);
-
     context.bindings = bindings;
     if (httpInput) {
         context.req = new Request(httpInput);
         context.res = new Response(context.done);
+        // This is added for backwards compatability with what the host used to send to the worker
+        context.bindingData.sys = {
+            methodName: info.name,
+            utcNow: (new Date()).toISOString(),
+            randGuid: uuid()
+        };
     }
     return {
         context: <Context>context,
@@ -57,7 +62,7 @@ class InvocationContext implements Context {
     res?: Response;
     done: DoneCallback;
 
-    constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, isHttp: boolean) {
+    constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
         this.invocationId = <string>request.invocationId;
         this.traceContext = fromRpcTraceContext(request.traceContext);
         const executionContext = {
@@ -82,15 +87,6 @@ class InvocationContext implements Context {
         );
 
         this.bindingData = getNormalizedBindingData(request);
-        
-        if (isHttp) {
-            this.bindingData.sys = {
-              methodName: info.name,
-              utcNow: (new Date()).toISOString(),
-              randGuid: uuid()
-            };
-        }
-
         this.bindingDefinitions = getBindingDefinitions(info);
 
         // isPromise is a hidden parameter that we set to true in the event of a returned promise
