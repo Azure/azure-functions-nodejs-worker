@@ -6,12 +6,13 @@ import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, TraceContext } from './public/Interfaces' 
+import { v4 as uuid } from 'uuid'
 
 export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, v1WorkerBehavior: boolean) {
-    let context = new InvocationContext(info, request, logCallback, callback);
+    const context = new InvocationContext(info, request, logCallback, callback);
 
-    let bindings: Dict<any> = {};
-    let inputs: any[] = [];
+    const bindings: Dict<any> = {};
+    const inputs: any[] = [];
     let httpInput: RequestProperties | undefined;
     for (let binding of <rpc.IParameterBinding[]>request.inputData) {
         if (binding.data && binding.name) {
@@ -36,6 +37,12 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
     if (httpInput) {
         context.req = new Request(httpInput);
         context.res = new Response(context.done);
+        // This is added for backwards compatability with what the host used to send to the worker
+        context.bindingData.sys = {
+            methodName: info.name,
+            utcNow: (new Date()).toISOString(),
+            randGuid: uuid()
+        };
     }
     return {
         context: <Context>context,

@@ -7,7 +7,7 @@ import { fromTypedData } from './RpcConverters';
 type BindingDirection = 'in' | 'out' | 'inout' | undefined;
 
 export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
-  let bindings = info.bindings;
+  const bindings = info.bindings;
   if (!bindings) {
     return [];
   }
@@ -22,7 +22,7 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
 }
 
 export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<any> {
-  let bindingData: Dict<any> = {
+  const bindingData: Dict<any> = {
     invocationId: request.invocationId
   };  
 

@@ -31,13 +31,11 @@ describe('WorkerChannel', () => {
         {
             body:
             {
-                data: "string",
-                body: "blahh"
+                string: "blahh"
             },
             rawBody:
             {
-                data: "string",
-                body: "blahh"
+                string: "blahh"
             }
         }
     } 

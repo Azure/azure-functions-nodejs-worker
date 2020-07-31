@@ -72,6 +72,15 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             // Assert.Equal("mycookie4-samesite-none=myvalue; path=/; samesite=none", cookies[5]);
         }
 
+        [Fact]
+        public async Task HttpTriggerBindingDataTests()
+        {
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerBindingData");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            string responseBody = await response.Content.ReadAsStringAsync();
+            Assert.Equal("binding data exists", responseBody);
+        }
+
         private static void VerifyBodyAndRawBody(JObject result, string input, string mediaType)
         {
             if (mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase))

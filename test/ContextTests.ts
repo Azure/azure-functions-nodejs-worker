@@ -7,6 +7,22 @@ import { expect } from 'chai';
 import 'mocha';
 import { isFunction } from 'util';
 
+const timerTriggerInput: rpc.IParameterBinding = {
+    name: "myTimer",
+    data: {
+        json: JSON.stringify({
+            "Schedule":{
+            },
+            "ScheduleStatus": {
+                "Last":"2016-10-04T10:15:00+00:00",
+                "LastUpdated":"2016-10-04T10:16:00+00:00",
+                "Next":"2016-10-04T10:20:00+00:00"
+            },
+            "IsPastDue":false
+        })
+    }
+};
+
 describe('Context', () => {
     let _context: Context;
     let _logger: any;
@@ -28,25 +44,10 @@ describe('Context', () => {
     });
 
     it ('camelCases timer trigger input when appropriate', async () => {
-        var inputDataValue: rpc.IParameterBinding = {
-            name: "myTimer",
-            data: {
-                json: JSON.stringify({
-                    "Schedule":{
-                    },
-                    "ScheduleStatus": {
-                        "Last":"2016-10-04T10:15:00+00:00",
-                        "LastUpdated":"2016-10-04T10:16:00+00:00",
-                        "Next":"2016-10-04T10:20:00+00:00"
-                    },
-                    "IsPastDue":false
-                })
-            }
-        };
         var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
             functionId: 'id',
             invocationId: '1',
-            inputData: [inputDataValue]
+            inputData: [timerTriggerInput]
         };
 
         let info: FunctionInfo = new FunctionInfo({ 
@@ -76,6 +77,68 @@ describe('Context', () => {
         expect(myTimerWorkerV1.ScheduleStatus.LastUpdated).to.equal("2016-10-04T10:16:00+00:00");
         expect(myTimerWorkerV1.ScheduleStatus.Next).to.equal("2016-10-04T10:20:00+00:00");
         expect(myTimerWorkerV1.IsPastDue).to.equal(false);
+    });
+
+    it ('Does not add sys to bindingData for non-http', async () => {
+        var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+            functionId: 'id',
+            invocationId: '1',
+            inputData: [timerTriggerInput]
+        };
+
+        let info: FunctionInfo = new FunctionInfo({ 
+            name: 'test',
+            bindings: { 
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
+            }
+        });
+
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        expect(context.bindingData.sys).to.be.undefined;
+        expect(context.bindingData.invocationId).to.equal("1");
+        expect(context.invocationId).to.equal("1");
+    });
+
+    it ('Adds correct properties for bindingData and http', async () => {
+        var inputDataValue: rpc.IParameterBinding = {
+            name: "req",
+            data: {
+                http: {
+                    body:
+                    {
+                        string: "blahh"
+                    }
+                }
+            }
+        };
+        var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+            functionId: 'id',
+            invocationId: '1',
+            inputData: [inputDataValue]
+        };
+
+        let info: FunctionInfo = new FunctionInfo({ 
+            name: 'test',
+            bindings: { 
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
+            }
+        });
+
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        const bindingData = context.bindingData;
+        expect(bindingData.sys.methodName).to.equal("test");
+        expect(bindingData.sys.randGuid).to.not.be.undefined;
+        expect(bindingData.sys.utcNow).to.not.be.undefined;
+        expect(bindingData.invocationId).to.equal("1");
+        expect(context.invocationId).to.equal("1");
     });
 
     it ('async function logs error on calling context.done', async () => {
