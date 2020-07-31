@@ -89,9 +89,11 @@ describe('Context', () => {
         let info: FunctionInfo = new FunctionInfo({ 
             name: 'test',
             bindings: { 
-                type: "http",
-                direction: 0,
-                dataType: 1
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
             }
         });
 
@@ -108,13 +110,7 @@ describe('Context', () => {
                 http: {
                     body:
                     {
-                        data: "string",
-                        body: "blahh"
-                    },
-                    rawBody:
-                    {
-                        data: "string",
-                        body: "blahh"
+                        string: "blahh"
                     }
                 }
             }
@@ -128,9 +124,11 @@ describe('Context', () => {
         let info: FunctionInfo = new FunctionInfo({ 
             name: 'test',
             bindings: { 
-                type: "http",
-                direction: 0,
-                dataType: 1
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
             }
         });
 
