@@ -78,7 +78,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerBindingData");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             string responseBody = await response.Content.ReadAsStringAsync();
-            Assert.Equal("binding data exists", responseBody)
+            Assert.Equal("binding data exists", responseBody);
         }
 
         private static void VerifyBodyAndRawBody(JObject result, string input, string mediaType)
