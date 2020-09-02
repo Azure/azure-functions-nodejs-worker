@@ -24,9 +24,9 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
       method: <HttpMethod>rpcHttp.method,
       url: <string>rpcHttp.url,
       originalUrl: <string>rpcHttp.url,
-      headers: fromNullableMapping(rpcHttp.nullableHeaders) || <Dict<string>> rpcHttp.headers,
-      query: fromNullableMapping(rpcHttp.nullableQuery) || <Dict<string>> rpcHttp.query,
-      params: fromNullableMapping(rpcHttp.nullableParams) || <Dict<string>> rpcHttp.params,
+      headers: fromNullableMapping(rpcHttp.nullableHeaders, rpcHttp.headers),
+      query: fromNullableMapping(rpcHttp.nullableQuery, rpcHttp.query),
+      params: fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params),
       body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
       rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
     };
@@ -49,19 +49,16 @@ function fromRpcHttpBody(body: rpc.ITypedData) {
     }
 }
 
-/**
- * 
- * @param nullableMapping The nullable mapping dictionary
- */
-function fromNullableMapping(nullableMapping: { [k: string]: INullableString } | null | undefined): Dict<string> | undefined {
-    let headers = {};
-    if (nullableMapping) {
-        for (const header in nullableMapping) {
-            headers[header] = nullableMapping[header].value || "";
+function fromNullableMapping(nullableMapping: { [k: string]: INullableString } | null | undefined, originalMapping?: { [k: string]: string } | null): Dict<string> {
+    let converted = {};
+    if (nullableMapping && Object.keys(nullableMapping).length > 0) {
+        for (const key in nullableMapping) {
+            converted[key] = nullableMapping[key].value || "";
         }
-        return headers;
+    } else if (originalMapping && Object.keys(originalMapping).length > 0) {
+        converted = <Dict<string>>originalMapping;
     }
-    return undefined;
+    return converted;
 }
 
 /**
