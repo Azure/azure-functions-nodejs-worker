@@ -1,4 +1,7 @@
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { 
+    AzureFunctionsRpcMessages as rpc,
+    INullableString
+} from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { HttpMethod, Cookie } from '../public/Interfaces';
 import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
@@ -21,9 +24,9 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
       method: <HttpMethod>rpcHttp.method,
       url: <string>rpcHttp.url,
       originalUrl: <string>rpcHttp.url,
-      headers: <Dict<string>>rpcHttp.headers,
-      query: <Dict<string>>rpcHttp.query,
-      params: <Dict<string>>rpcHttp.params,
+      headers: fromNullableMapping(rpcHttp.nullableHeaders) || <Dict<string>> rpcHttp.headers,
+      query: fromNullableMapping(rpcHttp.nullableQuery) || <Dict<string>> rpcHttp.query,
+      params: fromNullableMapping(rpcHttp.nullableParams) || <Dict<string>> rpcHttp.params,
       body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
       rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
     };
@@ -44,6 +47,21 @@ function fromRpcHttpBody(body: rpc.ITypedData) {
     else {
         return fromTypedData(body, false);
     }
+}
+
+/**
+ * 
+ * @param nullableMapping The nullable mapping dictionary
+ */
+function fromNullableMapping(nullableMapping: { [k: string]: INullableString } | null | undefined): Dict<string> | undefined {
+    let headers = {};
+    if (nullableMapping) {
+        for (const header in nullableMapping) {
+            headers[header] = nullableMapping[header].value || "";
+        }
+        return headers;
+    }
+    return undefined;
 }
 
 /**
