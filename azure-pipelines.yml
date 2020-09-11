@@ -76,7 +76,7 @@ jobs:
         NODE_VERSION: $(NODE_10)
       NODE12:
         NODE_VERSION: $(NODE_12)
-      NODE12:
+      NODE14:
         NODE_VERSION: $(NODE_14)
   pool:
     vmImage: 'windows-latest'
