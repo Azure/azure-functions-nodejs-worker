@@ -2,7 +2,8 @@ variables: {
   WORKER_VERSION: '2.0.5',
   NODE_8: '8.x',
   NODE_10: '10.x',
-  NODE_12: '12.x'
+  NODE_12: '12.x',
+  NODE_14: '14.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -24,6 +25,9 @@ jobs:
       UBUNTU_NODE12:
         IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_12)
+      UBUNTU_NODE14:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_14)
       WINDOWS_NODE8:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_8)
@@ -33,6 +37,9 @@ jobs:
       WINDOWS_NODE12:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_12)
+      WINDOWS_NODE14:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_14)
       MAC_NODE8:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_8)
@@ -42,6 +49,9 @@ jobs:
       MAC_NODE12:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_12)
+      MAC_NODE14:
+        IMAGE_TYPE: 'macOS-latest'
+        NODE_VERSION: $(NODE_14)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:
@@ -66,6 +76,8 @@ jobs:
         NODE_VERSION: $(NODE_10)
       NODE12:
         NODE_VERSION: $(NODE_12)
+      NODE12:
+        NODE_VERSION: $(NODE_14)
   pool:
     vmImage: 'windows-latest'
   steps:
