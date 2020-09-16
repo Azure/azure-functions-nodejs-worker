@@ -106,7 +106,8 @@ describe('WorkerChannel', () => {
         capabilities: { 
               'RpcHttpBodyOnly': 'true',
               'RpcHttpTriggerMetadataRemoved': 'true',
-              'IgnoreEmptyValuedRpcHttpHeaders': 'true'
+              'IgnoreEmptyValuedRpcHttpHeaders': 'true',
+              'UseNullableValueDictionaryForHttp': "true"
         },
         result: {
           status: rpc.StatusResult.Status.Success
