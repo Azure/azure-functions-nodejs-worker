@@ -92,7 +92,8 @@ export class WorkerChannel implements IWorkerChannel {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true",
       IgnoreEmptyValuedRpcHttpHeaders: "true",
-      WorkerStatus: "true"
+      WorkerStatus: "true",
+      UseNullableValueDictionaryForHttp: "true"
     };
     this._eventStream.write({
       requestId: requestId,

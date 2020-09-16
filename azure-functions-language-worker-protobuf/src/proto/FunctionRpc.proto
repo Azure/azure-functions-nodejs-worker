@@ -96,6 +96,9 @@ message WorkerInitRequest {
   // inform worker of supported categories and their levels
   // i.e. Worker = Verbose, Function.MyFunc = None
   map<string, RpcLog.Level> log_categories = 3;
+
+  // Full path of worker.config.json location
+  string worker_directory = 4;
 }
 
 // Worker responds with the result of initializing itself
@@ -481,4 +484,7 @@ message RpcHttp {
   TypedData rawBody = 17;
   repeated RpcClaimsIdentity identities = 18;
   repeated RpcHttpCookie cookies = 19;
+  map<string,NullableString> nullable_headers = 20;
+  map<string,NullableString> nullable_params = 21;
+  map<string,NullableString> nullable_query = 22;
 }
