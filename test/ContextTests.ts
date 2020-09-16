@@ -103,7 +103,7 @@ describe('Context', () => {
         expect(context.invocationId).to.equal("1");
     });
 
-    it ('Adds correct properties for bindingData and http', async () => {
+    it ('Adds correct sys properties for bindingData and http', async () => {
         var inputDataValue: rpc.IParameterBinding = {
             name: "req",
             data: {
@@ -133,11 +133,109 @@ describe('Context', () => {
         });
 
         let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
-        const bindingData = context.bindingData;
+        const { bindingData } = context;
         expect(bindingData.sys.methodName).to.equal("test");
         expect(bindingData.sys.randGuid).to.not.be.undefined;
         expect(bindingData.sys.utcNow).to.not.be.undefined;
         expect(bindingData.invocationId).to.equal("1");
+        expect(context.invocationId).to.equal("1");
+    });
+
+    it ('Adds correct header and query properties for bindingData and http using nullable values', async () => {
+        var inputDataValue: rpc.IParameterBinding = {
+            name: "req",
+            data: {
+                http: {
+                    body:
+                    {
+                        string: "blahh"
+                    },
+                    nullableHeaders: {
+                        header1: {
+                            value: "value1"
+                        },
+                        header2: {
+                            value: ""
+                        }
+                    },
+                    nullableQuery: {
+                        query1: {
+                            value: "value1"
+                        },
+                        query2: {
+                            value: undefined
+                        }
+                    }
+                }
+            }
+        };
+        var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+            functionId: 'id',
+            invocationId: '1',
+            inputData: [inputDataValue]
+        };
+
+        let info: FunctionInfo = new FunctionInfo({ 
+            name: 'test',
+            bindings: { 
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
+            }
+        });
+
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        const { bindingData } = context;
+        expect(bindingData.invocationId).to.equal("1");
+        expect(bindingData.headers.header1).to.equal("value1");
+        expect(bindingData.headers.header2).to.equal("");
+        expect(bindingData.query.query1).to.equal("value1");
+        expect(bindingData.query.query2).to.equal("");
+        expect(context.invocationId).to.equal("1");
+    });
+
+    it ('Adds correct header and query properties for bindingData and http using non-nullable values', async () => {
+        var inputDataValue: rpc.IParameterBinding = {
+            name: "req",
+            data: {
+                http: {
+                    body:
+                    {
+                        string: "blahh"
+                    },
+                    headers: {
+                        header1: "value1"
+                    },
+                    query: {
+                        query1: "value1"
+                    }
+                }
+            }
+        };
+        var msg: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+            functionId: 'id',
+            invocationId: '1',
+            inputData: [inputDataValue]
+        };
+
+        let info: FunctionInfo = new FunctionInfo({ 
+            name: 'test',
+            bindings: { 
+                req: {
+                    type: "http",
+                    direction: 0,
+                    dataType: 1
+                }
+            }
+        });
+
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        const { bindingData } = context;
+        expect(bindingData.invocationId).to.equal("1");
+        expect(bindingData.headers.header1).to.equal("value1");
+        expect(bindingData.query.query1).to.equal("value1");
         expect(context.invocationId).to.equal("1");
     });
 

@@ -75,7 +75,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         [Fact]
         public async Task HttpTriggerBindingDataTests()
         {
-            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerBindingData");
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerBindingData", "?stringInput=hello&emptyStringInput=");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             string responseBody = await response.Content.ReadAsStringAsync();
             Assert.Equal("binding data exists", responseBody);

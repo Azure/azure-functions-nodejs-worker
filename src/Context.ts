@@ -43,9 +43,13 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
             utcNow: (new Date()).toISOString(),
             randGuid: uuid()
         };
-        // Populate from HTTP request for backwards compatibility
-        context.bindingData.query = Object.assign({}, httpInput.query);
-        context.bindingData.headers = Object.assign({}, httpInput.headers);
+        // Populate from HTTP request for backwards compatibility if missing
+        if (!context.bindingData.query) {
+            context.bindingData.query = Object.assign({}, httpInput.query);
+        }
+        if (!context.bindingData.headers) {
+            context.bindingData.headers = Object.assign({}, httpInput.headers);
+        }
     }
     return {
         context: <Context>context,
