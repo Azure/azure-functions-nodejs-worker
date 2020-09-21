@@ -101,7 +101,7 @@ export class WorkerChannel implements IWorkerChannel {
     if (this._v1WorkerBehavior) {
       if (version.startsWith("v12.")) {
         systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
-      } else if (version.startsWith("14.")) {
+      } else if (version.startsWith("v14.")) {
         let msg = "Incompatible Node.js version"
           + " (" + version + ")."
           + " The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x."
