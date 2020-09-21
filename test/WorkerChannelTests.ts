@@ -142,6 +142,24 @@ describe('WorkerChannel', () => {
     }
   });
 
+  it('does not init for Node.js v14.x and v2 compatability = true', () => {
+    let version = process.version;
+    if (version.split(".")[0] === "v14") {
+      let initMessage = {
+        requestId: 'id',
+        workerInitRequest: {
+          capabilities: {
+            V2Compatable: "true"
+          }
+        }
+      };
+          
+      expect(() =>
+        stream.addTestMessage(initMessage)).to.throw(`Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
+      );
+    }
+  });
+
   it('responds to function load', () => {
     stream.addTestMessage({
       requestId: 'id',
@@ -318,6 +336,10 @@ describe('WorkerChannel', () => {
   });
 
   it ('invokes function in V2 compat mode', () => {
+    // Skip test on Node.js 14
+    if (process.version.startsWith("v14")) {
+      return;
+    }
     loader.getFunc.returns((context) => context.done());
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
@@ -483,6 +505,10 @@ describe('WorkerChannel', () => {
   });
 
   it ('returns string data with $return binding and V2 compat', () => {
+    // Skip test on Node.js 14
+    if (process.version.startsWith("v14")) {
+      return;
+    }
     let httpResponse;
     loader.getFunc.returns((context) => { httpResponse = context.res; context.done(null, { body: { hello: "world" }})});
     loader.getInfo.returns(new FunctionInfo(httpReturnBinding));
@@ -616,6 +642,10 @@ describe('WorkerChannel', () => {
   });
 
   it ('serializes output binding data through context.done with V2 compat', () => {
+    // Skip test on Node.js 14
+    if (process.version.startsWith("v14")) {
+      return;
+    }
     loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
 
