@@ -1,4 +1,4 @@
-import { toNullableBool, toNullableString, toNullableDouble, toNullableTimestamp, fromRpcTraceContext } from '../src/converters';
+import { toNullableBool, toNullableString, toNullableDouble, toNullableTimestamp, fromRpcTraceContext, fromTypedData } from '../src/converters';
 import { expect } from 'chai';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
@@ -161,5 +161,10 @@ describe('Rpc Converters', () => {
   it('does not convert undefined to NullableTimestamp', () => {
     let nullable = toNullableTimestamp(undefined, "test");
     expect(nullable && nullable.value).to.be.undefined;
+  });
+
+  it('numeric-string keeps string type', () => {
+    let numericString = fromTypedData({ string: '12345678901234567890' });
+    expect(numericString).to.equal('12345678901234567890');
   });
 })
