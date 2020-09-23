@@ -20,7 +20,7 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
     if (str !== undefined) {
         if (convertStringToJson) {
             try {
-                if (str != null) {
+                if (str != null && isJsonFormedStr(str)) {
                     str = JSON.parse(str);
                 }
             } catch (err) { }
@@ -181,4 +181,9 @@ export function toNullableTimestamp(dateTime: Date | number | undefined, propert
         }
     }
     return undefined;
+}
+
+function isJsonFormedStr(str: string): boolean {
+    const maybeJsonFormedStrRegex = new RegExp(/^\{.*\}$|^\[.*\]$/sm);
+    return maybeJsonFormedStrRegex.test(str);
 }
