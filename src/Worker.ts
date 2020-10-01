@@ -57,4 +57,6 @@ export function startNodeWorker(args) {
   process.on('exit', code => {
     systemLog(`Worker ${workerId} exited with code ${code}`);
   });
+  
+  return workerChannel;
 }

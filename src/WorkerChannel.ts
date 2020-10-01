@@ -7,6 +7,7 @@ import { toTypedData } from './converters';
 import { augmentTriggerMetadata } from './augmenters';
 import { systemError } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
+import { Context } from './public/Interfaces';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -25,12 +26,17 @@ interface IWorkerChannel {
   invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
   invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
   functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
+  invocationRequestBefore?: (context: Context, userFn: Function) => Function;
+  invocationRequestAfter?: Function;
 }
 
 /**
  * Initializes handlers for incoming gRPC messages on the client
  */
 export class WorkerChannel implements IWorkerChannel {
+  public invocationRequestBefore?: (context: Context, userFn: Function) => Function;
+  public invocationRequestAfter?: Function;
+
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
@@ -160,6 +166,10 @@ export class WorkerChannel implements IWorkerChannel {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
       }
+      
+      if (this.invocationRequestAfter) {
+        this.invocationRequestAfter();
+      }
 
       try {
         if (result) {
@@ -183,10 +193,15 @@ export class WorkerChannel implements IWorkerChannel {
         requestId: requestId,
         invocationResponse: response
       });
+
     }
 
     let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
+    
+    if (this.invocationRequestBefore) {
+      userFunction = this.invocationRequestBefore(context, userFunction);
+    }
     
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
@@ -194,8 +209,18 @@ export class WorkerChannel implements IWorkerChannel {
       let result = userFunction(context, ...inputs);
 
       if (result && isFunction(result.then)) {
-        result.then(result => (<any>context.done)(null, result, true))
-          .catch(err => (<any>context.done)(err, null, true));
+        result.then(result => {
+          if (this.invocationRequestAfter) {
+            this.invocationRequestAfter();
+          }
+          (<any>context.done)(null, result, true)
+        })
+          .catch(err => {
+            if (this.invocationRequestAfter) {
+              this.invocationRequestAfter();
+            }
+            (<any>context.done)(err, null, true)
+          });
       }
     } catch (err) {
       resultCallback(err);
@@ -208,7 +233,7 @@ export class WorkerChannel implements IWorkerChannel {
   public startStream(requestId: string, msg: rpc.StartStream): void {
     // Not yet implemented
   }
-
+  
   /**
    * Message is empty by design - Will add more fields in future if needed
    */ 

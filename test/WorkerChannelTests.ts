@@ -6,12 +6,69 @@ import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 import { load } from 'grpc';
+import { worker } from 'cluster';
 
 describe('WorkerChannel', () => {
   var channel: WorkerChannel;
   var stream: TestEventStream;
   var loader: sinon.SinonStubbedInstance<FunctionLoader>;
   var functions;
+  
+  const assertInvokedFunction = () => {
+    const triggerDataMock: { [k: string]: rpc.ITypedData } = {
+      "Headers": {
+          json: JSON.stringify({Connection: 'Keep-Alive'})
+      },
+      "Sys": {
+          json: JSON.stringify({MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212'})
+        }
+    };
+
+    const inputDataValue = {
+      name: "req",
+      data: {
+          data: "http",
+          http: 
+          {
+              body:
+              {
+                  data: "string",
+                  body: "blahh"
+              },
+              rawBody:
+              {
+                  data: "string",
+                  body: "blahh"
+              }
+          }
+      } 
+    };
+
+    const actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: [inputDataValue],
+      triggerMetadata: triggerDataMock,
+    };
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: []
+      }
+    });
+
+    // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(inputDataValue.data));
+    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(inputDataValue.data));
+  }
 
   beforeEach(() => {
     stream = new TestEventStream();
@@ -226,6 +283,91 @@ describe('WorkerChannel', () => {
       workerStatusResponse: {}
     });
   });
+  
+  describe('#invocationRequestBefore, #invocationRequestAfter', () => {
+    afterEach(() => {
+      delete channel.invocationRequestBefore;
+      delete channel.invocationRequestAfter;
+    });
+
+    it("should apply hook before user function is executed", () => {
+      channel.invocationRequestBefore = (context, userFunction) => {
+        context["magic_flag"] = 'magic value';
+        return userFunction.bind({__wrapped: true});
+      }
+
+      loader.getFunc.returns(function (this: any, context) {
+        expect(context['magic_flag']).to.equal('magic value');
+        expect(this.__wrapped).to.equal(true);
+        context.done();
+      });
+      loader.getInfo.returns({
+        name: 'test',
+        outputBindings: {}
+      });
+
+      assertInvokedFunction();
+    });
+    
+    it('should apply hook after user function is executed (callback)', (done) => {
+      let finished = false;
+      channel.invocationRequestAfter = () => {
+        expect(finished).to.equal(true);
+        done();
+      }
+
+      loader.getFunc.returns(function (this: any, context) {
+        finished = true;
+        context.done();
+      });
+      loader.getInfo.returns({
+        name: 'test',
+        outputBindings: {}
+      });
+
+      assertInvokedFunction();
+    });
+    
+    it('should apply hook after user function resolves (promise)', (done) => {
+      let finished = false;
+      channel.invocationRequestAfter = () => {
+        expect(finished).to.equal(true);
+        done();
+      }
+
+      loader.getFunc.returns(new Promise((resolve) => {
+        finished = true;
+        resolve()
+      }));
+      loader.getInfo.returns({
+        name: 'test',
+        outputBindings: {}
+      });
+
+      assertInvokedFunction();
+    });
+    
+    
+    it('should apply hook after user function rejects (promise)', (done) => {
+      let finished = false;
+      channel.invocationRequestAfter = () => {
+        expect(finished).to.equal(true);
+        done();
+      }
+
+      loader.getFunc.returns(new Promise((_, reject) => {
+        finished = true;
+        reject()
+      }));
+      loader.getInfo.returns({
+        name: 'test',
+        outputBindings: {}
+      });
+
+      assertInvokedFunction();
+    });
+
+  });
 
   it ('invokes function', () => {
     loader.getFunc.returns((context) => context.done());
@@ -233,60 +375,8 @@ describe('WorkerChannel', () => {
       name: 'test',
       outputBindings: {}
     })
-    
-    var triggerDataMock: { [k: string]: rpc.ITypedData } = {
-      "Headers": {
-          json: JSON.stringify({Connection: 'Keep-Alive'})
-      },
-      "Sys": {
-          json: JSON.stringify({MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212'})
-        }
-    };
 
-    var inputDataValue = {
-      name: "req",
-      data: {
-          data: "http",
-          http: 
-          {
-              body:
-              {
-                  data: "string",
-                  body: "blahh"
-              },
-              rawBody:
-              {
-                  data: "string",
-                  body: "blahh"
-              }
-          }
-      } 
-    };
-
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [inputDataValue],
-      triggerMetadata: triggerDataMock,
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: []
-      }
-    });
-
-    // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(inputDataValue.data));
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(inputDataValue.data));
+    assertInvokedFunction();
   });
 
   it ('throws for malformed messages', () => {
