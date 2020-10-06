@@ -11,6 +11,9 @@ import { Context } from './public/Interfaces';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
+type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
+type InvocationRequestAfter = (context: Context) => void;
+
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
  * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
@@ -26,25 +29,26 @@ interface IWorkerChannel {
   invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
   invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
   functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
-  invocationRequestBefore?: (context: Context, userFn: Function) => Function;
-  invocationRequestAfter?: Function;
+  registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void;
+  registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void;
 }
 
 /**
  * Initializes handlers for incoming gRPC messages on the client
  */
 export class WorkerChannel implements IWorkerChannel {
-  public invocationRequestBefore?: (context: Context, userFn: Function) => Function;
-  public invocationRequestAfter?: Function;
-
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
+  private _invocationRequestBefore: InvocationRequestBefore[];
+  private _invocationRequestAfter: InvocationRequestAfter[];
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
+    this._invocationRequestBefore = [];
+    this._invocationRequestAfter = [];
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -86,6 +90,14 @@ export class WorkerChannel implements IWorkerChannel {
     this._eventStream.write({
       rpcLog: log
     });
+  }
+
+  public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
+    this._invocationRequestBefore.push(beforeCb);
+  }
+
+  public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
+    this._invocationRequestAfter.push(afterCb);
   }
 
   /**
@@ -167,9 +179,7 @@ export class WorkerChannel implements IWorkerChannel {
         result: this.getStatus(err)
       }
       
-      if (this.invocationRequestAfter) {
-        this.invocationRequestAfter();
-      }
+      this.runInvocationRequestAfter(context);
 
       try {
         if (result) {
@@ -199,9 +209,7 @@ export class WorkerChannel implements IWorkerChannel {
     let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
-    if (this.invocationRequestBefore) {
-      userFunction = this.invocationRequestBefore(context, userFunction);
-    }
+    userFunction = this.runInvocationRequestBefore(context, userFunction);
     
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
@@ -210,15 +218,11 @@ export class WorkerChannel implements IWorkerChannel {
 
       if (result && isFunction(result.then)) {
         result.then(result => {
-          if (this.invocationRequestAfter) {
-            this.invocationRequestAfter();
-          }
+          this.runInvocationRequestAfter(context);
           (<any>context.done)(null, result, true)
         })
           .catch(err => {
-            if (this.invocationRequestAfter) {
-              this.invocationRequestAfter();
-            }
+            this.runInvocationRequestAfter(context);
             (<any>context.done)(err, null, true)
           });
       }
@@ -328,5 +332,19 @@ export class WorkerChannel implements IWorkerChannel {
     }
 
     return status;
+  }
+
+  private runInvocationRequestBefore(context: Context, userFunction: Function): Function {
+    let wrappedFunction = userFunction;
+    for (let before of this._invocationRequestBefore) {
+      wrappedFunction = before(context, wrappedFunction);
+    }
+    return wrappedFunction;
+  }
+
+  private runInvocationRequestAfter(context: Context) {
+    for (let after of this._invocationRequestAfter) {
+      after(context);
+    }
   }
 }

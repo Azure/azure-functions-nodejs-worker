@@ -286,19 +286,27 @@ describe('WorkerChannel', () => {
   
   describe('#invocationRequestBefore, #invocationRequestAfter', () => {
     afterEach(() => {
-      delete channel.invocationRequestBefore;
-      delete channel.invocationRequestAfter;
+      channel['_invocationRequestAfter'] = [];
+      channel['_invocationRequestBefore'] = [];
     });
 
     it("should apply hook before user function is executed", () => {
-      channel.invocationRequestBefore = (context, userFunction) => {
-        context["magic_flag"] = 'magic value';
-        return userFunction.bind({__wrapped: true});
-      }
+      channel.registerBeforeInvocationRequest((context, userFunction) => {
+        context['magic_flag'] = 'magic value';
+        return userFunction.bind({ __wrapped: true });
+      });
+      
+      channel.registerBeforeInvocationRequest((context, userFunction) => {
+        context["secondary_flag"] = 'magic value';
+        return userFunction;
+      });
 
       loader.getFunc.returns(function (this: any, context) {
         expect(context['magic_flag']).to.equal('magic value');
+        expect(context['secondary_flag']).to.equal('magic value');
         expect(this.__wrapped).to.equal(true);
+        expect(channel['_invocationRequestBefore'].length).to.equal(2);
+        expect(channel['_invocationRequestAfter'].length).to.equal(0);
         context.done();
       });
       loader.getInfo.returns({
@@ -311,13 +319,15 @@ describe('WorkerChannel', () => {
     
     it('should apply hook after user function is executed (callback)', (done) => {
       let finished = false;
-      channel.invocationRequestAfter = () => {
+      channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
         done();
-      }
+      });
 
       loader.getFunc.returns(function (this: any, context) {
         finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
         context.done();
       });
       loader.getInfo.returns({
@@ -330,13 +340,15 @@ describe('WorkerChannel', () => {
     
     it('should apply hook after user function resolves (promise)', (done) => {
       let finished = false;
-      channel.invocationRequestAfter = () => {
+      channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
         done();
-      }
+      });
 
       loader.getFunc.returns(new Promise((resolve) => {
         finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
         resolve()
       }));
       loader.getInfo.returns({
@@ -350,13 +362,15 @@ describe('WorkerChannel', () => {
     
     it('should apply hook after user function rejects (promise)', (done) => {
       let finished = false;
-      channel.invocationRequestAfter = () => {
+      channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
         done();
-      }
+      });
 
       loader.getFunc.returns(new Promise((_, reject) => {
         finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
         reject()
       }));
       loader.getInfo.returns({
