@@ -92,10 +92,17 @@ export class WorkerChannel implements IWorkerChannel {
     });
   }
 
+  /**
+   * Register a patching function to be run before User Function is executed.
+   * Hook should return a patched version of User Function.
+   */
   public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
     this._invocationRequestBefore.push(beforeCb);
   }
 
+  /**
+   * Register a function to be run after User Function resolves.
+   */
   public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
     this._invocationRequestAfter.push(afterCb);
   }
@@ -179,8 +186,6 @@ export class WorkerChannel implements IWorkerChannel {
         result: this.getStatus(err)
       }
       
-      this.runInvocationRequestAfter(context);
-
       try {
         if (result) {
           if (result.return) {
@@ -203,7 +208,8 @@ export class WorkerChannel implements IWorkerChannel {
         requestId: requestId,
         invocationResponse: response
       });
-
+      
+      this.runInvocationRequestAfter(context);
     }
 
     let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
@@ -214,15 +220,13 @@ export class WorkerChannel implements IWorkerChannel {
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
-      let result = userFunction(context, ...inputs);
+        let result = userFunction(context, ...inputs);
 
-      if (result && isFunction(result.then)) {
+        if (result && isFunction(result.then)) {
         result.then(result => {
-          this.runInvocationRequestAfter(context);
           (<any>context.done)(null, result, true)
         })
           .catch(err => {
-            this.runInvocationRequestAfter(context);
             (<any>context.done)(err, null, true)
           });
       }

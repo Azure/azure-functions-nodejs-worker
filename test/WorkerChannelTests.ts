@@ -14,7 +14,7 @@ describe('WorkerChannel', () => {
   var loader: sinon.SinonStubbedInstance<FunctionLoader>;
   var functions;
   
-  const assertInvokedFunction = () => {
+  const runInvokedFunction = () => {
     const triggerDataMock: { [k: string]: rpc.ITypedData } = {
       "Headers": {
           json: JSON.stringify({Connection: 'Keep-Alive'})
@@ -54,7 +54,11 @@ describe('WorkerChannel', () => {
     stream.addTestMessage({
       invocationRequest: actualInvocationRequest
     });
-
+    
+    return [inputDataValue, actualInvocationRequest];
+  }
+  
+  const assertInvokedFunction = (inputDataValue, actualInvocationRequest) => {
     sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
       invocationResponse: {
         invocationId: '1',
@@ -314,73 +318,89 @@ describe('WorkerChannel', () => {
         outputBindings: {}
       });
 
-      assertInvokedFunction();
+      const [inputDataValue, actualInvocationRequest] = runInvokedFunction();
+      assertInvokedFunction(inputDataValue, actualInvocationRequest);
     });
     
     it('should apply hook after user function is executed (callback)', (done) => {
       let finished = false;
+      let count = 0;
       channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
-        done();
+        count += 1;
       });
 
       loader.getFunc.returns(function (this: any, context) {
         finished = true;
         expect(channel['_invocationRequestBefore'].length).to.equal(0);
         expect(channel['_invocationRequestAfter'].length).to.equal(1);
+        expect(count).to.equal(0);
         context.done();
+        expect(count).to.equal(1);
+        done();
       });
       loader.getInfo.returns({
         name: 'test',
         outputBindings: {}
       });
 
-      assertInvokedFunction();
+      const [inputDataValue, actualInvocationRequest] = runInvokedFunction();
+      assertInvokedFunction(inputDataValue, actualInvocationRequest);
     });
     
     it('should apply hook after user function resolves (promise)', (done) => {
       let finished = false;
+      let count = 0;
+      let inputDataValue, actualInvocationRequest;
       channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
+        count += 1;
+        expect(count).to.equal(1);
+        assertInvokedFunction(inputDataValue, actualInvocationRequest);
         done();
       });
 
-      loader.getFunc.returns(new Promise((resolve) => {
+      loader.getFunc.returns(() => new Promise((resolve) => {
         finished = true;
         expect(channel['_invocationRequestBefore'].length).to.equal(0);
         expect(channel['_invocationRequestAfter'].length).to.equal(1);
-        resolve()
+        expect(count).to.equal(0);
+        resolve();
       }));
       loader.getInfo.returns({
         name: 'test',
         outputBindings: {}
       });
 
-      assertInvokedFunction();
+      [inputDataValue, actualInvocationRequest] = runInvokedFunction();
     });
     
     
     it('should apply hook after user function rejects (promise)', (done) => {
       let finished = false;
+      let count = 0;
       channel.registerAfterInvocationRequest((context) => {
         expect(finished).to.equal(true);
+        count += 1;
+        expect(count).to.equal(1);
+        assertInvokedFunction(inputDataValue, actualInvocationRequest);
         done();
       });
 
-      loader.getFunc.returns(new Promise((_, reject) => {
+      loader.getFunc.returns((context) => new Promise((_, reject) => {
         finished = true;
         expect(channel['_invocationRequestBefore'].length).to.equal(0);
         expect(channel['_invocationRequestAfter'].length).to.equal(1);
-        reject()
+        expect(count).to.equal(0);
+        reject();
       }));
       loader.getInfo.returns({
         name: 'test',
         outputBindings: {}
       });
 
-      assertInvokedFunction();
+      const [inputDataValue, actualInvocationRequest] = runInvokedFunction();
     });
-
   });
 
   it ('invokes function', () => {
@@ -390,7 +410,8 @@ describe('WorkerChannel', () => {
       outputBindings: {}
     })
 
-    assertInvokedFunction();
+    const [inputDataValue, actualInvocationRequest] = runInvokedFunction();
+    assertInvokedFunction(inputDataValue, actualInvocationRequest);
   });
 
   it ('throws for malformed messages', () => {
