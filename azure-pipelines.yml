@@ -6,9 +6,17 @@ variables: {
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
+pr:
+  branches:
+    include:
+      - master
+      - dev
+      - v2.x
+
 trigger:
 - master
 - dev
+- v2.x
 
 jobs:
 - job: UnitTests
