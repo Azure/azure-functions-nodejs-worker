@@ -7,8 +7,12 @@ import { toTypedData } from './converters';
 import { augmentTriggerMetadata } from './augmenters';
 import { systemError } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
+import { Context } from './public/Interfaces';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
+
+type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
+type InvocationRequestAfter = (context: Context) => void;
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -25,6 +29,8 @@ interface IWorkerChannel {
   invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
   invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
   functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
+  registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void;
+  registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void;
 }
 
 /**
@@ -34,11 +40,15 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
+  private _invocationRequestBefore: InvocationRequestBefore[];
+  private _invocationRequestAfter: InvocationRequestAfter[];
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
+    this._invocationRequestBefore = [];
+    this._invocationRequestAfter = [];
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -80,6 +90,21 @@ export class WorkerChannel implements IWorkerChannel {
     this._eventStream.write({
       rpcLog: log
     });
+  }
+
+  /**
+   * Register a patching function to be run before User Function is executed.
+   * Hook should return a patched version of User Function.
+   */
+  public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
+    this._invocationRequestBefore.push(beforeCb);
+  }
+
+  /**
+   * Register a function to be run after User Function resolves.
+   */
+  public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
+    this._invocationRequestAfter.push(afterCb);
   }
 
   /**
@@ -160,7 +185,7 @@ export class WorkerChannel implements IWorkerChannel {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
       }
-
+      
       try {
         if (result) {
           if (result.return) {
@@ -183,19 +208,27 @@ export class WorkerChannel implements IWorkerChannel {
         requestId: requestId,
         invocationResponse: response
       });
+      
+      this.runInvocationRequestAfter(context);
     }
 
     let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
+    userFunction = this.runInvocationRequestBefore(context, userFunction);
+    
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
-      let result = userFunction(context, ...inputs);
+        let result = userFunction(context, ...inputs);
 
-      if (result && isFunction(result.then)) {
-        result.then(result => (<any>context.done)(null, result, true))
-          .catch(err => (<any>context.done)(err, null, true));
+        if (result && isFunction(result.then)) {
+        result.then(result => {
+          (<any>context.done)(null, result, true)
+        })
+          .catch(err => {
+            (<any>context.done)(err, null, true)
+          });
       }
     } catch (err) {
       resultCallback(err);
@@ -208,7 +241,7 @@ export class WorkerChannel implements IWorkerChannel {
   public startStream(requestId: string, msg: rpc.StartStream): void {
     // Not yet implemented
   }
-
+  
   /**
    * Message is empty by design - Will add more fields in future if needed
    */ 
@@ -303,5 +336,19 @@ export class WorkerChannel implements IWorkerChannel {
     }
 
     return status;
+  }
+
+  private runInvocationRequestBefore(context: Context, userFunction: Function): Function {
+    let wrappedFunction = userFunction;
+    for (let before of this._invocationRequestBefore) {
+      wrappedFunction = before(context, wrappedFunction);
+    }
+    return wrappedFunction;
+  }
+
+  private runInvocationRequestAfter(context: Context) {
+    for (let after of this._invocationRequestAfter) {
+      after(context);
+    }
   }
 }
