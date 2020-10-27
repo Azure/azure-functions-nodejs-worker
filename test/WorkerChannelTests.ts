@@ -7,13 +7,54 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import 'mocha';
 import { load } from 'grpc';
 import { FunctionInfo } from '../src/FunctionInfo';
+import { worker } from 'cluster';
 
 describe('WorkerChannel', () => {
   let channel: WorkerChannel;
   let stream: TestEventStream;
   let loader: sinon.SinonStubbedInstance<FunctionLoader>;
   let functions;
-  const getTriggerDataMock: () => { [k: string]: rpc.ITypedData } =  () => {
+
+  const sendInvokeMessage = (inputData?: rpc.IParameterBinding[]|null, triggerDataMock?: { [k: string]: rpc.ITypedData }|null): rpc.IInvocationRequest => {
+    const actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
+      functionId: 'id',
+      invocationId: '1',
+      inputData: inputData,
+      triggerMetadata: triggerDataMock,
+    };
+
+    stream.addTestMessage({
+      invocationRequest: actualInvocationRequest
+    });
+
+    return actualInvocationRequest;
+  }
+
+  const assertInvocationSuccess = (expectedOutputData?: rpc.IParameterBinding[]|null, expectedReturnValue?: rpc.ITypedData|null) => {
+    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
+      invocationResponse: {
+        invocationId: '1',
+        result:  {
+          status: rpc.StatusResult.Status.Success
+        },
+        outputData: expectedOutputData,
+        returnValue: expectedReturnValue
+      }
+    });
+  }
+
+  const sendV2CompatableHostMessage = () => {
+    stream.addTestMessage({
+      workerInitRequest: {
+        hostVersion: "3.0.0000",
+        capabilities: {
+          V2Compatable: "true"
+        }
+      }
+    });
+  }
+  
+  const getHttpTriggerDataMock: () => { [k: string]: rpc.ITypedData } =  () => {
     return {
       "Headers": {
         json: JSON.stringify({Connection: 'Keep-Alive'})
@@ -83,6 +124,15 @@ describe('WorkerChannel', () => {
   const orchestratorBinding = {
     bindings: {
       test: orchestrationTriggerBinding
+    }
+  };
+  const queueTriggerBinding = {
+    bindings: {
+      test: {
+        type: "queue",
+        direction: 1,
+        dataType: 1
+      }
     }
   };
 
@@ -344,35 +394,10 @@ describe('WorkerChannel', () => {
     loader.getFunc.returns((context) => context.done());
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
+    sendV2CompatableHostMessage();
+    const actualInvocationRequest = sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
 
-    stream.addTestMessage({
-      workerInitRequest: {
-        hostVersion: "3.0.0000",
-        capabilities: {
-          V2Compatable: "true"
-        }
-      }
-    });
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: []
-      }
-    });
+    assertInvocationSuccess([]);
 
     // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
     expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(httpInputData.data));
@@ -383,26 +408,8 @@ describe('WorkerChannel', () => {
     loader.getFunc.returns((context) => context.done());
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: []
-      }
-    });
+    const actualInvocationRequest = sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+    assertInvocationSuccess([]);
 
     // triggerMedata will not be augmented with inpuDataValue since we are running Functions Host V3 compatability.
     expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
@@ -414,95 +421,44 @@ describe('WorkerChannel', () => {
     loader.getFunc.returns((context) => { httpResponse = context.res; context.done(null, { body: { hello: "world" }})});
     loader.getInfo.returns(new FunctionInfo(httpReturnBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [{
-          data: {
-            http: httpResponse
-          },
-          name: "$return"
-        }],
-        returnValue: { 
-          http: {
-            body: { json: "{\"hello\":\"world\"}" },
-            cookies: [],
-            headers: { },
-            statusCode: undefined
-          }
-        }
+    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+    
+    const expectedOutput = [{
+      data: {
+        http: httpResponse
+      },
+      name: "$return"
+    }];
+    const expectedReturnValue = { 
+      http: {
+        body: { json: "{\"hello\":\"world\"}" },
+        cookies: [],
+        headers: { },
+        statusCode: undefined
       }
-    });
+    }
+    assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
   it ('returns returned output if not http', () => {
     loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [],
-      triggerMetadata: getTriggerDataMock(),
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedOutput = [];
+    const expectedReturnValue = { 
+      json: "[\"hello, seattle!\",\"hello, tokyo!\"]"
     };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [],
-        returnValue: { 
-          json: "[\"hello, seattle!\",\"hello, tokyo!\"]"
-        }
-      }
-    });
+    assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
   it ('returned output is ignored if http', () => {
     loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [],
-      triggerMetadata: getTriggerDataMock(),
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [],
-        returnValue: undefined
-      }
-    });
+    sendInvokeMessage([], getHttpTriggerDataMock());
+    assertInvocationSuccess([], undefined);
   });
 
   it ('returns string data with $return binding and V2 compat', () => {
@@ -514,77 +470,37 @@ describe('WorkerChannel', () => {
     loader.getFunc.returns((context) => { httpResponse = context.res; context.done(null, { body: { hello: "world" }})});
     loader.getInfo.returns(new FunctionInfo(httpReturnBinding));
 
-    stream.addTestMessage({
-      workerInitRequest: {
-        hostVersion: "3.0.0000",
-        capabilities: {
-          V2Compatable: "true"
-        }
-      }
-    });
+    sendV2CompatableHostMessage();
+    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [{
-          data: {
-            http: httpResponse
-          },
-          name: "$return"
-        }],
-        returnValue: { json: "{\"body\":{\"hello\":\"world\"}}" }
-      }
-    });
+    const expectedOutput = [{
+      data: {
+        http: httpResponse
+      },
+      name: "$return"
+    }];
+    const expectedReturnValue = { json: "{\"body\":{\"hello\":\"world\"}}" };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
   it ('serializes output binding data through context.done', () => {
     loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
+    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
 
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [{
-          data: {
-            http: {
-              body: { json: "{\"hello\":\"world\"}" },
-              cookies: [],
-              headers: { },
-              statusCode: undefined
-            }
-          },
-          name: "res"
-        }]
-      }
-    });
+    const expectedOutput = [{
+      data: {
+        http: {
+          body: { json: "{\"hello\":\"world\"}" },
+          cookies: [],
+          headers: { },
+          statusCode: undefined
+        }
+      },
+      name: "res"
+    }];
+    assertInvocationSuccess(expectedOutput);
   });
 
   it ('serializes multiple output bindings through context.done and context.bindings', () => {
@@ -598,48 +514,31 @@ describe('WorkerChannel', () => {
     });
     loader.getInfo.returns(new FunctionInfo(multipleBinding));
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
-    };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [{
-          data: {
-            http: {
-              body: { json: "{\"hello\":\"world\"}" },
-              cookies: [],
-              headers: { },
-              statusCode: undefined
-            }
-          },
-          name: "res"
-        },
-        {
-          data: {
-            string: "override"
-          },
-          name: "overriddenQueueOutput"
-        },
-        {
-          data: {
-            string: "queue message"
-          },
-          name: "queueOutput"
-        }]
-      }
-    });
+    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+    const expectedOutput = [{
+      data: {
+        http: {
+          body: { json: "{\"hello\":\"world\"}" },
+          cookies: [],
+          headers: { },
+          statusCode: undefined
+        }
+      },
+      name: "res"
+    },
+    {
+      data: {
+        string: "override"
+      },
+      name: "overriddenQueueOutput"
+    },
+    {
+      data: {
+        string: "queue message"
+      },
+      name: "queueOutput"
+    }];
+    assertInvocationSuccess(expectedOutput);
   });
 
   it ('serializes output binding data through context.done with V2 compat', () => {
@@ -650,38 +549,13 @@ describe('WorkerChannel', () => {
     loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
 
-    stream.addTestMessage({
-      workerInitRequest: {
-        hostVersion: "3.0.0000",
-        capabilities: {
-          V2Compatable: "true"
-        }
-      }
-    });
+    sendV2CompatableHostMessage();
+    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
 
-    var actualInvocationRequest: rpc.IInvocationRequest = <rpc.IInvocationRequest> {
-      functionId: 'id',
-      invocationId: '1',
-      inputData: [httpInputData],
-      triggerMetadata: getTriggerDataMock(),
+    const expectedReturnValue = {
+      json: "{\"res\":{\"body\":{\"hello\":\"world\"}}}"
     };
-
-    stream.addTestMessage({
-      invocationRequest: actualInvocationRequest
-    });
-
-    sinon.assert.calledWithMatch(stream.written, <rpc.IStreamingMessage> {
-      invocationResponse: {
-        invocationId: '1',
-        result:  {
-          status: rpc.StatusResult.Status.Success
-        },
-        outputData: [],
-        returnValue: {
-          json: "{\"res\":{\"body\":{\"hello\":\"world\"}}}"
-        }
-      }
-    });
+    assertInvocationSuccess([], expectedReturnValue);
   });
 
   it ('throws for malformed messages', () => {
@@ -690,5 +564,113 @@ describe('WorkerChannel', () => {
         functionLoadResponse: 1
       });
     }).to.throw("functionLoadResponse.object expected");
+  });
+
+  describe('#invocationRequestBefore, #invocationRequestAfter', () => {
+    afterEach(() => {
+      channel['_invocationRequestAfter'] = [];
+      channel['_invocationRequestBefore'] = [];
+    });
+
+    it("should apply hook before user function is executed", () => {
+      channel.registerBeforeInvocationRequest((context, userFunction) => {
+        context['magic_flag'] = 'magic value';
+        return userFunction.bind({ __wrapped: true });
+      });
+
+      channel.registerBeforeInvocationRequest((context, userFunction) => {
+        context["secondary_flag"] = 'magic value';
+        return userFunction;
+      });
+
+      loader.getFunc.returns(function (this: any, context) {
+        expect(context['magic_flag']).to.equal('magic value');
+        expect(context['secondary_flag']).to.equal('magic value');
+        expect(this.__wrapped).to.equal(true);
+        expect(channel['_invocationRequestBefore'].length).to.equal(2);
+        expect(channel['_invocationRequestAfter'].length).to.equal(0);
+        context.done();
+      });
+      loader.getInfo.returns(new FunctionInfo(queueTriggerBinding));
+
+      const actualInvocationRequest = sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+      assertInvocationSuccess([]);
+  
+      expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
+      expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
+    });
+
+    it('should apply hook after user function is executed (callback)', (done) => {
+      let finished = false;
+      let count = 0;
+      channel.registerAfterInvocationRequest((context) => {
+        expect(finished).to.equal(true);
+        count += 1;
+      });
+
+      loader.getFunc.returns(function (this: any, context) {
+        finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
+        expect(count).to.equal(0);
+        context.done();
+        expect(count).to.equal(1);
+        done();
+      });
+      loader.getInfo.returns(new FunctionInfo(queueTriggerBinding));
+
+      const actualInvocationRequest = sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+      assertInvocationSuccess([]);
+  
+      expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
+      expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
+    });
+
+    it('should apply hook after user function resolves (promise)', (done) => {
+      let finished = false;
+      let count = 0;
+      channel.registerAfterInvocationRequest((context) => {
+        expect(finished).to.equal(true);
+        count += 1;
+        expect(count).to.equal(1);
+        assertInvocationSuccess([]);
+        done();
+      });
+
+      loader.getFunc.returns(() => new Promise((resolve) => {
+        finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
+        expect(count).to.equal(0);
+        resolve();
+      }));
+      loader.getInfo.returns(new FunctionInfo(queueTriggerBinding));
+
+      sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+    });
+
+
+    it('should apply hook after user function rejects (promise)', (done) => {
+      let finished = false;
+      let count = 0;
+      channel.registerAfterInvocationRequest((context) => {
+        expect(finished).to.equal(true);
+        count += 1;
+        expect(count).to.equal(1);
+        assertInvocationSuccess([]);
+        done();
+      });
+
+      loader.getFunc.returns((context) => new Promise((_, reject) => {
+        finished = true;
+        expect(channel['_invocationRequestBefore'].length).to.equal(0);
+        expect(channel['_invocationRequestAfter'].length).to.equal(1);
+        expect(count).to.equal(0);
+        reject();
+      }));
+      loader.getInfo.returns(new FunctionInfo(queueTriggerBinding));
+
+      sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
+    });
   });
 })
