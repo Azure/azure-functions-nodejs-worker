@@ -211,7 +211,7 @@ describe('WorkerChannel', () => {
     }
   });
 
-  it('responds to function load', () => {
+  it('responds to function load', async () => {
     stream.addTestMessage({
       requestId: 'id',
       functionLoadRequest: {  
@@ -219,6 +219,8 @@ describe('WorkerChannel', () => {
         metadata: { }
       }
     });
+    // Set slight delay 
+    await new Promise(resolve => setTimeout(resolve, 100));
     sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
       requestId: 'id',
       functionLoadResponse: {

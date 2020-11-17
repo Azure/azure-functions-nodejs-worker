@@ -170,11 +170,11 @@ export class WorkerChannel implements IWorkerChannel {
    * @param requestId gRPC message request id
    * @param msg gRPC message content
    */
-  public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
+  public async functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
       let err, errorMessage;
       try {
-        this._functionLoader.load(msg.functionId, msg.metadata);
+        await this._functionLoader.load(msg.functionId, msg.metadata);
       }
       catch(exception) {
         errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;

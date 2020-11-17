@@ -5,7 +5,7 @@ import { FunctionInfo } from './FunctionInfo'
 import { InternalException } from "./utils/InternalException";
 
 export interface IFunctionLoader {
-  load(functionId: string, metadata: rpc.IRpcFunctionMetadata): void;
+  load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void>;
   getInfo(functionId: string): FunctionInfo;
   getFunc(functionId: string): Function;
 }
