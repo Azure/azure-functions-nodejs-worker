@@ -110,6 +110,7 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+      nodeVersion: $(NODE_VERSION)
   - task: PublishTestResults@2
     condition: always()
     inputs:

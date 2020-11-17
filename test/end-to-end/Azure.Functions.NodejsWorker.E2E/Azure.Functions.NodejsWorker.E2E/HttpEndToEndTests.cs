@@ -43,6 +43,30 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         }
 
         [Theory]
+        [InlineData("HttpTriggerESModules", "?name=Test", HttpStatusCode.OK, "Hello Test")]
+        [InlineData("HttpTriggerESModules", "?name=John&lastName=Doe", HttpStatusCode.OK, "Hello John")]
+        [InlineData("HttpTriggerESModules", "", HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")]
+        public async Task HttpTriggerTests(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage)
+        {
+            let nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
+            Console.WriteLine(nodeVersion);
+            if (nodeVersion.StartsWith("v14.")) {
+                // TODO: Verify exception on 500 after https://github.com/Azure/azure-functions-host/issues/3589
+                HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger(functionName, queryString);
+                string actualMessage = await response.Content.ReadAsStringAsync();
+
+                Assert.Equal(expectedStatusCode, response.StatusCode);
+                
+                if (!string.IsNullOrEmpty(expectedMessage)) {
+                    Assert.False(string.IsNullOrEmpty(actualMessage));
+                    Assert.True(actualMessage.Contains(expectedMessage));
+                }
+            } else {
+                Console.WriteLine("Skipping ES Module test for node version " + nodeVersion);
+            }
+        }
+
+        [Theory]
         [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/json", HttpStatusCode.OK)]
         [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1, \"b\":}", "application/json", HttpStatusCode.OK)]
         [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/octet-stream", HttpStatusCode.OK)]
