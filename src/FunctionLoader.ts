@@ -28,7 +28,7 @@ export class FunctionLoader implements IFunctionLoader {
           // use eval so it doesn't get compiled into a require()
           script = await eval("import(scriptFilePath)");
         } else {
-            throw new InternalException(`Please use a Node.js version >= v14 to use ES Modules for '${scriptFilePath}'`);
+          throw new InternalException(`Please use a Node.js version >= v14 to use ES Modules for '${scriptFilePath}'`);
         }
       } else {
         script = require(scriptFilePath);
