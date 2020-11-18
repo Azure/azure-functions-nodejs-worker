@@ -61,7 +61,8 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                     Assert.Contains(expectedMessage, actualMessage);
                 }
             } else {
-                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+                // This function will fail to load on the worker side
+                Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             }
         }
 
