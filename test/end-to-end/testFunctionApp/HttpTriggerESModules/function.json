@@ -16,5 +16,6 @@
       "direction": "out",
       "name": "res"
     }
-  ]
+  ],
+  "scriptFile": "./index.mjs"
 }
