@@ -48,13 +48,12 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         [InlineData("HttpTriggerESModules", "", HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")]
         public async Task HttpTriggerESModuleTests(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage)
         {
-            var nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
-            Console.WriteLine(nodeVersion);
-            if (nodeVersion.StartsWith("v14.")) {
-                // TODO: Verify exception on 500 after https://github.com/Azure/azure-functions-host/issues/3589
-                HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger(functionName, queryString);
-                string actualMessage = await response.Content.ReadAsStringAsync();
+            // TODO: Verify exception on 500 after https://github.com/Azure/azure-functions-host/issues/3589
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger(functionName, queryString);
+            string actualMessage = await response.Content.ReadAsStringAsync();
 
+            var nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
+            if (nodeVersion.Equals("14.x")) {
                 Assert.Equal(expectedStatusCode, response.StatusCode);
                 
                 if (!string.IsNullOrEmpty(expectedMessage)) {
@@ -62,7 +61,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
                     Assert.Contains(expectedMessage, actualMessage);
                 }
             } else {
-                Console.WriteLine("Skipping ES Module test for node version " + nodeVersion);
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             }
         }
 

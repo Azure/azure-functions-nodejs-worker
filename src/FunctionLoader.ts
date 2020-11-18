@@ -1,4 +1,5 @@
 import { isObject, isFunction } from 'util';
+import * as url from 'url'
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo'
@@ -25,8 +26,15 @@ export class FunctionLoader implements IFunctionLoader {
       let script: any;
       if (scriptFilePath.endsWith(".mjs")) {
         if (this.allowESModules) {
-          // use eval so it doesn't get compiled into a require()
-          script = await eval("import(scriptFilePath)");
+          // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
+          // @ts-ignore
+          let scriptFileUrl = url.pathToFileURL(scriptFilePath);
+          if (scriptFileUrl.href) {
+            // use eval so it doesn't get compiled into a require()
+            script = await eval("import(scriptFileUrl.href)");
+          } else {
+            throw new InternalException(`'${scriptFilePath}' could not be converted to file URL (${scriptFileUrl.href})`);
+          }
         } else {
           throw new InternalException(`Please use a Node.js version >= v14 to use ES Modules for '${scriptFilePath}'`);
         }
