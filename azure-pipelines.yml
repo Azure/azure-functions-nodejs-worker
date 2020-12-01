@@ -66,7 +66,7 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: npm install request
+  - script: npm install -g request
     displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
   - script: npm install
     displayName: 'npm install'
@@ -92,7 +92,7 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: npm install request
+  - script: npm install -g request
     displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
   - script: npm install
     displayName: 'npm install'
@@ -110,6 +110,7 @@ jobs:
       AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
       FUNCTIONS_WORKER_RUNTIME: 'node'
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
+      nodeVersion: $(NODE_VERSION)
   - task: PublishTestResults@2
     condition: always()
     inputs:

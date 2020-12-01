@@ -16,6 +16,7 @@
     "@types/node": "^8.0.0",
     "@types/sinon": "^2.3.7",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "mocha": "^5.2.0",
     "mock-require": "^2.0.2",
     "node-abi": "2.1.1",
