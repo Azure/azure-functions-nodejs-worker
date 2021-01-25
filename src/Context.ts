@@ -8,7 +8,7 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, TraceContext } from './public/Interfaces' 
 import { v4 as uuid } from 'uuid'
 
-export function CreateContextAndInputs<T>(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback<T>, v1WorkerBehavior: boolean) {
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, v1WorkerBehavior: boolean) {
     const context = new InvocationContext(info, request, logCallback, callback);
 
     const bindings: Dict<any> = {};
@@ -37,7 +37,7 @@ export function CreateContextAndInputs<T>(info: FunctionInfo, request: rpc.IInvo
     if (httpInput) {
         context.req = new Request(httpInput);
         context.res = new Response(context.done);
-        // This is added for backwards compatability with what the host used to send to the worker
+        // This is added for backwards compatibility with what the host used to send to the worker
         context.bindingData.sys = {
             methodName: info.name,
             utcNow: (new Date()).toISOString(),
@@ -57,7 +57,7 @@ export function CreateContextAndInputs<T>(info: FunctionInfo, request: rpc.IInvo
     }
 }
 
-class InvocationContext<T> implements Context {
+class InvocationContext implements Context {
     invocationId: string;
     executionContext: ExecutionContext;
     bindings: Dict<any>;
@@ -69,7 +69,7 @@ class InvocationContext<T> implements Context {
     res?: Response;
     done: DoneCallback;
 
-    constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback<T>) {
+    constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
         this.invocationId = <string>request.invocationId;
         this.traceContext = fromRpcTraceContext(request.traceContext);
         const executionContext = {
@@ -133,8 +133,8 @@ function logWithAsyncCheck(done: boolean, log: LogCallback, level: LogLevel, exe
     return log(level, LogCategory.User, ...args);
 }
 
-export interface InvocationResult<T> {
-    return: Truthy<T> | undefined;
+export interface InvocationResult {
+    return: any;
     bindings: Dict<any>;
 }
 
@@ -142,16 +142,8 @@ export type DoneCallback = (err?: Error | string, result?: any) => void;
 
 export type LogCallback = (level: LogLevel, category: rpc.RpcLog.RpcLogCategory, ...args: any[]) => void;
 
-export type ResultCallback<T> = (err?: any, result?: InvocationResult<T>) => void;
+export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 
 export interface Dict<T> {
     [key: string]: T
 }
-
-export type Truthy<T> =
-    false extends T ? never :
-    0 extends T ? never :
-    "" extends T ? never :
-    null extends T ? never :
-    undefined extends T ? never :
-    T

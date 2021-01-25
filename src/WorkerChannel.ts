@@ -201,7 +201,7 @@ export class WorkerChannel implements IWorkerChannel {
    * @param requestId gRPC message request id
    * @param msg gRPC message content
    */
-  public invocationRequest<T>(requestId: string, msg: rpc.InvocationRequest) {
+  public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
     if (this._v1WorkerBehavior) {
       augmentTriggerMetadata(msg);
@@ -218,7 +218,7 @@ export class WorkerChannel implements IWorkerChannel {
       });
     }
 
-    let resultCallback: ResultCallback<T> = (err, result) => {
+    let resultCallback: ResultCallback = (err, result) => {
       let response: rpc.IInvocationResponse = {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
@@ -239,12 +239,11 @@ export class WorkerChannel implements IWorkerChannel {
                 response.returnValue = returnBinding.converter(result.return);
               // $return binding is not found: read result as object of outputs
               } else {
-                const returnVal = result.return; // necessary to type-check
                 response.outputData = Object.keys(info.outputBindings)
-                  .filter(key => returnVal[key] !== undefined)
+                  .filter(key => result.return[key] !== undefined)
                   .map(key => <rpc.IParameterBinding>{
                     name: key,
-                    data: info.outputBindings[key].converter(returnVal[key])
+                    data: info.outputBindings[key].converter(result.return[key])
                   });
               }
               // returned value does not match any output bindings (named or $return)
