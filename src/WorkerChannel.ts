@@ -201,7 +201,7 @@ export class WorkerChannel implements IWorkerChannel {
    * @param requestId gRPC message request id
    * @param msg gRPC message content
    */
-  public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
+  public invocationRequest<T>(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
     if (this._v1WorkerBehavior) {
       augmentTriggerMetadata(msg);
@@ -218,7 +218,7 @@ export class WorkerChannel implements IWorkerChannel {
       });
     }
 
-    let resultCallback: ResultCallback = (err, result) => {
+    let resultCallback: ResultCallback<T> = (err, result) => {
       let response: rpc.IInvocationResponse = {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
@@ -227,10 +227,10 @@ export class WorkerChannel implements IWorkerChannel {
       response.outputData = [];
 
       try {
-        if (result) {
+        if (result !== undefined) {
           let returnBinding = info.getReturnBinding();
           // Set results from return / context.done
-          if (result.return) {
+          if (result.return !== undefined) {
             if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
@@ -239,11 +239,12 @@ export class WorkerChannel implements IWorkerChannel {
                 response.returnValue = returnBinding.converter(result.return);
               // $return binding is not found: read result as object of outputs
               } else {
+                const returnVal = result.return; // necessary to type-check
                 response.outputData = Object.keys(info.outputBindings)
-                  .filter(key => result.return[key] !== undefined)
+                  .filter(key => returnVal[key] !== undefined)
                   .map(key => <rpc.IParameterBinding>{
                     name: key,
-                    data: info.outputBindings[key].converter(result.return[key])
+                    data: info.outputBindings[key].converter(returnVal[key])
                   });
               }
               // returned value does not match any output bindings (named or $return)
@@ -261,7 +262,8 @@ export class WorkerChannel implements IWorkerChannel {
                 let definedInBindings: boolean = result.bindings[key] !== undefined;
                 let hasReturnValue: boolean = !!result.return;
                 let hasReturnBinding: boolean = !!returnBinding;
-                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding && result.return[key] !== undefined;
+                let hasReturnAtKey: boolean = (result.return) ? (result.return[key] != undefined) : false;
+                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding &&  hasReturnAtKey;
                 return definedInBindings && !definedInReturn;
               })
               .map(key => <rpc.IParameterBinding>{
