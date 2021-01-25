@@ -261,8 +261,7 @@ export class WorkerChannel implements IWorkerChannel {
                 let definedInBindings: boolean = result.bindings[key] !== undefined;
                 let hasReturnValue: boolean = !!result.return;
                 let hasReturnBinding: boolean = !!returnBinding;
-                let hasReturnAtKey: boolean = (result.return) ? (result.return[key] != undefined) : false;
-                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding &&  hasReturnAtKey;
+                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding && result.return[key] !== undefined;y;
                 return definedInBindings && !definedInReturn;
               })
               .map(key => <rpc.IParameterBinding>{
