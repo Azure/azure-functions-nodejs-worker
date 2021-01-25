@@ -71,6 +71,15 @@ export interface Context {
         [key: string]: any;
     };
 }
+export interface HttpRequestHeaders {
+    [name: string]: string | undefined;
+}
+export interface HttpRequestQuery {
+    [name: string]: string | undefined;
+}
+export interface HttpRequestParams {
+    [name: string]: string | undefined;
+}
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
  */
