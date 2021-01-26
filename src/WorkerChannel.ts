@@ -227,10 +227,10 @@ export class WorkerChannel implements IWorkerChannel {
       response.outputData = [];
 
       try {
-        if (result !== undefined) {
+        if (result != null) {
           let returnBinding = info.getReturnBinding();
           // Set results from return / context.done
-          if (result.return !== undefined) {
+          if (result.return != null) {
             if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
