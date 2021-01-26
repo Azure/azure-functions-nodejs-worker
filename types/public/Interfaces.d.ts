@@ -10,6 +10,12 @@
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
 export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export interface ContextBindings {
+    [name: string]: any;
+}
+export interface ContextBindingData {
+    [name: string]: any;
+}
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
@@ -28,15 +34,11 @@ export interface Context {
      * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically
      * generated and named based off of the "name" property in function.json.
      */
-    bindings: {
-        [key: string]: any;
-    };
+    bindings: ContextBindings;
     /**
      * Trigger metadata and function invocation data.
      */
-    bindingData: {
-        [key: string]: any;
-    };
+    bindingData: ContextBindingData;
     /**
      * TraceContext information to enable distributed tracing scenarios.
      */
@@ -71,6 +73,15 @@ export interface Context {
         [key: string]: any;
     };
 }
+export interface HttpRequestHeaders {
+    [name: string]: string | undefined;
+}
+export interface HttpRequestQuery {
+    [name: string]: string | undefined;
+}
+export interface HttpRequestParams {
+    [name: string]: string | undefined;
+}
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
  */
@@ -86,21 +97,15 @@ export interface HttpRequest {
     /**
      * HTTP request headers.
      */
-    headers: {
-        [key: string]: string;
-    };
+    headers: HttpRequestHeaders;
     /**
      * Query string parameter keys and values from the URL.
      */
-    query: {
-        [key: string]: string;
-    };
+    query: HttpRequestQuery;
     /**
      * Route parameter keys and values.
      */
-    params: {
-        [key: string]: string;
-    };
+    params: HttpRequestParams;
     /**
      * The HTTP request body.
      */
