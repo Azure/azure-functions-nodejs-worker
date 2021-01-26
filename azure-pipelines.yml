@@ -12,11 +12,13 @@ pr:
       - master
       - dev
       - v2.x
+      - v1.x
 
 trigger:
 - master
 - dev
 - v2.x
+- v1.x
 
 jobs:
 - job: UnitTests
