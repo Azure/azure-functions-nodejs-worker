@@ -455,6 +455,39 @@ describe('WorkerChannel', () => {
     assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
+    it ('returns and serializes falsy values', () => {
+    loader.getFunc.returns((context) => context.done(null, ""));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedOutput = [];
+    const expectedReturnValue1 = { 
+      string: ""
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue1);
+
+    loader.getFunc.returns((context) => context.done(null, 0));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedReturnValue2 = { 
+      int: 0
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue2);
+
+    loader.getFunc.returns((context) => context.done(null, false));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedReturnValue3 = { 
+      json: "false"
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue3)
+  });
+
   it ('returned output is ignored if http', () => {
     loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
