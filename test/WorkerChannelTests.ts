@@ -468,7 +468,7 @@ describe('WorkerChannel', () => {
     assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
-    it ('returns and serializes falsy value: 0', () => {
+  it ('returns and serializes falsy value: 0', () => {
     loader.getFunc.returns((context) => context.done(null, 0));
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
 
