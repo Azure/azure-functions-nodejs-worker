@@ -75,7 +75,9 @@ class InvocationContext implements Context {
         const executionContext = {
             invocationId: this.invocationId,
             functionName: <string>info.name,
-            functionDirectory: <string>info.directory
+            functionDirectory: <string>info.directory,
+            retryCount: <number>request.retryCount,
+            maxRetryCount: <number>request.maxRetryCount
         };
         this.executionContext = executionContext;
         this.bindings = {};

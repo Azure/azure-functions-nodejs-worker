@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '2.1.0',
+  WORKER_VERSION: '2.1.1',
   NODE_12: '12.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)

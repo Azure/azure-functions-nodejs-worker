@@ -160,6 +160,14 @@ export interface ExecutionContext {
      * The directory your function is in (this is the parent directory of this function's function.json).
      */
     functionDirectory: string;
+    /**
+     * Current retry count.
+     */
+    retryCount: number;
+    /**
+     * Current retry count.
+     */
+    maxRetryCount: number;
 }
 /**
  * TraceContext information to enable distributed tracing scenarios.
