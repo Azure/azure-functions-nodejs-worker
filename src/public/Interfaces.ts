@@ -178,11 +178,18 @@ export interface ExecutionContext {
      */
     functionDirectory: string;
     /**
-     * Current retry count.
+     * The retry context of the current funciton execution. The retry context of the current function execution. Equals null if retry policy is not defined or it's the first function execution.
+     */
+    retryContext?: RetryContext;
+}
+
+export interface RetryContext {
+    /**
+     * Current retry count of the function executions.
      */
     retryCount: number;
     /**
-     * Current retry count.
+     * Max retry count is the maximum number of times an execution is retried before eventual failure. A value of -1 means to retry indefinitely.
      */
     maxRetryCount: number;
 }
