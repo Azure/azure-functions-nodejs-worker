@@ -15,14 +15,14 @@ export declare type AzureFunction<TReturn = any, TArgs extends any[] = any[]> = 
  * Context bindings object. Provided to your function binding data, as defined in function.json.
  */
 export interface ContextBindings {
-  [name: string]: unknown;
+  [name: string]: any;
 }
 
 /** 
  * Context binding data. Provided to your function trigger metadata and function invocation data.
 */
 export interface ContextBindingData {
-  [name: string]: unknown;
+  [name: string]: any;
 }
 
 /**
