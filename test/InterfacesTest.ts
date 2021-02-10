@@ -1,5 +1,5 @@
 // Test typescript interfaces for ts compliation errors
-import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
+import { AzureFunction, Context, HttpRequest, HttpResponse, ContextBindings, HttpMethod, Cookie } from "../types/public/Interfaces";
 const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -76,3 +76,41 @@ const returnWithContextDone: AzureFunction = function (context: Context, req: Ht
 }
 
 export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
+
+// Function returns custom object
+interface CustomOutput {
+    value: string;
+}
+export const runTypedReturn: AzureFunction<CustomOutput> = async (context, request: HttpRequest) => {
+//  return { // ts(2322) error
+//      value1: "Test1"
+//  };
+    return {
+        value: "Test"
+    };
+}
+
+// Possible to define a custom binding definiion
+declare module '../types/public/Interfaces' {
+    export interface ContextBindings {
+        myBoundContext: CustomOutput 
+    }
+}
+export const runDefineContextBinding = async (context: Context, request: HttpRequest, execu) => {
+    let binding1 = context.bindings.myBoundContext.value.toUpperCase();
+    let binding2 = context.bindings["somebinding"];
+    //let binding3 = context.bindings.undefinedContext.value.toUpperCase(); // ts(2329) error
+}
+
+// Possible to define a custom request query definition
+declare module '../types/public/Interfaces' {
+    export interface HttpRequestQuery {
+        param: string
+    }
+}
+
+export const runDefineRequestQuery = async (context: Context, request: HttpRequest, execu) => {
+    let param1 = context.req?.query.param.toUpperCase();
+    let param2 = context.req?.query["param2"];
+    //let param3 = context.req?.query.param3.toUpperCase(); // ts(2329) error
+}

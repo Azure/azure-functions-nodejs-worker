@@ -9,12 +9,18 @@
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export declare type AzureFunction<TReturn = unknown> = ((context: Context, ...args: any[]) => Promise<TReturn> | void);
+/**
+ * Context bindings object. Provided to your function binding data, as defined in function.json.
+ */
 export interface ContextBindings {
-    [name: string]: any;
+    [name: string]: unknown;
 }
+/**
+ * Context binding data. Provided to your function trigger metadata and function invocation data.
+*/
 export interface ContextBindingData {
-    [name: string]: any;
+    [name: string]: unknown;
 }
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
@@ -73,14 +79,23 @@ export interface Context {
         [key: string]: any;
     };
 }
-export interface HttpRequestHeaders {
-    [name: string]: string | undefined;
+/**
+ * HTTP request headers.
+ */
+export interface HttpHeaders {
+    [name: string]: string | unknown;
 }
+/**
+ * Query string parameter keys and values from the URL.
+ */
 export interface HttpRequestQuery {
-    [name: string]: string | undefined;
+    [name: string]: string | unknown;
 }
+/**
+ * Route parameter keys and values.
+ */
 export interface HttpRequestParams {
-    [name: string]: string | undefined;
+    [name: string]: string | unknown;
 }
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
@@ -97,7 +112,7 @@ export interface HttpRequest {
     /**
      * HTTP request headers.
      */
-    headers: HttpRequestHeaders;
+    headers: HttpHeaders;
     /**
      * Query string parameter keys and values from the URL.
      */

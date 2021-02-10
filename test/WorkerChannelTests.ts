@@ -639,7 +639,7 @@ describe('WorkerChannel', () => {
         done();
       });
 
-      loader.getFunc.returns(() => new Promise((resolve) => {
+      loader.getFunc.returns(() => new Promise<void>((resolve) => {
         finished = true;
         expect(channel['_invocationRequestBefore'].length).to.equal(0);
         expect(channel['_invocationRequestAfter'].length).to.equal(1);
