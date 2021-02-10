@@ -192,6 +192,10 @@ export interface RetryContext {
      * Max retry count is the maximum number of times an execution is retried before eventual failure. A value of -1 means to retry indefinitely.
      */
     maxRetryCount: number;
+    /**
+     * Exception that caused the retry
+     */
+    exception: Error;
 }
 
 /**

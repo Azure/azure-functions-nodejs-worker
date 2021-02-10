@@ -287,6 +287,9 @@ message RetryContext {
 
   // Max retry count
   int32 max_retry_count = 2;
+
+  // Exception that caused the retry
+  RpcException exception = 3;
 }
 
 // Host requests worker to cancel invocation
