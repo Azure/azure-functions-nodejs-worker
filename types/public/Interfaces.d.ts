@@ -9,7 +9,7 @@
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export declare type AzureFunction<TReturn = unknown> = ((context: Context, ...args: any[]) => Promise<TReturn> | void);
+export declare type AzureFunction<TReturn = any, TArgs extends any[] = any[]> = ((context: Context, ...args: TArgs) => Promise<TReturn> | void);
 /**
  * Context bindings object. Provided to your function binding data, as defined in function.json.
  */
@@ -82,20 +82,20 @@ export interface Context {
 /**
  * HTTP request headers.
  */
-export interface HttpHeaders {
-    [name: string]: string | unknown;
+export interface HttpRequestHeaders {
+    [name: string]: string | undefined;
 }
 /**
  * Query string parameter keys and values from the URL.
  */
 export interface HttpRequestQuery {
-    [name: string]: string | unknown;
+    [name: string]: string | undefined;
 }
 /**
  * Route parameter keys and values.
  */
 export interface HttpRequestParams {
-    [name: string]: string | unknown;
+    [name: string]: string | undefined;
 }
 /**
  * HTTP request object. Provided to your function when using HTTP Bindings.
@@ -112,7 +112,7 @@ export interface HttpRequest {
     /**
      * HTTP request headers.
      */
-    headers: HttpHeaders;
+    headers: HttpRequestHeaders;
     /**
      * Query string parameter keys and values from the URL.
      */
