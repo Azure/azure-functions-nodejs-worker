@@ -69,9 +69,33 @@ export interface Context {
     /**
      * HTTP response object. Provided to your function when using HTTP Bindings.
      */
-    res?: {
-        [key: string]: any;
-    };
+    res?: HttpResponse;
+}
+export interface HttpResponseHeaders {
+    [name: string]: string | undefined;
+}
+export interface HttpResponse {
+    /**
+     * An object that contains the body of the response.
+     */
+    body: any,
+    /**
+     * An object that contains the response headers.
+     */
+    headers?: HttpResponseHeaders,
+    /**
+     * Indicates that formatting is skipped for the response.
+     */
+    isRaw?: boolean,
+    /**
+     * The HTTP status code of the response.
+     */
+    status?: number,
+    /**
+     * An array of HTTP cookie objects that are set in the response.
+     * An HTTP cookie object has a name, value, and other cookie properties, such as maxAge or sameSite.
+     */
+    cookies?: Cookie[],
 }
 export interface HttpRequestHeaders {
     [name: string]: string | undefined;
