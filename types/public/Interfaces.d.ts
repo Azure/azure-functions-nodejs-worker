@@ -96,6 +96,22 @@ export interface HttpResponse {
      * An HTTP cookie object has a name, value, and other cookie properties, such as maxAge or sameSite.
      */
     cookies?: Cookie[],
+    /**
+     * A helper to access headers on the response
+     */
+    get(header: string): string | undefined,
+    /**
+     * A helper to set headers on the response
+     */
+    set(header: string, value?: string): void,
+    /**
+     * A helper to set headers on the response
+     */
+    header(header: string, value?: string): void,
+    /**
+     * A helper to send the response
+     */
+    send(body: any): void,
 }
 export interface HttpRequestHeaders {
     [name: string]: string | undefined;
