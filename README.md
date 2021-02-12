@@ -16,7 +16,7 @@
 - `npm test`
 
 ## Debugging and Testing
-- In the function app you are using to test, add the App Setting in local.settings.json `languageWorkers:node:workerDirectory = <path-to-nodejsWorker.js>`
+- In the function app you are using to test, add the App Setting in local.settings.json `languageWorkers:node:workerDirectory = <path to azure-functions-nodejs-worker directory>`
   - This configures the functions host to use the development version of the worker
   - You can also configure `languageWorkers:node:workerDirectory` as an environment variable.
 - To debug, add the App Setting in local.settings.json `languageWorkers:node:arguments = --inspect-brk`
