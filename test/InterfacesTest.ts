@@ -1,5 +1,6 @@
 // Test typescript interfaces for ts compliation errors
-import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
+import { Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
+import { AzureFunction } from "../types/public/ts3.1/Main";
 const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -90,14 +91,11 @@ export const runTypedReturn: AzureFunction<CustomOutput> = async (context, reque
     };
 }
 
-// Possible to define a custom binding definiion
-declare module '../types/public/Interfaces' {
-    export interface ContextBindings {
-        myBoundContext: CustomOutput 
-    }
-}
-export const runDefineContextBinding = async (context: Context, request: HttpRequest, execu) => {
-    let binding1 = context.bindings.myBoundContext.value.toUpperCase();
-    let binding2 = context.bindings["somebinding"];
-    //let binding3 = context.bindings.undefinedContext.value.toUpperCase(); // ts(2329) error
+export const runTypedReturn1: AzureFunction<CustomOutput> = async (context, request ) => {
+//  return { // ts(2322) error
+//      value1: "Test1"
+//  };
+    return {
+        value: "Test"
+    };
 }
