@@ -177,7 +177,15 @@ export interface RetryContext {
     /**
      * Exception that caused the retry
      */
-    exception: Error;
+    exception?: Exception;
+}
+export interface Exception {
+    /** Exception source */
+    source?: (string | null);
+    /** Exception stackTrace */
+    stackTrace?: (string | null);
+    /** Exception message */
+    message?: (string | null);
 }
 /**
  * TraceContext information to enable distributed tracing scenarios.
