@@ -80,7 +80,7 @@ export class WorkerChannel implements IWorkerChannel {
           systemError(`Worker ${workerId} malformed message`, msgError);
           throw new InternalException(msgError);
         }
-        oldWrite.apply(eventStream, arguments);
+        oldWrite.apply(eventStream, [msg]);
     }
   }
 
@@ -212,7 +212,7 @@ export class WorkerChannel implements IWorkerChannel {
       this.log({
         invocationId: msg.invocationId,
         category: `${info.name}.Invocation`,
-        message: format.apply(null, args),
+        message: format.apply(null, <[any, any[]]>args),
         level: level,
         logCategory: category
       });

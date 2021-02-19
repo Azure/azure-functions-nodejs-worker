@@ -72,10 +72,11 @@ class InvocationContext implements Context {
     constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
         this.invocationId = <string>request.invocationId;
         this.traceContext = fromRpcTraceContext(request.traceContext);
-        const executionContext = {
+        const executionContext = <ExecutionContext>{
             invocationId: this.invocationId,
             functionName: <string>info.name,
-            functionDirectory: <string>info.directory
+            functionDirectory: <string>info.directory,
+            retryContext: request.retryContext
         };
         this.executionContext = executionContext;
         this.bindings = {};

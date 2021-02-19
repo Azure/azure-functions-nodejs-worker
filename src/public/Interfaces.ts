@@ -177,6 +177,37 @@ export interface ExecutionContext {
      * The directory your function is in (this is the parent directory of this function's function.json).
      */
     functionDirectory: string;
+    /**
+     * The retry context of the current funciton execution. The retry context of the current function execution. Equals null if retry policy is not defined or it's the first function execution.
+     */
+    retryContext?: RetryContext;
+}
+
+export interface RetryContext {
+    /**
+     * Current retry count of the function executions.
+     */
+    retryCount: number;
+    /**
+     * Max retry count is the maximum number of times an execution is retried before eventual failure. A value of -1 means to retry indefinitely.
+     */
+    maxRetryCount: number;
+    /**
+     * Exception that caused the retry
+     */
+    exception?: Exception;
+}
+
+export interface Exception {
+
+    /** Exception source */
+    source?: (string|null);
+
+    /** Exception stackTrace */
+    stackTrace?: (string|null);
+
+    /** Exception message */
+    message?: (string|null);
 }
 
 /**
