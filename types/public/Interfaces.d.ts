@@ -9,7 +9,7 @@
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export declare type AzureFunction<TReturn = any> = ((context: Context, ...args: any[]) => Promise<TReturn> | void);
 export interface ContextBindings {
     [name: string]: any;
 }
