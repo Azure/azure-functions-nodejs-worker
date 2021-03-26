@@ -674,5 +674,44 @@ describe('WorkerChannel', () => {
 
       sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
     });
+
+    it ('returns and serializes falsy value in Durable: ""', () => {
+      loader.getFunc.returns((context) => context.done(null, ""));
+      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+    
+      sendInvokeMessage([], getHttpTriggerDataMock());
+    
+      const expectedOutput = [];
+      const expectedReturnValue = { 
+        string: ""
+      };
+      assertInvocationSuccess(expectedOutput, expectedReturnValue);
+    });
+    
+    it ('returns and serializes falsy value in Durable: 0', () => {
+      loader.getFunc.returns((context) => context.done(null, 0));
+      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+    
+      sendInvokeMessage([], getHttpTriggerDataMock());
+    
+      const expectedOutput = [];
+      const expectedReturnValue = { 
+        int: 0
+      };
+      assertInvocationSuccess(expectedOutput, expectedReturnValue);
+    });
+    
+    it ('returns and serializes falsy value in Durable: false', () => {
+      loader.getFunc.returns((context) => context.done(null, false));
+      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+    
+      sendInvokeMessage([], getHttpTriggerDataMock());
+    
+      const expectedOutput = [];
+      const expectedReturnValue = { 
+        json: "false"
+      };
+      assertInvocationSuccess(expectedOutput, expectedReturnValue)
+    });
   });
 })
