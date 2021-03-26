@@ -229,10 +229,11 @@ export class WorkerChannel implements IWorkerChannel {
       // As legacy behavior, falsy values get serialized to `null` in AzFunctions.
       // This breaks Durable Functions expectations so we check if we're serializing
       // for durable and, if so, ensure falsy values get serialized.
-      let returnBinding = info.getReturnBinding();
-      let isDurableBinding = returnBinding === 'orchestrationTrigger';
+      let isDurableBinding = info?.bindings?.name?.type == 'activityTrigger';
+
       try {
         if (result || (isDurableBinding && result != null)) {
+          let returnBinding = info.getReturnBinding();
           // Set results from return / context.done
           if (result.return || (isDurableBinding && result.return != null)) {
             if (this._v1WorkerBehavior) {

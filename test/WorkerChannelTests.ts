@@ -86,6 +86,11 @@ describe('WorkerChannel', () => {
     direction: 1,
     dataType: 1
   };
+  const activityTriggerBinding = {
+    type: "activityTrigger",
+    direction: 1,
+    dataType: 1
+  };
   const httpInputBinding = { 
     type: "httpTrigger",
     direction: 0,
@@ -126,6 +131,11 @@ describe('WorkerChannel', () => {
       test: orchestrationTriggerBinding
     }
   };
+  const activityBinding = {
+    bindings: {
+      name: activityTriggerBinding
+    }
+  }
   const queueTriggerBinding = {
     bindings: {
       test: {
@@ -677,7 +687,7 @@ describe('WorkerChannel', () => {
 
     it ('returns and serializes falsy value in Durable: ""', () => {
       loader.getFunc.returns((context) => context.done(null, ""));
-      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+      loader.getInfo.returns(new FunctionInfo(activityBinding));
     
       sendInvokeMessage([], getHttpTriggerDataMock());
     
@@ -690,7 +700,7 @@ describe('WorkerChannel', () => {
     
     it ('returns and serializes falsy value in Durable: 0', () => {
       loader.getFunc.returns((context) => context.done(null, 0));
-      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+      loader.getInfo.returns(new FunctionInfo(activityBinding));
     
       sendInvokeMessage([], getHttpTriggerDataMock());
     
@@ -703,7 +713,7 @@ describe('WorkerChannel', () => {
     
     it ('returns and serializes falsy value in Durable: false', () => {
       loader.getFunc.returns((context) => context.done(null, false));
-      loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+      loader.getInfo.returns(new FunctionInfo(activityBinding));
     
       sendInvokeMessage([], getHttpTriggerDataMock());
     
