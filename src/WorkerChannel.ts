@@ -226,11 +226,12 @@ export class WorkerChannel implements IWorkerChannel {
       // explicitly set outputData to empty array to concat later
       response.outputData = [];
 
+      let returnBinding = info.getReturnBinding();
+      let isDurableBinding = returnBinding === 'orchestrationTrigger';
       try {
-        if (result) {
-          let returnBinding = info.getReturnBinding();
+        if (result || (isDurableBinding && result != null)) {
           // Set results from return / context.done
-          if (result.return) {
+          if (result.return || (isDurableBinding && result.return != null)) {
             if (this._v1WorkerBehavior) {
               response.returnValue = toTypedData(result.return);
             } else {
