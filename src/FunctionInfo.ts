@@ -34,8 +34,7 @@ export class FunctionInfo {
           if (type && type.toLowerCase() === 'http') {
             this.httpOutputName = name;
             this.outputBindings[name] = Object.assign(bindings[name], { converter: toRpcHttp });
-          }
-          else {
+          } else {
             this.outputBindings[name] = Object.assign(bindings[name], { converter: toTypedData });
           }
         });
