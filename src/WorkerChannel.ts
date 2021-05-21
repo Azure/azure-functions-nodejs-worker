@@ -149,7 +149,8 @@ export class WorkerChannel implements IWorkerChannel {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true",
       IgnoreEmptyValuedRpcHttpHeaders: "true",
-      UseNullableValueDictionaryForHttp: "true"
+      UseNullableValueDictionaryForHttp: "true",
+      WorkerStatus: "true"
     };
 
     if (!this._v1WorkerBehavior) {
@@ -327,10 +328,15 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
-   * NOT USED
+   * Worker sends the host empty response to evaluate the worker's latency
    */ 
   public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
-    // Not yet implemented
+    let workerStatusResponse: rpc.IWorkerStatusResponse = {
+    };
+    this._eventStream.write({
+      requestId: requestId,
+      workerStatusResponse
+    });
   }
 
   /**

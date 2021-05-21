@@ -674,5 +674,21 @@ describe('WorkerChannel', () => {
 
       sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
     });
+
+    it('responds to worker status', async () => {
+      stream.addTestMessage({
+        requestId: 'id',
+        workerStatusRequest: {  
+        }
+      });
+      // Set slight delay 
+      await new Promise(resolve => setTimeout(resolve, 100));
+      sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+        requestId: 'id',
+        workerStatusResponse: {
+        }
+      });
+    });
+
   });
 })
