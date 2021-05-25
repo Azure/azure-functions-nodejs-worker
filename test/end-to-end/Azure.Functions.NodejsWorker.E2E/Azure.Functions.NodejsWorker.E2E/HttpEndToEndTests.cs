@@ -44,7 +44,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
 
         [Theory]
         [InlineData("HttpTriggerESModules", "?name=Test", HttpStatusCode.OK, "Hello Test")]
-        [InlineData("HttpTriggerESModules", "?name=John&lastName=Doe", HttpStatusCode.OK, "Hello John")]
+        [InlineData("HttpTriggerESModules", "?name=Marie&lastName=Hoeger", HttpStatusCode.OK, "Hello Marie")]
         [InlineData("HttpTriggerESModules", "", HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")]
         public async Task HttpTriggerESModuleTests(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage)
         {
