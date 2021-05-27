@@ -99,6 +99,10 @@ export interface HttpRequest {
      */
     url: string;
     /**
+     * Raw request url
+     */
+    originalUrl: string,
+    /**
      * HTTP request headers.
      */
     headers: HttpRequestHeaders;
