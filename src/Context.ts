@@ -37,7 +37,7 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
     if (httpInput) {
         context.req = new Request(httpInput);
         context.res = new Response(context.done);
-        // This is added for backwards compatability with what the host used to send to the worker
+        // This is added for backwards compatibility with what the host used to send to the worker
         context.bindingData.sys = {
             methodName: info.name,
             utcNow: (new Date()).toISOString(),

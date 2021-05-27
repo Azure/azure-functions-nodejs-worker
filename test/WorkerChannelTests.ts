@@ -455,6 +455,45 @@ describe('WorkerChannel', () => {
     assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
+  it ('returns and serializes falsy value: ""', () => {
+    loader.getFunc.returns((context) => context.done(null, ""));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedOutput = [];
+    const expectedReturnValue = { 
+      string: ""
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue);
+  });
+
+  it ('returns and serializes falsy value: 0', () => {
+    loader.getFunc.returns((context) => context.done(null, 0));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedOutput = [];
+    const expectedReturnValue = { 
+      int: 0
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue);
+  });
+
+  it ('returns and serializes falsy value: false', () => {
+    loader.getFunc.returns((context) => context.done(null, false));
+    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
+
+    sendInvokeMessage([], getHttpTriggerDataMock());
+
+    const expectedOutput = [];
+    const expectedReturnValue = { 
+      json: "false"
+    };
+    assertInvocationSuccess(expectedOutput, expectedReturnValue)
+  });
+
   it ('returned output is ignored if http', () => {
     loader.getFunc.returns((context) => context.done(null, ["hello, seattle!", "hello, tokyo!"]));
     loader.getInfo.returns(new FunctionInfo(httpResBinding));
