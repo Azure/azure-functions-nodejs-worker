@@ -98,7 +98,7 @@ jobs:
     displayName: 'npm install'
   - script: npm run build
     displayName: 'npm run build'
-  - powershell: |
+  - pwsh: |
       .\setup-e2e-tests.ps1
     displayName: 'setup tests'
   - powershell: |
