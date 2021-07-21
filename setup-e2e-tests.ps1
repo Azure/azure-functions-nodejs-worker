@@ -45,6 +45,7 @@ Remove-Item -Force "$FUNC_CLI_DIRECTORY.zip" -ErrorAction Ignore
 Remove-Item -Recurse -Force $FUNC_CLI_DIRECTORY -ErrorAction Ignore
 
 $version = Invoke-RestMethod -Uri "$env:CORE_TOOLS_URL/version.txt"
+$version = $version.Trim()
 Write-Host "Downloading Functions Core Tools (Version: $version)..."
 
 $output = "$FUNC_CLI_DIRECTORY.zip"
@@ -53,6 +54,21 @@ Invoke-RestMethod -Uri $coreToolsDownloadURL -OutFile $output
 
 Write-Host 'Extracting Functions Core Tools...'
 Expand-Archive $output -DestinationPath $FUNC_CLI_DIRECTORY
+
+if ($UseCoreToolsBuildFromIntegrationTests.IsPresent)
+{
+    Write-Host "Set Node worker directory"
+    $nodeWorkerFolderPath = [IO.Path]::Join($FUNC_CLI_DIRECTORY, 'workers', 'node')
+
+    if (-not (Test-Path $nodeWorkerFolderPath))
+    {
+        throw "Path '$nodeWorkerFolderPath' does not exist"
+    }
+
+    $workerDirectory = "languageWorkers:node:workerDirectory"
+    $env:workerDirectory = $nodeWorkerFolderPath
+    Write-Host "env:languageWorkers:node:workerDirectory = '$env:workerDirectory'"
+}
 
 $funcExePath = Join-Path $FUNC_CLI_DIRECTORY $FUNC_EXE_NAME
 

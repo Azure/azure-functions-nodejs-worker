@@ -19,29 +19,6 @@ function RunTest([string] $project, [string] $description,[bool] $skipBuild = $f
     return $r
 }
 
-$workerDirectory = "languageWorkers:node:workerDirectory"
-
-if (-not $env:workerDirectory)
-{
-
-  Write-Host "Setting variable '$workerDirectory'"
-
-  # Set the node worker directory
-  # Azure Functions Core Tools\workers\node
-  $nodeWorkerFolderPath = [IO.Path]::Join($PSScriptRoot, 'Azure.Functions.Cli', 'workers', 'node')
-
-  if (-not (Test-Path $nodeWorkerFolderPath))
-  {
-    $funcFolder = Get-ChildItem func.exe -Recurse | % {$_.FullName}
-    write-host "Func folder: $funcFolder"
-    throw "Unable to find '$nodeWorkerFolderPath'"
-  }
-
-  Write-Host "Set $workerDirectory to $nodeWorkerFolderPath"
-  $env:workerDirectory = $nodeWorkerFolderPath
-  Write-Host "Done"
-}
-
 $tests = @(
   @{project ="$PSScriptRoot/test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E.csproj"; description="E2E integration tests"}
 )
