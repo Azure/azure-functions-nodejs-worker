@@ -208,3 +208,30 @@ export interface Logger {
      */
     verbose(...args: any[]): void;
 }
+export interface Timer {
+    schedule: {
+        /**
+         * Describes whether the timer for daylight saving based on the timer's time zone
+         */
+        adjustForDST: boolean;
+        /**
+         * Describes a timer schedule status
+         */
+        scheduleStatus: {
+            /**
+             * Describes the last recorded schedule occurence
+             */
+            last: Date;
+            /**
+             * Describes the expected next schedule occurrence
+             */
+            next: Date;
+            /**
+             * Describes the last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart.
+             */
+            lastUpdated: Date;
+        };
+        /** Describes whether the timer schedules is past it's scheduled due time */
+        isPastDue: boolean;
+    };
+}
