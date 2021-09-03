@@ -6,7 +6,8 @@
 variables: {
   NODE_10: '10.x',
   NODE_12: '12.x',
-  NODE_14: '14.x'
+  NODE_14: '14.x',
+  NODE_14: '16.x'
 }
 
 pr: none
@@ -21,6 +22,8 @@ strategy:
         NODE_VERSION: $(NODE_12)
       NODE14:
         NODE_VERSION: $(NODE_14)
+      NODE16:
+        NODE_VERSION: $(NODE_16)
 pool:
     vmImage: 'vs2017-win2016'
 steps:

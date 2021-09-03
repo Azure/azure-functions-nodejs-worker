@@ -203,9 +203,9 @@ describe('WorkerChannel', () => {
     }
   });
 
-  it('does not init for Node.js v14.x and v2 compatability = true', () => {
+  it('does not init for Node.js v14.x or Node.js v16.x and v2 compatability = true', () => {
     let version = process.version;
-    if (version.split(".")[0] === "v14") {
+    if (version.split(".")[0] === "v14" || version.split(".")[0] === "v16") {
       let initMessage = {
         requestId: 'id',
         workerInitRequest: {
@@ -399,8 +399,8 @@ describe('WorkerChannel', () => {
   });
 
   it ('invokes function in V2 compat mode', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
+    // Skip test on Node.js 14 or Node.js 16
+    if (process.version.startsWith("v14") || process.version.startsWith("v16")) {
       return;
     }
     loader.getFunc.returns((context) => context.done());
@@ -474,8 +474,8 @@ describe('WorkerChannel', () => {
   });
 
   it ('returns string data with $return binding and V2 compat', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
+    // Skip test on Node.js 14 or Node.js 16
+    if (process.version.startsWith("v14") || process.version.startsWith("v16")) {
       return;
     }
     let httpResponse;
@@ -554,8 +554,8 @@ describe('WorkerChannel', () => {
   });
 
   it ('serializes output binding data through context.done with V2 compat', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
+    // Skip test on Node.js 14 or Node.js 16
+    if (process.version.startsWith("v14") || process.version.startsWith("v16")) {
       return;
     }
     loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
