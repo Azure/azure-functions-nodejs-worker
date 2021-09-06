@@ -1,6 +1,7 @@
 import { systemError } from './utils/Logger';
 import { Duplex } from 'stream';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
+import * as grpcloader from '@grpc/proto-loader';
 import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
@@ -12,8 +13,7 @@ interface GrpcClientConstructor {
 }
 
 function GetGrpcClientConstructor(): GrpcClientConstructor {
-    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.INamespace);
-    let rpcs = grpc.loadObject(reflectionObject, { enumsAsStrings: false, protobufjsVersion: 6 });
+    let rpcs = grpcloader.fromJSON(jsonModule as protobuf.INamespace);
     return rpcs.AzureFunctionsRpcMessages["FunctionRpc"];
 }
 
