@@ -76,7 +76,7 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: npm install -g request
+  - script: node -v
     displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
   - script: npm install
     displayName: 'npm install'
