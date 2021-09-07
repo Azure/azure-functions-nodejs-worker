@@ -8,6 +8,7 @@
     "google-protobuf": "^3.6.1",
     "@grpc/grpc-js": "^1.2.7",
     "@grpc/proto-loader": "^0.6.4",
+    "long": "^4.0.0",
     "minimist": "^1.2.5",
     "protobufjs": "^6.8.8",
     "uuid": "^8.3.0"
