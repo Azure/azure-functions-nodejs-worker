@@ -1,7 +1,7 @@
 var logPrefix = "LanguageWorkerConsoleLog";
 var errorPrefix = logPrefix + "[error] ";
 var warnPrefix = logPrefix + "[warn] ";
-var supportedVersions:string[] = ["v8", "v10", "v12", "v14"];
+var supportedVersions:string[] = ["v8", "v10", "v12", "v14", "v16"];
 var worker;
 
 // Try validating node version
