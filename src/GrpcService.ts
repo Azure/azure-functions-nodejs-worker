@@ -3,6 +3,7 @@ import { Duplex } from 'stream';
 import * as grpc from '@grpc/grpc-js';
 import * as grpcloader from '@grpc/proto-loader';
 import { PackageDefinition, ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client';
+import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
 import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
@@ -10,6 +11,7 @@ import rpc = jsonModule.AzureFunctionsRpcMessages;
 
 
 function GetGrpcClientConstructor(): ServiceClientConstructor {
+    let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.INamespace);
     const packageDef = grpcloader.fromJSON(jsonModule as protobuf.INamespace, {objects: true, defaults: true, oneofs: true});
     const serviceDef = packageDef["AzureFunctionsRpcMessages.FunctionRpc"] as grpcloader.ServiceDefinition;
     const clientConstructor: ServiceClientConstructor = grpc.makeClientConstructor(serviceDef, "FunctionRpc");
