@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '2.1.2',
+  WORKER_VERSION: '4.0.0',
   NODE_8: '8.x',
   NODE_10: '10.x',
   NODE_12: '12.x',
@@ -13,11 +13,13 @@ pr:
       - master
       - dev
       - v2.x
+      - v4.x
 
 trigger:
 - master
 - dev
 - v2.x
+- v4.x
 
 jobs:
 - job: UnitTests
