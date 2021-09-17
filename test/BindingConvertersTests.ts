@@ -19,6 +19,13 @@ describe('Binding Converters', () => {
         },
         "$request": {
             string: "Https://mock/"
+        },
+        "Falsy": {
+          value1 : 0,
+          value2 : "",
+          value3 : false,
+          value4 : null,
+          value5 : undefined
         }
     };
 
@@ -36,6 +43,11 @@ describe('Binding Converters', () => {
     expect(bindingData.sys.utcNow).to.equal('2018');
     expect(bindingData.sys.randGuid).to.equal('3212');
     expect(bindingData.$request).to.equal('Https://mock/');
+    expect(bindingData.falsy.value1).to.equal(0);
+    expect(bindingData.falsy.value2).to.equal("");
+    expect(bindingData.falsy.value3).to.equal(false);
+    expect(bindingData.falsy.value4).to.equal(null);
+    expect(bindingData.falsy.value5).to.equal(undefined);
     // Verify accessing original keys is undefined
     expect(bindingData.Sys).to.be.undefined;
     expect(bindingData.sys.UtcNow).to.be.undefined;
