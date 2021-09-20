@@ -46,8 +46,11 @@ function isBindingDirection(input: string | undefined): boolean {
 export function convertKeysToCamelCase(obj: any) {
   var output = {};
   for (var key in obj) {
+      // Only "undefined" will be replaced with original object property. For example:
+      //{ string : "0" } -> 0
+      //{ string : "false" } -> false
+      //"test" -> "test" (undefined returned from fromTypedData)
       let valueFromDataType = fromTypedData(obj[key]);
-      // Only "undefined" will be replaced with origin object property.
       let value = valueFromDataType === undefined ? obj[key] : valueFromDataType;
       let camelCasedKey = key.charAt(0).toLocaleLowerCase() + key.slice(1);
       // If the value is a JSON object (and not array and not http, which is already cased), convert keys to camel case
