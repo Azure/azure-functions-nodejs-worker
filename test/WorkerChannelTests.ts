@@ -43,16 +43,6 @@ describe('WorkerChannel', () => {
     });
   }
 
-  const sendV2CompatableHostMessage = () => {
-    stream.addTestMessage({
-      workerInitRequest: {
-        hostVersion: "3.0.0000",
-        capabilities: {
-          V2Compatable: "true"
-        }
-      }
-    });
-  }
   
   const getHttpTriggerDataMock: () => { [k: string]: rpc.ITypedData } =  () => {
     return {
@@ -175,13 +165,8 @@ describe('WorkerChannel', () => {
       }
     }
 
-    // V1 worker behavior
-    if (process.version.startsWith('v8')) {
-      initMessage.workerInitRequest.capabilities['V2Compatable'] = 'true';
-    // Expect this behavior in V2 worker behavior
-    } else {
-      expectedOutput.workerInitResponse.capabilities['TypedDataCollection'] = 'true';
-    }
+    expectedOutput.workerInitResponse.capabilities['TypedDataCollection'] = 'true';
+
     
     stream.addTestMessage(initMessage);
     sinon.assert.calledWith(stream.written, );
@@ -199,24 +184,6 @@ describe('WorkerChannel', () => {
           
       expect(() =>
         stream.addTestMessage(initMessage)).to.throw(`Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
-      );
-    }
-  });
-
-  it('does not init for Node.js v14.x and v2 compatability = true', () => {
-    let version = process.version;
-    if (version.split(".")[0] === "v14") {
-      let initMessage = {
-        requestId: 'id',
-        workerInitRequest: {
-          capabilities: {
-            V2Compatable: "true"
-          }
-        }
-      };
-          
-      expect(() =>
-        stream.addTestMessage(initMessage)).to.throw(`Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
       );
     }
   });
@@ -398,24 +365,6 @@ describe('WorkerChannel', () => {
     process.chdir(cwd);
   });
 
-  it ('invokes function in V2 compat mode', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
-      return;
-    }
-    loader.getFunc.returns((context) => context.done());
-    loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
-
-    sendV2CompatableHostMessage();
-    const actualInvocationRequest = sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
-
-    assertInvocationSuccess([]);
-
-    // triggerMedata will be augmented with inpuDataValue since "RpcHttpTriggerMetadataRemoved" capability is set to true and therefore not populated by the host.
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.equal(JSON.stringify(httpInputData.data));
-    expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.equal(JSON.stringify(httpInputData.data));
-  });
-
   it ('invokes function', () => {
     loader.getFunc.returns((context) => context.done());
     loader.getInfo.returns(new FunctionInfo(orchestratorBinding));
@@ -471,28 +420,6 @@ describe('WorkerChannel', () => {
 
     sendInvokeMessage([], getHttpTriggerDataMock());
     assertInvocationSuccess([], undefined);
-  });
-
-  it ('returns string data with $return binding and V2 compat', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
-      return;
-    }
-    let httpResponse;
-    loader.getFunc.returns((context) => { httpResponse = context.res; context.done(null, { body: { hello: "world" }})});
-    loader.getInfo.returns(new FunctionInfo(httpReturnBinding));
-
-    sendV2CompatableHostMessage();
-    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
-
-    const expectedOutput = [{
-      data: {
-        http: httpResponse
-      },
-      name: "$return"
-    }];
-    const expectedReturnValue = { json: "{\"body\":{\"hello\":\"world\"}}" };
-    assertInvocationSuccess(expectedOutput, expectedReturnValue);
   });
 
   it ('serializes output binding data through context.done', () => {
@@ -551,23 +478,6 @@ describe('WorkerChannel', () => {
       name: "queueOutput"
     }];
     assertInvocationSuccess(expectedOutput);
-  });
-
-  it ('serializes output binding data through context.done with V2 compat', () => {
-    // Skip test on Node.js 14
-    if (process.version.startsWith("v14")) {
-      return;
-    }
-    loader.getFunc.returns((context) => context.done(null, { res: { body: { hello: "world" }}}));
-    loader.getInfo.returns(new FunctionInfo(httpResBinding));
-
-    sendV2CompatableHostMessage();
-    sendInvokeMessage([httpInputData], getHttpTriggerDataMock());
-
-    const expectedReturnValue = {
-      json: "{\"res\":{\"body\":{\"hello\":\"world\"}}}"
-    };
-    assertInvocationSuccess([], expectedReturnValue);
   });
 
   it ('throws for malformed messages', () => {

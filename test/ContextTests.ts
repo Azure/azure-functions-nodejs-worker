@@ -38,8 +38,7 @@ describe('Context', () => {
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
 
-        let v1WorkerBehavior = false;
-        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback, v1WorkerBehavior);
+        let { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         _context = context;
     });
 
@@ -56,27 +55,17 @@ describe('Context', () => {
                 myTimer: {
                     type: "timerTrigger",
                     direction: 0,
-                    dataType: 0                    
+                    dataType: 0
                 }
             }
         });
-        // Node.js Worker V2 behavior
-        let workerV2Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
-        let myTimerWorkerV2 = workerV2Outputs.inputs[0];
-        expect(myTimerWorkerV2.schedule).to.be.empty;
-        expect(myTimerWorkerV2.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
-        expect(myTimerWorkerV2.scheduleStatus.lastUpdated).to.equal("2016-10-04T10:16:00+00:00");
-        expect(myTimerWorkerV2.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
-        expect(myTimerWorkerV2.isPastDue).to.equal(false);
-
-        // Node.js Worker V1 behavior
-        let workerV1Outputs = CreateContextAndInputs(info, msg, _logger, _resultCallback, true);
-        let myTimerWorkerV1 = workerV1Outputs.inputs[0];
-        expect(myTimerWorkerV1.Schedule).to.be.empty;
-        expect(myTimerWorkerV1.ScheduleStatus.Last).to.equal("2016-10-04T10:15:00+00:00");
-        expect(myTimerWorkerV1.ScheduleStatus.LastUpdated).to.equal("2016-10-04T10:16:00+00:00");
-        expect(myTimerWorkerV1.ScheduleStatus.Next).to.equal("2016-10-04T10:20:00+00:00");
-        expect(myTimerWorkerV1.IsPastDue).to.equal(false);
+        let workerOutputs = CreateContextAndInputs(info, msg, _logger, _resultCallback);
+        let myTimerWorker = workerOutputs.inputs[0];
+        expect(myTimerWorker.schedule).to.be.empty;
+        expect(myTimerWorker.scheduleStatus.last).to.equal("2016-10-04T10:15:00+00:00");
+        expect(myTimerWorker.scheduleStatus.lastUpdated).to.equal("2016-10-04T10:16:00+00:00");
+        expect(myTimerWorker.scheduleStatus.next).to.equal("2016-10-04T10:20:00+00:00");
+        expect(myTimerWorker.isPastDue).to.equal(false);
     });
 
     it ('Does not add sys to bindingData for non-http', async () => {
@@ -97,7 +86,7 @@ describe('Context', () => {
             }
         });
 
-        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         expect(context.bindingData.sys).to.be.undefined;
         expect(context.bindingData.invocationId).to.equal("1");
         expect(context.invocationId).to.equal("1");
@@ -132,7 +121,7 @@ describe('Context', () => {
             }
         });
 
-        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         const { bindingData } = context;
         expect(bindingData.sys.methodName).to.equal("test");
         expect(bindingData.sys.randGuid).to.not.be.undefined;
@@ -186,7 +175,7 @@ describe('Context', () => {
             }
         });
 
-        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         const { bindingData } = context;
         expect(bindingData.invocationId).to.equal("1");
         expect(bindingData.headers.header1).to.equal("value1");
@@ -231,7 +220,7 @@ describe('Context', () => {
             }
         });
 
-        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback, false);
+        let { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         const { bindingData } = context;
         expect(bindingData.invocationId).to.equal("1");
         expect(bindingData.headers.header1).to.equal("value1");

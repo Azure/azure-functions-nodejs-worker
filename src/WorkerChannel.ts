@@ -4,7 +4,6 @@ import { IFunctionLoader } from './FunctionLoader';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
-import { augmentTriggerMetadata } from './augmenters';
 import { systemError, systemWarn } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
 import { Context } from './public/Interfaces';
@@ -40,7 +39,6 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
-  private _v1WorkerBehavior: boolean;
   private _invocationRequestBefore: InvocationRequestBefore[];
   private _invocationRequestAfter: InvocationRequestAfter[];
 
@@ -48,8 +46,6 @@ export class WorkerChannel implements IWorkerChannel {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
-    // default value
-    this._v1WorkerBehavior = false;
     this._invocationRequestBefore = [];
     this._invocationRequestAfter = [];
 
@@ -116,46 +112,25 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
-    // TODO: add capability from host to go to "non-breaking" mode
-    if (msg.capabilities && msg.capabilities.V2Compatable) {
-      this._v1WorkerBehavior = true;
-    }
-
     // Validate version
     let version = process.version;
-    if (this._v1WorkerBehavior) {
-      if (version.startsWith("v12.")) {
-        systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
-      } else if (version.startsWith("v14.")) {
-        let msg = "Incompatible Node.js version"
-          + " (" + version + ")."
-          + " The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x."
-          + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
-        systemError(msg);
-        throw new InternalException(msg);        
-      }
-    } else {
-      if (version.startsWith("v8.")) {
-        let msg = "Incompatible Node.js version"
-          + " (" + version + ")."
-          + " The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x."
-          + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
-        systemError(msg);
-        throw new InternalException(msg);
-      }
+    if (!version.startsWith("v14.")) {
+      let msg = "Incompatible Node.js version"
+        + " (" + version + ")."
+        + " The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x"
+        + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
+      systemError(msg);
+      throw new InternalException(msg);
     }
-
+ 
     let workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true",
       IgnoreEmptyValuedRpcHttpHeaders: "true",
       UseNullableValueDictionaryForHttp: "true",
-      WorkerStatus: "true"
+      WorkerStatus: "true",
+      TypedDataCollection: "true"
     };
-
-    if (!this._v1WorkerBehavior) {
-      workerCapabilities["TypedDataCollection"] = "true";
-    }
 
     this._eventStream.write({
       requestId: requestId,
@@ -203,10 +178,6 @@ export class WorkerChannel implements IWorkerChannel {
    * @param msg gRPC message content
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
-    // Repopulate triggerMetaData if http.
-    if (this._v1WorkerBehavior) {
-      augmentTriggerMetadata(msg);
-    }
 
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, category, ...args) => {
@@ -239,26 +210,22 @@ export class WorkerChannel implements IWorkerChannel {
           let returnBinding = info.getReturnBinding();
           // Set results from return / context.done
           if (result.return || (isDurableBinding && result.return != null)) {
-            if (this._v1WorkerBehavior) {
-              response.returnValue = toTypedData(result.return);
+            // $return binding is found: return result data to $return binding
+            if (returnBinding) {
+              response.returnValue = returnBinding.converter(result.return);
+            // $return binding is not found: read result as object of outputs
             } else {
-              // $return binding is found: return result data to $return binding
-              if (returnBinding) {
-                response.returnValue = returnBinding.converter(result.return);
-              // $return binding is not found: read result as object of outputs
-              } else {
-                response.outputData = Object.keys(info.outputBindings)
-                  .filter(key => result.return[key] !== undefined)
-                  .map(key => <rpc.IParameterBinding>{
-                    name: key,
-                    data: info.outputBindings[key].converter(result.return[key])
-                  });
-              }
-              // returned value does not match any output bindings (named or $return)
-              // if not http, pass along value
-              if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
-                response.returnValue = toTypedData(result.return);
-              }
+              response.outputData = Object.keys(info.outputBindings)
+                .filter(key => result.return[key] !== undefined)
+                .map(key => <rpc.IParameterBinding>{
+                  name: key,
+                  data: info.outputBindings[key].converter(result.return[key])
+                });
+            }
+            // returned value does not match any output bindings (named or $return)
+            // if not http, pass along value
+            if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
+              response.returnValue = toTypedData(result.return);
             }
           }
           // Set results from context.bindings
@@ -289,7 +256,7 @@ export class WorkerChannel implements IWorkerChannel {
       this.runInvocationRequestAfter(context);
     }
 
-    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback, this._v1WorkerBehavior);
+    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
     
     userFunction = this.runInvocationRequestBefore(context, userFunction);
