@@ -4,8 +4,6 @@
 # https://aka.ms/yaml
 
 variables: {
-  NODE_10: '10.x',
-  NODE_12: '12.x',
   NODE_14: '14.x'
 }
 
@@ -15,10 +13,6 @@ trigger: none
 strategy:
     maxParallel: 1
     matrix:
-      NODE10:
-        NODE_VERSION: $(NODE_10)
-      NODE12:
-        NODE_VERSION: $(NODE_12)
       NODE14:
         NODE_VERSION: $(NODE_14)
 pool:
