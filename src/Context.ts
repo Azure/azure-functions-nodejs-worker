@@ -24,7 +24,9 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
                 if (info.getTimerTriggerName() === binding.name) {
                     // v2 worker converts timer trigger object to camelCase
                     input = convertKeysToCamelCase(binding)["data"];
-                } 
+                } else {
+                    input = fromTypedData(binding.data);
+                }
             }
             bindings[binding.name] = input;
             inputs.push(input);
