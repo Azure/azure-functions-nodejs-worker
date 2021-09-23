@@ -21,7 +21,7 @@ if ($IsWindows) {
     }
 }
 
-$FUNC_RUNTIME_VERSION = '4'
+$FUNC_RUNTIME_VERSION = '3'
 $coreToolsDownloadURL = $null
 if ($UseCoreToolsBuildFromIntegrationTests.IsPresent)
 {
