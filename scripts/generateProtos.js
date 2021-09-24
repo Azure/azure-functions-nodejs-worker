@@ -21,9 +21,9 @@ async function generateProtos() {
         .then(data => console.log("Compiled to JavaScript."))
         .catch(err => console.log(`Could not compile to JavaScript: ${err}`));
     
-    // Don't generate with Node.js v12 until resolved: https://github.com/protobufjs/protobuf.js/issues/1275
-    if ((process.version.startsWith("v12") || process.version.startsWith("v14")) && process.platform === 'win32') {
-        console.warn("Warning! Could not compile to TypeScript for Node.js 12 or 14 and Windows OS. Do not change public interfaces.");
+    // Don't generate with Node.js > v12 until resolved: https://github.com/protobufjs/protobuf.js/issues/1275
+    if ((process.version.startsWith("v14") || process.version.startsWith("v16")) && process.platform === 'win32') {
+        console.warn("Warning! Could not compile to TypeScript for Node.js 14 or 16 and Windows OS. Do not change public interfaces.");
     } else {
         genTs(allFiles)
         .then(data => console.log("Compiled to TypeScript."))
@@ -32,7 +32,7 @@ async function generateProtos() {
 };
 
 async function getFiles(root, fileFilter, directoryFilter) {
-    return readdirp({ root, fileFilter, directoryFilter })
+    return readdirp( root, {fileFilter : fileFilter, directoryFilter : directoryFilter })
         .then(data => getDelimitedFiles(data));
 }
 

@@ -1,6 +1,8 @@
 import { systemError } from './utils/Logger';
 import { Duplex } from 'stream';
-import * as grpc from 'grpc';
+import * as grpc from '@grpc/grpc-js';
+import * as grpcloader from '@grpc/proto-loader';
+import { PackageDefinition, ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client';
 import * as protobuf from 'protobufjs';
 
 // import protobufjs json descriptor
@@ -11,12 +13,13 @@ interface GrpcClientConstructor {
     new(connection: string, credentials: any, options: any): GrpcClient;
 }
 
-function GetGrpcClientConstructor(): GrpcClientConstructor {
+function GetGrpcClientConstructor(): ServiceClientConstructor {
     let reflectionObject = protobuf.Root.fromJSON(jsonModule as protobuf.INamespace);
-    let rpcs = grpc.loadObject(reflectionObject, { enumsAsStrings: false, protobufjsVersion: 6 });
-    return rpcs.AzureFunctionsRpcMessages["FunctionRpc"];
+    const packageDef = grpcloader.fromJSON(jsonModule as protobuf.INamespace, {objects: true, defaults: true, oneofs: true});
+    const serviceDef = packageDef["AzureFunctionsRpcMessages.FunctionRpc"] as grpcloader.ServiceDefinition;
+    const clientConstructor: ServiceClientConstructor = grpc.makeClientConstructor(serviceDef, "FunctionRpc");
+    return clientConstructor;
 }
-
 interface GrpcClient extends grpc.Client {
     eventStream(): IEventStream
 }
@@ -29,12 +32,12 @@ export interface IEventStream {
 }
 
 export function CreateGrpcEventStream(connection: string, grpcMaxMessageLength: number): IEventStream {
-    let GrpcClient = GetGrpcClientConstructor();
+    let constructor : ServiceClientConstructor = GetGrpcClientConstructor();
     let clientOptions = { 
         'grpc.max_send_message_length': grpcMaxMessageLength, 
         'grpc.max_receive_message_length': grpcMaxMessageLength 
     };
-    let client = new GrpcClient(connection, grpc.credentials.createInsecure(), clientOptions);
+    let client = new constructor(connection, grpc.credentials.createInsecure(), clientOptions);
     process.on('exit', code => {
         grpc.closeClient(client);
     });
