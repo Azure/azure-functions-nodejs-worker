@@ -16,7 +16,7 @@ export class FunctionLoader implements IFunctionLoader {
         info: FunctionInfo,
         func: Function
     }} = {};
-    private allowESModules = process.version.startsWith("v14");
+    private allowESModules = process.version.startsWith("v14") || process.version.startsWith("v16");
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void> {
       if (metadata.isProxy === true) {

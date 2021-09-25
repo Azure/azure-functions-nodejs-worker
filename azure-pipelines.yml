@@ -1,6 +1,7 @@
 variables: {
   WORKER_VERSION: '4.0.0',
-  NODE_14: '14.x'
+  NODE_14: '14.x',
+  NODE_16: '16.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -25,12 +26,21 @@ jobs:
       UBUNTU_NODE14:
         IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_14)
+      UBUNTU_NODE16:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_16)
       WINDOWS_NODE14:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_14)
+      WINDOWS_NODE16:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_16)
       MAC_NODE14:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_14)
+      MAC_NODE16:
+        IMAGE_TYPE: 'macOS-latest'
+        NODE_VERSION: $(NODE_16)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:
