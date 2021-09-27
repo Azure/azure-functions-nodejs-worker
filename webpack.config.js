@@ -25,43 +25,12 @@ module.exports = {
         'memcpy',
     ],
     module: {
-        loaders: [
-            {
-                // supply modified grpc package.json location
-                test: /.*grpc_extension.js$/,
-                loader: StringReplacePlugin.replace({
-                    replacements: [
-                        dynamicRequire,
-                        {
-                            pattern: /(\.\.\/)*package.json/,
-                            replacement: function (match, p1, offset, string) {
-                                return "./grpc/package.json";
-                            }
-                        }
-                    ]
-                })
-            },
-            {
-                // supply modified root.pem location
-                test: /.*grpc.*index.js$/,
-                loader: StringReplacePlugin.replace({
-                    replacements: [
-                        {
-                            pattern: /'\.\.', '\.\.'/,
-                            replacement: function (match, p1, offset, string) {
-                                return `'grpc'`;
-                            }
-                        }
-                    ]
-                })
-            },
+        rules: [
             {
                 // use dynamic require for require(expression)
-                // versioning.js -> require(env variable)
-                // pre-binding.js -> require(package_json_path)
                 // FunctionLoader.js -> require(userFunction)
-                test: /.*(versioning.js|pre-binding.js|FunctionLoader.js)$/,
-                loader: StringReplacePlugin.replace({
+                test: /.*(FunctionLoader.js)$/,
+                use: StringReplacePlugin.replace({
                     replacements: [ dynamicRequire ]
                 })
             }

@@ -15,29 +15,12 @@ Write-Host "buildNumber: " $buildNumber
 npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
-New-Item ./pkg/deps/grpc/etc/ -Type Directory
-New-Item ./pkg/grpc/ -Type Directory
 New-Item ./pkg/dist/src -Type Directory
-copy-item ./node_modules/grpc/deps/grpc/etc/roots.pem ./pkg/deps/grpc/etc/
-copy-item ./node_modules/grpc/package.json ./pkg/grpc/
 copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
 ./node_modules/.bin/webpack
 StopOnFailedExecution # fail if error
-# Node 14 support
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=linux --target_libc=glibc
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=14.10.1 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=14.10.1 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=14.10.1 --target_platform=linux --target_libc=glibc
-# Node 16 preview support
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=16.9.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=16.9.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=16.9.0 --target_platform=linux --target_libc=glibc
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=16.9.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=16.9.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=16.9.0 --target_platform=linux --target_libc=glibc
+
 
 copy-item Worker.nuspec pkg/
 

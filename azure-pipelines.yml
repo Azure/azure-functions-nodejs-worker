@@ -97,7 +97,7 @@ jobs:
       failTaskOnFailedTests: true
 
 - job: BuildArtifacts  
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true)))
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v4.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true)))
   pool:
     vmImage: 'vs2017-win2016'
   steps:
