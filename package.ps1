@@ -12,6 +12,7 @@ function StopOnFailedExecution {
 }
 
 Write-Host "buildNumber: " $buildNumber
+Write-Host "NugetPack: " $NugetPack
 npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
@@ -24,28 +25,7 @@ copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
 ./node_modules/.bin/webpack
 StopOnFailedExecution # fail if error
-# Node 8 support
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=8.4.0 --target_platform=linux --target_libc=glibc
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=8.4.0 --target_platform=linux --target_libc=glibc
-# Node 10 support
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=10.1.0 --target_platform=linux --target_libc=glibc
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=10.1.0 --target_platform=linux --target_libc=glibc
-# Node 12 support
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=12.13.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=12.13.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=12.13.0 --target_platform=linux --target_libc=glibc
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=12.13.0 --target_platform=win32
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=12.13.0 --target_platform=darwin
-./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=x64 --target=12.13.0 --target_platform=linux --target_libc=glibc
-# Node 14 preview support
+# Node 14 support
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=win32
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=darwin
 ./node_modules/.bin/node-pre-gyp install -C pkg/grpc --target_arch=ia32 --target=14.10.1 --target_platform=linux --target_libc=glibc
