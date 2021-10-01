@@ -12,6 +12,7 @@ function StopOnFailedExecution {
 }
 
 Write-Host "buildNumber: " $buildNumber
+Write-Host "NugetPack: " $NugetPack
 npm install
 npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
@@ -20,7 +21,6 @@ copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
 ./node_modules/.bin/webpack
 StopOnFailedExecution # fail if error
-
 
 copy-item Worker.nuspec pkg/
 
