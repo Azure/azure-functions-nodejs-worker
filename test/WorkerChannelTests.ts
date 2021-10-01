@@ -5,9 +5,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
-import { load } from 'grpc';
 import { FunctionInfo } from '../src/FunctionInfo';
-import { worker } from 'cluster';
 
 describe('WorkerChannel', () => {
   let channel: WorkerChannel;

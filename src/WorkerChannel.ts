@@ -114,10 +114,10 @@ export class WorkerChannel implements IWorkerChannel {
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
     // Validate version
     let version = process.version;
-    if (!version.startsWith("v14.")) {
+    if (!(version.startsWith("v14.") || version.startsWith("v16."))) {
       let msg = "Incompatible Node.js version"
         + " (" + version + ")."
-        + " The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x"
+        + " The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x or Node.js v16.x"
         + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
       systemError(msg);
       throw new InternalException(msg);
