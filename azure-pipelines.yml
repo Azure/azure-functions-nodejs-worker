@@ -9,15 +9,9 @@ name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 pr:
   branches:
     include:
-      - master
-      - dev
-      - v2.x
       - v1.x
 
 trigger:
-- master
-- dev
-- v2.x
 - v1.x
 
 jobs:
@@ -105,7 +99,7 @@ jobs:
       testResultsFiles: '**/*.trx'   
   
 - job: BuildArtifacts  
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x')))
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v1.x'))
   pool:
     vmImage: 'vs2017-win2016'
   steps:
