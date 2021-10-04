@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '4.0.0',
+  WORKER_VERSION: '4.0.1',
   NODE_14: '14.x',
   NODE_16: '16.x'
 }
@@ -63,6 +63,8 @@ jobs:
     matrix:
       NODE14:
         NODE_VERSION: $(NODE_14)
+      NODE16:
+        NODE_VERSION: $(NODE_16)
   pool:
     vmImage: 'windows-latest'
   steps:
