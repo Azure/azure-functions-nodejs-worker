@@ -1,5 +1,5 @@
 variables: {
-  WORKER_VERSION: '4.0.1',
+  WORKER_VERSION: '3.0.0',
   NODE_14: '14.x',
   NODE_16: '16.x'
 }
@@ -11,13 +11,13 @@ pr:
       - master
       - dev
       - v2.x
-      - v4.x
+      - v3.x
 
 trigger:
 - master
 - dev
 - v2.x
-- v4.x
+- v3.x
 
 jobs:
 - job: UnitTests
@@ -99,7 +99,7 @@ jobs:
       failTaskOnFailedTests: true
 
 - job: BuildArtifacts  
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v4.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true)))
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/v3.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true)))
   pool:
     vmImage: 'vs2017-win2016'
   steps:
