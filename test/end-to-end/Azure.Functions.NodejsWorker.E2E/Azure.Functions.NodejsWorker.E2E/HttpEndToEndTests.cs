@@ -53,7 +53,7 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             string actualMessage = await response.Content.ReadAsStringAsync();
 
             var nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
-            if (nodeVersion.Equals("14.x")) {
+            if (nodeVersion.Equals("14.x") || nodeVersion.Equals("16.x")) {
                 Assert.Equal(expectedStatusCode, response.StatusCode);
                 
                 if (!string.IsNullOrEmpty(expectedMessage)) {
