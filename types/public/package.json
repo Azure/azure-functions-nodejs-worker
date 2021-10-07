@@ -4,7 +4,7 @@
   "description": "Azure Functions types for Typescript",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Azure/azure-functions-nodejs-worker/tree/master/types/public"
+    "url": "https://github.com/Azure/azure-functions-nodejs-worker/tree/v1.x/types/public"
   },
   "keywords": [
     "azure-functions",

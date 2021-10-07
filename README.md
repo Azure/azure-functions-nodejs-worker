@@ -1,7 +1,10 @@
-|Branch|Status|
-|---|---|
-|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=master)|
-|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=dev)|
+# Azure Functions Node.js Worker
+
+|Branch|Status|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
+|---|---|---|---|---|
+|v1.x|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Azure.azure-functions-nodejs-worker?branchName=v1.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v1.x)|2|GA (Maintenance mode)|10, 8|
+
+> NOTE: The branch corresponds to the _worker_ version, which is intentionally decoupled from the _runtime_ version.
 
 ## Getting Started
 
