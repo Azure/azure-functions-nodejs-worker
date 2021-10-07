@@ -1,12 +1,19 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "0.1.0",
-    "command": "${cwd}/node_modules/.bin/tsc",
-    "isShellCommand": true,
-    "showOutput": "silent",
-    "problemMatcher": "$tsc",
-    "args": [
-        "--watch"
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm: watch",
+            "type": "npm",
+            "script": "watch",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$tsc-watch",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            }
+        }
     ]
 }

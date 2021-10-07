@@ -47,7 +47,8 @@
     "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
     "build-nomaps": "npm run build -- --sourceMap false",
     "gen": "node scripts/generateProtos.js",
-    "test": "mocha -r ts-node/register ./test/**/*.ts"
+    "test": "mocha -r ts-node/register ./test/**/*.ts",
+    "watch": "tsc --watch"
   },
   "files": [
     "dist"
