@@ -62,10 +62,8 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: npm install -g request
-    displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
-  - script: npm install
-    displayName: 'npm install'
+  - script: npm ci
+    displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
   - script: npm test
@@ -88,10 +86,8 @@ jobs:
     inputs:
       versionSpec: $(NODE_VERSION)
     displayName: 'Install Node.js for test'
-  - script: npm install -g request
-    displayName: 'Workaround to https://github.com/grpc/grpc-node/issues/922'
-  - script: npm install
-    displayName: 'npm install'
+  - script: npm ci
+    displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
   - pwsh: |
