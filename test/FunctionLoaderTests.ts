@@ -1,9 +1,11 @@
 import { WorkerChannel } from '../src/WorkerChannel';
 import { FunctionLoader } from '../src/FunctionLoader';
-import { expect } from 'chai';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import 'mocha';
 import mock = require('mock-require');
+const chai = require('chai')
+const expect = chai.expect
+chai.use(require('chai-as-promised'))
 
 describe('FunctionLoader', () => {
   var channel: WorkerChannel;
@@ -27,49 +29,46 @@ describe('FunctionLoader', () => {
   };
   });
 
-  it ('throws unable to determine function entry point', () => {
+  it ('throws unable to determine function entry point', async () => {
     mock('test', {});
-     expect(() => {
+      await expect(
         loader.load('functionId', <rpc.IRpcFunctionMetadata> {
-            scriptFile: 'test'
-        })
-     }).to.throw("Unable to determine function entry point. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.");
+          scriptFile: 'test'
+        })).to.be.rejectedWith("Unable to determine function entry point. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.");
   });
   
-  it ('does not load proxy function', () => {
+  it ('does not load proxy function', async () => {
     mock('test', {});
-    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+    await loader.load('functionId', <rpc.IRpcFunctionMetadata> {
         isProxy: true
     });
       
     expect(() => {
-      loader.getFunc('functionId');
+      loader.getFunc('functionId')
     }).to.throw("Function code for 'functionId' is not loaded and cannot be invoked.");
   });
 
-  it ('throws unable to determine function entry point with entryPoint name', () => {
+  it ('throws unable to determine function entry point with entryPoint name', async () => {
     mock('test', { test: {} });
     let entryPoint = 'wrongEntryPoint'
-    expect(() => {
-        loader.load('functionId', <rpc.IRpcFunctionMetadata> {
-            scriptFile: 'test',
-            entryPoint: entryPoint
-        })
-    }).to.throw(`Unable to determine function entry point: ${entryPoint}. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.`);
+    await expect(
+      loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+        scriptFile: 'test',
+        entryPoint: entryPoint
+      })).to.be.rejectedWith(`Unable to determine function entry point: ${entryPoint}. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.`);
   });
 
-  it ('throws the resolved entry point is not a function', () => {
+  it ('throws the resolved entry point is not a function', async () => {
     mock('test', { test: {} });
     let entryPoint = 'test'
-    expect(() => {
-        loader.load('functionId', <rpc.IRpcFunctionMetadata> {
-            scriptFile: 'test',
-            entryPoint: entryPoint
-        })
-    }).to.throw("The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.");
+    await expect(
+      loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+        scriptFile: 'test',
+        entryPoint: entryPoint
+      })).to.be.rejectedWith("The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.");
   });
 
-  it ('allows use of \'this\' in loaded user function', () => {
+  it ('allows use of \'this\' in loaded user function', async () => {
     var FuncObject = /** @class */ (function () {
       function FuncObject(this: any) {
           this.prop = true;
@@ -86,7 +85,7 @@ describe('FunctionLoader', () => {
 
     mock('test', new FuncObject());
 
-    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+    await loader.load('functionId', <rpc.IRpcFunctionMetadata> {
         scriptFile: 'test',
         entryPoint: 'test'
     });
@@ -98,10 +97,10 @@ describe('FunctionLoader', () => {
     });
   });
   
-  it ('allows to return a promise from async user function', () => {
+  it ('allows to return a promise from async user function', async () => {
     mock('test', { test: async () => {} });
 
-    loader.load('functionId', <rpc.IRpcFunctionMetadata> {
+    await loader.load('functionId', <rpc.IRpcFunctionMetadata> {
         scriptFile: 'test',
         entryPoint: 'test'
     });

@@ -1,52 +1,81 @@
+#
+# Copyright (c) Microsoft. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+#
+param
+(
+    [Switch]
+    $UseCoreToolsBuildFromIntegrationTests
+)
 
-# A function that checks exit codes and fails script if an error is found 
-function StopOnFailedExecution {
-  if ($LastExitCode) 
-  { 
-    exit $LastExitCode 
-  }
+$arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+if ($IsWindows) {
+    $FUNC_EXE_NAME = "func.exe"
+    $os = "win"
+} else {
+    $FUNC_EXE_NAME = "func"
+    if ($IsMacOS) {
+        $os = "osx"
+    } else {
+        $os = "linux"
+    }
 }
-Write-Host "$args[0]"
-Write-Host $args[0]
 
-$skipCliDownload = $false
-if($args[0])
+$FUNC_RUNTIME_VERSION = '3'
+$coreToolsDownloadURL = $null
+if ($UseCoreToolsBuildFromIntegrationTests.IsPresent)
 {
-$skipCliDownload = $args[0]
+    Write-Host "Install Functions Core Tools for integration tests" -fore Green
+    $coreToolsDownloadURL = "https://functionsintegclibuilds.blob.core.windows.net/builds/$FUNC_RUNTIME_VERSION/latest/Azure.Functions.Cli.$os-$arch.zip"
+    $env:CORE_TOOLS_URL = "https://functionsintegclibuilds.blob.core.windows.net/builds/$FUNC_RUNTIME_VERSION/latest"
 }
-Write-Host $skipCliDownload
-
-$currDir =  Get-Location
-if(!$skipCliDownload)
+else
 {
-Write-Host "Deleting Functions Core Tools if exists...."
-Remove-Item -Force ./Azure.Functions.Cli.zip -ErrorAction Ignore
-Remove-Item -Recurse -Force ./Azure.Functions.Cli -ErrorAction Ignore
-
-if (-not (Test-Path env:CORE_TOOLS_URL)) 
-{ 
-  $env:CORE_TOOLS_URL = "https://functionsclibuilds.blob.core.windows.net/builds/2/latest/Azure.Functions.Cli.win-x86.zip"
+    $coreToolsDownloadURL = "https://functionsclibuilds.blob.core.windows.net/builds/$FUNC_RUNTIME_VERSION/latest/Azure.Functions.Cli.$os-$arch.zip"
+    if (-not $env:CORE_TOOLS_URL)
+    {
+        $env:CORE_TOOLS_URL = "https://functionsclibuilds.blob.core.windows.net/builds/$FUNC_RUNTIME_VERSION/latest"
+    }
 }
 
-Write-Host "Downloading Functions Core Tools...."
-Invoke-RestMethod -Uri 'https://functionsclibuilds.blob.core.windows.net/builds/2/latest/version.txt' -OutFile version.txt
-Write-Host "Using Functions Core Tools version: $(Get-Content -Raw version.txt)"
-Remove-Item version.txt
+$FUNC_CLI_DIRECTORY = Join-Path $PSScriptRoot 'Azure.Functions.Cli'
 
-$output = "$currDir\Azure.Functions.Cli.zip"
-$wc = New-Object System.Net.WebClient
-$wc.DownloadFile($env:CORE_TOOLS_URL, $output)
+Write-Host 'Deleting Functions Core Tools if exists...'
+Remove-Item -Force "$FUNC_CLI_DIRECTORY.zip" -ErrorAction Ignore
+Remove-Item -Recurse -Force $FUNC_CLI_DIRECTORY -ErrorAction Ignore
 
-Write-Host "Extracting Functions Core Tools...."
-Expand-Archive ".\Azure.Functions.Cli.zip" -DestinationPath ".\Azure.Functions.Cli"
+$version = Invoke-RestMethod -Uri "$env:CORE_TOOLS_URL/version.txt"
+$version = $version.Trim()
+Write-Host "Downloading Functions Core Tools (Version: $version)..."
+
+$output = "$FUNC_CLI_DIRECTORY.zip"
+Write-Host "Functions Core Tools download URL: $coreToolsDownloadURL"
+Invoke-RestMethod -Uri $coreToolsDownloadURL -OutFile $output
+
+Write-Host 'Extracting Functions Core Tools...'
+Expand-Archive $output -DestinationPath $FUNC_CLI_DIRECTORY
+
+if ($UseCoreToolsBuildFromIntegrationTests.IsPresent)
+{
+    Write-Host "Set Node worker directory"
+    $nodeWorkerFolderPath = [IO.Path]::Join($FUNC_CLI_DIRECTORY, 'workers', 'node')
+
+    if (-not (Test-Path $nodeWorkerFolderPath))
+    {
+        throw "Path '$nodeWorkerFolderPath' does not exist"
+    }
+
+    $workerDirectory = "languageWorkers:node:workerDirectory"
+    $env:workerDirectory = $nodeWorkerFolderPath
+    Write-Host "env:languageWorkers:node:workerDirectory = '$env:workerDirectory'"
 }
 
-# Write-Host "Copying azure-functions-nodejs-worker to Functions Host workers directory..."
-# Copy-Item -Recurse -Force "$PSScriptRoot/pkg/" "$currDir/Azure.Functions.Cli/workers/node"
+$funcExePath = Join-Path $FUNC_CLI_DIRECTORY $FUNC_EXE_NAME
 
 Write-Host "Installing extensions..."
-cd "$currDir\test\end-to-end\testFunctionApp"
-& "$currDir\Azure.Functions.Cli\func.exe" extensions install | %{    
+Push-Location "$PSScriptRoot/test/end-to-end/testFunctionApp"
+
+& $funcExePath extensions install | ForEach-Object {
   if ($_ -match 'OK')    
   { Write-Host $_ -f Green }    
   elseif ($_ -match 'FAIL|ERROR')   
@@ -54,5 +83,10 @@ cd "$currDir\test\end-to-end\testFunctionApp"
   else    
   { Write-Host $_ }    
 }
-StopOnFailedExecution
-cd $currDir
+
+if ($LASTEXITCODE -ne 0)
+{
+  throw "Installing extensions failed."
+}
+
+Pop-Location

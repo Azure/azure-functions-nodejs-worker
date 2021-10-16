@@ -1,5 +1,6 @@
 // Test typescript interfaces for ts compliation errors
-import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
+import { Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
+import { AzureFunction } from "../types/public/ts3.1/Main";
 const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -76,3 +77,25 @@ const returnWithContextDone: AzureFunction = function (context: Context, req: Ht
 }
 
 export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
+
+// Function returns custom object
+interface CustomOutput {
+    value: string;
+}
+export const runTypedReturn: AzureFunction<CustomOutput> = async (context, request: HttpRequest) => {
+//  return { // ts(2322) error
+//      value1: "Test1"
+//  };
+    return {
+        value: "Test"
+    };
+}
+
+export const runTypedReturn1: AzureFunction<CustomOutput> = async (context, request ) => {
+//  return { // ts(2322) error
+//      value1: "Test1"
+//  };
+    return {
+        value: "Test"
+    };
+}

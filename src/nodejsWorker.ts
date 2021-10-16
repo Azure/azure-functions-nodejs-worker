@@ -1,7 +1,7 @@
 var logPrefix = "LanguageWorkerConsoleLog";
 var errorPrefix = logPrefix + "[error] ";
 var warnPrefix = logPrefix + "[warn] ";
-var supportedVersions:string[] = ["v8","v10", "v12"];
+var supportedVersions:string[] = ["v8", "v10", "v12", "v14"];
 var worker;
 
 // Try validating node version
@@ -19,14 +19,8 @@ function validateNodeVersion(version) {
         } else if (supportedVersions.indexOf(major) < 0) {
             message = "Incompatible Node.js version"
             + " (" + version + ")."
-            + " The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x."
             + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
         }
-        // Log a warning that v12 is not fully supported
-        if (major === "v12") {
-            console.warn(warnPrefix + "The Node.js version you are using (" + version + ") is not fully supported by Azure Functions V2. We recommend using one the following major versions: 8, 10.");
-        }
-        
     // Unknown error
     } catch(err) {
         var unknownError = "Error in validating Node.js version. ";

@@ -1,15 +1,16 @@
 /**
- * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
- * and will execute when triggered. It is recommended that you declare this function as async, which
- * implicitly returns a Promise.
- * @param context Context object passed to your function from the Azure Functions runtime.
- * @param {any[]} args Optional array of input and trigger binding data. These binding data are passed to the
- * function in the same order that they are defined in function.json. Valid input types are string, HttpRequest,
- * and Buffer.
- * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
- * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
+ * Context bindings object. Provided to your function binding data, as defined in function.json.
  */
-export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export interface ContextBindings {
+    [name: string]: any;
+}
+/**
+ * Context binding data. Provided to your function trigger metadata and function invocation data.
+*/
+export interface ContextBindingData {
+    invocationId?: string | null;
+    [name: string]: any;
+}
 /**
  * The context object can be used for writing logs, reading data from bindings, setting outputs and using
  * the context.done callback when your exported function is synchronous. A context object is passed
@@ -28,15 +29,11 @@ export interface Context {
      * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically
      * generated and named based off of the "name" property in function.json.
      */
-    bindings: {
-        [key: string]: any;
-    };
+    bindings: ContextBindings;
     /**
      * Trigger metadata and function invocation data.
      */
-    bindingData: {
-        [key: string]: any;
-    };
+    bindingData: ContextBindingData;
     /**
      * TraceContext information to enable distributed tracing scenarios.
      */
@@ -72,6 +69,24 @@ export interface Context {
     };
 }
 /**
+ * HTTP request headers.
+ */
+export interface HttpRequestHeaders {
+    [name: string]: string | undefined;
+}
+/**
+ * Query string parameter keys and values from the URL.
+ */
+export interface HttpRequestQuery {
+    [name: string]: string | undefined;
+}
+/**
+ * Route parameter keys and values.
+ */
+export interface HttpRequestParams {
+    [name: string]: string | undefined;
+}
+/**
  * HTTP request object. Provided to your function when using HTTP Bindings.
  */
 export interface HttpRequest {
@@ -86,21 +101,15 @@ export interface HttpRequest {
     /**
      * HTTP request headers.
      */
-    headers: {
-        [key: string]: string;
-    };
+    headers: HttpRequestHeaders;
     /**
      * Query string parameter keys and values from the URL.
      */
-    query: {
-        [key: string]: string;
-    };
+    query: HttpRequestQuery;
     /**
      * Route parameter keys and values.
      */
-    params: {
-        [key: string]: string;
-    };
+    params: HttpRequestParams;
     /**
      * The HTTP request body.
      */
@@ -155,6 +164,32 @@ export interface ExecutionContext {
      * The directory your function is in (this is the parent directory of this function's function.json).
      */
     functionDirectory: string;
+    /**
+     * The retry context of the current funciton execution. The retry context of the current function execution. Equals null if retry policy is not defined or it's the first function execution.
+     */
+    retryContext?: RetryContext;
+}
+export interface RetryContext {
+    /**
+     * Current retry count of the function executions.
+     */
+    retryCount: number;
+    /**
+     * Max retry count is the maximum number of times an execution is retried before eventual failure. A value of -1 means to retry indefinitely.
+     */
+    maxRetryCount: number;
+    /**
+     * Exception that caused the retry
+     */
+    exception?: Exception;
+}
+export interface Exception {
+    /** Exception source */
+    source?: (string | null);
+    /** Exception stackTrace */
+    stackTrace?: (string | null);
+    /** Exception message */
+    message?: (string | null);
 }
 /**
  * TraceContext information to enable distributed tracing scenarios.

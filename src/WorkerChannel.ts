@@ -5,10 +5,14 @@ import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { IEventStream } from './GrpcService';
 import { toTypedData } from './converters';
 import { augmentTriggerMetadata } from './augmenters';
-import { systemError } from './utils/Logger';
+import { systemError, systemWarn } from './utils/Logger';
 import { InternalException } from './utils/InternalException';
+import { Context } from './public/Interfaces';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
+
+type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
+type InvocationRequestAfter = (context: Context) => void;
 
 /**
  * The worker channel should have a way to handle all incoming gRPC messages.
@@ -25,6 +29,8 @@ interface IWorkerChannel {
   invocationRequest(requestId: string, msg: rpc.InvocationRequest): void;
   invocationCancel(requestId: string, msg: rpc.InvocationCancel): void;
   functionEnvironmentReloadRequest(requestId: string, msg: rpc.IFunctionEnvironmentReloadRequest): void;
+  registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void;
+  registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void;
 }
 
 /**
@@ -34,11 +40,18 @@ export class WorkerChannel implements IWorkerChannel {
   private _eventStream: IEventStream;
   private _functionLoader: IFunctionLoader;
   private _workerId: string;
+  private _v1WorkerBehavior: boolean;
+  private _invocationRequestBefore: InvocationRequestBefore[];
+  private _invocationRequestAfter: InvocationRequestAfter[];
 
   constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
     this._workerId = workerId;
     this._eventStream = eventStream;
     this._functionLoader = functionLoader;
+    // default value
+    this._v1WorkerBehavior = false;
+    this._invocationRequestBefore = [];
+    this._invocationRequestAfter = [];
 
     // call the method with the matching 'event' name on this class, passing the requestId and event message
     eventStream.on('data', (msg) => {
@@ -67,7 +80,7 @@ export class WorkerChannel implements IWorkerChannel {
           systemError(`Worker ${workerId} malformed message`, msgError);
           throw new InternalException(msgError);
         }
-        oldWrite.apply(eventStream, arguments);
+        oldWrite.apply(eventStream, [msg]);
     }
   }
 
@@ -83,21 +96,72 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
+   * Register a patching function to be run before User Function is executed.
+   * Hook should return a patched version of User Function.
+   */
+  public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
+    this._invocationRequestBefore.push(beforeCb);
+  }
+
+  /**
+   * Register a function to be run after User Function resolves.
+   */
+  public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
+    this._invocationRequestAfter.push(afterCb);
+  }
+
+  /**
    * Host sends capabilities/init data to worker and requests the worker to initialize itself 
    * @param requestId gRPC message request id
    * @param msg gRPC message content
    */
   public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
-    const capabilitiesDictionary = {
+    // TODO: add capability from host to go to "non-breaking" mode
+    if (msg.capabilities && msg.capabilities.V2Compatable) {
+      this._v1WorkerBehavior = true;
+    }
+
+    // Validate version
+    let version = process.version;
+    if (this._v1WorkerBehavior) {
+      if (version.startsWith("v12.")) {
+        systemWarn("The Node.js version you are using (" + version + ") is not fully supported with Azure Functions V2. We recommend using one the following major versions: 8, 10.");
+      } else if (version.startsWith("v14.")) {
+        let msg = "Incompatible Node.js version"
+          + " (" + version + ")."
+          + " The version of the Azure Functions runtime you are using (v2) supports Node.js v8.x and v10.x."
+          + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
+        systemError(msg);
+        throw new InternalException(msg);        
+      }
+    } else {
+      if (version.startsWith("v8.")) {
+        let msg = "Incompatible Node.js version"
+          + " (" + version + ")."
+          + " The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x."
+          + " Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions";
+        systemError(msg);
+        throw new InternalException(msg);
+      }
+    }
+
+    let workerCapabilities = {
       RpcHttpTriggerMetadataRemoved: "true",
       RpcHttpBodyOnly: "true",
-      IgnoreEmptyValuedRpcHttpHeaders: "true"
+      IgnoreEmptyValuedRpcHttpHeaders: "true",
+      UseNullableValueDictionaryForHttp: "true",
+      WorkerStatus: "true"
     };
+
+    if (!this._v1WorkerBehavior) {
+      workerCapabilities["TypedDataCollection"] = "true";
+    }
+
     this._eventStream.write({
       requestId: requestId,
       workerInitResponse: {
         result: this.getStatus(),
-        capabilities : capabilitiesDictionary,
+        capabilities : workerCapabilities,
       }
     });
   }
@@ -107,11 +171,11 @@ export class WorkerChannel implements IWorkerChannel {
    * @param requestId gRPC message request id
    * @param msg gRPC message content
    */
-  public functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
+  public async functionLoadRequest(requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
       let err, errorMessage;
       try {
-        this._functionLoader.load(msg.functionId, msg.metadata);
+        await this._functionLoader.load(msg.functionId, msg.metadata);
       }
       catch(exception) {
         errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
@@ -140,14 +204,16 @@ export class WorkerChannel implements IWorkerChannel {
    */
   public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
     // Repopulate triggerMetaData if http.
-    augmentTriggerMetadata(msg);
+    if (this._v1WorkerBehavior) {
+      augmentTriggerMetadata(msg);
+    }
 
     let info = this._functionLoader.getInfo(<string>msg.functionId);
     let logCallback: LogCallback = (level, category, ...args) => {
       this.log({
         invocationId: msg.invocationId,
         category: `${info.name}.Invocation`,
-        message: format.apply(null, args),
+        message: format.apply(null, <[any, any[]]>args),
         level: level,
         logCategory: category
       });
@@ -158,42 +224,88 @@ export class WorkerChannel implements IWorkerChannel {
         invocationId: msg.invocationId,
         result: this.getStatus(err)
       }
+      // explicitly set outputData to empty array to concat later
+      response.outputData = [];
+
+      // As legacy behavior, falsy values get serialized to `null` in AzFunctions.
+      // This breaks Durable Functions expectations, where customers expect any
+      // JSON-serializable values to be preserved by the framework,
+      // so we check if we're serializing for durable and, if so, ensure falsy
+      // values get serialized.
+      let isDurableBinding = info?.bindings?.name?.type == 'activityTrigger';
 
       try {
-        if (result) {
-          if (result.return) {
-            response.returnValue = toTypedData(result.return);
+        if (result || (isDurableBinding && result != null)) {
+          let returnBinding = info.getReturnBinding();
+          // Set results from return / context.done
+          if (result.return || (isDurableBinding && result.return != null)) {
+            if (this._v1WorkerBehavior) {
+              response.returnValue = toTypedData(result.return);
+            } else {
+              // $return binding is found: return result data to $return binding
+              if (returnBinding) {
+                response.returnValue = returnBinding.converter(result.return);
+              // $return binding is not found: read result as object of outputs
+              } else {
+                response.outputData = Object.keys(info.outputBindings)
+                  .filter(key => result.return[key] !== undefined)
+                  .map(key => <rpc.IParameterBinding>{
+                    name: key,
+                    data: info.outputBindings[key].converter(result.return[key])
+                  });
+              }
+              // returned value does not match any output bindings (named or $return)
+              // if not http, pass along value
+              if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
+                response.returnValue = toTypedData(result.return);
+              }
+            }
           }
+          // Set results from context.bindings
           if (result.bindings) {
-            response.outputData = Object.keys(info.outputBindings)
-              .filter(key => result.bindings[key] !== undefined)
+            response.outputData = response.outputData.concat(Object.keys(info.outputBindings)
+              // Data from return prioritized over data from context.bindings
+              .filter(key => {
+                let definedInBindings: boolean = result.bindings[key] !== undefined;
+                let hasReturnValue: boolean = !!result.return;
+                let hasReturnBinding: boolean = !!returnBinding;
+                let definedInReturn: boolean = hasReturnValue && !hasReturnBinding && result.return[key] !== undefined;
+                return definedInBindings && !definedInReturn;
+              })
               .map(key => <rpc.IParameterBinding>{
                 name: key,
                 data: info.outputBindings[key].converter(result.bindings[key])
-              });
+              }));
           }
         }
       } catch (e) {
         response.result = this.getStatus(e)
       }
-
       this._eventStream.write({
         requestId: requestId,
         invocationResponse: response
       });
+      
+      this.runInvocationRequestAfter(context);
     }
 
-    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
+    let { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback, this._v1WorkerBehavior);
     let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
+    
+    userFunction = this.runInvocationRequestBefore(context, userFunction);
     
     // catch user errors from the same async context in the event loop and correlate with invocation
     // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
     try {
-      let result = userFunction(context, ...inputs);
+        let result = userFunction(context, ...inputs);
 
-      if (result && isFunction(result.then)) {
-        result.then(result => (<any>context.done)(null, result, true))
-          .catch(err => (<any>context.done)(err, null, true));
+        if (result && isFunction(result.then)) {
+        result.then(result => {
+          (<any>context.done)(null, result, true)
+        })
+          .catch(err => {
+            (<any>context.done)(err, null, true)
+          });
       }
     } catch (err) {
       resultCallback(err);
@@ -206,7 +318,7 @@ export class WorkerChannel implements IWorkerChannel {
   public startStream(requestId: string, msg: rpc.StartStream): void {
     // Not yet implemented
   }
-
+  
   /**
    * Message is empty by design - Will add more fields in future if needed
    */ 
@@ -223,10 +335,15 @@ export class WorkerChannel implements IWorkerChannel {
   }
 
   /**
-   * NOT USED
+   * Worker sends the host empty response to evaluate the worker's latency
    */ 
   public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
-    // Not yet implemented
+    let workerStatusResponse: rpc.IWorkerStatusResponse = {
+    };
+    this._eventStream.write({
+      requestId: requestId,
+      workerStatusResponse
+    });
   }
 
   /**
@@ -283,7 +400,7 @@ export class WorkerChannel implements IWorkerChannel {
     });
   }
 
-  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult{
+  private getStatus(err?: any, errorMessage?: string): rpc.IStatusResult {
     let status: rpc.IStatusResult = {
       status: rpc.StatusResult.Status.Success
     };
@@ -297,5 +414,19 @@ export class WorkerChannel implements IWorkerChannel {
     }
 
     return status;
+  }
+
+  private runInvocationRequestBefore(context: Context, userFunction: Function): Function {
+    let wrappedFunction = userFunction;
+    for (let before of this._invocationRequestBefore) {
+      wrappedFunction = before(context, wrappedFunction);
+    }
+    return wrappedFunction;
+  }
+
+  private runInvocationRequestAfter(context: Context) {
+    for (let after of this._invocationRequestAfter) {
+      after(context);
+    }
   }
 }

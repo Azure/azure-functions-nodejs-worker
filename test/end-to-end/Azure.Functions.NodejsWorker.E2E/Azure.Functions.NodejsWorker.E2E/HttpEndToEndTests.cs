@@ -38,7 +38,31 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             
             if (!string.IsNullOrEmpty(expectedMessage)) {
                 Assert.False(string.IsNullOrEmpty(actualMessage));
-                Assert.True(actualMessage.Contains(expectedMessage));
+                Assert.Contains(expectedMessage, actualMessage);
+            }
+        }
+
+        [Theory]
+        [InlineData("HttpTriggerESModules", "?name=Test", HttpStatusCode.OK, "Hello Test")]
+        [InlineData("HttpTriggerESModules", "?name=Marie&lastName=Hoeger", HttpStatusCode.OK, "Hello Marie")]
+        [InlineData("HttpTriggerESModules", "", HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")]
+        public async Task HttpTriggerESModuleTests(string functionName, string queryString, HttpStatusCode expectedStatusCode, string expectedMessage)
+        {
+            // TODO: Verify exception on 500 after https://github.com/Azure/azure-functions-host/issues/3589
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger(functionName, queryString);
+            string actualMessage = await response.Content.ReadAsStringAsync();
+
+            var nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
+            if (nodeVersion.Equals("14.x")) {
+                Assert.Equal(expectedStatusCode, response.StatusCode);
+                
+                if (!string.IsNullOrEmpty(expectedMessage)) {
+                    Assert.False(string.IsNullOrEmpty(actualMessage));
+                    Assert.Contains(expectedMessage, actualMessage);
+                }
+            } else {
+                // This function will fail to load on the worker side
+                Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             }
         }
 
@@ -70,6 +94,15 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             Assert.Equal("mycookie4-samesite-lax=myvalue; path=/; samesite=lax", cookies[3]);
             Assert.Equal("mycookie5-samesite-strict=myvalue; path=/; samesite=strict", cookies[4]);
             // Assert.Equal("mycookie4-samesite-none=myvalue; path=/; samesite=none", cookies[5]);
+        }
+
+        [Fact]
+        public async Task HttpTriggerBindingDataTests()
+        {
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerBindingData", "?stringInput=hello&emptyStringInput=");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            string responseBody = await response.Content.ReadAsStringAsync();
+            Assert.Equal("binding data exists", responseBody);
         }
 
         private static void VerifyBodyAndRawBody(JObject result, string input, string mediaType)

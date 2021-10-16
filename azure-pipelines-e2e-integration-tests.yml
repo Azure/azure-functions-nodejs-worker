@@ -1,0 +1,51 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+variables: {
+  NODE_10: '10.x',
+  NODE_12: '12.x',
+  NODE_14: '14.x'
+}
+
+pr: none
+trigger: none
+
+strategy:
+    maxParallel: 1
+    matrix:
+      NODE10:
+        NODE_VERSION: $(NODE_10)
+      NODE12:
+        NODE_VERSION: $(NODE_12)
+      NODE14:
+        NODE_VERSION: $(NODE_14)
+pool:
+    vmImage: 'vs2017-win2016'
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: $(NODE_VERSION)
+    displayName: 'Install Node.js for test'
+  - script: npm install
+    displayName: 'npm install'
+  - script: npm run build
+    displayName: 'npm run build'
+  - pwsh: |
+      .\setup-e2e-tests.ps1 -UseCoreToolsBuildFromIntegrationTests
+    displayName: 'setup tests'
+  - powershell: |
+      .\run-e2e-tests.ps1
+    displayName: 'run tests'
+    env:
+      AzureWebJobsStorage: $(AzureWebJobsStorage)
+      AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
+      AzureWebJobsCosmosDBConnectionString: $(AzureWebJobsCosmosDBConnectionString)
+      FUNCTIONS_WORKER_RUNTIME: 'node'
+      nodeVersion: $(NODE_VERSION)
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testRunner: VSTest
+      testResultsFiles: '**/*.trx'

@@ -53,6 +53,10 @@ types/*
 
 !types/public
 types/public/*
+!types/public/Main.d.ts
 !types/public/Interfaces.d.ts
 !types/public/package.json
 !types/public/README.md
+!types/public/ts3.1
+types/public/ts3.1/*
+!types/public/ts3.1/Main.d.ts

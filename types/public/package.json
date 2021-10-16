@@ -1,6 +1,6 @@
 {
   "name": "@azure/functions",
-  "version": "1.2.2",
+  "version": "2.1.2",
   "description": "Azure Functions types for Typescript",
   "repository": {
     "type": "git",
@@ -10,7 +10,12 @@
     "azure-functions",
     "typescript"
   ],
-  "types": "./Interfaces.d.ts",
+  "types": "./Main.d.ts",
+  "typesVersions": {
+    ">=3.1": {
+      "*": ["ts3.1/*"]
+    }
+  },
   "author": "Microsoft",
   "license": "MIT"
 }

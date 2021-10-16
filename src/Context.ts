@@ -1,25 +1,32 @@
 import { FunctionInfo } from './FunctionInfo';
-import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions, fromRpcTraceContext } from './converters';
+import { fromRpcHttp, fromTypedData, getNormalizedBindingData, getBindingDefinitions, fromRpcTraceContext, convertKeysToCamelCase } from './converters';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, TraceContext } from './public/Interfaces' 
+import { v4 as uuid } from 'uuid'
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
-    let context = new InvocationContext(info, request, logCallback, callback);
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback, v1WorkerBehavior: boolean) {
+    const context = new InvocationContext(info, request, logCallback, callback);
 
-    let bindings: Dict<any> = {};
-    let inputs: InputTypes[] = [];
+    const bindings: Dict<any> = {};
+    const inputs: any[] = [];
     let httpInput: RequestProperties | undefined;
     for (let binding of <rpc.IParameterBinding[]>request.inputData) {
         if (binding.data && binding.name) {
-            let input: InputTypes;
+            let input;
             if (binding.data && binding.data.http) {
                 input = httpInput = fromRpcHttp(binding.data.http);
             } else {
-                input = fromTypedData(binding.data);
+                // TODO: Don't hard code fix for camelCase https://github.com/Azure/azure-functions-nodejs-worker/issues/188
+                if (!v1WorkerBehavior && info.getTimerTriggerName() === binding.name) {
+                    // v2 worker converts timer trigger object to camelCase
+                    input = convertKeysToCamelCase(binding)["data"];
+                } else {
+                    input = fromTypedData(binding.data);
+                }
             }
             bindings[binding.name] = input;
             inputs.push(input);
@@ -30,6 +37,19 @@ export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocat
     if (httpInput) {
         context.req = new Request(httpInput);
         context.res = new Response(context.done);
+        // This is added for backwards compatability with what the host used to send to the worker
+        context.bindingData.sys = {
+            methodName: info.name,
+            utcNow: (new Date()).toISOString(),
+            randGuid: uuid()
+        };
+        // Populate from HTTP request for backwards compatibility if missing
+        if (!context.bindingData.query) {
+            context.bindingData.query = Object.assign({}, httpInput.query);
+        }
+        if (!context.bindingData.headers) {
+            context.bindingData.headers = Object.assign({}, httpInput.headers);
+        }
     }
     return {
         context: <Context>context,
@@ -52,10 +72,11 @@ class InvocationContext implements Context {
     constructor(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback, callback: ResultCallback) {
         this.invocationId = <string>request.invocationId;
         this.traceContext = fromRpcTraceContext(request.traceContext);
-        const executionContext = {
+        const executionContext = <ExecutionContext>{
             invocationId: this.invocationId,
             functionName: <string>info.name,
-            functionDirectory: <string>info.directory
+            functionDirectory: <string>info.directory,
+            retryContext: request.retryContext
         };
         this.executionContext = executionContext;
         this.bindings = {};
@@ -127,6 +148,3 @@ export type ResultCallback = (err?: any, result?: InvocationResult) => void;
 export interface Dict<T> {
     [key: string]: T
 }
-
-// Allowed input types
-export type InputTypes = HttpRequest | string | Buffer | null | undefined;
