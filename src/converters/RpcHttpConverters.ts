@@ -1,18 +1,18 @@
-import { 
+import {
     AzureFunctionsRpcMessages as rpc,
-    INullableString
+    INullableString,
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { HttpMethod, Cookie } from '../public/Interfaces';
-import { RequestProperties } from '../http/Request';
 import { Dict } from '../Context';
-import { 
+import { RequestProperties } from '../http/Request';
+import { Cookie, HttpMethod } from '../public/Interfaces';
+import {
     fromTypedData,
-    toTypedData,
-    toRpcString,
-    toNullableString,
     toNullableBool,
     toNullableDouble,
-    toNullableTimestamp
+    toNullableString,
+    toNullableTimestamp,
+    toRpcString,
+    toTypedData,
 } from './RpcConverters';
 
 /**
@@ -21,16 +21,16 @@ import {
  */
 export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
     const httpContext: RequestProperties = {
-      method: <HttpMethod>rpcHttp.method,
-      url: <string>rpcHttp.url,
-      originalUrl: <string>rpcHttp.url,
-      headers: fromNullableMapping(rpcHttp.nullableHeaders, rpcHttp.headers),
-      query: fromNullableMapping(rpcHttp.nullableQuery, rpcHttp.query),
-      params: fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params),
-      body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
-      rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
+        method: <HttpMethod>rpcHttp.method,
+        url: <string>rpcHttp.url,
+        originalUrl: <string>rpcHttp.url,
+        headers: fromNullableMapping(rpcHttp.nullableHeaders, rpcHttp.headers),
+        query: fromNullableMapping(rpcHttp.nullableQuery, rpcHttp.query),
+        params: fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params),
+        body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
+        rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
     };
-  
+
     return httpContext;
 }
 
@@ -43,17 +43,19 @@ export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
 function fromRpcHttpBody(body: rpc.ITypedData) {
     if (body && body.bytes) {
         return (<Buffer>body.bytes).toString();
-    }
-    else {
+    } else {
         return fromTypedData(body, false);
     }
 }
 
-function fromNullableMapping(nullableMapping: { [k: string]: INullableString } | null | undefined, originalMapping?: { [k: string]: string } | null): Dict<string> {
+function fromNullableMapping(
+    nullableMapping: { [k: string]: INullableString } | null | undefined,
+    originalMapping?: { [k: string]: string } | null
+): Dict<string> {
     let converted = {};
     if (nullableMapping && Object.keys(nullableMapping).length > 0) {
         for (const key in nullableMapping) {
-            converted[key] = nullableMapping[key].value || "";
+            converted[key] = nullableMapping[key].value || '';
         }
     } else if (originalMapping && Object.keys(originalMapping).length > 0) {
         converted = <Dict<string>>originalMapping;
@@ -62,20 +64,22 @@ function fromNullableMapping(nullableMapping: { [k: string]: INullableString } |
 }
 
 /**
- * Converts the HTTP 'Response' object to an 'ITypedData' 'http' type to be sent through the RPC layer. 
- * 'http' types are a special case from other 'ITypedData' types, which come from primitive types. 
+ * Converts the HTTP 'Response' object to an 'ITypedData' 'http' type to be sent through the RPC layer.
+ * 'http' types are a special case from other 'ITypedData' types, which come from primitive types.
  * @param inputMessage  An HTTP response object
  */
 export function toRpcHttp(inputMessage): rpc.ITypedData {
     // Check if we will fail to find any of these
     if (typeof inputMessage !== 'object' || Array.isArray(inputMessage)) {
-        throw new Error("The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563");
+        throw new Error(
+            "The HTTP response must be an 'object' type that can include properties such as 'body', 'status', and 'headers'. Learn more: https://go.microsoft.com/fwlink/?linkid=2112563"
+        );
     }
 
-    let httpMessage: rpc.IRpcHttp = inputMessage;
+    const httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);
-    let status = inputMessage.statusCode || inputMessage.status;
+    const status = inputMessage.statusCode || inputMessage.status;
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
     return { http: httpMessage };
@@ -83,13 +87,13 @@ export function toRpcHttp(inputMessage): rpc.ITypedData {
 
 /**
  * Convert HTTP headers to a string/string mapping.
- * @param inputHeaders 
+ * @param inputHeaders
  */
 function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
-    let rpcHttpHeaders: {[key: string]: string} = {};
-    for (let key in inputHeaders) {
+    const rpcHttpHeaders: { [key: string]: string } = {};
+    for (const key in inputHeaders) {
         if (inputHeaders[key] != null) {
-        rpcHttpHeaders[key] = inputHeaders[key].toString();
+            rpcHttpHeaders[key] = inputHeaders[key].toString();
         }
     }
     return rpcHttpHeaders;
@@ -100,8 +104,8 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
  * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
  */
 export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
-    let rpcCookies: rpc.IRpcHttpCookie[] = [];
-    inputCookies.forEach(cookie => {
+    const rpcCookies: rpc.IRpcHttpCookie[] = [];
+    inputCookies.forEach((cookie) => {
         rpcCookies.push(toRpcHttpCookie(cookie));
     });
 
@@ -110,32 +114,32 @@ export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[
 
 /**
  * From RFC specifications for 'Set-Cookie' response header: https://www.rfc-editor.org/rfc/rfc6265.txt
- * @param inputCookie 
+ * @param inputCookie
  */
 function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
     // Resolve SameSite enum, a one-off
     let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
     if (inputCookie && inputCookie.sameSite) {
-        let sameSite = inputCookie.sameSite.toLocaleLowerCase();
-        if (sameSite === "lax") {
+        const sameSite = inputCookie.sameSite.toLocaleLowerCase();
+        if (sameSite === 'lax') {
             rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
-        } else if (sameSite === "strict") {
+        } else if (sameSite === 'strict') {
             rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
-        } else if (sameSite === "none") {
+        } else if (sameSite === 'none') {
             rpcSameSite = rpc.RpcHttpCookie.SameSite.ExplicitNone;
         }
     }
 
     const rpcCookie: rpc.IRpcHttpCookie = {
-            name: inputCookie && toRpcString(inputCookie.name, "cookie.name"),
-            value: inputCookie && toRpcString(inputCookie.value, "cookie.value"),
-            domain: toNullableString(inputCookie && inputCookie.domain, "cookie.domain"),
-            path: toNullableString(inputCookie && inputCookie.path, "cookie.path"),
-            expires: toNullableTimestamp(inputCookie && inputCookie.expires, "cookie.expires"),
-            secure: toNullableBool(inputCookie && inputCookie.secure, "cookie.secure"),
-            httpOnly: toNullableBool(inputCookie && inputCookie.httpOnly, "cookie.httpOnly"),
-            sameSite: rpcSameSite,
-            maxAge: toNullableDouble(inputCookie && inputCookie.maxAge, "cookie.maxAge")
+        name: inputCookie && toRpcString(inputCookie.name, 'cookie.name'),
+        value: inputCookie && toRpcString(inputCookie.value, 'cookie.value'),
+        domain: toNullableString(inputCookie && inputCookie.domain, 'cookie.domain'),
+        path: toNullableString(inputCookie && inputCookie.path, 'cookie.path'),
+        expires: toNullableTimestamp(inputCookie && inputCookie.expires, 'cookie.expires'),
+        secure: toNullableBool(inputCookie && inputCookie.secure, 'cookie.secure'),
+        httpOnly: toNullableBool(inputCookie && inputCookie.httpOnly, 'cookie.httpOnly'),
+        sameSite: rpcSameSite,
+        maxAge: toNullableDouble(inputCookie && inputCookie.maxAge, 'cookie.maxAge'),
     };
 
     return rpcCookie;
