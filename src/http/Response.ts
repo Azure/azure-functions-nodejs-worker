@@ -17,11 +17,11 @@ interface IResponse {
 
 export class Response implements IResponse {
     statusCode?: string | number;
-    headers: {[key:string]: any} = {};
+    headers: { [key: string]: any } = {};
     cookies: Cookie[] = [];
     body?: any;
     enableContentNegotiation?: boolean;
-    [key:string]: any;
+    [key: string]: any;
 
     private _done: Function;
 
@@ -38,7 +38,7 @@ export class Response implements IResponse {
         return this;
     }
 
-    setHeader(field: string, val: any): IResponse  {
+    setHeader(field: string, val: any): IResponse {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
@@ -62,11 +62,11 @@ export class Response implements IResponse {
         return this.end();
     }
 
-    type(type){
+    type(type) {
         return this.set('content-type', type);
     }
 
-    json(body){
+    json(body) {
         this.type('application/json');
         this.send(body);
         return;
@@ -76,7 +76,7 @@ export class Response implements IResponse {
     header = this.setHeader;
     set = this.setHeader;
     get = this.getHeader;
-    
+
     private setContentType() {
         if (this.body !== undefined) {
             if (this.get('content-type')) {

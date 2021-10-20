@@ -6,7 +6,7 @@ export interface ContextBindings {
 }
 /**
  * Context binding data. Provided to your function trigger metadata and function invocation data.
-*/
+ */
 export interface ContextBindingData {
     invocationId?: string | null;
     [name: string]: any;
@@ -122,7 +122,7 @@ export interface HttpRequest {
 /**
  * Possible values for an HTTP request method.
  */
-export declare type HttpMethod = "GET" | "POST" | "DELETE" | "HEAD" | "PATCH" | "PUT" | "OPTIONS" | "TRACE" | "CONNECT";
+export declare type HttpMethod = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PATCH' | 'PUT' | 'OPTIONS' | 'TRACE' | 'CONNECT';
 /**
  * Http response cookie object to "Set-Cookie"
  */
@@ -146,7 +146,7 @@ export interface Cookie {
     /** Sets the cookie to be inaccessible to JavaScript's Document.cookie API */
     httpOnly?: boolean;
     /** Can restrict the cookie to not be sent with cross-site requests */
-    sameSite?: "Strict" | "Lax" | "None" | undefined;
+    sameSite?: 'Strict' | 'Lax' | 'None' | undefined;
     /** Number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. */
     maxAge?: number;
 }
@@ -185,11 +185,11 @@ export interface RetryContext {
 }
 export interface Exception {
     /** Exception source */
-    source?: (string | null);
+    source?: string | null;
     /** Exception stackTrace */
-    stackTrace?: (string | null);
+    stackTrace?: string | null;
     /** Exception message */
-    message?: (string | null);
+    message?: string | null;
 }
 /**
  * TraceContext information to enable distributed tracing scenarios.
