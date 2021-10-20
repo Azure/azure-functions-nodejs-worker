@@ -1,6 +1,6 @@
 variables: {
   WORKER_VERSION: '2.1.2',
-  NODE_8: '8.x',
+  NODE_8: '8.x', # Can still be used if `FUNCTIONS_V2_COMPATIBILITY_MODE` is set
   NODE_10: '10.x',
   NODE_12: '12.x',
   NODE_14: '14.x'
@@ -66,6 +66,9 @@ jobs:
     displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
+  - script: npm run lint
+    condition: not(eq(variables['NODE_VERSION'], variables['NODE_8'])) # eslint doesn't support Node 8
+    displayName: 'npm run lint'
   - script: npm test
     displayName: 'npm test'
 
