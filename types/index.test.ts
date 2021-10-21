@@ -1,6 +1,6 @@
-// Test typescript interfaces for ts compliation errors
-import { Context, HttpRequest, HttpMethod, Cookie } from "../types/public/Interfaces";
-import { AzureFunction } from "../types/public/ts3.1/Main";
+// This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
+
+import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "@azure/functions";
 const get: HttpMethod = "GET";
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -22,10 +22,10 @@ const runHttp: AzureFunction = async function (context: Context, req: HttpReques
     }
 }
 
-const runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) { 
-    context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem); 
-    context.log.verbose('EnqueuedTimeUtc =', context.bindingData.enqueuedTimeUtc); 
-    context.log.verbose('DeliveryCount =', context.bindingData.deliveryCount); 
+const runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) {
+    context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem);
+    context.log.verbose('EnqueuedTimeUtc =', context.bindingData.enqueuedTimeUtc);
+    context.log.verbose('DeliveryCount =', context.bindingData.deliveryCount);
     context.log.verbose('MessageId =', context.bindingData.messageId);
     context.done();
 };
@@ -46,12 +46,12 @@ const runHttpReturn: AzureFunction = async function (context: Context, req: Http
     }
 }
 
-const runFunction: AzureFunction = async function(context: Context) {
+const runFunction: AzureFunction = async function (context: Context) {
     context.log("Ran function");
     return "Ran function";
 }
 
-const cookieFunction: AzureFunction = async function(context: Context) {
+const cookieFunction: AzureFunction = async function (context: Context) {
     let cookies: Cookie[] = [
         {
             name: "cookiename",
@@ -73,7 +73,7 @@ const runHttpWithQueue: AzureFunction = async function (context: Context, req: H
 
 const returnWithContextDone: AzureFunction = function (context: Context, req: HttpRequest) {
     context.log.info("Writing to queue");
-    context.done(null, { myOutput: { text: 'hello there, world', noNumber: true }});
+    context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
 }
 
 export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
@@ -82,19 +82,19 @@ export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, run
 interface CustomOutput {
     value: string;
 }
-export const runTypedReturn: AzureFunction<CustomOutput> = async (context, request: HttpRequest) => {
-//  return { // ts(2322) error
-//      value1: "Test1"
-//  };
+export const runTypedReturn: AzureFunction = async (context, request: HttpRequest): Promise<CustomOutput> => {
+    //  return { // ts(2322) error
+    //      value1: "Test1"
+    //  };
     return {
         value: "Test"
     };
 }
 
-export const runTypedReturn1: AzureFunction<CustomOutput> = async (context, request ) => {
-//  return { // ts(2322) error
-//      value1: "Test1"
-//  };
+export const runTypedReturn1: AzureFunction = async (context, request): Promise<CustomOutput> => {
+    //  return { // ts(2322) error
+    //      value1: "Test1"
+    //  };
     return {
         value: "Test"
     };

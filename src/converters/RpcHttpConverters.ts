@@ -1,10 +1,10 @@
+import { Cookie, HttpMethod } from '@azure/functions';
 import {
     AzureFunctionsRpcMessages as rpc,
     INullableString,
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Dict } from '../Context';
 import { RequestProperties } from '../http/Request';
-import { Cookie, HttpMethod } from '../public/Interfaces';
 import {
     fromTypedData,
     toNullableBool,

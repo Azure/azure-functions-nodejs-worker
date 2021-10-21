@@ -1,0 +1,16 @@
+{
+    "name": "@azure/functions",
+    "version": "2.0.0-beta.0",
+    "description": "Azure Functions types for Typescript",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Azure/azure-functions-nodejs-worker/tree/v2.x/types"
+    },
+    "keywords": [
+        "azure-functions",
+        "typescript"
+    ],
+    "types": "./index.d.ts",
+    "author": "Microsoft",
+    "license": "MIT"
+}

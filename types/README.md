@@ -40,4 +40,3 @@ If you are getting started with Azure Functions, you can follow this tutorial to
 
 The [Azure Functions developer guide](https://docs.microsoft.com/azure/azure-functions/functions-reference) and the [JavaScript-specific developer guide](https://docs.microsoft.com/azure/azure-functions/functions-reference-node) are good resources to gain an understanding of more Azure Functions concepts.
 
-

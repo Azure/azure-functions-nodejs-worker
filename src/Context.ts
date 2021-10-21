@@ -1,19 +1,19 @@
-import { FunctionInfo } from './FunctionInfo';
-import {
-    fromRpcHttp,
-    fromTypedData,
-    getNormalizedBindingData,
-    getBindingDefinitions,
-    fromRpcTraceContext,
-    convertKeysToCamelCase,
-} from './converters';
+import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from '@azure/functions';
+import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import {
+    convertKeysToCamelCase,
+    fromRpcHttp,
+    fromRpcTraceContext,
+    fromTypedData,
+    getBindingDefinitions,
+    getNormalizedBindingData,
+} from './converters';
+import { FunctionInfo } from './FunctionInfo';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
-import { Context, ExecutionContext, Logger, BindingDefinition, HttpRequest, TraceContext } from './public/Interfaces';
-import { v4 as uuid } from 'uuid';
 
 export function CreateContextAndInputs(
     info: FunctionInfo,
