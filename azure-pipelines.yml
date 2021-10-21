@@ -46,6 +46,8 @@ jobs:
     displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
+  - script: npm run lint
+    displayName: 'npm run lint'
   - script: npm test
     displayName: 'npm test'
 
