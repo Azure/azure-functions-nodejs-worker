@@ -2,20 +2,20 @@
  * Context bindings object. Provided to your function binding data, as defined in function.json.
  */
 export interface ContextBindings {
-  [name: string]: any;
-}
-
-/** 
- * Context binding data. Provided to your function trigger metadata and function invocation data.
-*/
-export interface ContextBindingData {
-  invocationId?: string | null;
-  [name: string]: any;
+    [name: string]: any;
 }
 
 /**
- * The context object can be used for writing logs, reading data from bindings, setting outputs and using 
- * the context.done callback when your exported function is synchronous. A context object is passed 
+ * Context binding data. Provided to your function trigger metadata and function invocation data.
+ */
+export interface ContextBindingData {
+    invocationId?: string | null;
+    [name: string]: any;
+}
+
+/**
+ * The context object can be used for writing logs, reading data from bindings, setting outputs and using
+ * the context.done callback when your exported function is synchronous. A context object is passed
  * to your function from the Azure Functions runtime on function invocation.
  */
 export interface Context {
@@ -28,7 +28,7 @@ export interface Context {
      */
     executionContext: ExecutionContext;
     /**
-     * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically 
+     * Input and trigger binding data, as defined in function.json. Properties on this object are dynamically
      * generated and named based off of the "name" property in function.json.
      */
     bindings: ContextBindings;
@@ -45,15 +45,15 @@ export interface Context {
      */
     bindingDefinitions: BindingDefinition[];
     /**
-     * Allows you to write streaming function logs. Calling directly allows you to write streaming function logs 
-     * at the default trace level. 
+     * Allows you to write streaming function logs. Calling directly allows you to write streaming function logs
+     * at the default trace level.
      */
     log: Logger;
     /**
      * A callback function that signals to the runtime that your code has completed. If your function is synchronous,
-     * you must call context.done at the end of execution. If your function is asynchronous, you should not use this 
+     * you must call context.done at the end of execution. If your function is asynchronous, you should not use this
      * callback.
-     * 
+     *
      * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
      * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
      *  a string, Buffer, ArrayBufferView, or number.
@@ -73,21 +73,21 @@ export interface Context {
  * HTTP request headers.
  */
 export interface HttpRequestHeaders {
-  [name: string]: string | undefined;
+    [name: string]: string | undefined;
 }
 
 /**
  * Query string parameter keys and values from the URL.
  */
 export interface HttpRequestQuery {
-  [name: string]: string | undefined;
+    [name: string]: string | undefined;
 }
 
 /**
  * Route parameter keys and values.
  */
 export interface HttpRequestParams {
-  [name: string]: string | undefined;
+    [name: string]: string | undefined;
 }
 
 /**
@@ -127,13 +127,12 @@ export interface HttpRequest {
 /**
  * Possible values for an HTTP request method.
  */
-export type HttpMethod = "GET" | "POST" | "DELETE"| "HEAD"| "PATCH"| "PUT" | "OPTIONS" | "TRACE" | "CONNECT";
+export type HttpMethod = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PATCH' | 'PUT' | 'OPTIONS' | 'TRACE' | 'CONNECT';
 
 /**
  * Http response cookie object to "Set-Cookie"
  */
 export interface Cookie {
-
     /** Cookie name */
     name: string;
 
@@ -146,7 +145,7 @@ export interface Cookie {
     /** Specifies URL path that must exist in the requested URL */
     path?: string;
 
-    /** 
+    /**
      * NOTE: It is generally recommended that you use maxAge over expires.
      * Sets the cookie to expire at a specific date instead of when the client closes.
      * This can be a Javascript Date or Unix time in milliseconds.
@@ -160,7 +159,7 @@ export interface Cookie {
     httpOnly?: boolean;
 
     /** Can restrict the cookie to not be sent with cross-site requests */
-    sameSite?: "Strict" | "Lax" | "None" | undefined;
+    sameSite?: 'Strict' | 'Lax' | 'None' | undefined;
 
     /** Number of seconds until the cookie expires. A zero or negative number will expire the cookie immediately. */
     maxAge?: number;
@@ -173,7 +172,7 @@ export interface ExecutionContext {
     invocationId: string;
     /**
      * The name of the function that is being invoked. The name of your function is always the same as the
-     * name of the corresponding function.json's parent directory. 
+     * name of the corresponding function.json's parent directory.
      */
     functionName: string;
     /**
@@ -202,15 +201,14 @@ export interface RetryContext {
 }
 
 export interface Exception {
-
     /** Exception source */
-    source?: (string|null);
+    source?: string | null;
 
     /** Exception stackTrace */
-    stackTrace?: (string|null);
+    stackTrace?: string | null;
 
     /** Exception message */
-    message?: (string|null);
+    message?: string | null;
 }
 
 /**
@@ -224,20 +222,23 @@ export interface TraceContext {
     tracestate: string | null | undefined;
 
     /** Holds additional properties being sent as part of request telemetry. */
-    attributes: {
-        [k: string]: string
-    } | null | undefined;
+    attributes:
+        | {
+              [k: string]: string;
+          }
+        | null
+        | undefined;
 }
 
 export interface BindingDefinition {
     /**
      * The name of your binding, as defined in function.json.
      */
-    name: string,
+    name: string;
     /**
      * The type of your binding, as defined in function.json.
      */
-    type: string,
+    type: string;
     /**
      * The direction of your binding, as defined in function.json.
      */
@@ -245,11 +246,11 @@ export interface BindingDefinition {
 }
 
 /**
- * Allows you to write streaming function logs. 
+ * Allows you to write streaming function logs.
  */
 export interface Logger {
     /**
-     * Writes streaming function logs at the default trace level. 
+     * Writes streaming function logs at the default trace level.
      */
     (...args: any[]): void;
     /**
@@ -273,27 +274,27 @@ export interface Logger {
 export interface Timer {
     isPastDue: boolean;
     schedule: {
-      /**
-       * Describes whether the timer for daylight saving based on the timer's time zone
-       */
-      adjustForDST: boolean;
-      /**
-       * Describes a timer schedule status
-       */
-      /** Describes whether the timer schedules is past it's scheduled due time */
+        /**
+         * Describes whether the timer for daylight saving based on the timer's time zone
+         */
+        adjustForDST: boolean;
+        /**
+         * Describes a timer schedule status
+         */
+        /** Describes whether the timer schedules is past it's scheduled due time */
     };
     scheduleStatus: {
-      /**
-       * Describes the last recorded schedule occurence. Date ISO string.
-       */
-      last: string;
-      /**
-       * Describes the expected next schedule occurrence
-       */
-      next: string;
-      /**
-       * Describes the last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
-       */
-      lastUpdated: string;
+        /**
+         * Describes the last recorded schedule occurence. Date ISO string.
+         */
+        last: string;
+        /**
+         * Describes the expected next schedule occurrence
+         */
+        next: string;
+        /**
+         * Describes the last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
+         */
+        lastUpdated: string;
     };
-  }
+}

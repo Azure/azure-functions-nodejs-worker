@@ -1,13 +1,13 @@
-import { 
+import { isLong } from 'long';
+import {
     AzureFunctionsRpcMessages as rpc,
-    INullableString,
     INullableBool,
     INullableDouble,
-    INullableTimestamp
+    INullableString,
+    INullableTimestamp,
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { InternalException } from "../utils/InternalException";
 import { TraceContext } from '../public/Interfaces';
-import { isLong } from 'long'
+import { InternalException } from '../utils/InternalException';
 
 /**
  * Converts 'ITypedData' input from the RPC layer to JavaScript types.
@@ -15,7 +15,7 @@ import { isLong } from 'long'
  * @param typedData ITypedData object containing one of a string, json, or bytes property
  * @param convertStringToJson Optionally parse the string input type as JSON
  */
-export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: boolean = true) {
+export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson = true) {
     typedData = typedData || {};
     let str = typedData.string || typedData.json;
     if (str !== undefined) {
@@ -24,21 +24,21 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
                 if (str != null) {
                     str = JSON.parse(str);
                 }
-            } catch (err) { }
+            } catch (err) {}
         }
         return str;
     } else if (typedData.bytes) {
         return Buffer.from(<Buffer>typedData.bytes);
     } else if (typedData.collectionBytes && typedData.collectionBytes.bytes) {
-        let byteCollection = <Uint8Array[]>typedData.collectionBytes.bytes;
-        return byteCollection.map(element => Buffer.from(<Buffer>element));
+        const byteCollection = <Uint8Array[]>typedData.collectionBytes.bytes;
+        return byteCollection.map((element) => Buffer.from(<Buffer>element));
     } else if (typedData.collectionString && typedData.collectionString.string) {
         return <string[]>typedData.collectionString.string;
     } else if (typedData.collectionDouble && typedData.collectionDouble.double) {
         return <number[]>typedData.collectionDouble.double;
     } else if (typedData.collectionSint64 && typedData.collectionSint64.sint64) {
-        let longCollection = <(Long|number)[]>typedData.collectionSint64.sint64;
-        return longCollection.map(element => isLong(element) ? element.toString() : <number>element);
+        const longCollection = <(Long | number)[]>typedData.collectionSint64.sint64;
+        return longCollection.map((element) => (isLong(element) ? element.toString() : <number>element));
     }
 }
 
@@ -46,14 +46,12 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson: b
  * Converts 'IRpcTraceContext' input from RPC layer to dictionary of key value pairs.
  * @param traceContext IRpcTraceContext object containing the activityId, tracestate and attributes.
  */
-export function fromRpcTraceContext(traceContext: rpc.IRpcTraceContext | null | undefined): TraceContext
-{
-    if (traceContext)
-    {
+export function fromRpcTraceContext(traceContext: rpc.IRpcTraceContext | null | undefined): TraceContext {
+    if (traceContext) {
         return <TraceContext>{
             traceparent: traceContext.traceParent,
             tracestate: traceContext.traceState,
-            attributes: traceContext.attributes
+            attributes: traceContext.attributes,
         };
     }
 
@@ -71,7 +69,7 @@ export function toTypedData(inputObject): rpc.ITypedData {
     } else if (Buffer.isBuffer(inputObject)) {
         return { bytes: inputObject };
     } else if (ArrayBuffer.isView(inputObject)) {
-        let bytes = new Uint8Array(inputObject.buffer, inputObject.byteOffset, inputObject.byteLength)
+        const bytes = new Uint8Array(inputObject.buffer, inputObject.byteOffset, inputObject.byteLength);
         return { bytes: bytes };
     } else if (typeof inputObject === 'number') {
         if (Number.isInteger(inputObject)) {
@@ -93,14 +91,16 @@ export function toTypedData(inputObject): rpc.ITypedData {
 export function toNullableBool(nullable: boolean | undefined, propertyName: string): undefined | INullableBool {
     if (typeof nullable === 'boolean') {
         return <INullableBool>{
-            value: nullable
+            value: nullable,
         };
     }
-    
+
     if (nullable != null) {
-        throw new InternalException(`A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(
+            `A 'boolean' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`
+        );
     }
-    
+
     return undefined;
 }
 
@@ -110,22 +110,27 @@ export function toNullableBool(nullable: boolean | undefined, propertyName: stri
  * @param nullable Input to be converted to an INullableDouble if it is a valid number
  * @param propertyName The name of the property that the caller will assign the output to. Used for debugging.
  */
-export function toNullableDouble(nullable: number | string | undefined, propertyName: string): undefined | INullableDouble {
+export function toNullableDouble(
+    nullable: number | string | undefined,
+    propertyName: string
+): undefined | INullableDouble {
     if (typeof nullable === 'number') {
         return <INullableDouble>{
-            value: nullable
+            value: nullable,
         };
     } else if (typeof nullable === 'string') {
         if (!isNaN(<any>nullable)) {
             const parsedNumber = parseFloat(nullable);
             return <INullableDouble>{
-                value: parsedNumber
+                value: parsedNumber,
             };
         }
-    } 
-    
+    }
+
     if (nullable != null) {
-        throw new InternalException(`A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(
+            `A 'number' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`
+        );
     }
 
     return undefined;
@@ -141,12 +146,14 @@ export function toRpcString(nullable: string | undefined, propertyName: string):
     if (typeof nullable === 'string') {
         return <string>nullable;
     }
-    
+
     if (nullable != null) {
-        throw new InternalException(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(
+            `A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`
+        );
     }
 
-    return "";
+    return '';
 }
 
 /**
@@ -158,12 +165,14 @@ export function toRpcString(nullable: string | undefined, propertyName: string):
 export function toNullableString(nullable: string | undefined, propertyName: string): undefined | INullableString {
     if (typeof nullable === 'string') {
         return <INullableString>{
-            value: nullable
+            value: nullable,
         };
-    } 
-    
+    }
+
     if (nullable != null) {
-        throw new InternalException(`A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`);
+        throw new InternalException(
+            `A 'string' type was expected instead of a '${typeof nullable}' type. Cannot parse value of '${propertyName}'.`
+        );
     }
 
     return undefined;
@@ -175,20 +184,25 @@ export function toNullableString(nullable: string | undefined, propertyName: str
  * @param nullable Input to be converted to an INullableTimestamp if it is valid input
  * @param propertyName The name of the property that the caller will assign the output to. Used for debugging.
  */
-export function toNullableTimestamp(dateTime: Date | number | undefined, propertyName: string): INullableTimestamp | undefined {
+export function toNullableTimestamp(
+    dateTime: Date | number | undefined,
+    propertyName: string
+): INullableTimestamp | undefined {
     if (dateTime != null) {
         try {
-            let timeInMilliseconds = (typeof dateTime === "number") ? dateTime : dateTime.getTime();
+            const timeInMilliseconds = typeof dateTime === 'number' ? dateTime : dateTime.getTime();
 
             if (timeInMilliseconds && timeInMilliseconds >= 0) {
                 return {
                     value: {
-                        seconds: Math.round(timeInMilliseconds / 1000)
-                    }
-                }
+                        seconds: Math.round(timeInMilliseconds / 1000),
+                    },
+                };
             }
-        } catch(e) {
-            throw new InternalException(`A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`);
+        } catch (e) {
+            throw new InternalException(
+                `A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`
+            );
         }
     }
     return undefined;

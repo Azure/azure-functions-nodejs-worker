@@ -1,5 +1,5 @@
-import { Context } from "./Interfaces";
-export * from "./Interfaces";
+import { Context } from './Interfaces';
+export * from './Interfaces';
 /**
  * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
  * and will execute when triggered. It is recommended that you declare this function as async, which
@@ -11,4 +11,4 @@ export * from "./Interfaces";
  * @returns Output bindings (optional). If you are returning a result from a Promise (or an async function), this
  * result will be passed to JSON.stringify unless it is a string, Buffer, ArrayBufferView, or number.
  */
-export declare type AzureFunction = ((context: Context, ...args: any[]) => Promise<any> | void);
+export declare type AzureFunction = (context: Context, ...args: any[]) => Promise<any> | void;
