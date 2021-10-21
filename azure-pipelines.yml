@@ -114,7 +114,6 @@ jobs:
       failTaskOnFailedTests: true
 
 - job: BuildArtifacts  
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
   pool:
     vmImage: 'vs2017-win2016'
   steps:
@@ -122,6 +121,10 @@ jobs:
     inputs:
       versionSpec: $(NODE_10)
     displayName: 'Install Node.js for test'
+  - script: npm ci
+    displayName: 'npm ci'
+  - script: npm run build-nomaps
+    displayName: 'npm run build-nomaps'
   - powershell: .\package.ps1
   - task: NuGetCommand@2
     inputs:
@@ -133,7 +136,7 @@ jobs:
       ArtifactName: 'drop'
       publishLocation: 'Container'
   - task: NuGetCommand@2
-    condition: eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], 'True')
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v2.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
     inputs:
       command: 'push'
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
