@@ -1,0 +1,4 @@
+*.test.ts
+tsconfig.json
+dist
+*.tgz
