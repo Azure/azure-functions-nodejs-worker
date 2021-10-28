@@ -13,8 +13,6 @@ function StopOnFailedExecution {
 
 Write-Host "buildNumber: " $buildNumber
 Write-Host "NugetPack: " $NugetPack
-npm install
-npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
 New-Item ./pkg/dist/src -Type Directory
 copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
