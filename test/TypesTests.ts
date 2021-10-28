@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import 'mocha';
 import * as cp from 'child_process';
+import 'mocha';
 import { ITestCallbackContext } from 'mocha';
 import * as path from 'path';
 
@@ -11,7 +11,7 @@ describe('Public TypeScript types', async () => {
             expect(await runTsBuild(tsVersion)).to.equal(0);
         });
     }
-})
+});
 
 async function runTsBuild(tsVersion: string): Promise<number> {
     const repoRoot = path.join(__dirname, '..', '..');
