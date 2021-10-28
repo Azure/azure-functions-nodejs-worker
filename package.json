@@ -5,10 +5,10 @@
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
-        "google-protobuf": "^3.6.1",
-        "grpc": "^1.24.5",
+        "google-protobuf": "3.9.1",
+        "grpc": "1.24.5",
         "minimist": "^1.2.5",
-        "protobufjs": "^6.8.8",
+        "protobufjs": "6.8.8",
         "uuid": "^8.3.0"
     },
     "devDependencies": {
@@ -24,6 +24,8 @@
         "eslint": "^7.32.0",
         "husky": "^7.0.2",
         "mocha": "^5.2.0",
+        "mocha-junit-reporter": "^2.0.2",
+        "mocha-multi-reporters": "^1.5.1",
         "mock-require": "^2.0.2",
         "node-abi": "2.1.1",
         "node-pre-gyp": "^0.15.0",
@@ -50,7 +52,7 @@
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && node ./node_modules/typescript/bin/tsc",
         "build-nomaps": "npm run build -- --sourceMap false",
         "gen": "node scripts/generateProtos.js",
-        "test": "mocha ./dist/test/**/*.js",
+        "test": "mocha ./dist/test/**/*.js --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint src",
         "lint-fix": "eslint src --fix",
         "watch": "node ./node_modules/typescript/bin/tsc --watch",

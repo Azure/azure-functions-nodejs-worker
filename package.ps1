@@ -12,8 +12,6 @@ function StopOnFailedExecution {
 }
 
 Write-Host "buildNumber: " $buildNumber
-npm install
-npm run build-nomaps 
 remove-item pkg -Recurse -ErrorAction Ignore
 New-Item ./pkg/deps/grpc/etc/ -Type Directory
 New-Item ./pkg/grpc/ -Type Directory

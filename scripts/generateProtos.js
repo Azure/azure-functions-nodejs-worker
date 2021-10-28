@@ -1,6 +1,6 @@
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
-const path = require("path");
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const path = require('path');
 
 async function generateProtos() {
     try {
@@ -10,31 +10,38 @@ async function generateProtos() {
         const protoFiles = [
             path.join(protoRoot, 'shared', 'NullableTypes.proto'),
             path.join(protoRoot, 'identity', 'ClaimsIdentityRpc.proto'),
-            path.join(protoRoot, 'FunctionRpc.proto')
+            path.join(protoRoot, 'FunctionRpc.proto'),
         ].join(' ');
 
-        console.log("Compiling protobuf definitions...");
+        console.log('Compiling protobuf definitions...');
 
         console.log('Compiling to JavaScript...');
         const jsOut = path.join(protoSrc, 'rpc.js');
         await run(`pbjs -t json-module -w commonjs -o ${jsOut} ${protoFiles}`);
         console.log(`Compiled to JavaScript: "${jsOut}"`);
 
-        console.log('Compiling to JavaScript static module...');
-        const jsStaticOut = path.join(protoSrc, 'rpc_static.js');
-        await run(`pbjs -t static-module -o ${jsStaticOut} ${protoFiles}`);
-        console.log(`Compiled to JavaScript static module: "${jsStaticOut}"`);
+        // Don't generate with Node.js v12/v14 until you bump protobufjs to at least 3.9.0 (original issue: https://github.com/protobufjs/protobuf.js/issues/1275)
+        if ((process.version.startsWith('v12') || process.version.startsWith('v14')) && process.platform === 'win32') {
+            console.warn(
+                'Warning! Could not compile to TypeScript for Node.js 12 or 14 and Windows OS. Do not change public interfaces.'
+            );
+        } else {
+            console.log('Compiling to JavaScript static module...');
+            const jsStaticOut = path.join(protoSrc, 'rpc_static.js');
+            await run(`pbjs -t static-module -o ${jsStaticOut} ${protoFiles}`);
+            console.log(`Compiled to JavaScript static module: "${jsStaticOut}"`);
 
-        console.log('Compiling to TypeScript...');
-        const dTsOut = path.join(protoSrc, 'rpc.d.ts');
-        await run(`pbts -o ${dTsOut} ${jsStaticOut}`);
-        console.log(`Compiled to TypeScript: "${dTsOut}"`);
+            console.log('Compiling to TypeScript...');
+            const dTsOut = path.join(protoSrc, 'rpc.d.ts');
+            await run(`pbts -o ${dTsOut} ${jsStaticOut}`);
+            console.log(`Compiled to TypeScript: "${dTsOut}"`);
+        }
     } catch (error) {
         console.error('Failed to compile protobuf definitions:');
         console.error(error.message);
         process.exit(-1);
     }
-};
+}
 
 async function run(command) {
     const { stdout, stderr } = await exec(command);
