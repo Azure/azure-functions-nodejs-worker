@@ -86,19 +86,19 @@ declare module '@azure/functions' {
      * HTTP request headers.
      */
     export interface HttpRequestHeaders {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * Query string parameter keys and values from the URL.
      */
     export interface HttpRequestQuery {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * Route parameter keys and values.
      */
     export interface HttpRequestParams {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
