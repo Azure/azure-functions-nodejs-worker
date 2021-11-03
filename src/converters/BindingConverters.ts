@@ -1,6 +1,5 @@
-import { BindingDefinition } from '@azure/functions';
+import { BindingDefinition, ContextBindingData } from '@azure/functions';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { Dict } from '../Context';
 import { FunctionInfo } from '../FunctionInfo';
 import { fromTypedData } from './RpcConverters';
 
@@ -21,9 +20,9 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
     });
 }
 
-export function getNormalizedBindingData(request: rpc.IInvocationRequest): Dict<any> {
-    const bindingData: Dict<any> = {
-        invocationId: request.invocationId,
+export function getNormalizedBindingData(request: rpc.IInvocationRequest): ContextBindingData {
+    const bindingData: ContextBindingData = {
+        invocationId: <string>request.invocationId,
     };
 
     // node binding data is camel cased due to language convention

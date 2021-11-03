@@ -22,7 +22,11 @@ declare module '@azure/functions' {
      * Context binding data. Provided to your function trigger metadata and function invocation data.
      */
     export interface ContextBindingData {
-        invocationId?: string | null;
+        /**
+         * A unique GUID per function invocation.
+         */
+        invocationId: string;
+
         [name: string]: any;
     }
     /**

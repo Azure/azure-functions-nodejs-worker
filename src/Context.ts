@@ -1,4 +1,12 @@
-import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from '@azure/functions';
+import {
+    BindingDefinition,
+    Context,
+    ContextBindingData,
+    ContextBindings,
+    ExecutionContext,
+    Logger,
+    TraceContext,
+} from '@azure/functions';
 import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import {
@@ -24,7 +32,7 @@ export function CreateContextAndInputs(
 ) {
     const context = new InvocationContext(info, request, logCallback, callback);
 
-    const bindings: Dict<any> = {};
+    const bindings: ContextBindings = {};
     const inputs: any[] = [];
     let httpInput: RequestProperties | undefined;
     for (const binding of <rpc.IParameterBinding[]>request.inputData) {
@@ -73,8 +81,8 @@ export function CreateContextAndInputs(
 class InvocationContext implements Context {
     invocationId: string;
     executionContext: ExecutionContext;
-    bindings: Dict<any>;
-    bindingData: Dict<any>;
+    bindings: ContextBindings;
+    bindingData: ContextBindingData;
     traceContext: TraceContext;
     bindingDefinitions: BindingDefinition[];
     log: Logger;
@@ -174,7 +182,7 @@ function logWithAsyncCheck(
 
 export interface InvocationResult {
     return: any;
-    bindings: Dict<any>;
+    bindings: ContextBindings;
 }
 
 export type DoneCallback = (err?: Error | string, result?: any) => void;
