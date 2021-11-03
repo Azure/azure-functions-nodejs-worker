@@ -20,6 +20,8 @@ copy-item ./node_modules/grpc/deps/grpc/etc/roots.pem ./pkg/deps/grpc/etc/
 copy-item ./node_modules/grpc/package.json ./pkg/grpc/
 copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
+copy-item ./LICENSE pkg
+copy-item ./NOTICE.html pkg
 ./node_modules/.bin/webpack
 StopOnFailedExecution # fail if error
 # Node 8 support
