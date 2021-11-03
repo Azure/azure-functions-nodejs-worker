@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as grpc from 'grpc';
 import * as protobuf from 'protobufjs';
 // import protobufjs json descriptor

@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import { Cookie, HttpMethod } from '@azure/functions';
 import {
     AzureFunctionsRpcMessages as rpc,

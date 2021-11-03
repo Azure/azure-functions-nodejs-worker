@@ -1,5 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the MIT License. See License.txt in the project root for license information.
+// Licensed under the MIT License.
+
 import { HttpMethod, HttpRequest } from '@azure/functions';
 
 export class RequestProperties implements HttpRequest {
