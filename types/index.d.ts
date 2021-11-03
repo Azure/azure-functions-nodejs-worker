@@ -179,9 +179,9 @@ declare module '@azure/functions' {
          */
         functionDirectory: string;
         /**
-         * The retry context of the current funciton execution. The retry context of the current function execution. Equals null if retry policy is not defined or it's the first function execution.
+         * The retry context of the current function execution or null if the retry policy is not defined.
          */
-        retryContext?: RetryContext;
+        retryContext: RetryContext | null;
     }
     export interface RetryContext {
         /**
