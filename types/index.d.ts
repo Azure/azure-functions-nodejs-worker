@@ -260,25 +260,31 @@ declare module '@azure/functions' {
          */
         verbose(...args: any[]): void;
     }
+    /**
+     * Timer schedule information. Provided to your function when using a timer binding.
+     */
     export interface Timer {
+        /**
+         * Whether this timer invocation is due to a missed schedule occurrence.
+         */
         isPastDue: boolean;
         schedule: {
             /**
-             * Describes whether the timer for daylight saving based on the timer's time zone
+             * Whether intervals between invocations should account for DST.
              */
             adjustForDST: boolean;
         };
         scheduleStatus: {
             /**
-             * Describes the last recorded schedule occurence. Date ISO string.
+             * The last recorded schedule occurrence. Date ISO string.
              */
             last: string;
             /**
-             * Describes the expected next schedule occurrence
+             * The expected next schedule occurrence. Date ISO string.
              */
             next: string;
             /**
-             * Describes the last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
+             * The last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
              */
             lastUpdated: string;
         };
