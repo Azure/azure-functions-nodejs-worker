@@ -1,5 +1,5 @@
 import { CreateContextAndInputs, LogCallback, ResultCallback } from '../src/Context';
-import { Context } from "../src/public/Interfaces";
+import { Context } from "@azure/functions";
 import { FunctionInfo } from '../src/FunctionInfo';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import * as sinon from 'sinon';

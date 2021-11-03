@@ -39,6 +39,7 @@ azure-functions-language-worker-protobuf/*
 
 dist
 pkg
+types/*.tgz
 
 Azure.Functions.Cli
 Azure.Functions.Cli.zip
@@ -48,16 +49,3 @@ test/end-to-end/Azure.Functions.NodejsWorker.E2E/.vs
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/bin
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/obj
 **/*-test-results.xml
-
-# Commit external interfaces
-types/*
-
-!types/public
-types/public/*
-!types/public/Main.d.ts
-!types/public/Interfaces.d.ts
-!types/public/package.json
-!types/public/README.md
-!types/public/ts3.1
-types/public/ts3.1/*
-!types/public/ts3.1/Main.d.ts

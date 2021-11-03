@@ -1,5 +1,4 @@
 import { FunctionInfo } from '../src/FunctionInfo';
-import { Cookie } from "../types/public/Interfaces";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';

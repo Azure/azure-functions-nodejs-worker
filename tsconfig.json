@@ -4,13 +4,13 @@
         "target": "es6",
         "noImplicitAny": false,
         "strict": true,
-        "outDir": "dist/src",
+        "outDir": "dist",
         "sourceMap": true,
-        "declaration": true,
-        "declarationDir": "types"
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "compileOnSave": true
+        "baseUrl": "./",
+        "paths": {
+            "@azure/functions": [
+                "types"
+            ]
+        }
+    }
 }
