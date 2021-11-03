@@ -50,6 +50,12 @@ jobs:
     displayName: 'npm run lint'
   - script: npm test
     displayName: 'npm test'
+  - task: PublishTestResults@2
+    displayName: 'Publish Unit Test Results'
+    inputs:
+      testResultsFiles: 'test/unit-test-results.xml'
+      testRunTitle: 'Unit $(Agent.JobName)'
+    condition: succeededOrFailed()
 
 - job: E2ETests
   strategy:
@@ -84,10 +90,12 @@ jobs:
       languageWorkers:node:workerDirectory: $(System.DefaultWorkingDirectory)
       nodeVersion: $(NODE_VERSION)
   - task: PublishTestResults@2
+    displayName: 'Publish E2E Test Results'
     condition: always()
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
+      testRunTitle: 'E2E $(Agent.JobName)'
       failTaskOnFailedTests: true
 
 - job: BuildArtifacts  
