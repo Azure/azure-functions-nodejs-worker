@@ -11,7 +11,7 @@ import {
 import { FunctionInfo } from './FunctionInfo';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
-import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from './public/Interfaces';
+import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from '@azure/functions';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 

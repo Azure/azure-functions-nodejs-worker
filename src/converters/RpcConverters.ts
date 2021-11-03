@@ -1,3 +1,4 @@
+import { TraceContext } from '@azure/functions';
 import { isLong } from 'long';
 import {
     AzureFunctionsRpcMessages as rpc,
@@ -6,7 +7,6 @@ import {
     INullableString,
     INullableTimestamp,
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { TraceContext } from '../public/Interfaces';
 import { InternalException } from '../utils/InternalException';
 
 /**

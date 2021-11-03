@@ -46,4 +46,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ### Contributing to TypeScript type definitions
 
-`types/public/Interfaces.d.ts` is a generated file from `src/public/Interfaces.ts`. If you want to add a change to `Interfaces.d.ts`, please make the change first to `Interfaces.ts` and then `npm run build` to generate the appropriate type definitions. Any additional type definition tests should go in `test/InterfacesTest.ts`.
+The type definitions supplied by the `@azure/functions` [npm package](https://www.npmjs.com/package/@azure/functions) are located in the `types` folder. Any changes should be applied directly to `./types/index.d.ts`. Please make sure to update the tests in `./types/index.test.ts` as well.

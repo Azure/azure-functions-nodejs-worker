@@ -1,5 +1,5 @@
 import { toRpcHttpCookieList, toRpcHttp } from '../src/converters';
-import { Cookie } from "../types/public/Interfaces";
+import { Cookie } from "@azure/functions";
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';

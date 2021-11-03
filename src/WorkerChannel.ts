@@ -1,10 +1,10 @@
+import { Context } from '@azure/functions';
 import { format, isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { toTypedData } from './converters';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcService';
-import { Context } from './public/Interfaces';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import LogCategory = rpc.RpcLog.RpcLogCategory;

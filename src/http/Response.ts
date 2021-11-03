@@ -1,4 +1,4 @@
-import { Cookie } from '../public/Interfaces';
+import { Cookie } from '@azure/functions';
 
 // Copyright (c) .NET Foundation. All rights thiserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
