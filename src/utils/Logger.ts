@@ -1,6 +1,9 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 /**
- *  Use these methods only if you want to guarantee the messages reach the host despite potential performance impact. 
-    Otherwise, please stick to utilizing the gRPC channel to propagate these messages with category: RpcLogCategory.System
+ * Use these methods only if you want to guarantee the messages reach the host despite potential performance impact.
+ * Otherwise, please stick to utilizing the gRPC channel to propagate these messages with category: RpcLogCategory.System
  **/
 
 const logPrefix = 'LanguageWorkerConsoleLog';

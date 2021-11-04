@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import { TraceContext } from '@azure/functions';
 import { isLong } from 'long';
 import {
