@@ -61,7 +61,7 @@ jobs:
   - task: NodeTool@0
     inputs:
       versionSpec: $(NODE_VERSION)
-    displayName: 'Install Node.js for test'
+    displayName: 'Install Node.js'
   - script: npm ci
     displayName: 'npm ci'
   - script: npm run build
@@ -70,41 +70,54 @@ jobs:
     condition: not(eq(variables['NODE_VERSION'], variables['NODE_8'])) # eslint doesn't support Node 8
     displayName: 'npm run lint'
   - script: npm test
-    displayName: 'npm test'
+    displayName: 'Run unit tests'
   - task: PublishTestResults@2
     displayName: 'Publish Unit Test Results'
     inputs:
       testResultsFiles: 'test/unit-test-results.xml'
-      testRunTitle: 'Unit $(Agent.JobName)'
+      testRunTitle: '$(Agent.JobName)'
     condition: succeededOrFailed()
 
 - job: E2ETests
   strategy:
     maxParallel: 1
+    # Node 8 is only supported in v2 compat mode and Mac isn't worth the extra build time unless we can get better parallel job support
     matrix:
-      NODE10:
+      UBUNTU_NODE10:
+        IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_10)
-      NODE12:
+      UBUNTU_NODE12:
+        IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_12)
-      NODE14:
+      UBUNTU_NODE14:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_14)
+      WINDOWS_NODE10:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_10)
+      WINDOWS_NODE12:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_12)
+      WINDOWS_NODE14:
+        IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_14)
   pool:
-    vmImage: 'windows-latest'
+    vmImage: $(IMAGE_TYPE)
   steps:
   - task: NodeTool@0
     inputs:
       versionSpec: $(NODE_VERSION)
-    displayName: 'Install Node.js for test'
+    displayName: 'Install Node.js'
   - script: npm ci
     displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
   - pwsh: |
       .\setup-e2e-tests.ps1
-    displayName: 'setup tests'
+    displayName: 'Setup e2e tests'
   - powershell: |
       .\run-e2e-tests.ps1
-    displayName: 'run tests'
+    displayName: 'Run e2e tests'
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
       AzureWebJobsEventHubSender: $(AzureWebJobsEventHubSender)
@@ -118,8 +131,7 @@ jobs:
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
-      testRunTitle: 'E2E $(Agent.JobName)'
-      failTaskOnFailedTests: true
+      testRunTitle: '$(Agent.JobName)'
 
 - job: BuildArtifacts  
   pool:
@@ -128,7 +140,7 @@ jobs:
   - task: NodeTool@0
     inputs:
       versionSpec: $(NODE_10)
-    displayName: 'Install Node.js for test'
+    displayName: 'Install Node.js'
   - script: npm ci
     displayName: 'npm ci'
   - script: npm run build-nomaps

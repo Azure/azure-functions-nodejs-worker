@@ -75,6 +75,10 @@ $funcExePath = Join-Path $FUNC_CLI_DIRECTORY $FUNC_EXE_NAME
 Write-Host "Installing extensions..."
 Push-Location "$PSScriptRoot/test/end-to-end/testFunctionApp"
 
+if ($IsMacOS -or $IsLinux) {
+    chmod +x $funcExePath
+}
+
 & $funcExePath extensions install | ForEach-Object {
   if ($_ -match 'OK')    
   { Write-Host $_ -f Green }    
