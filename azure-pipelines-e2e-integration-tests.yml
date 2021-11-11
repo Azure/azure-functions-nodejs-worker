@@ -38,6 +38,10 @@ steps:
     displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
+  - task: UseDotNet@2
+    displayName: 'Install .NET 6'
+    inputs:
+      version: 6.0.x
   - pwsh: |
       .\setup-e2e-tests.ps1 -UseCoreToolsBuildFromIntegrationTests
     displayName: 'Setup e2e tests'
