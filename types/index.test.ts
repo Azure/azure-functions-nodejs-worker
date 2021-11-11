@@ -1,6 +1,6 @@
 // This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
 
-import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest } from '@azure/functions';
+import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, Timer } from '@azure/functions';
 const get: HttpMethod = 'GET';
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -20,6 +20,15 @@ const runHttp: AzureFunction = async function (context: Context, req: HttpReques
             body: 'Please pass a name on the query string or in the request body',
         };
     }
+};
+
+export const timerTrigger: AzureFunction = async function (context: Context, myTimer: Timer): Promise<void> {
+    const timeStamp = new Date().toISOString();
+
+    if (myTimer.isPastDue) {
+        context.log('Timer function is running late!');
+    }
+    context.log('Timer trigger function ran!', timeStamp);
 };
 
 const runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) {
