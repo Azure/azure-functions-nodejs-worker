@@ -1,3 +1,4 @@
+import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from '@azure/functions';
 import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import {
@@ -11,7 +12,6 @@ import {
 import { FunctionInfo } from './FunctionInfo';
 import { Request, RequestProperties } from './http/Request';
 import { Response } from './http/Response';
-import { BindingDefinition, Context, ExecutionContext, Logger, TraceContext } from '@azure/functions';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 

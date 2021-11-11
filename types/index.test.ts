@@ -1,7 +1,7 @@
 // This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
 
-import { AzureFunction, Context, HttpRequest, HttpMethod, Cookie } from "@azure/functions";
-const get: HttpMethod = "GET";
+import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest } from '@azure/functions';
+const get: HttpMethod = 'GET';
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
     if (req.method === get) {
@@ -11,16 +11,16 @@ const runHttp: AzureFunction = async function (context: Context, req: HttpReques
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         context.res = {
-            status: "200",
-            body: "Hello " + (req.query.name || req.body.name)
+            status: '200',
+            body: 'Hello ' + (req.query.name || req.body.name),
         };
     } else {
         context.res = {
             status: 400,
-            body: "Please pass a name on the query string or in the request body"
+            body: 'Please pass a name on the query string or in the request body',
         };
     }
-}
+};
 
 const runServiceBus: AzureFunction = function (context: Context, myQueueItem: string) {
     context.log('Node.js ServiceBus queue trigger function processed message', myQueueItem);
@@ -35,46 +35,46 @@ const runHttpReturn: AzureFunction = async function (context: Context, req: Http
     context.log('JavaScript HTTP trigger function processed a request.');
     if (req.query.name || (req.body && req.body.name)) {
         return {
-            status: "200",
-            body: "Hello " + (req.query.name || req.body.name)
+            status: '200',
+            body: 'Hello ' + (req.query.name || req.body.name),
         };
     } else {
         return {
             status: 400,
-            body: "Please pass a name on the query string or in the request body"
+            body: 'Please pass a name on the query string or in the request body',
         };
     }
-}
+};
 
 const runFunction: AzureFunction = async function (context: Context) {
-    context.log("Ran function");
-    return "Ran function";
-}
+    context.log('Ran function');
+    return 'Ran function';
+};
 
 const cookieFunction: AzureFunction = async function (context: Context) {
-    let cookies: Cookie[] = [
+    const cookies: Cookie[] = [
         {
-            name: "cookiename",
-            value: "cookievalue",
-            expires: Date.now()
-        }
+            name: 'cookiename',
+            value: 'cookievalue',
+            expires: Date.now(),
+        },
     ];
     context.res = {
         cookies,
-        body: "just a normal body"
+        body: 'just a normal body',
     };
-}
+};
 
 const runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
-    context.log("Http-triggered function with " + req.method + " method.");
-    context.log("Pulling in queue item " + queueItem);
+    context.log('Http-triggered function with ' + req.method + ' method.');
+    context.log('Pulling in queue item ' + queueItem);
     return;
-}
+};
 
 const returnWithContextDone: AzureFunction = function (context: Context, req: HttpRequest) {
-    context.log.info("Writing to queue");
+    context.log.info('Writing to queue');
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
-}
+};
 
 export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
 
@@ -87,15 +87,15 @@ export const runTypedReturn: AzureFunction = async (context, request: HttpReques
     //      value1: "Test1"
     //  };
     return {
-        value: "Test"
+        value: 'Test',
     };
-}
+};
 
 export const runTypedReturn1: AzureFunction = async (context, request): Promise<CustomOutput> => {
     //  return { // ts(2322) error
     //      value1: "Test1"
     //  };
     return {
-        value: "Test"
+        value: 'Test',
     };
-}
+};
