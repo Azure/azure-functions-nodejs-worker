@@ -22,7 +22,11 @@ declare module '@azure/functions' {
      * Context binding data. Provided to your function trigger metadata and function invocation data.
      */
     export interface ContextBindingData {
-        invocationId?: string | null;
+        /**
+         * A unique GUID per function invocation.
+         */
+        invocationId: string;
+
         [name: string]: any;
     }
     /**
@@ -86,19 +90,19 @@ declare module '@azure/functions' {
      * HTTP request headers.
      */
     export interface HttpRequestHeaders {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * Query string parameter keys and values from the URL.
      */
     export interface HttpRequestQuery {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * Route parameter keys and values.
      */
     export interface HttpRequestParams {
-        [name: string]: string | undefined;
+        [name: string]: string;
     }
     /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
@@ -179,9 +183,9 @@ declare module '@azure/functions' {
          */
         functionDirectory: string;
         /**
-         * The retry context of the current funciton execution. The retry context of the current function execution. Equals null if retry policy is not defined or it's the first function execution.
+         * The retry context of the current function execution or null if the retry policy is not defined.
          */
-        retryContext?: RetryContext;
+        retryContext: RetryContext | null;
     }
     export interface RetryContext {
         /**
@@ -260,25 +264,31 @@ declare module '@azure/functions' {
          */
         verbose(...args: any[]): void;
     }
+    /**
+     * Timer schedule information. Provided to your function when using a timer binding.
+     */
     export interface Timer {
+        /**
+         * Whether this timer invocation is due to a missed schedule occurrence.
+         */
         isPastDue: boolean;
         schedule: {
             /**
-             * Describes whether the timer for daylight saving based on the timer's time zone
+             * Whether intervals between invocations should account for DST.
              */
             adjustForDST: boolean;
         };
         scheduleStatus: {
             /**
-             * Describes the last recorded schedule occurence. Date ISO string.
+             * The last recorded schedule occurrence. Date ISO string.
              */
             last: string;
             /**
-             * Describes the expected next schedule occurrence
+             * The expected next schedule occurrence. Date ISO string.
              */
             next: string;
             /**
-             * Describes the last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
+             * The last time this record was updated. This is used to re-calculate `next` with the current schedule after a host restart. Date ISO string.
              */
             lastUpdated: string;
         };

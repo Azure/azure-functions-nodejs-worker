@@ -1,17 +1,22 @@
 # Type definitions for Azure Functions
-This package contains type definitions for using TypeScript with Azure Functions.
+This package contains type definitions for using TypeScript with Azure Functions. Follow [this tutorial](https://docs.microsoft.com/azure/azure-functions/create-first-function-vs-code-typescript) to create your first TypeScript function.
 
-These typings are for common objects that will be passed to your Azure Functions function code. Azure Functions supports TypeScript development, but does not support directly running TypeScript code without transpilation.
+# Versioning
+The version of the package matches the version of the [Node.js worker](https://github.com/Azure/azure-functions-nodejs-worker). It is recommended to install the latest version of the package matching the major version of your worker.
 
-Read more on [configuring entry points](https://docs.microsoft.com/azure/azure-functions/functions-reference-node#configure-function-entry-point) in your Azure Functions function app.
+|Worker Version|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
+|---|---|---|---|
+|3|4|Preview|14|
+|2|3|GA (Recommended)|14, 12, 10|
+|1|2|GA (Maintenance mode)|10, 8|
 
 # Install
-Because this package only contains TypeScript type definitions, it should be saved under `devDependencies`.
+Because this package only contains type definitions, it should be saved under `devDependencies`.
 
 `npm install @azure/functions --save-dev`
 
 # Usage
-```javascript
+```typescript
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
 const index: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -32,12 +37,6 @@ const index: AzureFunction = async function (context: Context, req: HttpRequest)
 export { index };
 ```
 
-# Versions
-Versioning of @azure/functions is tied to the version of the [Azure Functions Node.js Worker](https://github.com/Azure/azure-functions-nodejs-worker/releases) the types were generated from. You can find the Azure Functions Node.js Worker version of a given Function Runtime Version [here](https://github.com/Azure/azure-functions-host/releases). It is recommended that you take the latest version available.
+# Contributing
 
-# Getting Started with Azure Functions
-If you are getting started with Azure Functions, you can follow this tutorial to [create and deploy your first JavaScript function](https://docs.microsoft.com/azure/azure-functions/functions-create-first-function-vs-code). We recommend that you use Visual Studio Code and the [Azure Functions extension](https://code.visualstudio.com/tutorials/functions-extension/getting-started).
-
-The [Azure Functions developer guide](https://docs.microsoft.com/azure/azure-functions/functions-reference) and the [JavaScript-specific developer guide](https://docs.microsoft.com/azure/azure-functions/functions-reference-node) are good resources to gain an understanding of more Azure Functions concepts.
-
-
+See "Contributing" section on the Node.js worker repo [here](https://github.com/Azure/azure-functions-nodejs-worker#contributing).
