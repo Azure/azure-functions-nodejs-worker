@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 declare module '@azure/functions' {
     /**
      * Interface for your Azure Function code. This function must be exported (via module.exports or exports)

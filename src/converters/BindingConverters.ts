@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import { BindingDefinition, ContextBindingData } from '@azure/functions';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from '../FunctionInfo';

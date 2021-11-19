@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 const logPrefix = 'LanguageWorkerConsoleLog';
 const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
