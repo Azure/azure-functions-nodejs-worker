@@ -1,7 +1,8 @@
 variables: {
   WORKER_VERSION: '3.0.0',
   NODE_14: '14.x',
-  NODE_16: '16.x'
+  NODE_16: '16.x',
+  DEFAULT_BRANCH: 'refs/heads/v3.x'
 }
 name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
@@ -137,8 +138,10 @@ jobs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'drop'
       publishLocation: 'Container'
+  - task: ComponentGovernanceComponentDetection@0
+    condition: or(eq(variables['ENABLE_COMPLIANCE'], 'true'), eq(variables['Build.SourceBranch'], variables('DEFAULT_BRANCH')))
   - task: NuGetCommand@2
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v3.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], variables('DEFAULT_BRANCH')), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
     inputs:
       command: 'push'
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
