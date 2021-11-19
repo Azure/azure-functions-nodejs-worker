@@ -139,9 +139,9 @@ jobs:
       ArtifactName: 'drop'
       publishLocation: 'Container'
   - task: ComponentGovernanceComponentDetection@0
-    condition: or(eq(variables['ENABLE_COMPLIANCE'], 'true'), eq(variables['Build.SourceBranch'], variables('DEFAULT_BRANCH')))
+    condition: or(eq(variables['ENABLE_COMPLIANCE'], 'true'), eq(variables['Build.SourceBranch'], variables['DEFAULT_BRANCH']))
   - task: NuGetCommand@2
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], variables('DEFAULT_BRANCH')), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], variables['DEFAULT_BRANCH']), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
     inputs:
       command: 'push'
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
