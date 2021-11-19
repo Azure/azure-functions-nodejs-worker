@@ -59,8 +59,8 @@
         "build-nomaps": "npm run build -- --sourceMap false",
         "gen": "node scripts/generateProtos.js",
         "test": "mocha -r ts-node/register ./test/**/*.ts --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
-        "lint": "eslint src",
-        "lint-fix": "eslint src --fix",
+        "lint": "eslint .",
+        "lint-fix": "eslint . --fix",
         "watch": "node ./node_modules/typescript/bin/tsc --watch",
         "prepare": "husky install"
     },
