@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import { Context } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';

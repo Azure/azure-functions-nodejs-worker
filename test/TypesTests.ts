@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect } from 'chai';
 import * as cp from 'child_process';
 import 'mocha';
