@@ -6,8 +6,8 @@ The version of the package matches the version of the [Node.js worker](https://g
 
 |Worker Version|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
 |---|---|---|---|
-|3|4|Preview|14|
-|2|3|GA (Recommended)|14, 12, 10|
+|3|4|GA (Recommended)|16 (Preview), 14|
+|2|3|GA|14, 12, 10|
 |1|2|GA (Maintenance mode)|10, 8|
 
 # Install
