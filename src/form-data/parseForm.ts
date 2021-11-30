@@ -1,50 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { FormPart, ParseFormBodyOptions } from '@azure/functions';
 import { Readable } from 'stream';
 import { getContentDispositionValues, getContentTypeFromHeader } from './parseContentType';
-
-type FormEntry = {
-    name: string;
-    fileName?: string;
-    contentType?: string;
-    value: Readable;
-};
-
-export type FormEntrySimple = {
-    name: string;
-    fileName?: string;
-    contentType?: string;
-    value: string;
-};
-
-export type ParseFormOptions = {
-    onEntry(entry: FormEntry): Promise<void>;
-};
 
 const carriageReturn = Buffer.from('\r')[0];
 const newline = Buffer.from('\n')[0];
 const hyphen = Buffer.from('-')[0];
-
-export async function parseFormSimple(stream: Readable, boundary: string): Promise<FormEntrySimple[]> {
-    const result: Promise<FormEntrySimple>[] = [];
-    await parseForm(stream, boundary, {
-        onEntry: async (entry) => {
-            result.push(onEntry(entry));
-        },
-    });
-    return await Promise.all(result);
-}
-
-async function onEntry(entry: FormEntry): Promise<FormEntrySimple> {
-    const value = await streamToString(entry.value);
-    return {
-        name: entry.name,
-        fileName: entry.fileName,
-        contentType: entry.contentType,
-        value,
-    };
-}
 
 async function streamToString(stream: Readable): Promise<string> {
     const chunks: Buffer[] = [];
@@ -58,14 +21,33 @@ async function streamToString(stream: Readable): Promise<string> {
     return Buffer.concat(chunks).toString();
 }
 
-export async function parseForm(stream: Readable, boundary: string, options: ParseFormOptions): Promise<void> {
+async function handlePart(
+    part: FormPart,
+    stream: Readable,
+    options: ParseFormBodyOptions | undefined
+): Promise<FormPart> {
+    if (options?.onPart) {
+        await options.onPart(part, stream);
+    } else {
+        part.value = await streamToString(stream);
+    }
+    return part;
+}
+
+export async function parseForm(
+    stream: Readable,
+    boundary: string,
+    options?: ParseFormBodyOptions
+): Promise<FormPart[]> {
     let inHeaders = false;
-    let entry: Partial<FormEntry> & { value: Readable } = {
-        value: new Readable(),
-    };
+    let part: Partial<FormPart> = {};
+    let partStream: Readable = new Readable();
+    partStream._read = () => {};
 
     const boundaryBuffer = Buffer.from(`--${boundary}`);
     const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
+
+    const results: Promise<FormPart>[] = [];
 
     let prevBufferLine: Buffer | undefined;
     let prevBufferEOL: Buffer | undefined;
@@ -95,27 +77,24 @@ export async function parseForm(stream: Readable, boundary: string, options: Par
                     const isBoundaryEnd = matchesBuffer(line, endBoundaryBuffer);
                     if (isBoundary || isBoundaryEnd) {
                         if (chunkToStreamEnd > chunkToStreamStart) {
-                            entry.value.push(chunk.slice(chunkToStreamStart, chunkToStreamEnd));
+                            partStream.push(chunk.slice(chunkToStreamStart, chunkToStreamEnd));
                         }
-                        entry.value.push(null);
-
+                        partStream.push(null);
                         if (isBoundaryEnd) {
                             return;
                         }
 
-                        const readable = new Readable();
-                        readable._read = () => {};
-                        entry = {
-                            value: readable,
-                        };
+                        part = {};
+                        partStream = new Readable();
+                        partStream._read = () => {};
                         inHeaders = true;
                     } else if (inHeaders) {
                         const lineAsString = line.toString();
                         if (!lineAsString) {
                             inHeaders = false;
-                            if (entry.name && entry.value) {
+                            if (part.name) {
                                 chunkToStreamStart = lineStart;
-                                options.onEntry(<FormEntry>entry);
+                                results.push(handlePart(<FormPart>part, partStream, options));
                             } else {
                                 throw new Error('todo');
                             }
@@ -123,19 +102,19 @@ export async function parseForm(stream: Readable, boundary: string, options: Par
                             // parse header
                             const contentDispositionValues = getContentDispositionValues(lineAsString);
                             if (contentDispositionValues) {
-                                entry.name = contentDispositionValues.getValue('name');
-                                entry.fileName = contentDispositionValues.tryGetValue('fileName');
+                                part.name = contentDispositionValues.getValue('name');
+                                part.fileName = contentDispositionValues.tryGetValue('fileName');
                             } else {
                                 const parsedContentType = getContentTypeFromHeader(lineAsString);
                                 if (parsedContentType) {
-                                    entry.contentType = parsedContentType;
+                                    part.contentType = parsedContentType;
                                 }
                             }
                         }
                     } else {
                         chunkToStreamEnd = index;
                         if (prevBufferLine) {
-                            entry.value.push(
+                            partStream.push(
                                 prevBufferEOL ? Buffer.concat([prevBufferEOL, prevBufferLine]) : prevBufferLine
                             );
                         }
@@ -147,7 +126,7 @@ export async function parseForm(stream: Readable, boundary: string, options: Par
                 if (lineEnd > 0) {
                     // We've processed several lines already - just need to keep track of the last bit
                     if (!inHeaders) {
-                        entry.value.push(chunk.slice(chunkToStreamStart, lineEnd));
+                        partStream.push(chunk.slice(chunkToStreamStart, lineEnd));
                     }
 
                     const partialLine = chunk.slice(lineStart, chunk.length);
@@ -165,6 +144,7 @@ export async function parseForm(stream: Readable, boundary: string, options: Par
         });
         stream.on('end', resolve);
     });
+    return await Promise.all(results);
 }
 
 function matchesBuffer(buf1: Buffer, buf2: Buffer) {

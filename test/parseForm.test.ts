@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { Readable } from 'stream';
-import { FormEntrySimple, parseFormSimple } from '../src/form-data/parseForm';
+import { parseForm } from '../src/form-data/parseForm';
 
 const helloFormData = `------WebKitFormBoundaryeJGMO2YP65ZZXRmv
 Content-Disposition: form-data; name="name"
@@ -25,7 +25,8 @@ world
 
 const boundary = '----WebKitFormBoundaryeJGMO2YP65ZZXRmv';
 
-function verifyHelloWorldForm(parsedForm: FormEntrySimple[], message?: string): void {
+async function verifyHelloWorldForm(stream: Readable, message?: string): Promise<void> {
+    const parsedForm = await parseForm(stream, boundary);
     expect(parsedForm).to.have.length(3, message);
     const entry1 = parsedForm[0];
     expect(entry1.name).to.equal('name', message);
@@ -56,16 +57,14 @@ describe('parseForm', () => {
         stream.push(helloFormData);
         stream.push(null); // signal it's done
 
-        const parsedForm = await parseFormSimple(stream, boundary);
-        verifyHelloWorldForm(parsedForm);
+        await verifyHelloWorldForm(stream);
     });
 
     it(`hello world form with data split in chunks`, async () => {
         for (let index = 1; index < helloFormData.length; index++) {
             const pieces = [helloFormData.substring(0, index), helloFormData.substring(index)];
             const stream = new TestStream(pieces);
-            const parsedForm = await parseFormSimple(stream, boundary);
-            verifyHelloWorldForm(parsedForm, `(Index: ${index})`);
+            await verifyHelloWorldForm(stream, `(Index: ${index})`);
         }
     });
 
@@ -81,8 +80,7 @@ describe('parseForm', () => {
                 ];
 
                 const stream = new TestStream(pieces);
-                const parsedForm = await parseFormSimple(stream, boundary);
-                verifyHelloWorldForm(parsedForm, `(Index1: ${index1}, Index2: ${index2})`);
+                await verifyHelloWorldForm(stream, `(Index1: ${index1}, Index2: ${index2})`);
             }
         }
     });

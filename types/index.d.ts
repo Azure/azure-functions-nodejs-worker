@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 declare module '@azure/functions' {
+    import { Readable } from 'stream';
+
     /**
      * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
      * and will execute when triggered. It is recommended that you declare this function as async, which
@@ -139,7 +141,21 @@ declare module '@azure/functions' {
          * The HTTP request body as a UTF-8 string.
          */
         rawBody?: any;
+
+        parseFormBody(options?: ParseFormBodyOptions): Promise<FormPart[]>;
     }
+
+    export interface ParseFormBodyOptions {
+        onPart?(part: FormPart, stream: Readable): Promise<void>;
+    }
+
+    export interface FormPart {
+        name: string;
+        fileName?: string;
+        contentType?: string;
+        value?: string;
+    }
+
     /**
      * Possible values for an HTTP request method.
      */
