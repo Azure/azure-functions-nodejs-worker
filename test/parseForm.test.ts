@@ -25,26 +25,29 @@ world
 
 const boundary = '----WebKitFormBoundaryeJGMO2YP65ZZXRmv';
 
-function verifyHelloWorldForm(parsedForm: FormEntrySimple[]): void {
-    expect(parsedForm).to.have.length(3);
+function verifyHelloWorldForm(parsedForm: FormEntrySimple[], message?: string): void {
+    expect(parsedForm).to.have.length(3, message);
     const entry1 = parsedForm[0];
-    expect(entry1.name).to.equal('name');
-    expect(entry1.value).to.equal('Azure Functions');
-    expect(entry1.fileName).to.equal(undefined);
-    expect(entry1.contentType).to.equal(undefined);
+    expect(entry1.name).to.equal('name', message);
+    expect(entry1.value).to.equal('Azure Functions', message);
+    expect(entry1.fileName).to.equal(undefined, message);
+    expect(entry1.contentType).to.equal(undefined, message);
 
     const entry2 = parsedForm[1];
-    expect(entry2.name).to.equal('greeting');
-    expect(entry2.value).to.equal('Hello');
-    expect(entry2.fileName).to.equal(undefined);
-    expect(entry2.contentType).to.equal(undefined);
+    expect(entry2.name).to.equal('greeting', message);
+    expect(entry2.value).to.equal('Hello', message);
+    expect(entry2.fileName).to.equal(undefined, message);
+    expect(entry2.contentType).to.equal(undefined, message);
 
     const entry3 = parsedForm[2];
-    expect(entry3.name).to.equal('myfile');
-    expect(entry3.value).to.equal(`hello
-world`);
-    expect(entry3.fileName).to.equal('test.txt');
-    expect(entry3.contentType).to.equal('text/plain');
+    expect(entry3.name).to.equal('myfile', message);
+    expect(entry3.value).to.equal(
+        `hello
+world`,
+        message
+    );
+    expect(entry3.fileName).to.equal('test.txt', message);
+    expect(entry3.contentType).to.equal('text/plain', message);
 }
 
 describe('parseForm', () => {
@@ -57,16 +60,43 @@ describe('parseForm', () => {
         verifyHelloWorldForm(parsedForm);
     });
 
-    it('hello world form with boundary split in chunks', async () => {
-        const stream = new Readable();
-        const index = 127;
-        const pieces = [helloFormData.substring(0, index), helloFormData.substring(index)];
-        for (const piece of pieces) {
-            stream.push(piece);
+    it(`hello world form with data split in chunks`, async () => {
+        for (let index = 1; index < helloFormData.length; index++) {
+            const pieces = [helloFormData.substring(0, index), helloFormData.substring(index)];
+            const stream = new TestStream(pieces);
+            const parsedForm = await parseFormSimple(stream, boundary);
+            verifyHelloWorldForm(parsedForm, `(Index: ${index})`);
         }
-        stream.push(null); // signal it's done
+    });
 
-        const parsedForm = await parseFormSimple(stream, boundary);
-        verifyHelloWorldForm(parsedForm);
+    it('hello world form with data split in multiple chunks', async () => {
+        for (const gap of [1, 4, 32, 128]) {
+            for (let index = 1; index < helloFormData.length - gap; index++) {
+                const index1 = index;
+                const index2 = index + gap;
+                const pieces = [
+                    helloFormData.substring(0, index1),
+                    helloFormData.substring(index1, index2),
+                    helloFormData.substring(index2),
+                ];
+
+                const stream = new TestStream(pieces);
+                const parsedForm = await parseFormSimple(stream, boundary);
+                verifyHelloWorldForm(parsedForm, `(Index1: ${index1}, Index2: ${index2})`);
+            }
+        }
     });
 });
+
+class TestStream extends Readable {
+    private _parts: string[];
+    constructor(parts: string[]) {
+        super();
+        this._parts = parts;
+    }
+
+    _read() {
+        const part = this._parts.shift();
+        this.push(part ? Buffer.from(part) : null);
+    }
+}
