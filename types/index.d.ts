@@ -164,7 +164,7 @@ declare module '@azure/functions' {
          *  Object representing logged-in user, either through
          *  AppService/Functions authentication, or SWA Authentication
          */
-        user: HttpRequestUser;
+        user?: HttpRequestUser;
         /**
          * The HTTP request body.
          */
