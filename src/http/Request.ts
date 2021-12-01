@@ -34,15 +34,27 @@ export class Request implements HttpRequest {
         this.body = fromTypedData(<rpc.ITypedData>rpcHttp.body);
         this.rawBody = fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body);
         if (this.headers['x-ms-client-principal']) {
-            this.user = {
-                type: 'AppService',
-                id: this.headers['x-ms-client-principal-id'],
-                username: this.headers['x-ms-client-principal-name'],
-                identityProvider: this.headers['x-ms-client-principal-idp'],
-                claimsPrincipalData: JSON.parse(
-                    Buffer.from(this.headers['x-ms-client-principal'], 'base64').toString('utf-8')
-                ),
-            };
+            const claimsPrincipalData = JSON.parse(
+                Buffer.from(this.headers['x-ms-client-principal'], 'base64').toString('utf-8')
+            );
+
+            if (claimsPrincipalData['identityProvider']) {
+                this.user = {
+                    type: 'StaticWebApps',
+                    id: claimsPrincipalData['userId'],
+                    username: claimsPrincipalData['userDetails'],
+                    identityProvider: claimsPrincipalData['identityProvider'],
+                    claimsPrincipalData,
+                };
+            } else {
+                this.user = {
+                    type: 'AppService',
+                    id: this.headers['x-ms-client-principal-id'],
+                    username: this.headers['x-ms-client-principal-name'],
+                    identityProvider: this.headers['x-ms-client-principal-idp'],
+                    claimsPrincipalData,
+                };
+            }
         }
     }
 
