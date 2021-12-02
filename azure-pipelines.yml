@@ -132,6 +132,11 @@ jobs:
     inputs:
       command: pack
       packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
+  - task: ManifestGeneratorTask@0
+    displayName: 'SBOM Generation Task'
+    inputs:
+      BuildDropPath: '$(Build.ArtifactStagingDirectory)'
+      Verbosity: 'Information'
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
