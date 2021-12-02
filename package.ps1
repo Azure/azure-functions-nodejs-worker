@@ -17,6 +17,7 @@ remove-item pkg -Recurse -ErrorAction Ignore
 New-Item ./pkg/dist/src -Type Directory
 copy-item ./dist/src/nodejsWorker.js ./pkg/dist/src/
 copy-item ./worker.config.json pkg
+copy-item ./package.json pkg
 copy-item ./LICENSE pkg
 copy-item ./NOTICE.html pkg
 ./node_modules/.bin/webpack
