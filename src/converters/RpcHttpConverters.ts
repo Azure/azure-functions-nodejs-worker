@@ -1,13 +1,12 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Cookie, HttpMethod } from '@azure/functions';
+import { Cookie } from '@azure/functions';
 import {
     AzureFunctionsRpcMessages as rpc,
     INullableString,
 } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Dict } from '../Context';
-import { RequestProperties } from '../http/Request';
 import {
     fromTypedData,
     toNullableBool,
@@ -19,31 +18,12 @@ import {
 } from './RpcConverters';
 
 /**
- * Converts 'IRpcHttp' input from the RPC layer to a JavaScript object.
- * @param rpcHttp RPC layer representation of an HTTP request
- */
-export function fromRpcHttp(rpcHttp: rpc.IRpcHttp): RequestProperties {
-    const httpContext: RequestProperties = {
-        method: <HttpMethod>rpcHttp.method,
-        url: <string>rpcHttp.url,
-        originalUrl: <string>rpcHttp.url,
-        headers: fromNullableMapping(rpcHttp.nullableHeaders, rpcHttp.headers),
-        query: fromNullableMapping(rpcHttp.nullableQuery, rpcHttp.query),
-        params: fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params),
-        body: fromTypedData(<rpc.ITypedData>rpcHttp.body),
-        rawBody: fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body),
-    };
-
-    return httpContext;
-}
-
-/**
  * Converts the provided body from the RPC layer to the appropriate javascript object.
  * Body of type 'byte' is a special case and it's converted to it's utf-8 string representation.
  * This is to avoid breaking changes in v2.
  * @param body The body from the RPC layer.
  */
-function fromRpcHttpBody(body: rpc.ITypedData) {
+export function fromRpcHttpBody(body: rpc.ITypedData) {
     if (body && body.bytes) {
         return (<Buffer>body.bytes).toString();
     } else {
@@ -51,7 +31,7 @@ function fromRpcHttpBody(body: rpc.ITypedData) {
     }
 }
 
-function fromNullableMapping(
+export function fromNullableMapping(
     nullableMapping: { [k: string]: INullableString } | null | undefined,
     originalMapping?: { [k: string]: string } | null
 ): Dict<string> {
