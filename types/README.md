@@ -4,11 +4,11 @@ This package contains type definitions for using TypeScript with Azure Functions
 # Versioning
 The version of the package matches the version of the [Node.js worker](https://github.com/Azure/azure-functions-nodejs-worker). It is recommended to install the latest version of the package matching the major version of your worker.
 
+**NOTE**: The version info listed below is for your current version of the package, which is not the latest. For the full matrix, see here: https://www.npmjs.com/package/@azure/functions
+
 |Worker Version|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
 |---|---|---|---|
-|3|4|Preview|14|
-|2|3|GA (Recommended)|14, 12, 10|
-|1|2|GA (Maintenance mode)|10, 8|
+|2|3|GA|14, 12, 10|
 
 # Install
 Because this package only contains type definitions, it should be saved under `devDependencies`.
