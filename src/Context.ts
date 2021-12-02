@@ -14,14 +14,13 @@ import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import {
     convertKeysToCamelCase,
-    fromRpcHttp,
     fromRpcTraceContext,
     fromTypedData,
     getBindingDefinitions,
     getNormalizedBindingData,
 } from './converters';
 import { FunctionInfo } from './FunctionInfo';
-import { Request, RequestProperties } from './http/Request';
+import { Request } from './http/Request';
 import { Response } from './http/Response';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -36,12 +35,12 @@ export function CreateContextAndInputs(
 
     const bindings: ContextBindings = {};
     const inputs: any[] = [];
-    let httpInput: RequestProperties | undefined;
+    let httpInput: Request | undefined;
     for (const binding of <rpc.IParameterBinding[]>request.inputData) {
         if (binding.data && binding.name) {
             let input;
             if (binding.data && binding.data.http) {
-                input = httpInput = fromRpcHttp(binding.data.http);
+                input = httpInput = new Request(binding.data.http);
             } else {
                 // TODO: Don't hard code fix for camelCase https://github.com/Azure/azure-functions-nodejs-worker/issues/188
                 if (info.getTimerTriggerName() === binding.name) {
@@ -58,7 +57,7 @@ export function CreateContextAndInputs(
 
     context.bindings = bindings;
     if (httpInput) {
-        context.req = new Request(httpInput);
+        context.req = httpInput;
         context.res = new Response(context.done);
         // This is added for backwards compatability with what the host used to send to the worker
         context.bindingData.sys = {
