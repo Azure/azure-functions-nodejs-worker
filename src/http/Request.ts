@@ -20,9 +20,10 @@ export class Request implements HttpRequest {
     public headers: HttpRequestHeaders;
     public query: HttpRequestQuery;
     public params: HttpRequestParams;
-    public user?: HttpRequestUser;
     public body?: any;
     public rawBody?: any;
+
+    private _cachedUser?: HttpRequestUser | null;
 
     public constructor(rpcHttp: rpc.IRpcHttp) {
         this.method = <HttpMethod>rpcHttp.method;
@@ -33,29 +34,38 @@ export class Request implements HttpRequest {
         this.params = fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params);
         this.body = fromTypedData(<rpc.ITypedData>rpcHttp.body);
         this.rawBody = fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body);
-        if (this.headers['x-ms-client-principal']) {
-            const claimsPrincipalData = JSON.parse(
-                Buffer.from(this.headers['x-ms-client-principal'], 'base64').toString('utf-8')
-            );
+    }
 
-            if (claimsPrincipalData['identityProvider']) {
-                this.user = {
-                    type: 'StaticWebApps',
-                    id: claimsPrincipalData['userId'],
-                    username: claimsPrincipalData['userDetails'],
-                    identityProvider: claimsPrincipalData['identityProvider'],
-                    claimsPrincipalData,
-                };
+    public get user(): HttpRequestUser | null {
+        if (this._cachedUser === undefined) {
+            if (this.headers['x-ms-client-principal']) {
+                const claimsPrincipalData = JSON.parse(
+                    Buffer.from(this.headers['x-ms-client-principal'], 'base64').toString('utf-8')
+                );
+
+                if (claimsPrincipalData['identityProvider']) {
+                    this._cachedUser = {
+                        type: 'StaticWebApps',
+                        id: claimsPrincipalData['userId'],
+                        username: claimsPrincipalData['userDetails'],
+                        identityProvider: claimsPrincipalData['identityProvider'],
+                        claimsPrincipalData,
+                    };
+                } else {
+                    this._cachedUser = {
+                        type: 'AppService',
+                        id: this.headers['x-ms-client-principal-id'],
+                        username: this.headers['x-ms-client-principal-name'],
+                        identityProvider: this.headers['x-ms-client-principal-idp'],
+                        claimsPrincipalData,
+                    };
+                }
             } else {
-                this.user = {
-                    type: 'AppService',
-                    id: this.headers['x-ms-client-principal-id'],
-                    username: this.headers['x-ms-client-principal-name'],
-                    identityProvider: this.headers['x-ms-client-principal-idp'],
-                    claimsPrincipalData,
-                };
+                this._cachedUser = null;
             }
         }
+
+        return this._cachedUser;
     }
 
     public get(field: string): string | undefined {
