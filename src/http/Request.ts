@@ -12,6 +12,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { fromTypedData } from '../converters/RpcConverters';
 import { fromNullableMapping, fromRpcHttpBody } from '../converters/RpcHttpConverters';
+import { extractHttpUserFromHeaders } from './ExtractHttpUser';
 
 export class Request implements HttpRequest {
     public method: HttpMethod | null;
@@ -38,31 +39,7 @@ export class Request implements HttpRequest {
 
     public get user(): HttpRequestUser | null {
         if (this._cachedUser === undefined) {
-            if (this.headers['x-ms-client-principal']) {
-                const claimsPrincipalData = JSON.parse(
-                    Buffer.from(this.headers['x-ms-client-principal'], 'base64').toString('utf-8')
-                );
-
-                if (claimsPrincipalData['identityProvider']) {
-                    this._cachedUser = {
-                        type: 'StaticWebApps',
-                        id: claimsPrincipalData['userId'],
-                        username: claimsPrincipalData['userDetails'],
-                        identityProvider: claimsPrincipalData['identityProvider'],
-                        claimsPrincipalData,
-                    };
-                } else {
-                    this._cachedUser = {
-                        type: 'AppService',
-                        id: this.headers['x-ms-client-principal-id'],
-                        username: this.headers['x-ms-client-principal-name'],
-                        identityProvider: this.headers['x-ms-client-principal-idp'],
-                        claimsPrincipalData,
-                    };
-                }
-            } else {
-                this._cachedUser = null;
-            }
+            this._cachedUser = extractHttpUserFromHeaders(this.headers);
         }
 
         return this._cachedUser;
