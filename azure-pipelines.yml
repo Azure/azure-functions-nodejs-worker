@@ -131,12 +131,21 @@ jobs:
   - task: NuGetCommand@2
     inputs:
       command: pack
-      packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
-  - task: PublishBuildArtifacts@1
+      packagesToPack: '$(System.DefaultWorkingDirectory)/pkg'
+      packDestination: '$(Build.ArtifactStagingDirectory)/worker'
+  - script: npm prune --production
+    displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
+  - task: ManifestGeneratorTask@0
+    displayName: 'Generate SBOM for worker'
     inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
+      BuildDropPath: '$(Build.ArtifactStagingDirectory)/worker'
+      BuildComponentPath: '$(System.DefaultWorkingDirectory)/node_modules'
+      PackageName: 'Azure Functions Node.js Worker'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish worker artifact'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/worker'
+      ArtifactName: 'worker'
   - task: NuGetCommand@2
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v3.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
     inputs:
@@ -146,3 +155,28 @@ jobs:
       publishVstsFeed: 'e6a70c92-4128-439f-8012-382fe78d6396/f37f760c-aebd-443e-9714-ce725cd427df'
       allowPackageConflicts: true
     displayName: 'Push NuGet package to the AzureFunctionsPreRelease feed'
+  # In order for the SBOM to be accurate, we want to explicitly specify the components folder, but the types package doesn't have any components
+  # We'll create an empty folder that _would_ store the components if it had any
+  - bash: |
+      mkdir types/node_modules
+    displayName: 'mkdir types/node_modules'
+  - script: npm pack
+    displayName: 'npm pack types'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/types'
+  - task: CopyFiles@2
+    displayName: 'Copy types package to staging'
+    inputs:
+      SourceFolder: $(System.DefaultWorkingDirectory)/types
+      Contents: '*.tgz'
+      TargetFolder: $(Build.ArtifactStagingDirectory)/types
+  - task: ManifestGeneratorTask@0
+    displayName: 'Generate SBOM for types'
+    inputs:
+      BuildDropPath: '$(Build.ArtifactStagingDirectory)/types'
+      BuildComponentPath: '$(System.DefaultWorkingDirectory)/types/node_modules'
+      PackageName: 'Azure Functions Type Definitions'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish types artifact'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/types'
+      ArtifactName: 'types'
