@@ -6,7 +6,7 @@ resources:
   - pipeline: nodeWorkerCI
     project: 'Azure Functions'
     source: Azure.azure-functions-nodejs-worker
-    branch: v3.x
+    branch: v2.x
 
 jobs:
 - job: ReleaseTypes 
