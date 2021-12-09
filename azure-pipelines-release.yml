@@ -1,0 +1,31 @@
+trigger: none
+pr: none
+
+resources:
+  pipelines:
+  - pipeline: nodeWorkerCI
+    project: 'Azure Functions'
+    source: Azure.azure-functions-nodejs-worker
+    branch: v2.x
+
+jobs:
+- job: ReleaseTypes 
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: NodeTool@0
+    displayName: 'Install Node.js'
+    inputs:
+      versionSpec: 14.x
+  - download: nodeWorkerCI
+  - script: mv *.tgz package.tgz
+    displayName: 'Rename tgz file' # because the publish command below requires an exact path
+    workingDirectory: '$(Pipeline.Workspace)/nodeWorkerCI/types'
+  - task: Npm@1
+    displayName: 'npm publish'
+    inputs:
+      command: custom
+      workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/types'
+      verbose: true
+      customCommand: 'publish package.tgz'
+      publishEndpoint: 'TypeScript Types Publish'
