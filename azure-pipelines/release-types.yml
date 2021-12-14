@@ -9,9 +9,10 @@ resources:
     branch: v3.x
 
 jobs:
-- job: ReleaseTypes 
+- job: ReleaseTypes
   pool:
-    vmImage: 'ubuntu-latest'
+    name: '1ES-Hosted-AzFunc'
+    vmImage: 'MMSUbuntu20.04TLS'
   steps:
   - task: NodeTool@0
     displayName: 'Install Node.js'
@@ -27,5 +28,5 @@ jobs:
       command: custom
       workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/types'
       verbose: true
-      customCommand: 'publish package.tgz'
+      customCommand: 'publish package.tgz $(NPM_PUBLISH_ARGS)'
       publishEndpoint: 'TypeScript Types Publish'
