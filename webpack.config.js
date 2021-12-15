@@ -12,7 +12,7 @@ var dynamicRequire = {
 module.exports = {
     entry: "./dist/src/Worker.js",
     output: {
-        path: `${__dirname}/pkg`,
+        path: `${__dirname}/dist/src`,
         filename: "worker-bundle.js",
         library: "worker",
         libraryTarget: "commonjs2"
