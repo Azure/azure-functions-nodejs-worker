@@ -9,6 +9,8 @@ import { FunctionInfo } from '../src/FunctionInfo';
 import { FunctionLoader } from '../src/FunctionLoader';
 import { WorkerChannel } from '../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+import LogLevel = rpc.RpcLog.Level;
 
 describe('WorkerChannel', () => {
     let channel: WorkerChannel;
@@ -661,6 +663,26 @@ describe('WorkerChannel', () => {
                 json: 'false',
             };
             assertInvocationSuccess(expectedOutput, expectedReturnValue);
+        });
+
+        it('logs AzureFiles cold start warning', async () => {
+            process.env.WEBSITE_CONTENTAZUREFILECONNECTIONSTRING = 'test';
+            process.env.WEBSITE_CONTENTSHARE = 'test';
+            process.env.AzureWebJobsScriptRoot = 'test';
+
+            // Accesing private method
+            (channel as any).logColdStartWarning(100);
+
+            // Set slight delay
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+                rpcLog: {
+                    message:
+                        'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                },
+            });
         });
     });
 });
