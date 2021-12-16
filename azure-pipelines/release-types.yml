@@ -21,12 +21,12 @@ jobs:
   - download: nodeWorkerCI
   - script: mv *.tgz package.tgz
     displayName: 'Rename tgz file' # because the publish command below requires an exact path
-    workingDirectory: '$(Pipeline.Workspace)/nodeWorkerCI/types'
+    workingDirectory: '$(Pipeline.Workspace)/nodeWorkerCI/drop/types'
   - task: Npm@1
     displayName: 'npm publish'
     inputs:
       command: custom
-      workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/types'
+      workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/drop/types'
       verbose: true
       customCommand: 'publish package.tgz $(NPM_PUBLISH_ARGS)'
       publishEndpoint: 'TypeScript Types Publish'
