@@ -46,6 +46,7 @@ jobs:
     displayName: 'Generate SBOM for worker'
     inputs:
       BuildDropPath: '$(Build.ArtifactStagingDirectory)/worker'
+      # The list of components can't be determined from the webpacked file in the staging dir, so reference the original node_modules folder
       BuildComponentPath: '$(Build.SourcesDirectory)/node_modules'
       PackageName: 'Azure Functions Node.js Worker'
   - task: NuGetCommand@2
