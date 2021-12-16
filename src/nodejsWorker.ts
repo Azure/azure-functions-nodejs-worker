@@ -44,7 +44,7 @@ validateNodeVersion(process.version);
 
 // Try requiring bundle
 try {
-    worker = require('../../worker-bundle.js');
+    worker = require('./worker-bundle.js');
     worker = worker.worker;
 } catch (err) {
     console.log(logPrefix + "Couldn't require bundle, falling back to Worker.js. " + err);
