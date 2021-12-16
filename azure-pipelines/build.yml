@@ -1,3 +1,8 @@
+parameters:
+- name: IsPrerelease
+  type: boolean
+  default: true
+
 pr:
   branches:
     include:
@@ -26,6 +31,8 @@ jobs:
       command: pack
       packagesToPack: '$(System.DefaultWorkingDirectory)/pkg'
       packDestination: '$(Build.ArtifactStagingDirectory)/worker'
+      ${{ if eq(parameters.IsPrerelease, true) }}:
+        buildProperties: 'prereleaseSuffix=-alpha.$(Build.BuildNumber)'
   - script: npm prune --production
     displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
   - task: ManifestGeneratorTask@0
