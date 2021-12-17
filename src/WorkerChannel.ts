@@ -3,6 +3,7 @@
 
 import { Context } from '@azure/functions';
 import { access, constants } from 'fs';
+import * as path from 'path';
 import { format, isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
@@ -130,6 +131,8 @@ export class WorkerChannel implements IWorkerChannel {
             throw new InternalException(msg);
         }
 
+        this.logColdStartWarning();
+
         const workerCapabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',
             RpcHttpBodyOnly: 'true',
@@ -167,8 +170,6 @@ export class WorkerChannel implements IWorkerChannel {
                 });
                 err = exception;
             }
-
-            this.logColdStartWarning();
 
             this._eventStream.write({
                 requestId: requestId,
@@ -424,8 +425,7 @@ export class WorkerChannel implements IWorkerChannel {
                 delayInMs = 5000;
             }
             setTimeout(() => {
-                const path = require('path');
-                access(path.join(process.env.AzureWebJobsScriptRoot, 'package.json'), constants.F_OK, (e) => {
+                access(path.join(process.env.AzureWebJobsScriptRoot!, 'package.json'), constants.F_OK, (e) => {
                     if (e) {
                         this.log({
                             message:
