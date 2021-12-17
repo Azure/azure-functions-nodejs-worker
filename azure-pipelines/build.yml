@@ -40,6 +40,7 @@ jobs:
         worker.config.json
       targetFolder: '$(Build.ArtifactStagingDirectory)/worker'
       cleanTargetFolder: true
+  - powershell: ./scripts/installGrpc.ps1 '$(Build.ArtifactStagingDirectory)/worker/dist/src'
   - script: npm prune --production
     displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
   - task: ManifestGeneratorTask@0
