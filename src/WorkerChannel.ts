@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { Context } from '@azure/functions';
+import { access, constants } from 'fs';
+import * as path from 'path';
 import { format, isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { augmentTriggerMetadata } from './augmenters';
@@ -157,6 +159,8 @@ export class WorkerChannel implements IWorkerChannel {
                 throw new InternalException(msg);
             }
         }
+
+        this.logColdStartWarning();
 
         const workerCapabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',
@@ -452,6 +456,33 @@ export class WorkerChannel implements IWorkerChannel {
     private runInvocationRequestAfter(context: Context) {
         for (const after of this._invocationRequestAfter) {
             after(context);
+        }
+    }
+
+    private logColdStartWarning(delayInMs?: number): void {
+        // On reading a js file with function code('require') NodeJs tries to find 'package.json' all the way up to the file system root.
+        // In Azure files it causes a delay during cold start as connection to Azure Files is an expensive operation.
+        if (
+            process.env.WEBSITE_CONTENTAZUREFILECONNECTIONSTRING &&
+            process.env.WEBSITE_CONTENTSHARE &&
+            process.env.AzureWebJobsScriptRoot
+        ) {
+            // Add delay to avoid affecting coldstart
+            if (!delayInMs) {
+                delayInMs = 5000;
+            }
+            setTimeout(() => {
+                access(path.join(process.env.AzureWebJobsScriptRoot!, 'package.json'), constants.F_OK, (e) => {
+                    if (e) {
+                        this.log({
+                            message:
+                                'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
+                            level: LogLevel.Debug,
+                            logCategory: LogCategory.System,
+                        });
+                    }
+                });
+            }, delayInMs);
         }
     }
 }
