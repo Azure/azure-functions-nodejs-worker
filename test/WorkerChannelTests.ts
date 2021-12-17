@@ -772,10 +772,10 @@ describe('WorkerChannel', () => {
             process.env.AzureWebJobsScriptRoot = 'test';
 
             // Accesing private method
-            (channel as any).logColdStartWarning(100);
+            (channel as any).logColdStartWarning(10);
 
             // Set slight delay
-            await new Promise((resolve) => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
             sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
                 rpcLog: {
                     message:
