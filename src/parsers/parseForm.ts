@@ -1,0 +1,76 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License.
+
+import * as types from '@azure/functions';
+import { MediaType } from '../constants';
+import { parseContentType } from './parseHeader';
+import { parseMultipartForm } from './parseMultipartForm';
+
+/**
+ * See ./test/parseForm.test.ts for examples
+ */
+export async function parseForm(data: Buffer | string, contentType: string): Promise<Form> {
+    const [mediaType, parameters] = parseContentType(contentType);
+    switch (mediaType.toLowerCase()) {
+        case MediaType.multipartForm: {
+            const boundary = parameters.get('boundary');
+            const parts = await parseMultipartForm(typeof data === 'string' ? Buffer.from(data) : data, boundary);
+            return new Form(parts);
+        }
+        case MediaType.urlEncodedForm: {
+            const parsed = new URLSearchParams(data.toString());
+            const parts: [string, types.FormPart][] = [];
+            for (const [key, value] of parsed) {
+                parts.push([key, { value: Buffer.from(value) }]);
+            }
+            return new Form(parts);
+        }
+        default:
+            throw new Error(
+                `Media type "${mediaType}" does not match types supported for form parsing: "${MediaType.multipartForm}", "${MediaType.urlEncodedForm}".`
+            );
+    }
+}
+
+export class Form implements types.Form {
+    private _parts: [string, types.FormPart][];
+    constructor(parts: [string, types.FormPart][]) {
+        this._parts = parts;
+    }
+
+    public get(name: string): types.FormPart | null {
+        for (const [key, value] of this._parts) {
+            if (key === name) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    public getAll(name: string): types.FormPart[] {
+        const result: types.FormPart[] = [];
+        for (const [key, value] of this._parts) {
+            if (key === name) {
+                result.push(value);
+            }
+        }
+        return result;
+    }
+
+    public has(name: string): boolean {
+        for (const [key, _value] of this._parts) {
+            if (key === name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    [Symbol.iterator](): Iterator<[string, types.FormPart]> {
+        return this._parts[Symbol.iterator]();
+    }
+
+    public get length(): number {
+        return this._parts.length;
+    }
+}

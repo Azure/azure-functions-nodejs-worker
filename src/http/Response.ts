@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Cookie } from '@azure/functions';
+import { HeaderName, MediaType } from '../constants';
 
 interface IResponse {
     statusCode?: string | number;
@@ -64,11 +65,11 @@ export class Response implements IResponse {
     }
 
     type(type) {
-        return this.set('content-type', type);
+        return this.set(HeaderName.contentType, type);
     }
 
     json(body) {
-        this.type('application/json');
+        this.type(MediaType.json);
         this.send(body);
         return;
     }
@@ -80,13 +81,13 @@ export class Response implements IResponse {
 
     private setContentType() {
         if (this.body !== undefined) {
-            if (this.get('content-type')) {
+            if (this.get(HeaderName.contentType)) {
                 // use user defined content type, if exists
                 return;
             }
 
             if (Buffer.isBuffer(this.body)) {
-                this.type('application/octet-stream');
+                this.type(MediaType.octetStream);
             }
         }
     }
