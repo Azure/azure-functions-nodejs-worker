@@ -55,7 +55,7 @@
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
         "watch": "node ./node_modules/typescript/bin/tsc --watch",
-        "webpack": "webpack --mode production"
+        "webpack": "webpack"
     },
     "files": [
         "dist"
