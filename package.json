@@ -50,12 +50,12 @@
     "scripts": {
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && node ./node_modules/typescript/bin/tsc",
-        "build-nomaps": "npm run build -- --sourceMap false",
         "gen": "node scripts/generateProtos.js",
         "test": "mocha ./dist/test/**/*.js --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
-        "watch": "node ./node_modules/typescript/bin/tsc --watch"
+        "watch": "node ./node_modules/typescript/bin/tsc --watch",
+        "webpack": "webpack"
     },
     "files": [
         "dist"
