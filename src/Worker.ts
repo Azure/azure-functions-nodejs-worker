@@ -8,6 +8,8 @@ import { WorkerChannel } from './WorkerChannel';
 
 import Status = rpc.StatusResult.Status;
 
+var os = require('os');
+
 export function startNodeWorker(args) {
     const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
     if (!host || !port || !workerId || !requestId || !grpcMaxMessageLength) {
@@ -25,7 +27,15 @@ export function startNodeWorker(args) {
         throw new InternalException(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
     }
 
-    const connection = `${host}:${port}`;
+    let connection = '';
+    if (os.platform() == 'linux') {
+        const tempDir = os.tmpdir();
+        connection = "".concat("unix://", tempDir, "/socket.tmp");
+        console.log(connection);
+    }
+    else {
+        connection = `${host}:${port}`;
+    }
     systemLog(`Worker ${workerId} connecting on ${connection}`);
 
     let eventStream;

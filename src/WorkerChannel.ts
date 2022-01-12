@@ -181,6 +181,10 @@ export class WorkerChannel implements IWorkerChannel {
      */
     public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
         const info = this._functionLoader.getInfo(<string>msg.functionId);
+
+        const startTimerLabel = "$$$ ".concat("InvocationID: ", msg.invocationId, ", HandleInvocation_ms_worker");
+        console.time(startTimerLabel);
+
         const logCallback: LogCallback = (level, category, ...args) => {
             this.log({
                 invocationId: msg.invocationId,
@@ -192,6 +196,9 @@ export class WorkerChannel implements IWorkerChannel {
         };
 
         const resultCallback: ResultCallback = (err, result) => {
+            const handleOutputsTimerLabel = "$$$ ".concat("InvocationID: ", msg.invocationId, ", HandleOutputs_ms_worker");
+            console.time(handleOutputsTimerLabel);
+
             const response: rpc.IInvocationResponse = {
                 invocationId: msg.invocationId,
                 result: this.getStatus(err),
@@ -258,23 +265,38 @@ export class WorkerChannel implements IWorkerChannel {
             } catch (e) {
                 response.result = this.getStatus(e);
             }
+
+            console.timeLog(handleOutputsTimerLabel);
+
             this._eventStream.write({
                 requestId: requestId,
                 invocationResponse: response,
             });
 
             this.runInvocationRequestAfter(context);
+
+            console.timeLog(startTimerLabel);
         };
+
+        const handleInputsTimerLabel = "$$$ ".concat("InvocationID: ", msg.invocationId, ", HandleInputs_ms_worker");
+        console.time(handleInputsTimerLabel);
 
         const { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
         let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
+
+        console.timeLog(handleInputsTimerLabel);
 
         userFunction = this.runInvocationRequestBefore(context, userFunction);
 
         // catch user errors from the same async context in the event loop and correlate with invocation
         // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
         try {
+            const appCodeTimerLabel = "$$$ ".concat("InvocationID: ", msg.invocationId, ", AppCodeTime_ms_worker");
+            console.time(appCodeTimerLabel);
+
             const result = userFunction(context, ...inputs);
+
+            console.timeLog(appCodeTimerLabel);
 
             if (result && isFunction(result.then)) {
                 result
