@@ -1,3 +1,9 @@
+parameters:
+- name: NpmPublishArgs
+  displayName: 'NPM Publish Args'
+  type: string
+  default: '--dry-run'
+
 trigger: none
 pr: none
 
@@ -28,5 +34,5 @@ jobs:
       command: custom
       workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/drop/types'
       verbose: true
-      customCommand: 'publish package.tgz $(NPM_PUBLISH_ARGS)'
+      customCommand: 'publish package.tgz ${{ parameters.NpmPublishArgs }}'
       publishEndpoint: 'TypeScript Types Publish'
