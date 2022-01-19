@@ -1,6 +1,11 @@
 trigger: none
 pr: none
 
+parameters:
+- name: NPM_PUBLISH_ARGS
+  type: string
+  default: '--dry-run'
+
 resources:
   pipelines:
   - pipeline: nodeWorkerCI
