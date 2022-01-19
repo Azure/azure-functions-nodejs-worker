@@ -26,6 +26,8 @@
     > NOTE: If you need to debug worker initialization, use `--inspect-brk` instead of `--inspect`. Just keep in mind you need to attach the debugger within 30 seconds or the host process will timeout.
 - Start the local function app (i.e. run `func start` or press <kbd>F5</kbd>)
 - Back in the worker repository, press <kbd>F5</kbd> and select the process for your running function app
+- Before you submit a PR, run `npm run lint` and `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
+
 
 ### Code of Conduct
 
