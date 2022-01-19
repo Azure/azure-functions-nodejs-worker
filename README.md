@@ -2,9 +2,9 @@
 
 |Branch|Status|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
 |---|---|---|---|---|
-|v3.x (default)|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Node.js/azure-functions-nodejs-worker.build?branchName=v3.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v3.x)|4|GA (Recommended)|16 (Preview), 14|
-|v2.x|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Node.js/azure-functions-nodejs-worker.build?branchName=v2.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v2.x)|3|GA|14, 12, 10|
-|v1.x|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions/_apis/build/status/Node.js/azure-functions-nodejs-worker.build?branchName=v1.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v1.x)|2|GA (Maintenance mode)|10, 8|
+|v3.x (default)|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/Azure%2520Functions/10/v3.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v3.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/Azure%2520Functions/99/v3.x?compact_message)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=99&branchName=v3.x)|4|GA (Recommended)|16 (Preview), 14|
+|v2.x|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/Azure%2520Functions/10/v2.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v2.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/Azure%2520Functions/99/v2.x?compact_message)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=99&branchName=v2.x)|3|GA|14, 12, 10|
+|v1.x|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/Azure%2520Functions/10/v1.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v1.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/Azure%2520Functions/10/v1.x?compact_message)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v1.x)|2|GA (Maintenance mode)|10, 8|
 
 > NOTE: The branch corresponds to the _worker_ version, which is intentionally decoupled from the _runtime_ version.
 
