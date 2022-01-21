@@ -382,10 +382,9 @@ describe('WorkerChannel', () => {
 
         sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
             rpcLog: {
-                category: "undefined.Invocation",
-                invocationId: "1",
-                message:
-                    'Received FunctionInvocationRequest',
+                category: 'undefined.Invocation',
+                invocationId: '1',
+                message: 'Received FunctionInvocationRequest',
                 level: LogLevel.Debug,
                 logCategory: LogCategory.System,
             },
