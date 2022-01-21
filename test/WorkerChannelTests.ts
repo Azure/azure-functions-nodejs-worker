@@ -379,6 +379,17 @@ describe('WorkerChannel', () => {
         // triggerMedata will not be augmented with inpuDataValue since we are running Functions Host V3 compatability.
         expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
         expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
+
+        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+            rpcLog: {
+                category: "undefined.Invocation",
+                invocationId: "1",
+                message:
+                    'Received FunctionInvocationRequest',
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        });
     });
 
     it('returns correct data with $return binding', () => {
