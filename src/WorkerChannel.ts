@@ -199,7 +199,7 @@ export class WorkerChannel implements IWorkerChannel {
         };
 
         // Log invocation details to ensure the invocation received by node worker
-        logCallback(LogLevel.Debug, LogCategory.System, "Received FunctionInvocationRequest");
+        logCallback(LogLevel.Debug, LogCategory.System, 'Received FunctionInvocationRequest');
 
         const resultCallback: ResultCallback = (err, result) => {
             const response: rpc.IInvocationResponse = {
