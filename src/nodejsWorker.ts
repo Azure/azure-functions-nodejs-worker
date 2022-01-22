@@ -5,6 +5,7 @@ const logPrefix = 'LanguageWorkerConsoleLog';
 const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
 const supportedVersions: string[] = ['v14', 'v16'];
+const devOnlyVersions: string[] = ['v15', 'v17'];
 let worker;
 
 // Try validating node version
@@ -19,12 +20,12 @@ function validateNodeVersion(version) {
         if (versionSplit.length != 3) {
             message = "Could not parse Node.js version: '" + version + "'";
             // Unsupported version note: Documentation about Node's stable versions here: https://github.com/nodejs/Release#release-plan and an explanation here: https://medium.com/swlh/understanding-how-node-releases-work-in-2018-6fd356816db4
-        } else if (process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development' && major == 'v17') {
+        } else if (process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development' && devOnlyVersions.indexOf(major) >= 0) {
             const warning =
                 'Node.js version used (' +
                 version +
-                ') is not officially supported. You may use it during local development, but your function will be deployed to a different Node.js version on Azure.' +
-                ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
+                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
+                ' https://aka.ms/functions-node-versions';
             console.warn(warnPrefix + warning);
         } else if (supportedVersions.indexOf(major) < 0) {
             message =
