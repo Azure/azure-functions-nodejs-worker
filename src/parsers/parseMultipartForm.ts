@@ -9,7 +9,7 @@ const carriageReturn = Buffer.from('\r')[0];
 const newline = Buffer.from('\n')[0];
 
 // multipart/form-data specification https://datatracker.ietf.org/doc/html/rfc7578
-export async function parseMultipartForm(chunk: Buffer, boundary: string): Promise<[string, FormPart][]> {
+export function parseMultipartForm(chunk: Buffer, boundary: string): [string, FormPart][] {
     const result: [string, FormPart][] = [];
     let currentName: string | undefined;
     let currentPart: FormPart | undefined;

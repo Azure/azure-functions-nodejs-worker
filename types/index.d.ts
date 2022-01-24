@@ -144,7 +144,7 @@ declare module '@azure/functions' {
          * Parses the body and returns an object representing a form
          * @throws if the content type is not "multipart/form-data" or "application/x-www-form-urlencoded"
          */
-        parseFormBody(): Promise<Form>;
+        parseFormBody(): Form;
     }
 
     export interface Form extends Iterable<[string, FormPart]> {

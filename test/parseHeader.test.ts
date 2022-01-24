@@ -29,6 +29,14 @@ describe('getHeaderValue', () => {
             'text/html;   charset=UTF-8'
         );
     });
+
+    it('missing', async () => {
+        expect(getHeaderValue('oops: text/plain', 'content-type')).to.equal(null);
+    });
+
+    it('invalid', async () => {
+        expect(getHeaderValue('invalid', 'content-type')).to.equal(null);
+    });
 });
 
 describe('parseContentType', () => {
@@ -69,6 +77,10 @@ describe('parseContentType', () => {
             expect(
                 getMediaType('   multipart/form-data;    boundary=----WebKitFormBoundaryeJGMO2YP65ZZXRmv   ')
             ).to.equal('multipart/form-data');
+        });
+
+        it('invalid', async () => {
+            expect(() => getMediaType('invalid')).to.throw(/content-type.*format/i);
         });
     });
 
@@ -139,6 +151,12 @@ describe('parseContentType', () => {
                     'multipart/form-data; boundary=----WebKitFormBoundaryeJGMO2YP65ZZXRmv; test="boundary=nope"'
                 )
             ).to.equal('----WebKitFormBoundaryeJGMO2YP65ZZXRmv');
+        });
+
+        it('missing boundary', async () => {
+            expect(() => getFormBoundary('multipart/form-data; oops=----WebKitFormBoundaryeJGMO2YP65ZZXRmv')).to.throw(
+                /failed to find.*boundary/i
+            );
         });
     });
 });

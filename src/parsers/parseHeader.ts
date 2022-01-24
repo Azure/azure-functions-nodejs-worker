@@ -18,7 +18,7 @@ const semicolonEnd = `\\s*;?${end}`; // allows optional semicolon and otherwise 
 /**
  * @param data a full header, e.g. "Content-Type: text/html; charset=UTF-8"
  * @param headerName the header name, e.g. "Content-Type"
- * @returns the header value, e.g. "text/html; charset=UTF-8"
+ * @returns the header value, e.g. "text/html; charset=UTF-8" or null if not found
  */
 export function getHeaderValue(data: string, headerName: string): string | null {
     const match = new RegExp(`${start}${headerName}\\s*:${end}`, 'i').exec(data);

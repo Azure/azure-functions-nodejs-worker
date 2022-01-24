@@ -40,12 +40,12 @@ export class Request implements HttpRequest {
         return this.headers && this.headers[field.toLowerCase()];
     }
 
-    public async parseFormBody(): Promise<Form> {
+    public parseFormBody(): Form {
         const contentType = this.get(HeaderName.contentType);
         if (!contentType) {
             throw new Error(`"${HeaderName.contentType}" header must be defined.`);
         } else {
-            return await parseForm(this.body, contentType);
+            return parseForm(this.body, contentType);
         }
     }
 }

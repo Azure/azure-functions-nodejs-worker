@@ -9,12 +9,12 @@ import { parseMultipartForm } from './parseMultipartForm';
 /**
  * See ./test/parseForm.test.ts for examples
  */
-export async function parseForm(data: Buffer | string, contentType: string): Promise<Form> {
+export function parseForm(data: Buffer | string, contentType: string): Form {
     const [mediaType, parameters] = parseContentType(contentType);
     switch (mediaType.toLowerCase()) {
         case MediaType.multipartForm: {
             const boundary = parameters.get('boundary');
-            const parts = await parseMultipartForm(typeof data === 'string' ? Buffer.from(data) : data, boundary);
+            const parts = parseMultipartForm(typeof data === 'string' ? Buffer.from(data) : data, boundary);
             return new Form(parts);
         }
         case MediaType.urlEncodedForm: {
