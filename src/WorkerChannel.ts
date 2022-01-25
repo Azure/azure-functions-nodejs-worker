@@ -11,7 +11,7 @@ import { toTypedData } from './converters';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcService';
 import { InternalException } from './utils/InternalException';
-import { systemError, systemWarn } from './utils/Logger';
+import { systemError } from './utils/Logger';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -127,9 +127,13 @@ export class WorkerChannel implements IWorkerChannel {
                 'Node.js version used (' +
                 version +
                 ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure.' +
-                ' The version of the Azure Functions runtime you are using (v4) officially supports Node.js v14.x or Node.js v16.x.' +
-                ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
-            systemWarn(msg);
+                ' The version of the Azure Functions runtime you are using (v4) officially supports Node.js v14.x or Node.js v16.x:' +
+                ' https://aka.ms/functions-node-versions';
+            this.log({
+                message: msg,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
         } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
             const msg =
                 'Incompatible Node.js version' +
