@@ -126,8 +126,7 @@ export class WorkerChannel implements IWorkerChannel {
             const msg =
                 'Node.js version used (' +
                 version +
-                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure.' +
-                ' The version of the Azure Functions runtime you are using (v4) officially supports Node.js v14.x or Node.js v16.x:' +
+                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
                 ' https://aka.ms/functions-node-versions';
             this.log({
                 message: msg,
