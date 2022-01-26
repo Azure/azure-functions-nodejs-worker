@@ -438,14 +438,14 @@ describe('WorkerChannel', () => {
         expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
 
         sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
-          rpcLog: {
-              category: "undefined.Invocation",
-              invocationId: '1',
-              message: 'Received FunctionInvocationRequest',
-              level: LogLevel.Debug,
-              logCategory: LogCategory.System,
-          },
-      });
+            rpcLog: {
+                category: 'undefined.Invocation',
+                invocationId: '1',
+                message: 'Received FunctionInvocationRequest',
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        });
     });
 
     it('returns correct data with $return binding', () => {
