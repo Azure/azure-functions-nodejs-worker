@@ -4,7 +4,7 @@
 import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { IEventStream } from '../src/GrpcService';
+import { IEventStream } from '../src/GrpcClient';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
     written: sinon.SinonSpy;
