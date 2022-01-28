@@ -163,6 +163,7 @@ declare module '@azure/functions' {
         /**
          *  Object representing logged-in user, either through
          *  AppService/Functions authentication, or SWA Authentication
+         *  null when no such user is logged in.
          */
         user: HttpRequestUser | null;
         /**
