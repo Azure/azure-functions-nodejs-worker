@@ -5,7 +5,7 @@ import { HttpRequestHeaders, HttpRequestUser } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
 import { v4 as uuid } from 'uuid';
-import { extractHttpUserFromHeaders } from '../src/http/ExtractHttpUser';
+import { extractHttpUserFromHeaders } from '../src/http/extractHttpUserFromHeaders';
 
 describe('Extract Http User Claims Principal from Headers', () => {
     it('Correctly parses AppService headers', () => {

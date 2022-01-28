@@ -12,7 +12,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { fromTypedData } from '../converters/RpcConverters';
 import { fromNullableMapping, fromRpcHttpBody } from '../converters/RpcHttpConverters';
-import { extractHttpUserFromHeaders } from './ExtractHttpUser';
+import { extractHttpUserFromHeaders } from './extractHttpUserFromHeaders';
 
 export class Request implements HttpRequest {
     public method: HttpMethod | null;
