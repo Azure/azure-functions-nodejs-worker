@@ -9,6 +9,8 @@ import { FunctionInfo } from '../src/FunctionInfo';
 import { FunctionLoader } from '../src/FunctionLoader';
 import { WorkerChannel } from '../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+import LogLevel = rpc.RpcLog.Level;
 
 describe('WorkerChannel', () => {
     let channel: WorkerChannel;
@@ -377,6 +379,16 @@ describe('WorkerChannel', () => {
         // triggerMedata will not be augmented with inpuDataValue since we are running Functions Host V3 compatability.
         expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.$request)).to.be.undefined;
         expect(JSON.stringify(actualInvocationRequest.triggerMetadata!.req)).to.be.undefined;
+
+        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+            rpcLog: {
+                category: 'undefined.Invocation',
+                invocationId: '1',
+                message: 'Received FunctionInvocationRequest',
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        });
     });
 
     it('returns correct data with $return binding', () => {
@@ -661,6 +673,26 @@ describe('WorkerChannel', () => {
                 json: 'false',
             };
             assertInvocationSuccess(expectedOutput, expectedReturnValue);
+        });
+
+        it('logs AzureFiles cold start warning', async () => {
+            process.env.WEBSITE_CONTENTAZUREFILECONNECTIONSTRING = 'test';
+            process.env.WEBSITE_CONTENTSHARE = 'test';
+            process.env.AzureWebJobsScriptRoot = 'test';
+
+            // Accesing private method
+            (channel as any).logColdStartWarning(10);
+
+            // Set slight delay
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+                rpcLog: {
+                    message:
+                        'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                },
+            });
         });
     });
 });

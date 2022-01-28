@@ -1,9 +1,7 @@
 variables: {
-  WORKER_VERSION: '3.0.0',
   NODE_14: '14.x',
   NODE_16: '16.x'
 }
-name: $(WORKER_VERSION)-$(Date:yyyyMMdd)$(Rev:.r)
 
 pr:
   branches:
@@ -114,35 +112,3 @@ jobs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
       testRunTitle: '$(Agent.JobName)'
-
-- job: BuildArtifacts  
-  pool:
-    vmImage: 'vs2017-win2016'
-  steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: $(NODE_14)
-    displayName: 'Install Node.js'
-  - script: npm ci
-    displayName: 'npm ci'
-  - script: npm run build-nomaps
-    displayName: 'npm run build-nomaps'
-  - powershell: .\package.ps1
-  - task: NuGetCommand@2
-    inputs:
-      command: pack
-      packagesToPack: '$(System.DefaultWorkingDirectory)\pkg'
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
-  - task: NuGetCommand@2
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v3.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-      nuGetFeedType: 'internal'
-      publishVstsFeed: 'e6a70c92-4128-439f-8012-382fe78d6396/f37f760c-aebd-443e-9714-ce725cd427df'
-      allowPackageConflicts: true
-    displayName: 'Push NuGet package to the AzureFunctionsPreRelease feed'
