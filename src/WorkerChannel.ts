@@ -9,7 +9,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { toTypedData } from './converters';
 import { IFunctionLoader } from './FunctionLoader';
-import { IEventStream } from './GrpcService';
+import { IEventStream } from './GrpcClient';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
