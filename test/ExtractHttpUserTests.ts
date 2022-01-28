@@ -15,13 +15,6 @@ describe('Extract Http User Claims Principal from Headers', () => {
         const claimsPrincipalData = {
             auth_typ: provider,
             claims: [
-                { typ: 'aud', val: uuid() },
-                { typ: 'iss', val: `https://login.microsoftonline.com/${uuid()}/v2.0` },
-                { typ: 'iat', val: '1637109555' },
-                { typ: 'nbf', val: '1637109555' },
-                { typ: 'exp', val: '1637113455' },
-                { typ: 'aio', val: uuid() },
-                { typ: 'c_hash', val: uuid() },
                 {
                     typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
                     val: username,
@@ -33,16 +26,6 @@ describe('Extract Http User Claims Principal from Headers', () => {
                     val: id,
                 },
                 { typ: 'preferred_username', val: username },
-                { typ: 'rh', val: uuid() },
-                {
-                    typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
-                    val: uuid(),
-                },
-                {
-                    typ: 'http://schemas.microsoft.com/identity/claims/tenantid',
-                    val: uuid(),
-                },
-                { typ: 'uti', val: uuid() },
                 { typ: 'ver', val: '2.0' },
             ],
             name_typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
@@ -59,10 +42,11 @@ describe('Extract Http User Claims Principal from Headers', () => {
         const user: HttpRequestUser | null = extractHttpUserFromHeaders(headers);
 
         expect(user).to.not.be.null;
+        expect(user?.type).to.equal('AppService');
         expect(user?.id).to.equal(id);
         expect(user?.username).to.equal(username);
         expect(user?.identityProvider).to.equal(provider);
-        expect(user?.claimsPrincipalData).to.eql(claimsPrincipalData);
+        expect(user?.claimsPrincipalData).to.deep.equal(claimsPrincipalData);
     });
 
     it('Correctly parses StaticWebApps headers', () => {
@@ -83,10 +67,11 @@ describe('Extract Http User Claims Principal from Headers', () => {
         const user: HttpRequestUser | null = extractHttpUserFromHeaders(headers);
 
         expect(user).to.not.be.null;
+        expect(user?.type).to.equal('StaticWebApps');
         expect(user?.id).to.equal(id);
         expect(user?.username).to.equal(username);
         expect(user?.identityProvider).to.equal(provider);
-        expect(user?.claimsPrincipalData).to.eql(claimsPrinicipalData);
+        expect(user?.claimsPrincipalData).to.deep.equal(claimsPrinicipalData);
     });
 
     it('Correctly returns null on missing header data', () => {
