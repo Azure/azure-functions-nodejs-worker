@@ -1,22 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Cookie, HttpResponseForContext } from '@azure/functions';
+import { Cookie, HttpResponseApi } from '@azure/functions';
 
-// interface IResponse {
-//     statusCode?: string | number;
-//     headers: {
-//         [key: string]: any;
-//     };
-//     cookies: Cookie[];
-//     body?: any;
-//     get(field: string): any;
-//     set(field: string, val: any): IResponse;
-//     header(field: string, val: any): IResponse;
-//     status(statusCode: string | number): IResponse;
-// }
-
-export class Response implements HttpResponseForContext {
+export class Response implements HttpResponseApi {
     statusCode?: string | number;
     headers: { [key: string]: any } = {};
     cookies: Cookie[] = [];
@@ -39,7 +26,7 @@ export class Response implements HttpResponseForContext {
         return this;
     }
 
-    setHeader(field: string, val: any): HttpResponseForContext {
+    setHeader(field: string, val: any): HttpResponseApi {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
@@ -53,7 +40,7 @@ export class Response implements HttpResponseForContext {
         return this;
     }
 
-    status(statusCode: string | number): HttpResponseForContext {
+    status(statusCode: string | number): HttpResponseApi {
         this.statusCode = statusCode;
         return this;
     }
