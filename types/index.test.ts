@@ -77,6 +77,30 @@ const cookieFunction: AzureFunction = async function (context: Context) {
     };
 };
 
+const resNumberFunction: AzureFunction = async function (context: Context) {
+    context.res = {
+        body: {
+            hello: 'world',
+        },
+        status: 200,
+        headers: {
+            'content-type': 'application/json',
+        },
+    };
+};
+
+const resStringFunction: AzureFunction = async function (context: Context) {
+    context.res = {
+        status: '200',
+    };
+};
+
+const resFuncFunction: AzureFunction = async function (context: Context) {
+    if (context.res?.status instanceof Function) {
+        context.res.status(200);
+    }
+};
+
 const runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
     context.log('Http-triggered function with ' + req.method + ' method.');
     context.log('Pulling in queue item ' + queueItem);
@@ -88,7 +112,18 @@ const returnWithContextDone: AzureFunction = function (context: Context, req: Ht
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
 };
 
-export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, runHttpWithQueue, returnWithContextDone };
+export {
+    runHttp,
+    cookieFunction,
+    runHttpReturn,
+    runServiceBus,
+    runFunction,
+    runHttpWithQueue,
+    returnWithContextDone,
+    resNumberFunction,
+    resStringFunction,
+    resFuncFunction,
+};
 
 // Function returns custom object
 interface CustomOutput {

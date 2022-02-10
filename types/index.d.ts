@@ -85,14 +85,18 @@ declare module '@azure/functions' {
         /**
          * HTTP response object. Provided to your function when using HTTP Bindings.
          */
-        res?: {
-            [key: string]: any;
-        };
+        res?: HttpResponseForContext | HttpResponseForUser;
     }
     /**
      * HTTP request headers.
      */
     export interface HttpRequestHeaders {
+        [name: string]: string;
+    }
+    /**
+     * HTTP response headers.
+     */
+    export interface HttpResponseHeaders {
         [name: string]: string;
     }
     /**
@@ -183,6 +187,128 @@ declare module '@azure/functions' {
      * Possible values for an HTTP Request user type
      */
     export type HttpRequestUserType = 'AppService' | 'StaticWebApps';
+    /**
+     * HTTP response object. Provided to your function when using HTTP Bindings.
+     */
+    export interface IResponse {
+        /**
+         * HTTP response headers.
+         */
+        headers?: HttpResponseHeaders;
+        /**
+         *  HTTP cookies that are set in the response.
+         */
+        cookies?: Cookie[];
+        /**
+         * HTTP response body.
+         */
+        body?: any;
+        /**
+         * status code for the response
+         */
+        statusCode?: number | string;
+    }
+
+    export interface HttpResponseForContext extends IResponse {
+        headers: HttpResponseHeaders;
+        cookies: Cookie[];
+        /**
+         * Enables content negotiation using ASP.NET core if true
+         * If false, treat response as raw (default)
+         */
+        enableContentNegotiation?: boolean;
+        /**
+         * sets the HTTP status code
+         * @param statusCode the status code to set
+         * @returns the updated HttpResponseForContext instance
+         */
+        status: (statusCode: number | string) => HttpResponseForContext;
+        /**
+         * Sets the header field `field` to the value `value` in `headers`
+         * @param field the name of the header field to set
+         * @param val the value of the header field
+         * @returns the updated IResponse instance
+         */
+        setHeader(field: string, val: any): HttpResponseForContext;
+        /**
+         * Has the same functionality as setHeader.
+         * Sets the header field `field` to the value `value` in `headers`
+         * @param field the name of the header field to set
+         * @param val the value of the header field
+         * @returns the updated IResponse instance
+         */
+        header(field: string, val: any): HttpResponseForContext;
+        /**
+         * Has the same functionality as setHeader.
+         * Sets the header field `field` to the value `value` in `headers`
+         * @param field the name of the header field to set
+         * @param val the value of the header field
+         * @returns the updated IResponse instance
+         */
+        set(field: string, val: any): HttpResponseForContext;
+        /**
+         * Get the value of the header field `field`
+         * @param field the name of the header field to get
+         */
+        getHeader(field: string): any;
+        /**
+         * Has the same functionality as getHeader
+         * Get the value of header field `field`
+         * @param field the name of the header field to get
+         */
+        get(field: string): any;
+        /**
+         * Removes header field `field` from `headers`
+         * @param field the name of the header field to remove
+         * @returns the updated IResponse instance
+         */
+        removeHeader(field: string): HttpResponseForContext;
+        /**
+         * Set the 'Content-Type' header to value `type`
+         * @param type the value to set header 'Content-Type' to
+         * @returns the updated IResponse instance
+         */
+        type(type: string): HttpResponseForContext;
+        /**
+         * Sets the content-type then calls context.done()
+         * @param body (optional) body content to send
+         * @returns updated IResponse instance
+         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
+         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         */
+        send(body?: any): HttpResponseForContext;
+        /**
+         * Same as send()
+         * Sets the content-type then calls context.done()
+         * @param body (optional) body content to send
+         * @returns updated IResponse instance
+         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         */
+        end(body?: any): HttpResponseForContext;
+        /**
+         * Sets the status code then calls send()
+         * @param statusCode status code to send
+         * @returns updated IResponse instance
+         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         */
+        sendStatus(statusCode: string | number): HttpResponseForContext;
+        /**
+         * Sets the 'Content-Type' header to 'application/json' then calls send(body)
+         * @param body (optional) body content to send
+         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         */
+        json(body?: any): void;
+    }
+
+    export interface HttpResponseForUser extends IResponse {
+        status?: number | string;
+    }
+
+    export type HttpResponse = HttpResponseForContext | HttpResponseForUser;
+
     /**
      * Http response cookie object to "Set-Cookie"
      */

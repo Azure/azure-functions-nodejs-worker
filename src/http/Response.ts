@@ -1,22 +1,22 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Cookie } from '@azure/functions';
+import { Cookie, HttpResponseForContext } from '@azure/functions';
 
-interface IResponse {
-    statusCode?: string | number;
-    headers: {
-        [key: string]: any;
-    };
-    cookies: Cookie[];
-    body?: any;
-    get(field: string): any;
-    set(field: string, val: any): IResponse;
-    header(field: string, val: any): IResponse;
-    status(statusCode: string | number): IResponse;
-}
+// interface IResponse {
+//     statusCode?: string | number;
+//     headers: {
+//         [key: string]: any;
+//     };
+//     cookies: Cookie[];
+//     body?: any;
+//     get(field: string): any;
+//     set(field: string, val: any): IResponse;
+//     header(field: string, val: any): IResponse;
+//     status(statusCode: string | number): IResponse;
+// }
 
-export class Response implements IResponse {
+export class Response implements HttpResponseForContext {
     statusCode?: string | number;
     headers: { [key: string]: any } = {};
     cookies: Cookie[] = [];
@@ -39,12 +39,12 @@ export class Response implements IResponse {
         return this;
     }
 
-    setHeader(field: string, val: any): IResponse {
+    setHeader(field: string, val: any): HttpResponseForContext {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
 
-    getHeader(field: string): IResponse {
+    getHeader(field: string): any {
         return this.headers[field.toLowerCase()];
     }
 
@@ -53,7 +53,7 @@ export class Response implements IResponse {
         return this;
     }
 
-    status(statusCode: string | number): IResponse {
+    status(statusCode: string | number): HttpResponseForContext {
         this.statusCode = statusCode;
         return this;
     }
