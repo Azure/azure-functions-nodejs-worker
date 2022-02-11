@@ -9,7 +9,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { toTypedData } from './converters';
 import { IFunctionLoader } from './FunctionLoader';
-import { IEventStream } from './GrpcService';
+import { IEventStream } from './GrpcClient';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -119,7 +119,21 @@ export class WorkerChannel implements IWorkerChannel {
     public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
         // Validate version
         const version = process.version;
-        if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
+        if (
+            (version.startsWith('v17.') || version.startsWith('v15.')) &&
+            process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development'
+        ) {
+            const msg =
+                'Node.js version used (' +
+                version +
+                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
+                ' https://aka.ms/functions-node-versions';
+            this.log({
+                message: msg,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
+        } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
             const msg =
                 'Incompatible Node.js version' +
                 ' (' +
@@ -197,6 +211,9 @@ export class WorkerChannel implements IWorkerChannel {
                 logCategory: category,
             });
         };
+
+        // Log invocation details to ensure the invocation received by node worker
+        logCallback(LogLevel.Debug, LogCategory.System, 'Received FunctionInvocationRequest');
 
         const resultCallback: ResultCallback = (err, result) => {
             const response: rpc.IInvocationResponse = {

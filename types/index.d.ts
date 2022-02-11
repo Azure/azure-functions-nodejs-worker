@@ -108,6 +108,35 @@ declare module '@azure/functions' {
         [name: string]: string;
     }
     /**
+     *  Object representing logged-in user, either through
+     *  AppService/Functions authentication, or SWA Authentication
+     */
+    export interface HttpRequestUser {
+        /**
+         * Type of authentication, either AppService or StaticWebApps
+         */
+        type: HttpRequestUserType;
+        /**
+         * unique user GUID
+         */
+        id: string;
+        /**
+         * unique username
+         */
+        username: string;
+        /**
+         * provider of authentication service
+         */
+        identityProvider: string;
+        /**
+         * Extra authentication information, dependent on auth type
+         * and auth provider
+         */
+        claimsPrincipalData: {
+            [key: string]: any;
+        };
+    }
+    /**
      * HTTP request object. Provided to your function when using HTTP Bindings.
      */
     export interface HttpRequest {
@@ -131,6 +160,12 @@ declare module '@azure/functions' {
          * Route parameter keys and values.
          */
         params: HttpRequestParams;
+        /**
+         *  Object representing logged-in user, either through
+         *  AppService/Functions authentication, or SWA Authentication
+         *  null when no such user is logged in.
+         */
+        user: HttpRequestUser | null;
         /**
          * The HTTP request body.
          */
@@ -190,6 +225,10 @@ declare module '@azure/functions' {
      * Possible values for an HTTP request method.
      */
     export type HttpMethod = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PATCH' | 'PUT' | 'OPTIONS' | 'TRACE' | 'CONNECT';
+    /**
+     * Possible values for an HTTP Request user type
+     */
+    export type HttpRequestUserType = 'AppService' | 'StaticWebApps';
     /**
      * Http response cookie object to "Set-Cookie"
      */
