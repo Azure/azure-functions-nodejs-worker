@@ -196,7 +196,7 @@ declare module '@azure/functions' {
          */
         headers?: HttpResponseHeaders;
         /**
-         *  HTTP cookies that are set in the response.
+         *  HTTP response cookies.
          */
         cookies?: Cookie[];
         /**
@@ -204,7 +204,7 @@ declare module '@azure/functions' {
          */
         body?: any;
         /**
-         * status code for the response
+         * HTTP response status code.
          * @default 200
          */
         statusCode?: number | string;
@@ -220,7 +220,7 @@ declare module '@azure/functions' {
      */
     export interface HttpResponseApi extends IResponse {
         /**
-         * Sets the HTTP status code
+         * Sets the HTTP response status code
          * @param statusCode the status code to set
          * @returns the updated HttpResponseApi instance
          */
@@ -275,8 +275,8 @@ declare module '@azure/functions' {
          * Automatically sets the content-type then calls context.done()
          * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
-         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
-         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
+         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
          */
         send(body?: any): HttpResponseApi;
         /**
@@ -284,23 +284,23 @@ declare module '@azure/functions' {
          * Automatically sets the content-type then calls context.done()
          * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
-         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
          */
         end(body?: any): HttpResponseApi;
         /**
          * Sets the status code then calls send()
          * @param statusCode status code to send
          * @returns updated HttpResponseApi instance
-         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
          */
         sendStatus(statusCode: string | number): HttpResponseApi;
         /**
          * Sets the 'Content-Type' header to 'application/json' then calls send(body)
          * @param body (optional) body content to send
-         * @deprecated this function calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more  information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
          */
         json(body?: any): void;
     }
@@ -309,7 +309,7 @@ declare module '@azure/functions' {
      */
     export interface HttpResponseObject extends IResponse {
         /**
-         * status code for the response
+         * HTTP response status code
          * @default 200
          */
         status?: number | string;
