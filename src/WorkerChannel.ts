@@ -4,7 +4,7 @@
 import { Context } from '@azure/functions';
 import { access, constants } from 'fs';
 import * as path from 'path';
-import { format, isFunction } from 'util';
+import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from './Context';
 import { toTypedData } from './converters';
@@ -300,7 +300,7 @@ export class WorkerChannel implements IWorkerChannel {
         try {
             const result = userFunction(context, ...inputs);
 
-            if (result && isFunction(result.then)) {
+            if (result && typeof result.then === 'function') {
                 result
                     .then((result) => {
                         (<any>context.done)(null, result, true);
