@@ -43,12 +43,10 @@ interface IWorkerChannel {
 export class WorkerChannel implements IWorkerChannel {
     private _eventStream: IEventStream;
     private _functionLoader: IFunctionLoader;
-    private _workerId: string;
     private _invocationRequestBefore: InvocationRequestBefore[];
     private _invocationRequestAfter: InvocationRequestAfter[];
 
     constructor(workerId: string, eventStream: IEventStream, functionLoader: IFunctionLoader) {
-        this._workerId = workerId;
         this._eventStream = eventStream;
         this._functionLoader = functionLoader;
         this._invocationRequestBefore = [];
