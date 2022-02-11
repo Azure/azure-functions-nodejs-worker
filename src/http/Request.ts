@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import {
+    Form,
     HttpMethod,
     HttpRequest,
     HttpRequestHeaders,
@@ -10,8 +11,10 @@ import {
     HttpRequestUser,
 } from '@azure/functions';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { HeaderName } from '../constants';
 import { fromTypedData } from '../converters/RpcConverters';
 import { fromNullableMapping, fromRpcHttpBody } from '../converters/RpcHttpConverters';
+import { parseForm } from '../parsers/parseForm';
 import { extractHttpUserFromHeaders } from './extractHttpUserFromHeaders';
 
 export class Request implements HttpRequest {
@@ -47,5 +50,14 @@ export class Request implements HttpRequest {
 
     public get(field: string): string | undefined {
         return this.headers && this.headers[field.toLowerCase()];
+    }
+
+    public parseFormBody(): Form {
+        const contentType = this.get(HeaderName.contentType);
+        if (!contentType) {
+            throw new Error(`"${HeaderName.contentType}" header must be defined.`);
+        } else {
+            return parseForm(this.body, contentType);
+        }
     }
 }
