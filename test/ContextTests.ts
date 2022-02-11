@@ -5,7 +5,6 @@ import { Context } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
-import { isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../src/Context';
 import { FunctionInfo } from '../src/FunctionInfo';
@@ -320,7 +319,7 @@ class BasicCallback {
 // Does logic in WorkerChannel to call the user function
 function callUserFunc(myFunc, context: Context): Promise<any> {
     let result = myFunc(context);
-    if (result && isFunction(result.then)) {
+    if (result && typeof result.then === 'function') {
         result = result
             .then((result) => (<any>context.done)(null, result, true))
             .catch((err) => (<any>context.done)(err, null, true));

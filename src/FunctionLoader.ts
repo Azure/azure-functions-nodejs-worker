@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as url from 'url';
-import { isFunction, isObject } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
@@ -50,7 +49,7 @@ export class FunctionLoader implements IFunctionLoader {
         }
         const entryPoint = <string>(metadata && metadata.entryPoint);
         const userFunction = getEntryPoint(script, entryPoint);
-        if (!isFunction(userFunction)) {
+        if (typeof userFunction !== 'function') {
             throw new InternalException(
                 'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
             );
@@ -81,7 +80,7 @@ export class FunctionLoader implements IFunctionLoader {
 }
 
 function getEntryPoint(f: any, entryPoint?: string): Function {
-    if (isObject(f)) {
+    if (f !== null && typeof f === 'object') {
         const obj = f;
         if (entryPoint) {
             // the module exports multiple functions
@@ -97,7 +96,7 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
             f = f.run || f.index;
         }
 
-        if (isFunction(f)) {
+        if (typeof f === 'function') {
             return function () {
                 return f.apply(obj, arguments);
             };
