@@ -244,8 +244,8 @@ describe('Context', () => {
         sinon.assert.calledWith(_resultCallback, null, { bindings: {}, return: 'hello' });
     });
 
-    it('function logs error on calling context.done more than once', () => {
-        callUserFunc(BasicCallback.callbackTwice, _context);
+    it('function logs error on calling context.done more than once', async () => {
+        await callUserFunc(BasicCallback.callbackTwice, _context);
         sinon.assert.calledOnce(_logger);
         sinon.assert.calledWith(
             _logger,
@@ -255,8 +255,8 @@ describe('Context', () => {
         );
     });
 
-    it('function logs error on calling context.log after context.done() called', () => {
-        callUserFunc(BasicCallback.callbackOnce, _context);
+    it('function logs error on calling context.log after context.done() called', async () => {
+        await callUserFunc(BasicCallback.callbackOnce, _context);
         _context.log('');
         sinon.assert.calledTwice(_logger);
         sinon.assert.calledWith(
@@ -279,14 +279,14 @@ describe('Context', () => {
         );
     });
 
-    it('function calls callback correctly with bindings', () => {
-        callUserFunc(BasicCallback.callbackOnce, _context);
+    it('function calls callback correctly with bindings', async () => {
+        await callUserFunc(BasicCallback.callbackOnce, _context);
         sinon.assert.calledOnce(_resultCallback);
         sinon.assert.calledWith(_resultCallback, undefined, { bindings: { hello: 'world' }, return: undefined });
     });
 
-    it('empty function does not call callback', () => {
-        callUserFunc(BasicCallback.callbackNone, _context);
+    it('empty function does not call callback', async () => {
+        await callUserFunc(BasicCallback.callbackNone, _context);
         sinon.assert.notCalled(_resultCallback);
     });
 });
