@@ -20,7 +20,7 @@ function RunTest([string] $project, [string] $description,[bool] $skipBuild = $f
 }
 
 $tests = @(
-  @{project ="$PSScriptRoot/test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E.csproj"; description="E2E integration tests"}
+  @{project ="$PSScriptRoot/../test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E.csproj"; description="E2E integration tests"}
 )
 
 $success = $true
