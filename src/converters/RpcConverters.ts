@@ -33,15 +33,15 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson = 
     } else if (typedData.bytes) {
         return Buffer.from(<Buffer>typedData.bytes);
     } else if (typedData.collectionBytes && typedData.collectionBytes.bytes) {
-        const byteCollection = <Uint8Array[]>typedData.collectionBytes.bytes;
+        const byteCollection = typedData.collectionBytes.bytes;
         return byteCollection.map((element) => Buffer.from(<Buffer>element));
     } else if (typedData.collectionString && typedData.collectionString.string) {
-        return <string[]>typedData.collectionString.string;
+        return typedData.collectionString.string;
     } else if (typedData.collectionDouble && typedData.collectionDouble.double) {
-        return <number[]>typedData.collectionDouble.double;
+        return typedData.collectionDouble.double;
     } else if (typedData.collectionSint64 && typedData.collectionSint64.sint64) {
-        const longCollection = <(Long | number)[]>typedData.collectionSint64.sint64;
-        return longCollection.map((element) => (isLong(element) ? element.toString() : <number>element));
+        const longCollection = typedData.collectionSint64.sint64;
+        return longCollection.map((element) => (isLong(element) ? element.toString() : element));
     }
 }
 
@@ -147,7 +147,7 @@ export function toNullableDouble(
  */
 export function toRpcString(nullable: string | undefined, propertyName: string): string {
     if (typeof nullable === 'string') {
-        return <string>nullable;
+        return nullable;
     }
 
     if (nullable != null) {
