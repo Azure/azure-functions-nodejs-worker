@@ -31,7 +31,6 @@ export class FunctionLoader implements IFunctionLoader {
         if (scriptFilePath.endsWith('.mjs')) {
             if (this.allowESModules) {
                 // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
-                // @ts-ignore
                 const scriptFileUrl = url.pathToFileURL(scriptFilePath);
                 if (scriptFileUrl.href) {
                     // use eval so it doesn't get compiled into a require()
