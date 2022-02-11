@@ -7,7 +7,7 @@ import 'mocha';
 import { ITestCallbackContext } from 'mocha';
 import * as path from 'path';
 
-describe('Public TypeScript types', async () => {
+describe('Public TypeScript types', () => {
     for (const tsVersion of ['3', '4']) {
         it(`builds with TypeScript v${tsVersion}`, async function (this: ITestCallbackContext) {
             this.timeout(10 * 1000);
