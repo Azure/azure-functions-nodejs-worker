@@ -44,7 +44,6 @@
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/unbound-method": "off",
         "no-empty": "off",
-        "no-useless-escape": "off",
         "prefer-rest-params": "off",
         "prefer-spread": "off"
     },
