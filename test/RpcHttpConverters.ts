@@ -67,7 +67,7 @@ describe('Rpc Converters', () => {
             },
         ];
 
-        const rpcCookies = toRpcHttpCookieList(<Cookie[]>cookieInputs);
+        const rpcCookies = toRpcHttpCookieList(cookieInputs);
         expect(rpcCookies[0].name).to.equal('none-cookie');
         expect(rpcCookies[0].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.ExplicitNone);
 

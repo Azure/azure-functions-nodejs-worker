@@ -201,7 +201,7 @@ export class WorkerChannel implements IWorkerChannel {
      * @param msg gRPC message content
      */
     public invocationRequest(requestId: string, msg: rpc.InvocationRequest) {
-        const info = this._functionLoader.getInfo(<string>msg.functionId);
+        const info = this._functionLoader.getInfo(msg.functionId);
         const logCallback: LogCallback = (level, category, ...args) => {
             this.log({
                 invocationId: msg.invocationId,
@@ -291,7 +291,7 @@ export class WorkerChannel implements IWorkerChannel {
         };
 
         const { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
-        let userFunction = this._functionLoader.getFunc(<string>msg.functionId);
+        let userFunction = this._functionLoader.getFunc(msg.functionId);
 
         userFunction = this.runInvocationRequestBefore(context, userFunction);
 
