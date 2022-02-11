@@ -3,7 +3,7 @@
 
 // This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
 
-import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, Timer } from '@azure/functions';
+import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, HttpResponseApi, Timer } from '@azure/functions';
 const get: HttpMethod = 'GET';
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -77,28 +77,55 @@ const cookieFunction: AzureFunction = async function (context: Context) {
     };
 };
 
-const resNumberFunction: AzureFunction = async function (context: Context) {
+const httpResponseObjectFunction: AzureFunction = async function (context: Context) {
     context.res = {
         body: {
             hello: 'world',
         },
         status: 200,
+        statusCode: 200,
         headers: {
             'content-type': 'application/json',
         },
+        cookies: [
+            {
+                name: 'cookiename',
+                value: 'cookievalue',
+                expires: Date.now(),
+            },
+        ],
+        enableContentNegotiation: false,
     };
 };
 
-const resStringFunction: AzureFunction = async function (context: Context) {
+const statusStringFunction: AzureFunction = async function (context: Context) {
     context.res = {
         status: '200',
+        statusCode: '200',
     };
 };
 
-const resFuncFunction: AzureFunction = async function (context: Context) {
-    if (context.res?.status instanceof Function) {
-        context.res.status(200);
-    }
+const httpResponseApiFunction: AzureFunction = async function (context: Context) {
+    context.res = context.res as HttpResponseApi;
+    context.res.status(200);
+    context.res.setHeader('hello', 'world');
+    context.res.set('hello', 'world');
+    context.res.header('hello', 'world');
+    const hello: string = context.res.get('hello');
+    const hello2: string = context.res.getHeader('hello');
+    context.res.removeHeader('hello');
+    context.res.type('application/json');
+    context.res.body = {
+        hello: 'world',
+    };
+    context.res.cookies = [
+        {
+            name: 'cookiename',
+            value: 'cookievalue',
+            expires: Date.now(),
+        },
+    ];
+    context.res.enableContentNegotiation = false;
 };
 
 const runHttpWithQueue: AzureFunction = async function (context: Context, req: HttpRequest, queueItem: Buffer) {
@@ -112,17 +139,44 @@ const returnWithContextDone: AzureFunction = function (context: Context, req: Ht
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
 };
 
+const returnWithSend: AzureFunction = function (context: Context, req: HttpRequest) {
+    context.res = context.res as HttpResponseApi;
+    context.res.send('hello world');
+};
+
+const returnWithEnd: AzureFunction = function (context: Context, req: HttpRequest) {
+    context.res = context.res as HttpResponseApi;
+    context.res.end('hello world');
+};
+
+const returnWithSendStatus: AzureFunction = function (context: Context, req: HttpRequest) {
+    context.res = context.res as HttpResponseApi;
+    context.res.sendStatus(200);
+};
+
+const returnWithJson: AzureFunction = function (context: Context, req: HttpRequest) {
+    if (context.res?.status instanceof Function) {
+        context.res.status(200).json({
+            hello: 'world',
+        });
+    }
+};
+
 export {
     runHttp,
     cookieFunction,
+    httpResponseApiFunction,
+    httpResponseObjectFunction,
+    statusStringFunction,
     runHttpReturn,
     runServiceBus,
     runFunction,
     runHttpWithQueue,
     returnWithContextDone,
-    resNumberFunction,
-    resStringFunction,
-    resFuncFunction,
+    returnWithSend,
+    returnWithEnd,
+    returnWithSendStatus,
+    returnWithJson,
 };
 
 // Function returns custom object
