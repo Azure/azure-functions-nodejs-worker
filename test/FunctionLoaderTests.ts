@@ -7,27 +7,21 @@ import 'mocha';
 import * as mock from 'mock-require';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionLoader } from '../src/FunctionLoader';
-import { WorkerChannel } from '../src/WorkerChannel';
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('FunctionLoader', () => {
-    let channel: WorkerChannel;
     let loader: FunctionLoader;
-    let require;
-    let functions;
-    let context, logs, bindingValues;
+    let context, logs;
 
     beforeEach(() => {
         loader = new FunctionLoader();
         logs = [];
-        bindingValues = {};
         context = {
             _inputs: [],
             bindings: {},
             log: (message) => logs.push(message),
             bind: (val, cb) => {
-                bindingValues = val;
                 cb && cb(val);
             },
         };

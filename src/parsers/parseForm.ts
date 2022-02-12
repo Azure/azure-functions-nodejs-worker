@@ -58,7 +58,7 @@ export class Form implements types.Form {
     }
 
     public has(name: string): boolean {
-        for (const [key, _value] of this._parts) {
+        for (const [key] of this._parts) {
             if (key === name) {
                 return true;
             }

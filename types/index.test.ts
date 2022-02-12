@@ -83,7 +83,7 @@ const runHttpWithQueue: AzureFunction = async function (context: Context, req: H
     return;
 };
 
-const returnWithContextDone: AzureFunction = function (context: Context, req: HttpRequest) {
+const returnWithContextDone: AzureFunction = function (context: Context, _req: HttpRequest) {
     context.log.info('Writing to queue');
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
 };
@@ -94,7 +94,7 @@ export { runHttp, cookieFunction, runHttpReturn, runServiceBus, runFunction, run
 interface CustomOutput {
     value: string;
 }
-export const runTypedReturn: AzureFunction = async (context, request: HttpRequest): Promise<CustomOutput> => {
+export const runTypedReturn: AzureFunction = async (_context, _request: HttpRequest): Promise<CustomOutput> => {
     //  return { // ts(2322) error
     //      value1: "Test1"
     //  };
@@ -103,7 +103,7 @@ export const runTypedReturn: AzureFunction = async (context, request: HttpReques
     };
 };
 
-export const runTypedReturn1: AzureFunction = async (context, request): Promise<CustomOutput> => {
+export const runTypedReturn1: AzureFunction = async (_context, _request): Promise<CustomOutput> => {
     //  return { // ts(2322) error
     //      value1: "Test1"
     //  };
