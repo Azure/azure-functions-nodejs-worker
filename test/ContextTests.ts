@@ -40,7 +40,7 @@ describe('Context', () => {
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
 
-        const { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
+        const { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         _context = context;
     });
 
@@ -297,7 +297,7 @@ class BasicAsync {
         context.done();
     }
 
-    public static async asyncPlainFunction(context: Context) {
+    public static async asyncPlainFunction(_context: Context) {
         return 'hello';
     }
 }
@@ -314,7 +314,7 @@ class BasicCallback {
         context.done();
     }
 
-    public static callbackNone(context) {}
+    public static callbackNone(_context) {}
 }
 
 // Does logic in WorkerChannel to call the user function

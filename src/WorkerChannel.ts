@@ -116,7 +116,7 @@ export class WorkerChannel implements IWorkerChannel {
      * @param requestId gRPC message request id
      * @param msg gRPC message content
      */
-    public workerInitRequest(requestId: string, msg: rpc.WorkerInitRequest) {
+    public workerInitRequest(requestId: string, _msg: rpc.WorkerInitRequest) {
         // Validate version
         const version = process.version;
         if (
@@ -317,14 +317,14 @@ export class WorkerChannel implements IWorkerChannel {
     /**
      * Worker sends the host information identifying itself
      */
-    public startStream(requestId: string, msg: rpc.StartStream): void {
+    public startStream(_requestId: string, _msg: rpc.StartStream): void {
         // Not yet implemented
     }
 
     /**
      * Message is empty by design - Will add more fields in future if needed
      */
-    public workerHeartbeat(requestId: string, msg: rpc.WorkerHeartbeat): void {
+    public workerHeartbeat(_requestId: string, _msg: rpc.WorkerHeartbeat): void {
         // Not yet implemented
     }
 
@@ -332,14 +332,14 @@ export class WorkerChannel implements IWorkerChannel {
      * Warning before killing the process after grace_period
      * Worker self terminates ..no response on this
      */
-    public workerTerminate(requestId: string, msg: rpc.WorkerTerminate): void {
+    public workerTerminate(_requestId: string, _msg: rpc.WorkerTerminate): void {
         // Not yet implemented
     }
 
     /**
      * Worker sends the host empty response to evaluate the worker's latency
      */
-    public workerStatusRequest(requestId: string, msg: rpc.WorkerStatusRequest): void {
+    public workerStatusRequest(requestId: string, _msg: rpc.WorkerStatusRequest): void {
         const workerStatusResponse: rpc.IWorkerStatusResponse = {};
         this._eventStream.write({
             requestId: requestId,
@@ -350,14 +350,14 @@ export class WorkerChannel implements IWorkerChannel {
     /**
      * Host notifies worker of file content change
      */
-    public fileChangeEventRequest(requestId: string, msg: rpc.FileChangeEventRequest): void {
+    public fileChangeEventRequest(_requestId: string, _msg: rpc.FileChangeEventRequest): void {
         // Not yet implemented
     }
 
     /**
      * Host requests worker to cancel invocation
      */
-    public invocationCancel(requestId: string, msg: rpc.InvocationCancel): void {
+    public invocationCancel(_requestId: string, _msg: rpc.InvocationCancel): void {
         // Not yet implemented
     }
 

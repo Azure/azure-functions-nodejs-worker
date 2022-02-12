@@ -9,10 +9,6 @@ import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc
 
 import rpc = jsonModule.AzureFunctionsRpcMessages;
 
-interface GrpcClientConstructor {
-    new (connection: string, credentials: any, options: any): GrpcClient;
-}
-
 function GetGrpcClientConstructor(): ServiceClientConstructor {
     const packageDef = grpcloader.fromJSON(jsonModule as protobuf.INamespace, {
         objects: true,
@@ -22,9 +18,6 @@ function GetGrpcClientConstructor(): ServiceClientConstructor {
     const serviceDef = packageDef['AzureFunctionsRpcMessages.FunctionRpc'] as grpcloader.ServiceDefinition;
     const clientConstructor: ServiceClientConstructor = grpc.makeClientConstructor(serviceDef, 'FunctionRpc');
     return clientConstructor;
-}
-interface GrpcClient extends grpc.Client {
-    eventStream(): IEventStream;
 }
 
 export interface IEventStream {
@@ -41,7 +34,7 @@ export function CreateGrpcEventStream(connection: string, grpcMaxMessageLength: 
         'grpc.max_receive_message_length': grpcMaxMessageLength,
     };
     const client = new constructor(connection, grpc.credentials.createInsecure(), clientOptions);
-    process.on('exit', (code) => {
+    process.on('exit', () => {
         grpc.closeClient(client);
     });
 

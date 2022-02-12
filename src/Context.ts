@@ -112,16 +112,15 @@ class InvocationContext implements Context {
 
         // Log message that is tied to function invocation
         this.log = Object.assign(
-            <ILog>(...args: any[]) =>
-                logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
+            (...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
             {
-                error: <ILog>(...args: any[]) =>
+                error: (...args: any[]) =>
                     logWithAsyncCheck(_done, logCallback, LogLevel.Error, executionContext, ...args),
-                warn: <ILog>(...args: any[]) =>
+                warn: (...args: any[]) =>
                     logWithAsyncCheck(_done, logCallback, LogLevel.Warning, executionContext, ...args),
-                info: <ILog>(...args: any[]) =>
+                info: (...args: any[]) =>
                     logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
-                verbose: <ILog>(...args: any[]) =>
+                verbose: (...args: any[]) =>
                     logWithAsyncCheck(_done, logCallback, LogLevel.Trace, executionContext, ...args),
             }
         );

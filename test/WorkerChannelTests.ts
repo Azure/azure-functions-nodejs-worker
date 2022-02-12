@@ -16,7 +16,6 @@ describe('WorkerChannel', () => {
     let channel: WorkerChannel;
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
-    let functions;
 
     const sendInvokeMessage = (
         inputData?: rpc.IParameterBinding[] | null,
@@ -548,7 +547,7 @@ describe('WorkerChannel', () => {
         it('should apply hook after user function is executed (callback)', (done) => {
             let finished = false;
             let count = 0;
-            channel.registerAfterInvocationRequest((context) => {
+            channel.registerAfterInvocationRequest((_context) => {
                 expect(finished).to.equal(true);
                 count += 1;
             });
@@ -574,7 +573,7 @@ describe('WorkerChannel', () => {
         it('should apply hook after user function resolves (promise)', (done) => {
             let finished = false;
             let count = 0;
-            channel.registerAfterInvocationRequest((context) => {
+            channel.registerAfterInvocationRequest((_context) => {
                 expect(finished).to.equal(true);
                 count += 1;
                 expect(count).to.equal(1);
@@ -600,7 +599,7 @@ describe('WorkerChannel', () => {
         it('should apply hook after user function rejects (promise)', (done) => {
             let finished = false;
             let count = 0;
-            channel.registerAfterInvocationRequest((context) => {
+            channel.registerAfterInvocationRequest((_context) => {
                 expect(finished).to.equal(true);
                 count += 1;
                 expect(count).to.equal(1);
@@ -609,7 +608,7 @@ describe('WorkerChannel', () => {
             });
 
             loader.getFunc.returns(
-                (context) =>
+                (_context) =>
                     new Promise((_, reject) => {
                         finished = true;
                         expect(channel['_invocationRequestBefore'].length).to.equal(0);
