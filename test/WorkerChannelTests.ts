@@ -737,43 +737,34 @@ describe('WorkerChannel', () => {
             });
         });
 
-        it('returns and serializes falsy value in Durable: ""', () => {
+        it('returns null for falsy value in Durable: "" (legacy behavior)', () => {
             loader.getFunc.returns((context) => context.done(null, ''));
             loader.getInfo.returns(new FunctionInfo(activityBinding));
 
             sendInvokeMessage([], getHttpTriggerDataMock());
 
             const expectedOutput = [];
-            const expectedReturnValue = {
-                string: '',
-            };
-            assertInvocationSuccess(expectedOutput, expectedReturnValue);
+            assertInvocationSuccess(expectedOutput);
         });
 
-        it('returns and serializes falsy value in Durable: 0', () => {
+        it('returns null for falsy value in Durable: 0 (legacy behavior)', () => {
             loader.getFunc.returns((context) => context.done(null, 0));
             loader.getInfo.returns(new FunctionInfo(activityBinding));
 
             sendInvokeMessage([], getHttpTriggerDataMock());
 
             const expectedOutput = [];
-            const expectedReturnValue = {
-                int: 0,
-            };
-            assertInvocationSuccess(expectedOutput, expectedReturnValue);
+            assertInvocationSuccess(expectedOutput);
         });
 
-        it('returns and serializes falsy value in Durable: false', () => {
+        it('returns null for falsy value in Durable: false (legacy behavior)', () => {
             loader.getFunc.returns((context) => context.done(null, false));
             loader.getInfo.returns(new FunctionInfo(activityBinding));
 
             sendInvokeMessage([], getHttpTriggerDataMock());
 
             const expectedOutput = [];
-            const expectedReturnValue = {
-                json: 'false',
-            };
-            assertInvocationSuccess(expectedOutput, expectedReturnValue);
+            assertInvocationSuccess(expectedOutput);
         });
 
         it('logs AzureFiles cold start warning', async () => {
