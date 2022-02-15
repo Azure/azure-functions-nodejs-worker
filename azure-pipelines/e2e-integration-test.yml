@@ -43,10 +43,10 @@ steps:
     inputs:
       version: 6.0.x
   - pwsh: |
-      .\setup-e2e-tests.ps1 -UseCoreToolsBuildFromIntegrationTests
+      .\scripts\setup-e2e-tests.ps1 -UseCoreToolsBuildFromIntegrationTests
     displayName: 'Setup e2e tests'
   - powershell: |
-      .\run-e2e-tests.ps1
+      .\scripts\run-e2e-tests.ps1
     displayName: 'Run e2e tests'
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)
