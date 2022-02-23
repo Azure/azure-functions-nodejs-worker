@@ -30,7 +30,7 @@ export function invocationRequest(channel: WorkerChannel, requestId: string, msg
     // Log invocation details to ensure the invocation received by node worker
     logCallback(LogLevel.Debug, LogCategory.System, 'Received FunctionInvocationRequest');
 
-    const resultCallback: ResultCallback = (err, result) => {
+    const resultCallback: ResultCallback = (err: unknown, result) => {
         const response: rpc.IInvocationResponse = {
             invocationId: msg.invocationId,
             result: toRpcStatus(err),
@@ -94,8 +94,8 @@ export function invocationRequest(channel: WorkerChannel, requestId: string, msg
                     );
                 }
             }
-        } catch (e) {
-            response.result = toRpcStatus(e);
+        } catch (err) {
+            response.result = toRpcStatus(err);
         }
         channel.eventStream.write({
             requestId: requestId,

@@ -4,6 +4,7 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { isError } from '../utils/ensureErrorType';
 import { InternalException } from '../utils/InternalException';
 import { systemError } from '../utils/Logger';
 import { toRpcStatus } from '../utils/toRpcStatus';
@@ -78,8 +79,8 @@ export function logColdStartWarning(channel: WorkerChannel, delayInMs?: number):
             delayInMs = 5000;
         }
         setTimeout(() => {
-            access(path.join(process.env.AzureWebJobsScriptRoot!, 'package.json'), constants.F_OK, (e) => {
-                if (e) {
+            access(path.join(process.env.AzureWebJobsScriptRoot!, 'package.json'), constants.F_OK, (err) => {
+                if (isError(err)) {
                     channel.log({
                         message:
                             'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
