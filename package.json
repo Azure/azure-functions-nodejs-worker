@@ -56,7 +56,7 @@
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && node ./node_modules/typescript/bin/tsc",
         "gen": "node scripts/generateProtos.js",
-        "test": "mocha -r ts-node/register ./test/**/*.ts --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
+        "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
         "watch": "node ./node_modules/typescript/bin/tsc --watch",
