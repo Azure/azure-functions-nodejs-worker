@@ -13,7 +13,7 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export async function functionLoadRequest(channel: WorkerChannel, requestId: string, msg: rpc.FunctionLoadRequest) {
+export async function functionLoadRequest(channel: WorkerChannel, requestId: string, msg: rpc.IFunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
         let error: Error | null | undefined;
         let errorMessage: string | undefined;

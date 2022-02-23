@@ -5,6 +5,7 @@ import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs, LogCallback, ResultCallback } from '../Context';
 import { toTypedData } from '../converters';
+import { nonNullProp } from '../utils/nonNull';
 import { toRpcStatus } from '../utils/toRpcStatus';
 import { WorkerChannel } from '../WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -15,8 +16,8 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export function invocationRequest(channel: WorkerChannel, requestId: string, msg: rpc.InvocationRequest) {
-    const info = channel.functionLoader.getInfo(msg.functionId);
+export function invocationRequest(channel: WorkerChannel, requestId: string, msg: rpc.IInvocationRequest) {
+    const info = channel.functionLoader.getInfo(nonNullProp(msg, 'functionId'));
     const logCallback: LogCallback = (level, category, ...args) => {
         channel.log({
             invocationId: msg.invocationId,
@@ -106,7 +107,7 @@ export function invocationRequest(channel: WorkerChannel, requestId: string, msg
     };
 
     const { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
-    let userFunction = channel.functionLoader.getFunc(msg.functionId);
+    let userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
 
     userFunction = channel.runInvocationRequestBefore(context, userFunction);
 

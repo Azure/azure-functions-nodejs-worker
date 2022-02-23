@@ -4,10 +4,10 @@
 import * as parseArgs from 'minimist';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
+import { setupEventStream } from './setupEventStream';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
-import { WorkerChannel } from './WorkerChannel';
 
 export function startNodeWorker(args) {
     const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
@@ -39,7 +39,7 @@ export function startNodeWorker(args) {
         throw error;
     }
 
-    new WorkerChannel(workerId, eventStream, new FunctionLoader());
+    setupEventStream(workerId, eventStream, new FunctionLoader());
 
     eventStream.write({
         requestId: requestId,

@@ -3,12 +3,12 @@
 
 import * as sinon from 'sinon';
 import { FunctionLoader } from '../../src/FunctionLoader';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { setupEventStream } from '../../src/setupEventStream';
 import { TestEventStream } from './TestEventStream';
 
 export function beforeEventHandlerSuite() {
     const stream = new TestEventStream();
     const loader = sinon.createStubInstance<FunctionLoader>(FunctionLoader);
-    const channel = new WorkerChannel('workerId', stream, loader);
+    const channel = setupEventStream('workerId', stream, loader);
     return { stream, loader, channel };
 }
