@@ -238,7 +238,7 @@ declare module '@azure/functions' {
     /**
      * HTTP response object
      */
-    export interface HttpResponseBase {
+    interface HttpResponseBase {
         /**
          * HTTP response headers.
          */
@@ -261,7 +261,7 @@ declare module '@azure/functions' {
          * If false, treat response as raw (default)
          * @default false
          */
-         enableContentNegotiation?: boolean;
+        enableContentNegotiation?: boolean;
     }
     /**
      * Http response object and methods.
