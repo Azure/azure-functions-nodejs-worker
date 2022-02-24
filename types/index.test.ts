@@ -2,8 +2,18 @@
 // Licensed under the MIT License.
 
 // This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
-
-import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, HttpResponseApi, HttpResponseObject, Timer } from '@azure/functions';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable deprecation/deprecation */
+import {
+    AzureFunction,
+    Context,
+    Cookie,
+    HttpMethod,
+    HttpRequest,
+    HttpResponseApi,
+    HttpResponseObject,
+    Timer,
+} from '@azure/functions';
 const get: HttpMethod = 'GET';
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -119,7 +129,7 @@ const httpResponseApiFunction: AzureFunction = async function (context: Context)
     context.res.type('application/json');
     context.res.body = {
         hello,
-        hello2
+        hello2,
     };
     context.res.cookies = [
         {
@@ -142,18 +152,10 @@ const returnWithContextDone: AzureFunction = function (context: Context, _req: H
     context.done(null, { myOutput: { text: 'hello there, world', noNumber: true } });
 };
 
-const returnWithSend: AzureFunction = function (context: Context, req: HttpRequest) {
+const returnWithContextDoneMethods: AzureFunction = function (context: Context, _req: HttpRequest) {
     context.res = context.res as HttpResponseApi;
     context.res.send('hello world');
-};
-
-const returnWithEnd: AzureFunction = function (context: Context, req: HttpRequest) {
-    context.res = context.res as HttpResponseApi;
     context.res.end('hello world');
-};
-
-const returnWithSendStatus: AzureFunction = function (context: Context, req: HttpRequest) {
-    context.res = context.res as HttpResponseApi;
     context.res.sendStatus(200);
 };
 
@@ -176,9 +178,7 @@ export {
     runFunction,
     runHttpWithQueue,
     returnWithContextDone,
-    returnWithSend,
-    returnWithEnd,
-    returnWithSendStatus,
+    returnWithContextDoneMethods,
     returnWithJson,
 };
 
