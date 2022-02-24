@@ -118,7 +118,8 @@ const httpResponseApiFunction: AzureFunction = async function (context: Context)
     context.res.removeHeader('hello');
     context.res.type('application/json');
     context.res.body = {
-        hello: 'world',
+        hello,
+        hello2
     };
     context.res.cookies = [
         {
