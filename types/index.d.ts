@@ -276,7 +276,7 @@ declare module '@azure/functions' {
          * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
-         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
         send(body?: any): HttpResponseApi;
         /**
@@ -285,7 +285,7 @@ declare module '@azure/functions' {
          * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
         end(body?: any): HttpResponseApi;
         /**
@@ -293,14 +293,14 @@ declare module '@azure/functions' {
          * @param statusCode status code to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
         sendStatus(statusCode: string | number): HttpResponseApi;
         /**
          * Sets the 'Content-Type' header to 'application/json' then calls send(body)
          * @param body (optional) body content to send
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
-         * See the docs here for more information: https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#use-async-and-await
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
         json(body?: any): void;
     }
