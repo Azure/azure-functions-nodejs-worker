@@ -216,59 +216,47 @@ declare module '@azure/functions' {
     export interface HttpResponseApi extends HttpResponseBase {
         /**
          * Sets the HTTP response status code
-         * @param statusCode the status code to set
          * @returns the updated HttpResponseApi instance
          */
         status: (statusCode: number | string) => HttpResponseApi;
         /**
          * Sets a particular header field to a value
-         * @param field the name of the header field to set
-         * @param val the value of the header field
          * @returns the updated HttpResponseApi instance
          */
         setHeader(field: string, val: any): HttpResponseApi;
         /**
          * Has the same functionality as setHeader.
          * Sets a particular header field to a value
-         * @param field the name of the header field to set
-         * @param val the value of the header field
          * @returns the updated HttpResponseApi instance
          */
         header(field: string, val: any): HttpResponseApi;
         /**
          * Has the same functionality as setHeader.
          * Sets a particular header field to a value
-         * @param field the name of the header field to set
-         * @param val the value of the header field
          * @returns the updated HttpResponseApi instance
          */
         set(field: string, val: any): HttpResponseApi;
         /**
          * Get the value of a particular header field
-         * @param field the name of the header field to get
          */
         getHeader(field: string): any;
         /**
          * Has the same functionality as getHeader
          * Get the value of a particular header field
-         * @param field the name of the header field to get
          */
         get(field: string): any;
         /**
          * Removes a particular header field
-         * @param field the name of the header field to remove
          * @returns the updated HttpResponseApi instance
          */
         removeHeader(field: string): HttpResponseApi;
         /**
          * Set the 'Content-Type' header to a particular value
-         * @param type the value to set header 'Content-Type' to
          * @returns the updated HttpResponseApi instance
          */
         type(type: string): HttpResponseApi;
         /**
          * Automatically sets the content-type then calls context.done()
-         * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
@@ -277,7 +265,6 @@ declare module '@azure/functions' {
         /**
          * Same as send()
          * Automatically sets the content-type then calls context.done()
-         * @param body (optional) body content to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
@@ -285,7 +272,6 @@ declare module '@azure/functions' {
         end(body?: any): HttpResponseApi;
         /**
          * Sets the status code then calls send()
-         * @param statusCode status code to send
          * @returns updated HttpResponseApi instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
@@ -293,7 +279,6 @@ declare module '@azure/functions' {
         sendStatus(statusCode: string | number): HttpResponseApi;
         /**
          * Sets the 'Content-Type' header to 'application/json' then calls send(body)
-         * @param body (optional) body content to send
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
