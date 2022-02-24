@@ -216,7 +216,8 @@ declare module '@azure/functions' {
         enableContentNegotiation?: boolean;
     }
     /**
-     * Http response object and methods. Provided to your function when using HTTP triggers.
+     * Http response object and methods.
+     * This is the default of the res property in the Context object provided to your function when using HTTP triggers.
      */
     export interface HttpResponseApi extends HttpResponseBase {
         /**
@@ -305,7 +306,8 @@ declare module '@azure/functions' {
         json(body?: any): void;
     }
     /**
-     * Http response object. Set by your function when using HTTP triggers.
+     * Http response object.
+     * This is not the default on the Context object, but you may replace context.res with an object of this type when using HTTP triggers.
      */
     export interface HttpResponseObject extends HttpResponseBase {
         /**
