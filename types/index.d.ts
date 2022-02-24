@@ -254,6 +254,12 @@ declare module '@azure/functions' {
          * @default 200
          */
         statusCode?: number | string;
+        /**
+         * Enables content negotiation using ASP.NET core if true
+         * If false, treat response as raw (default)
+         * @default false
+         */
+         enableContentNegotiation?: boolean;
     }
     /**
      * Http response object and methods.
