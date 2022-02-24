@@ -190,7 +190,7 @@ declare module '@azure/functions' {
     /**
      * HTTP response object
      */
-    export interface IResponse {
+    export interface HttpResponseBase {
         /**
          * HTTP response headers.
          */
@@ -218,7 +218,7 @@ declare module '@azure/functions' {
     /**
      * Http response object and methods. Provided to your function when using HTTP triggers.
      */
-    export interface HttpResponseApi extends IResponse {
+    export interface HttpResponseApi extends HttpResponseBase {
         /**
          * Sets the HTTP response status code
          * @param statusCode the status code to set
@@ -307,7 +307,7 @@ declare module '@azure/functions' {
     /**
      * Http response object. Set by your function when using HTTP triggers.
      */
-    export interface HttpResponseObject extends IResponse {
+    export interface HttpResponseObject extends HttpResponseBase {
         /**
          * HTTP response status code
          * @default 200
