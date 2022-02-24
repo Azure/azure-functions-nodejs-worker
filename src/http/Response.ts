@@ -1,12 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-<<<<<<< HEAD
 import { Cookie, HttpResponseApi } from '@azure/functions';
-=======
-import { Cookie } from '@azure/functions';
 import { HeaderName, MediaType } from '../constants';
->>>>>>> v3.x
 
 export class Response implements HttpResponseApi {
     statusCode?: string | number;
