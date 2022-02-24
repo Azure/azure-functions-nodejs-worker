@@ -5,7 +5,6 @@ import { Context } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
-import { isFunction } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../src/Context';
 import { FunctionInfo } from '../src/FunctionInfo';
@@ -40,7 +39,7 @@ describe('Context', () => {
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
 
-        const { context, inputs } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
+        const { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
         _context = context;
     });
 
@@ -244,8 +243,8 @@ describe('Context', () => {
         sinon.assert.calledWith(_resultCallback, null, { bindings: {}, return: 'hello' });
     });
 
-    it('function logs error on calling context.done more than once', () => {
-        callUserFunc(BasicCallback.callbackTwice, _context);
+    it('function logs error on calling context.done more than once', async () => {
+        await callUserFunc(BasicCallback.callbackTwice, _context);
         sinon.assert.calledOnce(_logger);
         sinon.assert.calledWith(
             _logger,
@@ -255,8 +254,8 @@ describe('Context', () => {
         );
     });
 
-    it('function logs error on calling context.log after context.done() called', () => {
-        callUserFunc(BasicCallback.callbackOnce, _context);
+    it('function logs error on calling context.log after context.done() called', async () => {
+        await callUserFunc(BasicCallback.callbackOnce, _context);
         _context.log('');
         sinon.assert.calledTwice(_logger);
         sinon.assert.calledWith(
@@ -279,14 +278,14 @@ describe('Context', () => {
         );
     });
 
-    it('function calls callback correctly with bindings', () => {
-        callUserFunc(BasicCallback.callbackOnce, _context);
+    it('function calls callback correctly with bindings', async () => {
+        await callUserFunc(BasicCallback.callbackOnce, _context);
         sinon.assert.calledOnce(_resultCallback);
         sinon.assert.calledWith(_resultCallback, undefined, { bindings: { hello: 'world' }, return: undefined });
     });
 
-    it('empty function does not call callback', () => {
-        callUserFunc(BasicCallback.callbackNone, _context);
+    it('empty function does not call callback', async () => {
+        await callUserFunc(BasicCallback.callbackNone, _context);
         sinon.assert.notCalled(_resultCallback);
     });
 });
@@ -297,7 +296,7 @@ class BasicAsync {
         context.done();
     }
 
-    public static async asyncPlainFunction(context: Context) {
+    public static async asyncPlainFunction(_context: Context) {
         return 'hello';
     }
 }
@@ -314,13 +313,13 @@ class BasicCallback {
         context.done();
     }
 
-    public static callbackNone(context) {}
+    public static callbackNone(_context) {}
 }
 
 // Does logic in WorkerChannel to call the user function
 function callUserFunc(myFunc, context: Context): Promise<any> {
     let result = myFunc(context);
-    if (result && isFunction(result.then)) {
+    if (result && typeof result.then === 'function') {
         result = result
             .then((result) => (<any>context.done)(null, result, true))
             .catch((err) => (<any>context.done)(err, null, true));

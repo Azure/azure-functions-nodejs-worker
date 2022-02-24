@@ -1,7 +1,12 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+<<<<<<< HEAD
 import { Cookie, HttpResponseApi } from '@azure/functions';
+=======
+import { Cookie } from '@azure/functions';
+import { HeaderName, MediaType } from '../constants';
+>>>>>>> v3.x
 
 export class Response implements HttpResponseApi {
     statusCode?: string | number;
@@ -51,11 +56,11 @@ export class Response implements HttpResponseApi {
     }
 
     type(type) {
-        return this.set('content-type', type);
+        return this.set(HeaderName.contentType, type);
     }
 
     json(body) {
-        this.type('application/json');
+        this.type(MediaType.json);
         this.send(body);
         return;
     }
@@ -67,13 +72,13 @@ export class Response implements HttpResponseApi {
 
     private setContentType() {
         if (this.body !== undefined) {
-            if (this.get('content-type')) {
+            if (this.get(HeaderName.contentType)) {
                 // use user defined content type, if exists
                 return;
             }
 
             if (Buffer.isBuffer(this.body)) {
-                this.type('application/octet-stream');
+                this.type(MediaType.octetStream);
             }
         }
     }

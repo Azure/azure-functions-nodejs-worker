@@ -1,32 +1,27 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
+import * as mock from 'mock-require';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionLoader } from '../src/FunctionLoader';
-import { WorkerChannel } from '../src/WorkerChannel';
-import mock = require('mock-require');
-const chai = require('chai');
 const expect = chai.expect;
-chai.use(require('chai-as-promised'));
+chai.use(chaiAsPromised);
 
 describe('FunctionLoader', () => {
-    let channel: WorkerChannel;
     let loader: FunctionLoader;
-    let require;
-    let functions;
-    let context, logs, bindingValues;
+    let context, logs;
 
     beforeEach(() => {
         loader = new FunctionLoader();
         logs = [];
-        bindingValues = {};
         context = {
             _inputs: [],
             bindings: {},
             log: (message) => logs.push(message),
             bind: (val, cb) => {
-                bindingValues = val;
                 cb && cb(val);
             },
         };

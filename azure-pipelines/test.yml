@@ -93,10 +93,10 @@ jobs:
     inputs:
       version: 6.0.x
   - pwsh: |
-      .\setup-e2e-tests.ps1
+      .\scripts\setup-e2e-tests.ps1
     displayName: 'Setup e2e tests'
   - powershell: |
-      .\run-e2e-tests.ps1
+      .\scripts\run-e2e-tests.ps1
     displayName: 'Run e2e tests'
     env:
       AzureWebJobsStorage: $(AzureWebJobsStorage)

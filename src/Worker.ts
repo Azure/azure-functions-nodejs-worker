@@ -2,14 +2,11 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
 import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
 import { WorkerChannel } from './WorkerChannel';
-
-import Status = rpc.StatusResult.Status;
 
 export function startNodeWorker(args) {
     const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
@@ -19,11 +16,11 @@ export function startNodeWorker(args) {
         );
         // Find which arguments are in error
         const debugInfo: string[] = [];
-        if (!host) debugInfo.push(`\'hostName\' is ${host}`);
-        if (!port) debugInfo.push(`\'port\' is ${port}`);
-        if (!workerId) debugInfo.push(`\'workerId\' is ${workerId}`);
-        if (!requestId) debugInfo.push(`\'requestId\' is ${requestId}`);
-        if (!grpcMaxMessageLength) debugInfo.push(`\'grpcMaxMessageLength\' is ${grpcMaxMessageLength}`);
+        if (!host) debugInfo.push(`'hostName' is ${host}`);
+        if (!port) debugInfo.push(`'port' is ${port}`);
+        if (!workerId) debugInfo.push(`'workerId' is ${workerId}`);
+        if (!requestId) debugInfo.push(`'requestId' is ${requestId}`);
+        if (!grpcMaxMessageLength) debugInfo.push(`'grpcMaxMessageLength' is ${grpcMaxMessageLength}`);
 
         throw new InternalException(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
     }
@@ -39,7 +36,7 @@ export function startNodeWorker(args) {
         throw new InternalException(exception);
     }
 
-    const workerChannel = new WorkerChannel(workerId, eventStream, new FunctionLoader());
+    new WorkerChannel(workerId, eventStream, new FunctionLoader());
 
     eventStream.write({
         requestId: requestId,

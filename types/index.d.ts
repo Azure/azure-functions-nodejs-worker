@@ -178,7 +178,53 @@ declare module '@azure/functions' {
          * The HTTP request body as a UTF-8 string.
          */
         rawBody?: any;
+
+        /**
+         * Parses the body and returns an object representing a form
+         * @throws if the content type is not "multipart/form-data" or "application/x-www-form-urlencoded"
+         */
+        parseFormBody(): Form;
     }
+
+    export interface Form extends Iterable<[string, FormPart]> {
+        /**
+         * Returns the value of the first name-value pair whose name is `name`. If there are no such pairs, `null` is returned.
+         */
+        get(name: string): FormPart | null;
+
+        /**
+         * Returns the values of all name-value pairs whose name is `name`. If there are no such pairs, an empty array is returned.
+         */
+        getAll(name: string): FormPart[];
+
+        /**
+         * Returns `true` if there is at least one name-value pair whose name is `name`.
+         */
+        has(name: string): boolean;
+
+        /**
+         * The number of parts in this form
+         */
+        length: number;
+    }
+
+    export interface FormPart {
+        /**
+         * The value for this part of the form
+         */
+        value: Buffer;
+
+        /**
+         * The file name for this part of the form, if specified
+         */
+        fileName?: string;
+
+        /**
+         * The content type for this part of the form, assumed to be "text/plain" if not specified
+         */
+        contentType?: string;
+    }
+
     /**
      * Possible values for an HTTP request method.
      */

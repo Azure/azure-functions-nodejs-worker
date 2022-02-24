@@ -38,7 +38,7 @@ else
     }
 }
 
-$FUNC_CLI_DIRECTORY = Join-Path $PSScriptRoot 'Azure.Functions.Cli'
+$FUNC_CLI_DIRECTORY = Join-Path $PSScriptRoot '..' 'Azure.Functions.Cli'
 
 Write-Host 'Deleting Functions Core Tools if exists...'
 Remove-Item -Force "$FUNC_CLI_DIRECTORY.zip" -ErrorAction Ignore
@@ -73,7 +73,7 @@ if ($UseCoreToolsBuildFromIntegrationTests.IsPresent)
 $funcExePath = Join-Path $FUNC_CLI_DIRECTORY $FUNC_EXE_NAME
 
 Write-Host "Installing extensions..."
-Push-Location "$PSScriptRoot/test/end-to-end/testFunctionApp"
+Push-Location "$PSScriptRoot/../test/end-to-end/testFunctionApp"
 
 if ($IsMacOS -or $IsLinux) {
     chmod +x $funcExePath
