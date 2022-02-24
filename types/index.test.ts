@@ -3,7 +3,7 @@
 
 // This file will be compiled by multiple versions of TypeScript as decribed in ./test/TypesTests.ts to verify there are no errors
 
-import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, HttpResponseApi, Timer } from '@azure/functions';
+import { AzureFunction, Context, Cookie, HttpMethod, HttpRequest, HttpResponseApi, HttpResponseObject, Timer } from '@azure/functions';
 const get: HttpMethod = 'GET';
 
 const runHttp: AzureFunction = async function (context: Context, req: HttpRequest) {
@@ -78,6 +78,7 @@ const cookieFunction: AzureFunction = async function (context: Context) {
 };
 
 const httpResponseObjectFunction: AzureFunction = async function (context: Context) {
+    context.res = context.res as HttpResponseObject;
     context.res = {
         body: {
             hello: 'world',
@@ -99,6 +100,7 @@ const httpResponseObjectFunction: AzureFunction = async function (context: Conte
 };
 
 const statusStringFunction: AzureFunction = async function (context: Context) {
+    context.res = context.res as HttpResponseObject;
     context.res = {
         status: '200',
         statusCode: '200',
