@@ -58,7 +58,7 @@ describe('functionLoadRequest', () => {
                 result: {
                     status: rpc.StatusResult.Status.Failure,
                     exception: {
-                        message: "Worker was unable to load function undefined: 'Error: Function throws error'",
+                        message: "Worker was unable to load function undefined: 'Function throws error'",
                         stackTrace: '<STACKTRACE>',
                     },
                 },

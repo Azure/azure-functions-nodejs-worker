@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { ensureErrorType } from '../utils/ensureErrorType';
 import { toRpcStatus } from '../utils/toRpcStatus';
 import { WorkerChannel } from '../WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -14,24 +15,25 @@ import LogLevel = rpc.RpcLog.Level;
  */
 export async function functionLoadRequest(channel: WorkerChannel, requestId: string, msg: rpc.FunctionLoadRequest) {
     if (msg.functionId && msg.metadata) {
-        let err, errorMessage;
+        let error: Error | null | undefined;
+        let errorMessage: string | undefined;
         try {
             await channel.functionLoader.load(msg.functionId, msg.metadata);
-        } catch (exception) {
-            errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${exception}'`;
+        } catch (err) {
+            error = ensureErrorType(err);
+            errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${error.message}'`;
             channel.log({
                 message: errorMessage,
                 level: LogLevel.Error,
                 logCategory: LogCategory.System,
             });
-            err = exception;
         }
 
         channel.eventStream.write({
             requestId: requestId,
             functionLoadResponse: {
                 functionId: msg.functionId,
-                result: toRpcStatus(err, errorMessage),
+                result: toRpcStatus(error, errorMessage),
             },
         });
     }

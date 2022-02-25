@@ -4,6 +4,7 @@
 import * as parseArgs from 'minimist';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
+import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
 import { WorkerChannel } from './WorkerChannel';
@@ -31,9 +32,11 @@ export function startNodeWorker(args) {
     let eventStream;
     try {
         eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
-    } catch (exception) {
-        exception.message = 'Error creating GRPC event stream: ' + exception.message;
-        throw new InternalException(exception);
+    } catch (err) {
+        const error = ensureErrorType(err);
+        error.isAzureFunctionsInternalException = true;
+        error.message = 'Error creating GRPC event stream: ' + error.message;
+        throw error;
     }
 
     new WorkerChannel(workerId, eventStream, new FunctionLoader());
@@ -45,13 +48,14 @@ export function startNodeWorker(args) {
         },
     });
 
-    process.on('uncaughtException', (err) => {
+    process.on('uncaughtException', (err: unknown) => {
+        const error = ensureErrorType(err);
         let errorMessage: string;
-        if ((<InternalException>err).isAzureFunctionsInternalException) {
-            errorMessage = `Worker ${workerId} uncaught exception: ${err.stack || err}`;
+        if (error.isAzureFunctionsInternalException) {
+            errorMessage = `Worker ${workerId} uncaught exception: ${error.stack || err}`;
         } else {
             errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${
-                err.stack || err
+                error.stack || err
             }`;
         }
 

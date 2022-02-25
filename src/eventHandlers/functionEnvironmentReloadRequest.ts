@@ -23,7 +23,7 @@ export function functionEnvironmentReloadRequest(
         logCategory: LogCategory.System,
     });
 
-    let error = null;
+    let error: unknown;
     try {
         process.env = Object.assign({}, msg.environmentVariables);
         // Change current working directory
@@ -35,8 +35,8 @@ export function functionEnvironmentReloadRequest(
             });
             process.chdir(msg.functionAppDirectory);
         }
-    } catch (e) {
-        error = e;
+    } catch (err) {
+        error = err;
     }
 
     const functionEnvironmentReloadResponse: rpc.IFunctionEnvironmentReloadResponse = {

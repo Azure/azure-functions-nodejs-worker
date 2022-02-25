@@ -202,7 +202,7 @@ export function toNullableTimestamp(
                     },
                 };
             }
-        } catch (e) {
+        } catch {
             throw new InternalException(
                 `A 'number' or 'Date' input was expected instead of a '${typeof dateTime}'. Cannot parse value of '${propertyName}'.`
             );
