@@ -3,11 +3,10 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { logColdStartWarning } from '../../src/eventHandlers/workerInitRequest';
 import { WorkerChannel } from '../../src/WorkerChannel';
-import { beforeEventHandlerTest } from './beforeEventHandlerTest';
+import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -16,11 +15,15 @@ describe('workerInitRequest', () => {
     let channel: WorkerChannel;
     let stream: TestEventStream;
 
-    beforeEach(() => {
-        ({ stream, channel } = beforeEventHandlerTest());
+    before(() => {
+        ({ stream, channel } = beforeEventHandlerSuite());
     });
 
-    it('responds to init', () => {
+    afterEach(async () => {
+        await stream.afterEachEventHandlerTest();
+    });
+
+    it('responds to init', async () => {
         const initMessage = {
             requestId: 'id',
             workerInitRequest: {
@@ -36,6 +39,8 @@ describe('workerInitRequest', () => {
                     RpcHttpTriggerMetadataRemoved: 'true',
                     IgnoreEmptyValuedRpcHttpHeaders: 'true',
                     UseNullableValueDictionaryForHttp: 'true',
+                    WorkerStatus: 'true',
+                    TypedDataCollection: 'true',
                 },
                 result: {
                     status: rpc.StatusResult.Status.Success,
@@ -43,10 +48,8 @@ describe('workerInitRequest', () => {
             },
         };
 
-        expectedOutput.workerInitResponse.capabilities['TypedDataCollection'] = 'true';
-
         stream.addTestMessage(initMessage);
-        sinon.assert.calledWith(stream.written);
+        await stream.assertCalledWith(expectedOutput);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
@@ -72,9 +75,7 @@ describe('workerInitRequest', () => {
 
         logColdStartWarning(channel, 10);
 
-        // Set slight delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
+        await stream.assertCalledWith({
             rpcLog: {
                 message:
                     'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',

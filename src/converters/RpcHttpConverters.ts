@@ -62,7 +62,10 @@ export function toRpcHttp(inputMessage): rpc.ITypedData {
     const httpMessage: rpc.IRpcHttp = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);
-    const status = inputMessage.statusCode || inputMessage.status;
+    let status = inputMessage.statusCode;
+    if (typeof inputMessage.status !== 'function') {
+        status ||= inputMessage.status;
+    }
     httpMessage.statusCode = status && status.toString();
     httpMessage.body = toTypedData(inputMessage.body);
     return { http: httpMessage };

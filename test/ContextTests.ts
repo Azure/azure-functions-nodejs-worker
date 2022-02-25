@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
@@ -25,22 +24,12 @@ const timerTriggerInput: rpc.IParameterBinding = {
 };
 
 describe('Context', () => {
-    let _context: Context;
     let _logger: any;
     let _resultCallback: any;
 
     beforeEach(() => {
-        const info: FunctionInfo = new FunctionInfo({ name: 'test' });
-        const msg: rpc.IInvocationRequest = {
-            functionId: 'id',
-            invocationId: '1',
-            inputData: [],
-        };
         _logger = sinon.spy();
         _resultCallback = sinon.spy();
-
-        const { context } = CreateContextAndInputs(info, msg, _logger, _resultCallback);
-        _context = context;
     });
 
     it('camelCases timer trigger input when appropriate', async () => {
@@ -225,104 +214,4 @@ describe('Context', () => {
         expect(bindingData.query.query1).to.equal('value1');
         expect(context.invocationId).to.equal('1');
     });
-
-    it('async function logs error on calling context.done', async () => {
-        await callUserFunc(BasicAsync.asyncAndCallback, _context);
-        sinon.assert.calledOnce(_logger);
-        sinon.assert.calledWith(
-            _logger,
-            rpc.RpcLog.Level.Error,
-            rpc.RpcLog.RpcLogCategory.User,
-            "Error: Choose either to return a promise or call 'done'.  Do not use both in your script."
-        );
-    });
-
-    it('async function calls callback and returns value without context.done', async () => {
-        await callUserFunc(BasicAsync.asyncPlainFunction, _context);
-        sinon.assert.calledOnce(_resultCallback);
-        sinon.assert.calledWith(_resultCallback, null, { bindings: {}, return: 'hello' });
-    });
-
-    it('function logs error on calling context.done more than once', async () => {
-        await callUserFunc(BasicCallback.callbackTwice, _context);
-        sinon.assert.calledOnce(_logger);
-        sinon.assert.calledWith(
-            _logger,
-            rpc.RpcLog.Level.Error,
-            rpc.RpcLog.RpcLogCategory.User,
-            "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'."
-        );
-    });
-
-    it('function logs error on calling context.log after context.done() called', async () => {
-        await callUserFunc(BasicCallback.callbackOnce, _context);
-        _context.log('');
-        sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(
-            _logger,
-            rpc.RpcLog.Level.Warning,
-            rpc.RpcLog.RpcLogCategory.System,
-            "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 "
-        );
-    });
-
-    it('function logs error on calling context.log from non-awaited async call', async () => {
-        await callUserFunc(BasicAsync.asyncPlainFunction, _context);
-        _context.log('');
-        sinon.assert.calledTwice(_logger);
-        sinon.assert.calledWith(
-            _logger,
-            rpc.RpcLog.Level.Warning,
-            rpc.RpcLog.RpcLogCategory.System,
-            "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: test. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 "
-        );
-    });
-
-    it('function calls callback correctly with bindings', async () => {
-        await callUserFunc(BasicCallback.callbackOnce, _context);
-        sinon.assert.calledOnce(_resultCallback);
-        sinon.assert.calledWith(_resultCallback, undefined, { bindings: { hello: 'world' }, return: undefined });
-    });
-
-    it('empty function does not call callback', async () => {
-        await callUserFunc(BasicCallback.callbackNone, _context);
-        sinon.assert.notCalled(_resultCallback);
-    });
 });
-
-// async test functions
-class BasicAsync {
-    public static async asyncAndCallback(context: Context) {
-        context.done();
-    }
-
-    public static async asyncPlainFunction(_context: Context) {
-        return 'hello';
-    }
-}
-
-// sync test functions
-class BasicCallback {
-    public static callbackTwice(context) {
-        context.done();
-        context.done();
-    }
-
-    public static callbackOnce(context) {
-        context.bindings = { hello: 'world' };
-        context.done();
-    }
-
-    public static callbackNone(_context) {}
-}
-
-// Does logic in WorkerChannel to call the user function
-function callUserFunc(myFunc, context: Context): Promise<any> {
-    let result = myFunc(context);
-    if (result && typeof result.then === 'function') {
-        result = result
-            .then((result) => (<any>context.done)(null, result, true))
-            .catch((err) => (<any>context.done)(err, null, true));
-    }
-    return result;
-}
