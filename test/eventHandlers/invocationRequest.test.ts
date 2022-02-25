@@ -169,7 +169,7 @@ namespace Msg {
             invocationId: '1',
             message: "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.",
             level: LogLevel.Error,
-            logCategory: LogCategory.User,
+            logCategory: LogCategory.System,
         },
     };
     export const duplicateDoneLog: rpc.IStreamingMessage = {
@@ -178,7 +178,7 @@ namespace Msg {
             invocationId: '1',
             message: "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.",
             level: LogLevel.Error,
-            logCategory: LogCategory.User,
+            logCategory: LogCategory.System,
         },
     };
     export const unexpectedLogAfterDoneLog: rpc.IStreamingMessage = {
@@ -438,8 +438,8 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
-            Msg.asyncAndDoneLog
+            Msg.asyncAndDoneLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 
@@ -452,8 +452,8 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
-            Msg.duplicateDoneLog
+            Msg.duplicateDoneLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 
@@ -466,9 +466,9 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
             Msg.unexpectedLogAfterDoneLog,
-            Msg.userTestLog
+            Msg.userTestLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 

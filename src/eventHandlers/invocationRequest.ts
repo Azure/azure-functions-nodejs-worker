@@ -3,8 +3,9 @@
 
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { CreateContextAndInputs, LogCallback, ResultCallback } from '../Context';
+import { CreateContextAndInputs } from '../Context';
 import { toTypedData } from '../converters';
+import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
 import { toRpcStatus } from '../utils/toRpcStatus';
 import { WorkerChannel } from '../WorkerChannel';
@@ -16,9 +17,20 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export function invocationRequest(channel: WorkerChannel, requestId: string, msg: rpc.IInvocationRequest) {
+export async function invocationRequest(channel: WorkerChannel, requestId: string, msg: rpc.IInvocationRequest) {
+    const response: rpc.IInvocationResponse = {
+        invocationId: msg.invocationId,
+        result: toRpcStatus(),
+    };
+    // explicitly set outputData to empty array to concat later
+    response.outputData = [];
+
+    let isDone = false;
+    let resultIsPromise = false;
+
     const info = channel.functionLoader.getInfo(nonNullProp(msg, 'functionId'));
-    const logCallback: LogCallback = (level, category, ...args) => {
+
+    function log(level: LogLevel, category: LogCategory, ...args: any[]) {
         channel.log({
             invocationId: msg.invocationId,
             category: `${info.name}.Invocation`,
@@ -26,18 +38,68 @@ export function invocationRequest(channel: WorkerChannel, requestId: string, msg
             level: level,
             logCategory: category,
         });
-    };
+    }
+    function systemLog(level: LogLevel, ...args: any[]) {
+        log(level, LogCategory.System, ...args);
+    }
+    function userLog(level: LogLevel, ...args: any[]) {
+        if (isDone) {
+            let badAsyncMsg =
+                "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
+            badAsyncMsg += `Function name: ${info.name}. Invocation Id: ${msg.invocationId}. `;
+            badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
+            systemLog(LogLevel.Warning, badAsyncMsg);
+        }
+        log(level, LogCategory.User, ...args);
+    }
 
     // Log invocation details to ensure the invocation received by node worker
-    logCallback(LogLevel.Debug, LogCategory.System, 'Received FunctionInvocationRequest');
+    systemLog(LogLevel.Debug, 'Received FunctionInvocationRequest');
 
-    const resultCallback: ResultCallback = (err: unknown, result) => {
-        const response: rpc.IInvocationResponse = {
-            invocationId: msg.invocationId,
-            result: toRpcStatus(err),
-        };
-        // explicitly set outputData to empty array to concat later
-        response.outputData = [];
+    function onDone(): void {
+        if (isDone) {
+            const message = resultIsPromise
+                ? "Error: Choose either to return a promise or call 'done'.  Do not use both in your script."
+                : "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.";
+            systemLog(LogLevel.Error, message);
+        }
+        isDone = true;
+    }
+
+    const { context, inputs, doneEmitter } = CreateContextAndInputs(info, msg, userLog);
+    try {
+        const legacyDoneTask = new Promise((resolve, reject) => {
+            doneEmitter.on('done', (err?: unknown, result?: any) => {
+                onDone();
+                if (isError(err)) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        let userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
+        userFunction = channel.runInvocationRequestBefore(context, userFunction);
+        let rawResult = userFunction(context, ...inputs);
+        resultIsPromise = rawResult && typeof rawResult.then === 'function';
+        let resultTask: Promise<any>;
+        if (resultIsPromise) {
+            rawResult = Promise.resolve(rawResult).then((r) => {
+                onDone();
+                return r;
+            });
+            resultTask = Promise.race([rawResult, legacyDoneTask]);
+        } else {
+            resultTask = legacyDoneTask;
+        }
+
+        const result = await resultTask;
+
+        // Allow HTTP response from context.res if HTTP response is not defined from the context.bindings object
+        if (info.httpOutputName && context.res && context.bindings[info.httpOutputName] === undefined) {
+            context.bindings[info.httpOutputName] = context.res;
+        }
 
         // As legacy behavior, falsy values get serialized to `null` in AzFunctions.
         // This breaks Durable Functions expectations, where customers expect any
@@ -46,86 +108,61 @@ export function invocationRequest(channel: WorkerChannel, requestId: string, msg
         // values get serialized.
         const isDurableBinding = info?.bindings?.name?.type == 'activityTrigger';
 
-        try {
-            if (result || (isDurableBinding && result != null)) {
-                const returnBinding = info.getReturnBinding();
-                // Set results from return / context.done
-                if (result.return || (isDurableBinding && result.return != null)) {
-                    // $return binding is found: return result data to $return binding
-                    if (returnBinding) {
-                        response.returnValue = returnBinding.converter(result.return);
-                        // $return binding is not found: read result as object of outputs
-                    } else {
-                        response.outputData = Object.keys(info.outputBindings)
-                            .filter((key) => result.return[key] !== undefined)
-                            .map(
-                                (key) =>
-                                    <rpc.IParameterBinding>{
-                                        name: key,
-                                        data: info.outputBindings[key].converter(result.return[key]),
-                                    }
-                            );
-                    }
-                    // returned value does not match any output bindings (named or $return)
-                    // if not http, pass along value
-                    if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
-                        response.returnValue = toTypedData(result.return);
-                    }
-                }
-                // Set results from context.bindings
-                if (result.bindings) {
-                    response.outputData = response.outputData.concat(
-                        Object.keys(info.outputBindings)
-                            // Data from return prioritized over data from context.bindings
-                            .filter((key) => {
-                                const definedInBindings: boolean = result.bindings[key] !== undefined;
-                                const hasReturnValue = !!result.return;
-                                const hasReturnBinding = !!returnBinding;
-                                const definedInReturn: boolean =
-                                    hasReturnValue && !hasReturnBinding && result.return[key] !== undefined;
-                                return definedInBindings && !definedInReturn;
-                            })
-                            .map(
-                                (key) =>
-                                    <rpc.IParameterBinding>{
-                                        name: key,
-                                        data: info.outputBindings[key].converter(result.bindings[key]),
-                                    }
-                            )
+        const returnBinding = info.getReturnBinding();
+        // Set results from return / context.done
+        if (result || (isDurableBinding && result != null)) {
+            // $return binding is found: return result data to $return binding
+            if (returnBinding) {
+                response.returnValue = returnBinding.converter(result);
+                // $return binding is not found: read result as object of outputs
+            } else {
+                response.outputData = Object.keys(info.outputBindings)
+                    .filter((key) => result[key] !== undefined)
+                    .map(
+                        (key) =>
+                            <rpc.IParameterBinding>{
+                                name: key,
+                                data: info.outputBindings[key].converter(result[key]),
+                            }
                     );
-                }
             }
-        } catch (err) {
-            response.result = toRpcStatus(err);
+            // returned value does not match any output bindings (named or $return)
+            // if not http, pass along value
+            if (!response.returnValue && response.outputData.length == 0 && !info.hasHttpTrigger) {
+                response.returnValue = toTypedData(result);
+            }
         }
-        channel.eventStream.write({
-            requestId: requestId,
-            invocationResponse: response,
-        });
-
-        channel.runInvocationRequestAfter(context);
-    };
-
-    const { context, inputs } = CreateContextAndInputs(info, msg, logCallback, resultCallback);
-    let userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
-
-    userFunction = channel.runInvocationRequestBefore(context, userFunction);
-
-    // catch user errors from the same async context in the event loop and correlate with invocation
-    // throws from asynchronous work (setTimeout, etc) are caught by 'unhandledException' and cannot be correlated with invocation
-    try {
-        const result = userFunction(context, ...inputs);
-
-        if (result && typeof result.then === 'function') {
-            result
-                .then((result) => {
-                    (<any>context.done)(null, result, true);
-                })
-                .catch((err) => {
-                    (<any>context.done)(err, null, true);
-                });
+        // Set results from context.bindings
+        if (context.bindings) {
+            response.outputData = response.outputData.concat(
+                Object.keys(info.outputBindings)
+                    // Data from return prioritized over data from context.bindings
+                    .filter((key) => {
+                        const definedInBindings: boolean = context.bindings[key] !== undefined;
+                        const hasReturnValue = !!result;
+                        const hasReturnBinding = !!returnBinding;
+                        const definedInReturn: boolean =
+                            hasReturnValue && !hasReturnBinding && result[key] !== undefined;
+                        return definedInBindings && !definedInReturn;
+                    })
+                    .map(
+                        (key) =>
+                            <rpc.IParameterBinding>{
+                                name: key,
+                                data: info.outputBindings[key].converter(context.bindings[key]),
+                            }
+                    )
+            );
         }
     } catch (err) {
-        resultCallback(err);
+        response.result = toRpcStatus(err);
+        isDone = true;
     }
+
+    channel.eventStream.write({
+        requestId: requestId,
+        invocationResponse: response,
+    });
+
+    channel.runInvocationRequestAfter(context);
 }

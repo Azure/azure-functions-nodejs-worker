@@ -22,16 +22,12 @@ import {
 import { FunctionInfo } from './FunctionInfo';
 import { Request } from './http/Request';
 import { Response } from './http/Response';
+import EventEmitter = require('events');
 import LogLevel = rpc.RpcLog.Level;
-import LogCategory = rpc.RpcLog.RpcLogCategory;
 
-export function CreateContextAndInputs(
-    info: FunctionInfo,
-    request: rpc.IInvocationRequest,
-    logCallback: LogCallback,
-    callback: ResultCallback
-) {
-    const context = new InvocationContext(info, request, logCallback, callback);
+export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback) {
+    const doneEmitter = new EventEmitter();
+    const context = new InvocationContext(info, request, logCallback, doneEmitter);
 
     const bindings: ContextBindings = {};
     const inputs: any[] = [];
@@ -76,6 +72,7 @@ export function CreateContextAndInputs(
     return {
         context: <Context>context,
         inputs: inputs,
+        doneEmitter,
     };
 }
 
@@ -95,7 +92,7 @@ class InvocationContext implements Context {
         info: FunctionInfo,
         request: rpc.IInvocationRequest,
         logCallback: LogCallback,
-        callback: ResultCallback
+        doneEmitter: EventEmitter
     ) {
         this.invocationId = <string>request.invocationId;
         this.traceContext = fromRpcTraceContext(request.traceContext);
@@ -107,77 +104,22 @@ class InvocationContext implements Context {
         };
         this.executionContext = executionContext;
         this.bindings = {};
-        let _done = false;
-        let _promise = false;
 
         // Log message that is tied to function invocation
-        this.log = Object.assign(
-            (...args: any[]) => logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
-            {
-                error: (...args: any[]) =>
-                    logWithAsyncCheck(_done, logCallback, LogLevel.Error, executionContext, ...args),
-                warn: (...args: any[]) =>
-                    logWithAsyncCheck(_done, logCallback, LogLevel.Warning, executionContext, ...args),
-                info: (...args: any[]) =>
-                    logWithAsyncCheck(_done, logCallback, LogLevel.Information, executionContext, ...args),
-                verbose: (...args: any[]) =>
-                    logWithAsyncCheck(_done, logCallback, LogLevel.Trace, executionContext, ...args),
-            }
-        );
+        this.log = Object.assign((...args: any[]) => logCallback(LogLevel.Information, ...args), {
+            error: (...args: any[]) => logCallback(LogLevel.Error, ...args),
+            warn: (...args: any[]) => logCallback(LogLevel.Warning, ...args),
+            info: (...args: any[]) => logCallback(LogLevel.Information, ...args),
+            verbose: (...args: any[]) => logCallback(LogLevel.Trace, ...args),
+        });
 
         this.bindingData = getNormalizedBindingData(request);
         this.bindingDefinitions = getBindingDefinitions(info);
 
-        // isPromise is a hidden parameter that we set to true in the event of a returned promise
-        this.done = (err?: any, result?: any, isPromise?: boolean) => {
-            _promise = isPromise === true;
-            if (_done) {
-                if (_promise) {
-                    logCallback(
-                        LogLevel.Error,
-                        LogCategory.User,
-                        "Error: Choose either to return a promise or call 'done'.  Do not use both in your script."
-                    );
-                } else {
-                    logCallback(
-                        LogLevel.Error,
-                        LogCategory.User,
-                        "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'."
-                    );
-                }
-                return;
-            }
-            _done = true;
-
-            // Allow HTTP response from context.res if HTTP response is not defined from the context.bindings object
-            if (info.httpOutputName && this.res && this.bindings[info.httpOutputName] === undefined) {
-                this.bindings[info.httpOutputName] = this.res;
-            }
-
-            callback(err, {
-                return: result,
-                bindings: this.bindings,
-            });
+        this.done = (err?: unknown, result?: any) => {
+            doneEmitter.emit('done', err, result);
         };
     }
-}
-
-// Emit warning if trying to log after function execution is done.
-function logWithAsyncCheck(
-    done: boolean,
-    log: LogCallback,
-    level: LogLevel,
-    executionContext: ExecutionContext,
-    ...args: any[]
-) {
-    if (done) {
-        let badAsyncMsg =
-            "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
-        badAsyncMsg += `Function name: ${executionContext.functionName}. Invocation Id: ${executionContext.invocationId}. `;
-        badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
-        log(LogLevel.Warning, LogCategory.System, badAsyncMsg);
-    }
-    return log(level, LogCategory.User, ...args);
 }
 
 export interface InvocationResult {
@@ -185,11 +127,9 @@ export interface InvocationResult {
     bindings: ContextBindings;
 }
 
-export type DoneCallback = (err?: Error | string, result?: any) => void;
+export type DoneCallback = (err?: unknown, result?: any) => void;
 
-export type LogCallback = (level: LogLevel, category: rpc.RpcLog.RpcLogCategory, ...args: any[]) => void;
-
-export type ResultCallback = (err?: any, result?: InvocationResult) => void;
+export type LogCallback = (level: LogLevel, ...args: any[]) => void;
 
 export interface Dict<T> {
     [key: string]: T;
