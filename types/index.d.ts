@@ -257,8 +257,8 @@ declare module '@azure/functions' {
          */
         statusCode?: number | string;
         /**
-         * Enables content negotiation using ASP.NET core if true
-         * If false, treat response as raw (default)
+         * Enable content negotiation of response body if true
+         * If false, treat response body as raw
          * @default false
          */
         enableContentNegotiation?: boolean;
