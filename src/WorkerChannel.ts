@@ -1,25 +1,23 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context } from '@azure/functions';
+import { HookCallback } from '@azure/functions-worker';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
-
-type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
-type InvocationRequestAfter = (context: Context) => void;
+import Module = require('module');
 
 export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
-    private _invocationRequestBefore: InvocationRequestBefore[];
-    private _invocationRequestAfter: InvocationRequestAfter[];
+    private _preInvocationHooks: HookCallback[] = [];
+    private _postInvocationHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
-        this._invocationRequestBefore = [];
-        this._invocationRequestAfter = [];
+        this.initWorkerModule(this);
     }
 
     /**
@@ -33,32 +31,49 @@ export class WorkerChannel {
         });
     }
 
-    /**
-     * Register a patching function to be run before User Function is executed.
-     * Hook should return a patched version of User Function.
-     */
-    public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
-        this._invocationRequestBefore.push(beforeCb);
+    public registerHook(hookName: string, callback: HookCallback): Disposable {
+        const hooks = this.getHooks(hookName);
+        hooks.push(callback);
+        return new Disposable(() => {
+            const index = hooks.indexOf(callback);
+            if (index > -1) {
+                hooks.splice(index, 1);
+            }
+        });
     }
 
-    /**
-     * Register a function to be run after User Function resolves.
-     */
-    public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
-        this._invocationRequestAfter.push(afterCb);
-    }
-
-    public runInvocationRequestBefore(context: Context, userFunction: Function): Function {
-        let wrappedFunction = userFunction;
-        for (const before of this._invocationRequestBefore) {
-            wrappedFunction = before(context, wrappedFunction);
+    public async executeHooks(hookName: string, context: {}): Promise<void> {
+        const callbacks = this.getHooks(hookName);
+        for (const callback of callbacks) {
+            await callback(context);
         }
-        return wrappedFunction;
     }
 
-    public runInvocationRequestAfter(context: Context) {
-        for (const after of this._invocationRequestAfter) {
-            after(context);
+    private getHooks(hookName: string): HookCallback[] {
+        switch (hookName) {
+            case 'preInvocation':
+                return this._preInvocationHooks;
+            case 'postInvocation':
+                return this._postInvocationHooks;
+            default:
+                throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
+    }
+
+    private initWorkerModule(channel: WorkerChannel) {
+        const workerApi = {
+            registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
+            Disposable,
+        };
+
+        Module.prototype.require = new Proxy(Module.prototype.require, {
+            apply(target, thisArg, argArray) {
+                if (argArray[0] === '@azure/functions-worker') {
+                    return workerApi;
+                } else {
+                    return Reflect.apply(target, thisArg, argArray);
+                }
+            },
+        });
     }
 }

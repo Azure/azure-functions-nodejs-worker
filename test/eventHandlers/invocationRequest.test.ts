@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { AzureFunction, Context } from '@azure/functions';
+import * as workerTypes from '@azure/functions-worker';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from '../../src/FunctionInfo';
 import { FunctionLoader } from '../../src/FunctionLoader';
-import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -57,7 +57,7 @@ namespace Binding {
     };
     export const queue = {
         bindings: {
-            test: {
+            testOutput: {
                 type: 'queue',
                 direction: 1,
                 dataType: 1,
@@ -76,6 +76,8 @@ function addSuffix(asyncFunc: AzureFunction, callbackFunc: AzureFunction): [Azur
         [callbackFunc, ' (context.done)'],
     ];
 }
+
+let hookData: string;
 
 namespace TestFunc {
     const basicAsync = async (context: Context) => {
@@ -110,6 +112,27 @@ namespace TestFunc {
         context.done(null, { res: { body: { hello: 'world' } } });
     };
     export const resHttp = addSuffix(resHttpAsync, resHttpCallback);
+
+    const logHookDataAsync = async (context: Context) => {
+        hookData += 'invoc';
+        context.log(hookData);
+        return 'hello';
+    };
+    const logHookDataCallback = (context: Context) => {
+        hookData += 'invoc';
+        context.log(hookData);
+        context.done(null, 'hello');
+    };
+    export const logHookData = addSuffix(logHookDataAsync, logHookDataCallback);
+
+    const logInputAsync = async (context: Context, input: any) => {
+        context.log(input);
+    };
+    const logInputCallback = (context: Context, input: any) => {
+        context.log(input);
+        context.done();
+    };
+    export const logInput = addSuffix(logInputAsync, logInputCallback);
 
     const multipleBindingsAsync = async (context: Context) => {
         context.bindings.queueOutput = 'queue message';
@@ -191,15 +214,17 @@ namespace Msg {
             logCategory: LogCategory.System,
         },
     };
-    export const userTestLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            category: 'testFuncName.Invocation',
-            invocationId: '1',
-            message: 'testUserLog',
-            level: LogLevel.Information,
-            logCategory: LogCategory.User,
-        },
-    };
+    export function userTestLog(data = 'testUserLog'): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                category: 'testFuncName.Invocation',
+                invocationId: '1',
+                message: data,
+                level: LogLevel.Information,
+                logCategory: LogCategory.User,
+            },
+        };
+    }
     export const invocResFailed: rpc.IStreamingMessage = {
         requestId: 'testReqId',
         invocationResponse: {
@@ -245,31 +270,8 @@ namespace Msg {
     }
 }
 
-describe('invocationRequest', () => {
-    let channel: WorkerChannel;
-    let stream: TestEventStream;
-    let loader: sinon.SinonStubbedInstance<FunctionLoader>;
-
-    before(() => {
-        ({ stream, loader, channel } = beforeEventHandlerSuite());
-    });
-
-    afterEach(async () => {
-        await stream.afterEachEventHandlerTest();
-    });
-
-    function sendInvokeMessage(inputData?: rpc.IParameterBinding[] | null): void {
-        stream.addTestMessage({
-            requestId: 'testReqId',
-            invocationRequest: {
-                functionId: 'id',
-                invocationId: '1',
-                inputData: inputData,
-            },
-        });
-    }
-
-    const httpInputData = {
+namespace InputData {
+    export const http = {
         name: 'req',
         data: {
             data: 'http',
@@ -283,6 +285,47 @@ describe('invocationRequest', () => {
             },
         },
     };
+
+    export const string = {
+        name: 'testInput',
+        data: {
+            data: 'string',
+            string: 'testStringData',
+        },
+    };
+}
+
+describe('invocationRequest', () => {
+    let stream: TestEventStream;
+    let loader: sinon.SinonStubbedInstance<FunctionLoader>;
+    let workerApi: typeof workerTypes;
+    let testDisposables: workerTypes.Disposable[] = [];
+
+    before(async () => {
+        ({ stream, loader } = beforeEventHandlerSuite());
+        workerApi = await import('@azure/functions-worker');
+    });
+
+    beforeEach(async () => {
+        hookData = '';
+    });
+
+    afterEach(async () => {
+        await stream.afterEachEventHandlerTest();
+        workerApi.Disposable.from(...testDisposables).dispose();
+        testDisposables = [];
+    });
+
+    function sendInvokeMessage(inputData?: rpc.IParameterBinding[] | null): void {
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            invocationRequest: {
+                functionId: 'id',
+                invocationId: '1',
+                inputData: inputData,
+            },
+        });
+    }
 
     function getHttpResponse(rawBody?: string | {} | undefined, name = 'res'): rpc.IParameterBinding {
         let body: rpc.ITypedData;
@@ -311,10 +354,10 @@ describe('invocationRequest', () => {
         it('invokes function' + suffix, async () => {
             loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-            sendInvokeMessage([httpInputData]);
+            sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
-                Msg.userTestLog,
+                Msg.userTestLog(),
                 Msg.invocResponse([getHttpResponse()])
             );
         });
@@ -324,7 +367,7 @@ describe('invocationRequest', () => {
         it('returns correct data with $return binding' + suffix, async () => {
             loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.httpReturn));
-            sendInvokeMessage([httpInputData]);
+            sendInvokeMessage([InputData.http]);
             const expectedOutput = getHttpResponse(undefined, '$return');
             const expectedReturnValue = {
                 http: {
@@ -366,7 +409,7 @@ describe('invocationRequest', () => {
         it('serializes output binding data through context.done' + suffix, async () => {
             loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-            sendInvokeMessage([httpInputData]);
+            sendInvokeMessage([InputData.http]);
             const expectedOutput = [getHttpResponse({ hello: 'world' })];
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse(expectedOutput));
         });
@@ -386,7 +429,7 @@ describe('invocationRequest', () => {
                     name: 'testFuncName',
                 })
             );
-            sendInvokeMessage([httpInputData]);
+            sendInvokeMessage([InputData.http]);
             const expectedOutput = [
                 getHttpResponse({ hello: 'world' }),
                 {
@@ -410,7 +453,7 @@ describe('invocationRequest', () => {
         it('returns failed status for user error' + suffix, async () => {
             loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
-            sendInvokeMessage([httpInputData]);
+            sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed);
         });
     }
@@ -426,7 +469,7 @@ describe('invocationRequest', () => {
     it('empty function does not return invocation response', async () => {
         loader.getFunc.returns(() => {});
         loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-        sendInvokeMessage([httpInputData]);
+        sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(Msg.receivedInvocLog());
     });
 
@@ -435,7 +478,7 @@ describe('invocationRequest', () => {
             context.done();
         });
         loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-        sendInvokeMessage([httpInputData]);
+        sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
             Msg.asyncAndDoneLog,
@@ -449,7 +492,7 @@ describe('invocationRequest', () => {
             context.done();
         });
         loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-        sendInvokeMessage([httpInputData]);
+        sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
             Msg.duplicateDoneLog,
@@ -463,11 +506,11 @@ describe('invocationRequest', () => {
             context.log('testUserLog');
         });
         loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-        sendInvokeMessage([httpInputData]);
+        sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
             Msg.unexpectedLogAfterDoneLog,
-            Msg.userTestLog,
+            Msg.userTestLog(),
             Msg.invocResponse([getHttpResponse()])
         );
     });
@@ -479,109 +522,193 @@ describe('invocationRequest', () => {
             return 'hello';
         });
         loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
-        sendInvokeMessage([httpInputData]);
+        sendInvokeMessage([InputData.http]);
         // wait for first two messages to ensure invocation happens
         await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([getHttpResponse()]));
         // then add extra context.log
         _context!.log('testUserLog');
-        await stream.assertCalledWith(Msg.unexpectedLogAfterDoneLog, Msg.userTestLog);
+        await stream.assertCalledWith(Msg.unexpectedLogAfterDoneLog, Msg.userTestLog());
     });
 
-    describe('#invocationRequestBefore, #invocationRequestAfter', () => {
-        afterEach(() => {
-            channel['_invocationRequestAfter'] = [];
-            channel['_invocationRequestBefore'] = [];
-        });
-
-        it('should apply hook before user function is executed', async () => {
-            channel.registerBeforeInvocationRequest((context, userFunction) => {
-                context['magic_flag'] = 'magic value';
-                return userFunction.bind({ __wrapped: true });
-            });
-
-            channel.registerBeforeInvocationRequest((context, userFunction) => {
-                context['secondary_flag'] = 'magic value';
-                return userFunction;
-            });
-
-            loader.getFunc.returns(function (this: any, context) {
-                expect(context['magic_flag']).to.equal('magic value');
-                expect(context['secondary_flag']).to.equal('magic value');
-                expect(this.__wrapped).to.equal(true);
-                expect(channel['_invocationRequestBefore'].length).to.equal(2);
-                expect(channel['_invocationRequestAfter'].length).to.equal(0);
-                context.done();
-            });
+    for (const [func, suffix] of TestFunc.logHookData) {
+        it('preInvocationHook' + suffix, async () => {
+            loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
-            sendInvokeMessage([httpInputData]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+            testDisposables.push(
+                workerApi.registerHook('preInvocation', () => {
+                    hookData += 'pre';
+                })
+            );
+
+            sendInvokeMessage([InputData.http]);
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.userTestLog('preinvoc'),
+                Msg.invocResponse([], { string: 'hello' })
+            );
+            expect(hookData).to.equal('preinvoc');
         });
+    }
 
-        it('should apply hook after user function is executed (callback)', async () => {
-            let finished = false;
-            let count = 0;
-            channel.registerAfterInvocationRequest((_context) => {
-                expect(finished).to.equal(true);
-                count += 1;
-            });
-
-            loader.getFunc.returns((context: Context) => {
-                finished = true;
-                expect(channel['_invocationRequestBefore'].length).to.equal(0);
-                expect(channel['_invocationRequestAfter'].length).to.equal(1);
-                expect(count).to.equal(0);
-                context.done();
-            });
+    for (const [func, suffix] of TestFunc.logInput) {
+        it('preInvocationHook respects change to inputs' + suffix, async () => {
+            loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
-            sendInvokeMessage([httpInputData]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
-            expect(count).to.equal(1);
+            testDisposables.push(
+                workerApi.registerHook('preInvocation', (context: workerTypes.PreInvocationContext) => {
+                    expect(context.inputs.length).to.equal(1);
+                    expect(context.inputs[0]).to.equal('testStringData');
+                    context.inputs = ['changedStringData'];
+                })
+            );
+
+            sendInvokeMessage([InputData.string]);
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.userTestLog('changedStringData'),
+                Msg.invocResponse([])
+            );
         });
+    }
 
-        it('should apply hook after user function resolves (promise)', async () => {
-            let finished = false;
-            let count = 0;
-            channel.registerAfterInvocationRequest((_context) => {
-                expect(finished).to.equal(true);
-                count += 1;
-            });
-
-            loader.getFunc.returns(async () => {
-                finished = true;
-                expect(channel['_invocationRequestBefore'].length).to.equal(0);
-                expect(channel['_invocationRequestAfter'].length).to.equal(1);
-                expect(count).to.equal(0);
-            });
+    for (const [func, suffix] of TestFunc.logHookData) {
+        it('postInvocationHook' + suffix, async () => {
+            loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
-            sendInvokeMessage([httpInputData]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
-            expect(count).to.equal(1);
+            testDisposables.push(
+                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                    hookData += 'post';
+                    expect(context.result).to.equal('hello');
+                    expect(context.error).to.be.null;
+                })
+            );
+
+            sendInvokeMessage([InputData.http]);
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.userTestLog('invoc'),
+                Msg.invocResponse([], { string: 'hello' })
+            );
+            expect(hookData).to.equal('invocpost');
         });
+    }
 
-        it('should apply hook after user function rejects (promise)', async () => {
-            let finished = false;
-            let count = 0;
-            channel.registerAfterInvocationRequest((_context) => {
-                expect(finished).to.equal(true);
-                count += 1;
-            });
-
-            loader.getFunc.returns(async () => {
-                finished = true;
-                expect(channel['_invocationRequestBefore'].length).to.equal(0);
-                expect(channel['_invocationRequestAfter'].length).to.equal(1);
-                expect(count).to.equal(0);
-                throw testError;
-            });
+    for (const [func, suffix] of TestFunc.logHookData) {
+        it('postInvocationHook respects change to context.result' + suffix, async () => {
+            loader.getFunc.returns(func);
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
-            sendInvokeMessage([httpInputData]);
+            testDisposables.push(
+                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                    hookData += 'post';
+                    expect(context.result).to.equal('hello');
+                    expect(context.error).to.be.null;
+                    context.result = 'world';
+                })
+            );
+
+            sendInvokeMessage([InputData.http]);
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.userTestLog('invoc'),
+                Msg.invocResponse([], { string: 'world' })
+            );
+            expect(hookData).to.equal('invocpost');
+        });
+    }
+
+    for (const [func, suffix] of TestFunc.error) {
+        it('postInvocationHook executes if function throws error' + suffix, async () => {
+            loader.getFunc.returns(func);
+            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+            testDisposables.push(
+                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                    hookData += 'post';
+                    expect(context.result).to.be.null;
+                    expect(context.error).to.equal(testError);
+                })
+            );
+
+            sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed);
-            expect(count).to.equal(1);
+            expect(hookData).to.equal('post');
         });
+    }
+
+    for (const [func, suffix] of TestFunc.error) {
+        it('postInvocationHook respects change to context.error' + suffix, async () => {
+            loader.getFunc.returns(func);
+            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+            testDisposables.push(
+                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                    hookData += 'post';
+                    expect(context.result).to.be.null;
+                    expect(context.error).to.equal(testError);
+                    context.error = null;
+                    context.result = 'hello';
+                })
+            );
+
+            sendInvokeMessage([InputData.http]);
+            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], { string: 'hello' }));
+            expect(hookData).to.equal('post');
+        });
+    }
+
+    it('pre and post invocation hooks share data', async () => {
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        testDisposables.push(
+            workerApi.registerHook('preInvocation', (context: workerTypes.PreInvocationContext) => {
+                context['hello'] = 'world';
+                hookData += 'pre';
+            })
+        );
+
+        testDisposables.push(
+            workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                expect(context['hello']).to.equal('world');
+                hookData += 'post';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        expect(hookData).to.equal('prepost');
+    });
+
+    it('dispose hooks', async () => {
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        const disposableA: workerTypes.Disposable = workerApi.registerHook('preInvocation', () => {
+            hookData += 'a';
+        });
+        testDisposables.push(disposableA);
+        const disposableB: workerTypes.Disposable = workerApi.registerHook('preInvocation', () => {
+            hookData += 'b';
+        });
+        testDisposables.push(disposableB);
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        expect(hookData).to.equal('ab');
+
+        disposableA.dispose();
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        expect(hookData).to.equal('abb');
+
+        disposableB.dispose();
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        expect(hookData).to.equal('abb');
     });
 
     for (const [func, suffix] of TestFunc.returnEmptyString) {

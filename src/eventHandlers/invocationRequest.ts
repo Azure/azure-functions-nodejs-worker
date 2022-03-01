@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { PostInvocationContext, PreInvocationContext } from '@azure/functions-worker';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';
@@ -66,7 +67,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
         isDone = true;
     }
 
-    const { context, inputs, doneEmitter } = CreateContextAndInputs(info, msg, userLog);
+    let { context, inputs, doneEmitter } = CreateContextAndInputs(info, msg, userLog);
     try {
         const legacyDoneTask = new Promise((resolve, reject) => {
             doneEmitter.on('done', (err?: unknown, result?: any) => {
@@ -79,8 +80,12 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             });
         });
 
-        let userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
-        userFunction = channel.runInvocationRequestBefore(context, userFunction);
+        const userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
+        const preInvocContext: PreInvocationContext = { invocationContext: context, inputs };
+
+        await channel.executeHooks('preInvocation', preInvocContext);
+        inputs = preInvocContext.inputs;
+
         let rawResult = userFunction(context, ...inputs);
         resultIsPromise = rawResult && typeof rawResult.then === 'function';
         let resultTask: Promise<any>;
@@ -94,7 +99,18 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             resultTask = legacyDoneTask;
         }
 
-        const result = await resultTask;
+        const postInvocContext: PostInvocationContext = Object.assign(preInvocContext, { result: null, error: null });
+        try {
+            postInvocContext.result = await resultTask;
+        } catch (err) {
+            postInvocContext.error = err;
+        }
+        await channel.executeHooks('postInvocation', postInvocContext);
+
+        if (isError(postInvocContext.error)) {
+            throw postInvocContext.error;
+        }
+        const result = postInvocContext.result;
 
         // Allow HTTP response from context.res if HTTP response is not defined from the context.bindings object
         if (info.httpOutputName && context.res && context.bindings[info.httpOutputName] === undefined) {
@@ -163,6 +179,4 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
         requestId: requestId,
         invocationResponse: response,
     });
-
-    channel.runInvocationRequestAfter(context);
 }

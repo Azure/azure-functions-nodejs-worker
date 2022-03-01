@@ -43,6 +43,7 @@
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/unbound-method": "off",
         "no-empty": "off",
+        "prefer-const": ["error", { "destructuring": "all" }],
         "prefer-rest-params": "off",
         "prefer-spread": "off"
     },
