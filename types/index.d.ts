@@ -236,38 +236,33 @@ declare module '@azure/functions' {
      */
     export type HttpRequestUserType = 'AppService' | 'StaticWebApps';
     /**
-     * HTTP response object
-     */
-    interface HttpResponseBase {
-        /**
-         * HTTP response headers.
-         */
-        headers?: HttpResponseHeaders;
-        /**
-         *  HTTP response cookies.
-         */
-        cookies?: Cookie[];
-        /**
-         * HTTP response body.
-         */
-        body?: any;
-        /**
-         * HTTP response status code.
-         * @default 200
-         */
-        statusCode?: number | string;
-        /**
-         * Enable content negotiation of response body if true
-         * If false, treat response body as raw
-         * @default false
-         */
-        enableContentNegotiation?: boolean;
-    }
-    /**
      * Http response object and methods.
      * This is the default of the res property in the Context object provided to your function when using HTTP triggers.
      */
-    export interface HttpResponseApi extends HttpResponseBase {
+    export interface HttpResponseApi {
+        /**
+         * HTTP response headers.
+         */
+         headers?: HttpResponseHeaders;
+         /**
+          *  HTTP response cookies.
+          */
+         cookies?: Cookie[];
+         /**
+          * HTTP response body.
+          */
+         body?: any;
+         /**
+          * HTTP response status code.
+          * @default 200
+          */
+         statusCode?: number | string;
+         /**
+          * Enable content negotiation of response body if true
+          * If false, treat response body as raw
+          * @default false
+          */
+         enableContentNegotiation?: boolean;
         /**
          * Sets the HTTP response status code
          * @returns the updated HttpResponseApi instance
@@ -342,12 +337,35 @@ declare module '@azure/functions' {
      * Http response object.
      * This is not the default on the Context object, but you may replace context.res with an object of this type when using HTTP triggers.
      */
-    export interface HttpResponseObject extends HttpResponseBase {
+    export interface HttpResponseObject {
         /**
+         * HTTP response headers.
+         */
+         headers?: HttpResponseHeaders;
+         /**
+          *  HTTP response cookies.
+          */
+         cookies?: Cookie[];
+         /**
+          * HTTP response body.
+          */
+         body?: any;
+         /**
+          * HTTP response status code.
+          * @default 200
+          */
+         statusCode?: number | string;
+         /**
          * HTTP response status code
          * @default 200
          */
         status?: number | string;
+         /**
+          * Enable content negotiation of response body if true
+          * If false, treat response body as raw
+          * @default false
+          */
+         enableContentNegotiation?: boolean;
     }
     /**
      * Http response type.
