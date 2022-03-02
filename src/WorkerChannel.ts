@@ -6,7 +6,6 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
-import Module = require('module');
 
 export class WorkerChannel {
     public eventStream: IEventStream;
@@ -17,7 +16,6 @@ export class WorkerChannel {
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
-        this.initWorkerModule(this);
     }
 
     /**
@@ -58,22 +56,5 @@ export class WorkerChannel {
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
-    }
-
-    private initWorkerModule(channel: WorkerChannel) {
-        const workerApi = {
-            registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
-            Disposable,
-        };
-
-        Module.prototype.require = new Proxy(Module.prototype.require, {
-            apply(target, thisArg, argArray) {
-                if (argArray[0] === '@azure/functions-worker') {
-                    return workerApi;
-                } else {
-                    return Reflect.apply(target, thisArg, argArray);
-                }
-            },
-        });
     }
 }
