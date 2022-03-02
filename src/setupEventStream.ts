@@ -7,8 +7,6 @@ import { functionLoadRequest } from './eventHandlers/functionLoadRequest';
 import { invocationRequest } from './eventHandlers/invocationRequest';
 import { workerInitRequest } from './eventHandlers/workerInitRequest';
 import { workerStatusRequest } from './eventHandlers/workerStatusRequest';
-import { IFunctionLoader } from './FunctionLoader';
-import { IEventStream } from './GrpcClient';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
@@ -22,14 +20,8 @@ import LogLevel = rpc.RpcLog.Level;
  * This should have a way to handle all incoming gRPC messages.
  * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
  */
-export function setupEventStream(
-    workerId: string,
-    eventStream: IEventStream,
-    functionLoader: IFunctionLoader
-): WorkerChannel {
-    const channel = new WorkerChannel(eventStream, functionLoader);
-
-    eventStream.on('data', (msg) => {
+export function setupEventStream(workerId: string, channel: WorkerChannel): void {
+    channel.eventStream.on('data', (msg) => {
         const eventName = msg.content;
         switch (eventName) {
             case 'functionEnvironmentReloadRequest':
@@ -66,21 +58,19 @@ export function setupEventStream(
         }
     });
 
-    eventStream.on('error', function (err) {
+    channel.eventStream.on('error', function (err) {
         systemError(`Worker ${workerId} encountered event stream error: `, err);
         throw new InternalException(err);
     });
 
     // wrap event stream write to validate message correctness
-    const oldWrite = eventStream.write;
-    eventStream.write = function checkWrite(msg) {
+    const oldWrite = channel.eventStream.write;
+    channel.eventStream.write = function checkWrite(msg) {
         const msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
             systemError(`Worker ${workerId} malformed message`, msgError);
             throw new InternalException(msgError);
         }
-        oldWrite.apply(eventStream, [msg]);
+        oldWrite.apply(channel.eventStream, [msg]);
     };
-
-    return channel;
 }

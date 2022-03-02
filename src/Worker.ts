@@ -8,6 +8,7 @@ import { setupEventStream } from './setupEventStream';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
+import { WorkerChannel } from './WorkerChannel';
 
 export function startNodeWorker(args) {
     const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
@@ -39,7 +40,8 @@ export function startNodeWorker(args) {
         throw error;
     }
 
-    setupEventStream(workerId, eventStream, new FunctionLoader());
+    const channel = new WorkerChannel(eventStream, new FunctionLoader());
+    setupEventStream(workerId, channel);
 
     eventStream.write({
         requestId: requestId,
