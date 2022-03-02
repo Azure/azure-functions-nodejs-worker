@@ -243,26 +243,26 @@ declare module '@azure/functions' {
         /**
          * HTTP response headers.
          */
-         headers?: HttpResponseHeaders;
-         /**
-          *  HTTP response cookies.
-          */
-         cookies?: Cookie[];
-         /**
-          * HTTP response body.
-          */
-         body?: any;
-         /**
-          * HTTP response status code.
-          * @default 200
-          */
-         statusCode?: number | string;
-         /**
-          * Enable content negotiation of response body if true
-          * If false, treat response body as raw
-          * @default false
-          */
-         enableContentNegotiation?: boolean;
+        headers?: HttpResponseHeaders;
+        /**
+         *  HTTP response cookies.
+         */
+        cookies?: Cookie[];
+        /**
+         * HTTP response body.
+         */
+        body?: any;
+        /**
+         * HTTP response status code.
+         * @default 200
+         */
+        statusCode?: number | string;
+        /**
+         * Enable content negotiation of response body if true
+         * If false, treat response body as raw
+         * @default false
+         */
+        enableContentNegotiation?: boolean;
         /**
          * Sets the HTTP response status code
          * @returns the updated HttpResponseApi instance
@@ -341,31 +341,31 @@ declare module '@azure/functions' {
         /**
          * HTTP response headers.
          */
-         headers?: HttpResponseHeaders;
-         /**
-          *  HTTP response cookies.
-          */
-         cookies?: Cookie[];
-         /**
-          * HTTP response body.
-          */
-         body?: any;
-         /**
-          * HTTP response status code.
-          * @default 200
-          */
-         statusCode?: number | string;
-         /**
+        headers?: HttpResponseHeaders;
+        /**
+         *  HTTP response cookies.
+         */
+        cookies?: Cookie[];
+        /**
+         * HTTP response body.
+         */
+        body?: any;
+        /**
+         * HTTP response status code.
+         * @default 200
+         */
+        statusCode?: number | string;
+        /**
          * HTTP response status code
          * @default 200
          */
         status?: number | string;
-         /**
-          * Enable content negotiation of response body if true
-          * If false, treat response body as raw
-          * @default false
-          */
-         enableContentNegotiation?: boolean;
+        /**
+         * Enable content negotiation of response body if true
+         * If false, treat response body as raw
+         * @default false
+         */
+        enableContentNegotiation?: boolean;
     }
     /**
      * Http response type.
