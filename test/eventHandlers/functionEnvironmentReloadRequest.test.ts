@@ -3,10 +3,48 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { beforeEventHandlerTest } from './beforeEventHandlerTest';
+import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+import LogLevel = rpc.RpcLog.Level;
+
+namespace Msg {
+    export function reloadEnvVarsLog(numVars: number): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message: `Reloading environment variables. Found ${numVars} variables to reload.`,
+                level: LogLevel.Information,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export const reloadSuccess: rpc.IStreamingMessage = {
+        requestId: 'id',
+        functionEnvironmentReloadResponse: {
+            result: {
+                status: rpc.StatusResult.Status.Success,
+            },
+        },
+    };
+
+    export const noHandlerRpcLog: rpc.IStreamingMessage = {
+        rpcLog: {
+            message: "Worker workerId had no handler for message 'undefined'",
+            level: LogLevel.Error,
+            logCategory: LogCategory.System,
+        },
+    };
+
+    export const changingCwdLog: rpc.IStreamingMessage = {
+        rpcLog: {
+            message: `Changing current working directory to /`,
+            level: LogLevel.Information,
+            logCategory: LogCategory.System,
+        },
+    };
+}
 
 describe('functionEnvironmentReloadRequest', () => {
     let stream: TestEventStream;
@@ -15,17 +53,18 @@ describe('functionEnvironmentReloadRequest', () => {
     let originalEnv: NodeJS.ProcessEnv;
     before(() => {
         originalEnv = process.env;
+        ({ stream } = beforeEventHandlerSuite());
     });
 
     after(() => {
         process.env = originalEnv;
     });
 
-    beforeEach(() => {
-        ({ stream } = beforeEventHandlerTest());
+    afterEach(async () => {
+        await stream.afterEachEventHandlerTest();
     });
 
-    it('reloads environment variables', () => {
+    it('reloads environment variables', async () => {
         process.env.PlaceholderVariable = 'TRUE';
         stream.addTestMessage({
             requestId: 'id',
@@ -37,20 +76,13 @@ describe('functionEnvironmentReloadRequest', () => {
                 functionAppDirectory: null,
             },
         });
-        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
-            requestId: 'id',
-            functionEnvironmentReloadResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
     });
 
-    it('reloading environment variables removes existing environment variables', () => {
+    it('reloading environment variables removes existing environment variables', async () => {
         process.env.PlaceholderVariable = 'TRUE';
         process.env.NODE_ENV = 'Debug';
         stream.addTestMessage({
@@ -60,47 +92,38 @@ describe('functionEnvironmentReloadRequest', () => {
                 functionAppDirectory: null,
             },
         });
-        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
-            requestId: 'id',
-            functionEnvironmentReloadResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
         expect(process.env).to.be.empty;
     });
 
-    it('reloads empty environment variables without throwing', () => {
-        expect(() => {
-            stream.write({
-                requestId: 'id',
-                functionEnvironmentReloadRequest: {
-                    environmentVariables: {},
-                    functionAppDirectory: null,
-                },
-            });
-        }).to.not.throw();
+    it('reloads empty environment variables', async () => {
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {},
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
 
-        expect(() => {
-            stream.write({
-                requestId: 'id',
-                functionEnvironmentReloadRequest: null,
-            });
-        }).to.not.throw();
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: null,
+        });
 
-        expect(() => {
-            stream.write({
-                requestId: 'id',
-                functionEnvironmentReloadRequest: {
-                    environmentVariables: null,
-                    functionAppDirectory: null,
-                },
-            });
-        }).to.not.throw();
+        await stream.assertCalledWith(Msg.noHandlerRpcLog);
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: null,
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
     });
 
-    it('reloads environment variable and keeps cwd without functionAppDirectory', () => {
+    it('reloads environment variable and keeps cwd without functionAppDirectory', async () => {
         const cwd = process.cwd();
         stream.addTestMessage({
             requestId: 'id',
@@ -112,20 +135,13 @@ describe('functionEnvironmentReloadRequest', () => {
                 functionAppDirectory: null,
             },
         });
-        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
-            requestId: 'id',
-            functionEnvironmentReloadResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() == cwd);
     });
 
-    it('reloads environment variable and changes functionAppDirectory', () => {
+    it('reloads environment variable and changes functionAppDirectory', async () => {
         const cwd = process.cwd();
         const newDir = '/';
         stream.addTestMessage({
@@ -138,14 +154,8 @@ describe('functionEnvironmentReloadRequest', () => {
                 functionAppDirectory: newDir,
             },
         });
-        sinon.assert.calledWith(stream.written, <rpc.IStreamingMessage>{
-            requestId: 'id',
-            functionEnvironmentReloadResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        });
+
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.changingCwdLog, Msg.reloadSuccess);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() != newDir);

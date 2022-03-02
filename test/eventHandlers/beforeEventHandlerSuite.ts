@@ -6,7 +6,7 @@ import { FunctionLoader } from '../../src/FunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 
-export function beforeEventHandlerTest() {
+export function beforeEventHandlerSuite() {
     const stream = new TestEventStream();
     const loader = sinon.createStubInstance<FunctionLoader>(FunctionLoader);
     const channel = new WorkerChannel('workerId', stream, loader);
