@@ -48,7 +48,8 @@ export class Response implements HttpResponseApi {
 
     sendStatus(statusCode: string | number) {
         this.status(statusCode);
-        return this.end(); // eslint-disable deprecation/deprecation
+        // eslint-disable-next-line deprecation/deprecation
+        return this.end();
     }
 
     type(type) {
@@ -57,7 +58,8 @@ export class Response implements HttpResponseApi {
 
     json(body) {
         this.type(MediaType.json);
-        this.send(body); // eslint-disable deprecation/deprecation
+        // eslint-disable-next-line deprecation/deprecation
+        this.send(body);
         return;
     }
 
