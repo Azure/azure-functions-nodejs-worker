@@ -17,7 +17,7 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export function workerInitRequest(channel: WorkerChannel, requestId: string, _msg: rpc.WorkerInitRequest) {
+export function workerInitRequest(channel: WorkerChannel, requestId: string, _msg: rpc.IWorkerInitRequest) {
     // Validate version
     const version = process.version;
     if (

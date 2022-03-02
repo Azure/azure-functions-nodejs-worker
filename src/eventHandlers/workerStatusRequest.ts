@@ -7,7 +7,7 @@ import { WorkerChannel } from '../WorkerChannel';
 /**
  * Worker sends the host empty response to evaluate the worker's latency
  */
-export function workerStatusRequest(channel: WorkerChannel, requestId: string, _msg: rpc.WorkerStatusRequest): void {
+export function workerStatusRequest(channel: WorkerChannel, requestId: string, _msg: rpc.IWorkerStatusRequest): void {
     const workerStatusResponse: rpc.IWorkerStatusResponse = {};
     channel.eventStream.write({
         requestId: requestId,
