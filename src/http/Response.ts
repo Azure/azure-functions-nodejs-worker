@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable deprecation/deprecation */
+
 import { Cookie, HttpResponseApi } from '@azure/functions';
 import { HeaderName, MediaType } from '../constants';
 
