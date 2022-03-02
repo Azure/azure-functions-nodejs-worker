@@ -19,7 +19,6 @@ export class FunctionLoader implements IFunctionLoader {
             func: Function;
         };
     } = {};
-    private allowESModules = process.version.startsWith('v14') || process.version.startsWith('v16');
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void> {
         if (metadata.isProxy === true) {
@@ -28,20 +27,14 @@ export class FunctionLoader implements IFunctionLoader {
         const scriptFilePath = <string>(metadata && metadata.scriptFile);
         let script: any;
         if (scriptFilePath.endsWith('.mjs')) {
-            if (this.allowESModules) {
-                // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
-                const scriptFileUrl = url.pathToFileURL(scriptFilePath);
-                if (scriptFileUrl.href) {
-                    // use eval so it doesn't get compiled into a require()
-                    script = await eval('import(scriptFileUrl.href)');
-                } else {
-                    throw new InternalException(
-                        `'${scriptFilePath}' could not be converted to file URL (${scriptFileUrl.href})`
-                    );
-                }
+            // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
+            const scriptFileUrl = url.pathToFileURL(scriptFilePath);
+            if (scriptFileUrl.href) {
+                // use eval so it doesn't get compiled into a require()
+                script = await eval('import(scriptFileUrl.href)');
             } else {
                 throw new InternalException(
-                    `Please use a Node.js version >= v14 to use ES Modules for '${scriptFilePath}'`
+                    `'${scriptFilePath}' could not be converted to file URL (${scriptFileUrl.href})`
                 );
             }
         } else {
