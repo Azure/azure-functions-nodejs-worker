@@ -1,8 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-/* eslint-disable deprecation/deprecation */
-
 import { Cookie, HttpResponseApi } from '@azure/functions';
 import { HeaderName, MediaType } from '../constants';
 
@@ -50,7 +48,7 @@ export class Response implements HttpResponseApi {
 
     sendStatus(statusCode: string | number) {
         this.status(statusCode);
-        return this.end();
+        return this.end(); // eslint-disable deprecation/deprecation
     }
 
     type(type) {
@@ -59,7 +57,7 @@ export class Response implements HttpResponseApi {
 
     json(body) {
         this.type(MediaType.json);
-        this.send(body);
+        this.send(body); // eslint-disable deprecation/deprecation
         return;
     }
 
