@@ -82,6 +82,7 @@ describe('FunctionLoader', () => {
             }
             FuncObject.prototype.index = function (ctx) {
                 ctx.bindings.prop = this.test();
+                // eslint-disable-next-line deprecation/deprecation
                 ctx.done();
             };
             FuncObject.prototype.test = function () {
