@@ -76,6 +76,9 @@ declare module '@azure/functions' {
          * @param err A user-defined error to pass back to the runtime. If present, your function execution will fail.
          * @param result An object containing output binding data. `result` will be passed to JSON.stringify unless it is
          *  a string, Buffer, ArrayBufferView, or number.
+         *
+         * @deprecated Use of sync functions with `context.done()` is deprecated. Use async/await and pass the response as the return value instead.
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
         done(err?: Error | string | null, result?: any): void;
         /**
