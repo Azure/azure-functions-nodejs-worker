@@ -352,11 +352,13 @@ declare module '@azure/functions' {
         body?: any;
         /**
          * HTTP response status code.
+         * This property takes precedence over the `status` property
          * @default 200
          */
         statusCode?: number | string;
         /**
          * HTTP response status code
+         * The same as `statusCode`. This property is ignored if `statusCode` is set
          * @default 200
          */
         status?: number | string;
