@@ -239,7 +239,7 @@ declare module '@azure/functions' {
      * Http response object and methods.
      * This is the default of the res property in the Context object provided to your function when using HTTP triggers.
      */
-    export interface HttpResponseApi {
+    export interface HttpResponseFull {
         /**
          * HTTP response headers.
          */
@@ -337,7 +337,7 @@ declare module '@azure/functions' {
      * Http response object.
      * This is not the default on the Context object, but you may replace context.res with an object of this type when using HTTP triggers.
      */
-    export interface HttpResponseObject {
+    export interface HttpResponseSimple {
         /**
          * HTTP response headers.
          */
