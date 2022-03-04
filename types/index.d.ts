@@ -85,9 +85,7 @@ declare module '@azure/functions' {
         /**
          * HTTP response object. Provided to your function when using HTTP Bindings.
          */
-        res?: {
-            [key: string]: any;
-        };
+        res?: HttpResponse;
     }
     /**
      * HTTP request headers.
