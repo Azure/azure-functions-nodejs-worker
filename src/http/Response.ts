@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Cookie, HttpResponseApi } from '@azure/functions';
+import { Cookie, HttpResponseFull } from '@azure/functions';
 import { HeaderName, MediaType } from '../constants';
 
-export class Response implements HttpResponseApi {
+export class Response implements HttpResponseFull {
     statusCode?: string | number;
     headers: { [key: string]: any } = {};
     cookies: Cookie[] = [];
@@ -27,7 +27,7 @@ export class Response implements HttpResponseApi {
         return this;
     }
 
-    setHeader(field: string, val: any): HttpResponseApi {
+    setHeader(field: string, val: any): HttpResponseFull {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
@@ -41,7 +41,7 @@ export class Response implements HttpResponseApi {
         return this;
     }
 
-    status(statusCode: string | number): HttpResponseApi {
+    status(statusCode: string | number): HttpResponseFull {
         this.statusCode = statusCode;
         return this;
     }

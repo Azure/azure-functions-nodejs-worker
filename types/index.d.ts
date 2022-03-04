@@ -265,26 +265,26 @@ declare module '@azure/functions' {
         enableContentNegotiation?: boolean;
         /**
          * Sets the HTTP response status code
-         * @returns the updated HttpResponseApi instance
+         * @returns the updated HttpResponseFull instance
          */
-        status: (statusCode: number | string) => HttpResponseApi;
+        status: (statusCode: number | string) => HttpResponseFull;
         /**
          * Sets a particular header field to a value
-         * @returns the updated HttpResponseApi instance
+         * @returns the updated HttpResponseFull instance
          */
-        setHeader(field: string, val: any): HttpResponseApi;
-        /**
-         * Has the same functionality as setHeader.
-         * Sets a particular header field to a value
-         * @returns the updated HttpResponseApi instance
-         */
-        header(field: string, val: any): HttpResponseApi;
+        setHeader(field: string, val: any): HttpResponseFull;
         /**
          * Has the same functionality as setHeader.
          * Sets a particular header field to a value
-         * @returns the updated HttpResponseApi instance
+         * @returns the updated HttpResponseFull instance
          */
-        set(field: string, val: any): HttpResponseApi;
+        header(field: string, val: any): HttpResponseFull;
+        /**
+         * Has the same functionality as setHeader.
+         * Sets a particular header field to a value
+         * @returns the updated HttpResponseFull instance
+         */
+        set(field: string, val: any): HttpResponseFull;
         /**
          * Get the value of a particular header field
          */
@@ -296,36 +296,36 @@ declare module '@azure/functions' {
         get(field: string): any;
         /**
          * Removes a particular header field
-         * @returns the updated HttpResponseApi instance
+         * @returns the updated HttpResponseFull instance
          */
-        removeHeader(field: string): HttpResponseApi;
+        removeHeader(field: string): HttpResponseFull;
         /**
          * Set the 'Content-Type' header to a particular value
-         * @returns the updated HttpResponseApi instance
+         * @returns the updated HttpResponseFull instance
          */
-        type(type: string): HttpResponseApi;
+        type(type: string): HttpResponseFull;
         /**
          * Automatically sets the content-type then calls context.done()
-         * @returns updated HttpResponseApi instance
+         * @returns updated HttpResponseFull instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
-        send(body?: any): HttpResponseApi;
+        send(body?: any): HttpResponseFull;
         /**
          * Same as send()
          * Automatically sets the content-type then calls context.done()
-         * @returns updated HttpResponseApi instance
+         * @returns updated HttpResponseFull instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
-        end(body?: any): HttpResponseApi;
+        end(body?: any): HttpResponseFull;
         /**
          * Sets the status code then calls send()
-         * @returns updated HttpResponseApi instance
+         * @returns updated HttpResponseFull instance
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
          * See the docs here for more information: https://aka.ms/functions-js-async-await
          */
-        sendStatus(statusCode: string | number): HttpResponseApi;
+        sendStatus(statusCode: string | number): HttpResponseFull;
         /**
          * Sets the 'Content-Type' header to 'application/json' then calls send(body)
          * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
@@ -372,7 +372,7 @@ declare module '@azure/functions' {
     /**
      * Http response type.
      */
-    export type HttpResponse = HttpResponseObject | HttpResponseApi;
+    export type HttpResponse = HttpResponseSimple | HttpResponseFull;
 
     /**
      * Http response cookie object to "Set-Cookie"
