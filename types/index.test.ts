@@ -11,8 +11,8 @@ import {
     Cookie,
     HttpMethod,
     HttpRequest,
-    HttpResponseApi,
-    HttpResponseObject,
+    HttpResponseFull,
+    HttpResponseSimple,
     Timer,
 } from '@azure/functions';
 const get: HttpMethod = 'GET';
@@ -88,8 +88,8 @@ const cookieFunction: AzureFunction = async function (context: Context) {
     };
 };
 
-const httpResponseObjectFunction: AzureFunction = async function (context: Context) {
-    context.res = context.res as HttpResponseObject;
+const httpResponseSimpleFunction: AzureFunction = async function (context: Context) {
+    context.res = context.res as HttpResponseSimple;
     context.res = {
         body: {
             hello: 'world',
@@ -111,15 +111,15 @@ const httpResponseObjectFunction: AzureFunction = async function (context: Conte
 };
 
 const statusStringFunction: AzureFunction = async function (context: Context) {
-    context.res = context.res as HttpResponseObject;
+    context.res = context.res as HttpResponseSimple;
     context.res = {
         status: '200',
         statusCode: '200',
     };
 };
 
-const httpResponseApiFunction: AzureFunction = async function (context: Context) {
-    context.res = context.res as HttpResponseApi;
+const httpResponseFullFunction: AzureFunction = async function (context: Context) {
+    context.res = context.res as HttpResponseFull;
     context.res.status(200);
     context.res.setHeader('hello', 'world');
     context.res.set('hello', 'world');
@@ -154,7 +154,7 @@ const returnWithContextDone: AzureFunction = function (context: Context, _req: H
 };
 
 const returnWithContextDoneMethods: AzureFunction = function (context: Context, _req: HttpRequest) {
-    context.res = context.res as HttpResponseApi;
+    context.res = context.res as HttpResponseFull;
     context.res.send('hello world');
     context.res.end('hello world');
     context.res.sendStatus(200);
@@ -171,8 +171,8 @@ const returnWithJson: AzureFunction = function (context: Context, req: HttpReque
 export {
     runHttp,
     cookieFunction,
-    httpResponseApiFunction,
-    httpResponseObjectFunction,
+    httpResponseFullFunction,
+    httpResponseSimpleFunction,
     statusStringFunction,
     runHttpReturn,
     runServiceBus,
