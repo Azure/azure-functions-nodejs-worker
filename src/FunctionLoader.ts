@@ -7,7 +7,7 @@ import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
 
 export interface IFunctionLoader {
-    load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void>;
+    load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: Object): Promise<void>;
     getInfo(functionId: string): FunctionInfo;
     getFunc(functionId: string): Function;
 }
@@ -20,13 +20,13 @@ export class FunctionLoader implements IFunctionLoader {
         };
     } = {};
 
-    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void> {
+    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: Object): Promise<void> {
         if (metadata.isProxy === true) {
             return;
         }
         const scriptFilePath = <string>(metadata && metadata.scriptFile);
         let script: any;
-        if (scriptFilePath.endsWith('.mjs')) {
+        if (isUsingMjs(packageJson, scriptFilePath)) {
             // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
             const scriptFileUrl = url.pathToFileURL(scriptFilePath);
             if (scriptFileUrl.href) {
@@ -108,4 +108,17 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
     }
 
     return f;
+}
+
+function isUsingMjs(packageJson: Object, filePath: string): Boolean {
+    if (filePath.endsWith('.mjs')) {
+        return true;
+    }
+    if (filePath.endsWith('.cjs')) {
+        return false;
+    }
+    if (packageJson['type'] && packageJson['type'] === 'module') {
+        return true;
+    }
+    return false;
 }
