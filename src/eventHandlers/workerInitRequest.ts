@@ -47,6 +47,9 @@ export function workerInitRequest(channel: WorkerChannel, requestId: string, _ms
     }
 
     logColdStartWarning(channel);
+    if (_msg.functionAppDirectory) {
+        channel.initAppDir(_msg.functionAppDirectory);
+    }
 
     const workerCapabilities = {
         RpcHttpTriggerMetadataRemoved: 'true',

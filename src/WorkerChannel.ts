@@ -5,6 +5,7 @@ import { Context } from '@azure/functions';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { getPackageJson } from './utils/getPackageJson';
 
 type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
 type InvocationRequestAfter = (context: Context) => void;
@@ -12,12 +13,16 @@ type InvocationRequestAfter = (context: Context) => void;
 export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
+    public functionAppDir: string;
+    public packageJson: Object;
     private _invocationRequestBefore: InvocationRequestBefore[];
     private _invocationRequestAfter: InvocationRequestAfter[];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
+        this.functionAppDir = '';
+        this.packageJson = {};
         this._invocationRequestBefore = [];
         this._invocationRequestAfter = [];
     }
@@ -59,6 +64,13 @@ export class WorkerChannel {
     public runInvocationRequestAfter(context: Context) {
         for (const after of this._invocationRequestAfter) {
             after(context);
+        }
+    }
+
+    public initAppDir(dir: string) {
+        if (dir !== this.functionAppDir) {
+            this.functionAppDir = dir;
+            this.packageJson = getPackageJson(this.functionAppDir);
         }
     }
 }
