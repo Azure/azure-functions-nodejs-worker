@@ -133,7 +133,7 @@ describe('FunctionLoader', () => {
         expect(result).to.be.true;
     });
 
-    it('respects module package.json type', () => {
+    it('respects module package.json module type', () => {
         const result = loader.isUsingMjs('test.js', {
             type: 'module',
         });
