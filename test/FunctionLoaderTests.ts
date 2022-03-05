@@ -119,6 +119,36 @@ describe('FunctionLoader', () => {
         expect(result.then).to.be.a('function');
     });
 
+    it('respects .cjs extension', () => {
+        const result = loader.isUsingMjs('test.cjs', {
+            type: 'module',
+        });
+        expect(result).to.be.false;
+    });
+
+    it('respects .mjs extension', () => {
+        const result = loader.isUsingMjs('test.mjs', {
+            type: 'commonjs',
+        });
+        expect(result).to.be.true;
+    });
+
+    it('respects module package.json type', () => {
+        const result = loader.isUsingMjs('test.js', {
+            type: 'module',
+        });
+        expect(result).to.be.true;
+    });
+
+    it('defaults to using commonjs', () => {
+        expect(loader.isUsingMjs('test.js', {})).to.be.false;
+        expect(
+            loader.isUsingMjs('test.js', {
+                type: 'commonjs',
+            })
+        ).to.be.false;
+    });
+
     afterEach(() => {
         mock.stopAll();
     });

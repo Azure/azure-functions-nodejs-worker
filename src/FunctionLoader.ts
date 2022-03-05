@@ -26,7 +26,7 @@ export class FunctionLoader implements IFunctionLoader {
         }
         const scriptFilePath = <string>(metadata && metadata.scriptFile);
         let script: any;
-        if (isUsingMjs(packageJson, scriptFilePath)) {
+        if (this.isUsingMjs(scriptFilePath, packageJson)) {
             // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
             const scriptFileUrl = url.pathToFileURL(scriptFilePath);
             if (scriptFileUrl.href) {
@@ -70,6 +70,19 @@ export class FunctionLoader implements IFunctionLoader {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
     }
+
+    isUsingMjs(filePath: string, packageJson: Object): Boolean {
+        if (filePath.endsWith('.mjs')) {
+            return true;
+        }
+        if (filePath.endsWith('.cjs')) {
+            return false;
+        }
+        if (packageJson['type'] && packageJson['type'] === 'module') {
+            return true;
+        }
+        return false;
+    }
 }
 
 function getEntryPoint(f: any, entryPoint?: string): Function {
@@ -108,17 +121,4 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
     }
 
     return f;
-}
-
-function isUsingMjs(packageJson: Object, filePath: string): Boolean {
-    if (filePath.endsWith('.mjs')) {
-        return true;
-    }
-    if (filePath.endsWith('.cjs')) {
-        return false;
-    }
-    if (packageJson['type'] && packageJson['type'] === 'module') {
-        return true;
-    }
-    return false;
 }
