@@ -67,10 +67,10 @@ export class WorkerChannel {
         }
     }
 
-    public initAppDir(dir: string) {
+    public async initAppDir(dir: string) {
         if (dir !== this.functionAppDir) {
             this.functionAppDir = dir;
-            this.packageJson = getPackageJson(this.functionAppDir);
+            this.packageJson = await getPackageJson(this.functionAppDir);
         }
     }
 }

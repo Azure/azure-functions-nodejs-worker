@@ -17,7 +17,7 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export function workerInitRequest(channel: WorkerChannel, requestId: string, _msg: rpc.IWorkerInitRequest) {
+export async function workerInitRequest(channel: WorkerChannel, requestId: string, _msg: rpc.IWorkerInitRequest) {
     // Validate version
     const version = process.version;
     if (
@@ -48,7 +48,7 @@ export function workerInitRequest(channel: WorkerChannel, requestId: string, _ms
 
     logColdStartWarning(channel);
     if (_msg.functionAppDirectory) {
-        channel.initAppDir(_msg.functionAppDirectory);
+        await channel.initAppDir(_msg.functionAppDirectory);
     }
 
     const workerCapabilities = {
