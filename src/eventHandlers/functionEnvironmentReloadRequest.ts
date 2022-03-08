@@ -10,11 +10,11 @@ import LogLevel = rpc.RpcLog.Level;
 /**
  * Environment variables from the current process
  */
-export function functionEnvironmentReloadRequest(
+export async function functionEnvironmentReloadRequest(
     channel: WorkerChannel,
     requestId: string,
     msg: rpc.IFunctionEnvironmentReloadRequest
-): void {
+): Promise<void> {
     // Add environment variables from incoming
     const numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
     channel.log({
@@ -34,6 +34,7 @@ export function functionEnvironmentReloadRequest(
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
+            await channel.initAppDir(msg.functionAppDirectory);
         }
     } catch (err) {
         error = err;
