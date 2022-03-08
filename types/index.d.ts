@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { PackageJson as PackageJsonType } from './packageJson';
+
 declare module '@azure/functions' {
     /**
      * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
@@ -526,4 +528,6 @@ declare module '@azure/functions' {
             lastUpdated: string;
         };
     }
+
+    export type PackageJson = PackageJsonType;
 }
