@@ -30,9 +30,13 @@ describe('FunctionLoader', () => {
     it('throws unable to determine function entry point', async () => {
         mock('test', {});
         await expect(
-            loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-                scriptFile: 'test',
-            })
+            loader.load(
+                'functionId',
+                <rpc.IRpcFunctionMetadata>{
+                    scriptFile: 'test',
+                },
+                {}
+            )
         ).to.be.rejectedWith(
             "Unable to determine function entry point. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property."
         );
@@ -40,9 +44,13 @@ describe('FunctionLoader', () => {
 
     it('does not load proxy function', async () => {
         mock('test', {});
-        await loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-            isProxy: true,
-        });
+        await loader.load(
+            'functionId',
+            <rpc.IRpcFunctionMetadata>{
+                isProxy: true,
+            },
+            {}
+        );
 
         expect(() => {
             loader.getFunc('functionId');
@@ -53,10 +61,14 @@ describe('FunctionLoader', () => {
         mock('test', { test: {} });
         const entryPoint = 'wrongEntryPoint';
         await expect(
-            loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-                scriptFile: 'test',
-                entryPoint: entryPoint,
-            })
+            loader.load(
+                'functionId',
+                <rpc.IRpcFunctionMetadata>{
+                    scriptFile: 'test',
+                    entryPoint: entryPoint,
+                },
+                {}
+            )
         ).to.be.rejectedWith(
             `Unable to determine function entry point: ${entryPoint}. If multiple functions are exported, you must indicate the entry point, either by naming it 'run' or 'index', or by naming it explicitly via the 'entryPoint' metadata property.`
         );
@@ -66,10 +78,14 @@ describe('FunctionLoader', () => {
         mock('test', { test: {} });
         const entryPoint = 'test';
         await expect(
-            loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-                scriptFile: 'test',
-                entryPoint: entryPoint,
-            })
+            loader.load(
+                'functionId',
+                <rpc.IRpcFunctionMetadata>{
+                    scriptFile: 'test',
+                    entryPoint: entryPoint,
+                },
+                {}
+            )
         ).to.be.rejectedWith(
             'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
         );
@@ -92,10 +108,14 @@ describe('FunctionLoader', () => {
 
         mock('test', new FuncObject());
 
-        await loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-            scriptFile: 'test',
-            entryPoint: 'test',
-        });
+        await loader.load(
+            'functionId',
+            <rpc.IRpcFunctionMetadata>{
+                scriptFile: 'test',
+                entryPoint: 'test',
+            },
+            {}
+        );
 
         const userFunction = loader.getFunc('functionId');
 
@@ -107,10 +127,14 @@ describe('FunctionLoader', () => {
     it('allows to return a promise from async user function', async () => {
         mock('test', { test: async () => {} });
 
-        await loader.load('functionId', <rpc.IRpcFunctionMetadata>{
-            scriptFile: 'test',
-            entryPoint: 'test',
-        });
+        await loader.load(
+            'functionId',
+            <rpc.IRpcFunctionMetadata>{
+                scriptFile: 'test',
+                entryPoint: 'test',
+            },
+            {}
+        );
 
         const userFunction = loader.getFunc('functionId');
         const result = userFunction();
