@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 import { Context, PackageJson } from '@azure/functions';
+import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
-import { getPackageJson } from './utils/getPackageJson';
+import path = require('path');
 
 type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
 type InvocationRequestAfter = (context: Context) => void;
@@ -69,6 +70,10 @@ export class WorkerChannel {
 
     public async initAppDir(dir: string) {
         this.functionAppDir = dir;
-        this.packageJson = await getPackageJson(this.functionAppDir);
+        try {
+            this.packageJson = await readJson(path.join(this.functionAppDir, 'package.json'));
+        } catch {
+            this.packageJson = {};
+        }
     }
 }
