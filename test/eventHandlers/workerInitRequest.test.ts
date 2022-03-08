@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import 'mocha';
+import * as mock from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { logColdStartWarning } from '../../src/eventHandlers/workerInitRequest';
 import { WorkerChannel } from '../../src/WorkerChannel';
@@ -83,5 +84,34 @@ describe('workerInitRequest', () => {
                 logCategory: LogCategory.System,
             },
         });
+    });
+
+    it('correctly loads package.json file', async () => {
+        const appDir = 'appDir';
+        const expectedPackageJson = {
+            type: 'module',
+        };
+        mock({
+            [appDir]: {
+                'package.json': JSON.stringify(expectedPackageJson),
+            },
+        });
+        await channel.initAppDir(appDir);
+        expect(channel.functionAppDir).to.equal(appDir);
+        expect(channel.packageJson).to.deep.equal(expectedPackageJson);
+        mock.restore();
+    });
+
+    it('loads empty package.json', async () => {
+        const appDir = 'appDir';
+        mock({
+            [appDir]: {
+                'not-package-json': 'some content',
+            },
+        });
+        await channel.initAppDir(appDir);
+        expect(channel.functionAppDir).to.equal(appDir);
+        expect(channel.packageJson).to.be.empty;
+        mock.restore();
     });
 });
