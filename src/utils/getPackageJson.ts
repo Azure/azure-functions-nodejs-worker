@@ -3,16 +3,11 @@
 
 import path = require('path');
 import { PackageJson } from '@azure/functions';
-import { access } from 'fs';
-import { promisify } from 'util';
-
-const accessAsync = promisify(access);
+import { readJson } from 'fs-extra';
 
 export async function getPackageJson(appDir: string): Promise<PackageJson> {
-    const packageJsonPath = path.join(appDir, 'package.json');
     try {
-        await accessAsync(packageJsonPath);
-        return require(packageJsonPath);
+        return await readJson(path.join(appDir, 'package.json'));
     } catch {
         return {};
     }
