@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context, PackageJson } from '@azure/functions';
+import { Context } from '@azure/functions';
 import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { IFunctionLoader } from './FunctionLoader';
+import { IFunctionLoader, PackageJson } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
 import path = require('path');
 

@@ -1,11 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PackageJson } from '@azure/functions';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
+
+export interface PackageJson {
+    type?: 'commonjs' | 'module';
+}
 
 export interface IFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
