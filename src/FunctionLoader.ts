@@ -1,13 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { PackageJson } from '@azure/functions';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
 
 export interface IFunctionLoader {
-    load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson?: Object): Promise<void>;
+    load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson?: PackageJson): Promise<void>;
     getInfo(functionId: string): FunctionInfo;
     getFunc(functionId: string): Function;
 }
@@ -20,7 +21,7 @@ export class FunctionLoader implements IFunctionLoader {
         };
     } = {};
 
-    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: Object = {}): Promise<void> {
+    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson = {}): Promise<void> {
         if (metadata.isProxy === true) {
             return;
         }
@@ -71,7 +72,7 @@ export class FunctionLoader implements IFunctionLoader {
         }
     }
 
-    isUsingMjs(filePath: string, packageJson: Object): Boolean {
+    isUsingMjs(filePath: string, packageJson: PackageJson): Boolean {
         if (filePath.endsWith('.mjs')) {
             return true;
         }

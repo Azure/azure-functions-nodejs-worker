@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context } from '@azure/functions';
+import { Context, PackageJson } from '@azure/functions';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
@@ -14,7 +14,7 @@ export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
     public functionAppDir: string;
-    public packageJson: Object;
+    public packageJson: PackageJson;
     private _invocationRequestBefore: InvocationRequestBefore[];
     private _invocationRequestAfter: InvocationRequestAfter[];
 
