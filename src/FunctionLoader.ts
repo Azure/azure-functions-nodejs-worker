@@ -27,7 +27,7 @@ export class FunctionLoader implements IFunctionLoader {
         }
         const scriptFilePath = <string>(metadata && metadata.scriptFile);
         let script: any;
-        if (this.isUsingMjs(scriptFilePath, packageJson)) {
+        if (this.isESModule(scriptFilePath, packageJson)) {
             // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
             const scriptFileUrl = url.pathToFileURL(scriptFilePath);
             if (scriptFileUrl.href) {
@@ -72,7 +72,7 @@ export class FunctionLoader implements IFunctionLoader {
         }
     }
 
-    isUsingMjs(filePath: string, packageJson: PackageJson): Boolean {
+    isESModule(filePath: string, packageJson: PackageJson): Boolean {
         if (filePath.endsWith('.mjs')) {
             return true;
         }
