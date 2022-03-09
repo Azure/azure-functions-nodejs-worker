@@ -11,17 +11,13 @@ declare module '@azure/functions-worker' {
      * Register a hook to interact with the lifecycle of Azure Functions.
      * Hooks are executed in the order they were registered and will block execution if they throw an error
      */
-    export function registerHook(
-        hookName: 'preInvocation',
-        callback: (context: PreInvocationContext) => void | Promise<void>
-    ): Disposable;
-    export function registerHook(
-        hookName: 'postInvocation',
-        callback: (context: PostInvocationContext) => void | Promise<void>
-    ): Disposable;
+    export function registerHook(hookName: 'preInvocation', callback: PreInvocationCallback): Disposable;
+    export function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
     export function registerHook(hookName: string, callback: HookCallback): Disposable;
 
-    export type HookCallback = (context: {}) => void | Promise<void>;
+    export type HookCallback = (context: HookContext) => void | Promise<void>;
+    export type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
+    export type PostInvocationCallback = (context: PostInvocationContext) => void | Promise<void>;
 
     export type HookData = { [key: string]: any };
 

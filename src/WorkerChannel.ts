@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback } from '@azure/functions-worker';
+import { HookCallback, HookContext } from '@azure/functions-worker';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -40,7 +40,7 @@ export class WorkerChannel {
         });
     }
 
-    public async executeHooks(hookName: string, context: {}): Promise<void> {
+    public async executeHooks(hookName: string, context: HookContext): Promise<void> {
         const callbacks = this.getHooks(hookName);
         for (const callback of callbacks) {
             await callback(context);
