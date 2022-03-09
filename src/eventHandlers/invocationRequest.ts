@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { PostInvocationContext, PreInvocationContext } from '@azure/functions-worker';
+import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-worker';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';
@@ -80,8 +80,9 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             });
         });
 
+        const hookData: HookData = {};
         const userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
-        const preInvocContext: PreInvocationContext = { invocationContext: context, inputs };
+        const preInvocContext: PreInvocationContext = { hookData, invocationContext: context, inputs };
 
         await channel.executeHooks('preInvocation', preInvocContext);
         inputs = preInvocContext.inputs;
@@ -99,7 +100,13 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             resultTask = legacyDoneTask;
         }
 
-        const postInvocContext: PostInvocationContext = Object.assign(preInvocContext, { result: null, error: null });
+        const postInvocContext: PostInvocationContext = {
+            hookData,
+            invocationContext: context,
+            inputs,
+            result: null,
+            error: null,
+        };
         try {
             postInvocContext.result = await resultTask;
         } catch (err) {

@@ -23,11 +23,23 @@ declare module '@azure/functions-worker' {
 
     export type HookCallback = (context: {}) => void | Promise<void>;
 
+    export type HookData = { [key: string]: any };
+
+    /**
+     * Base interface for all hook context objects
+     */
+    export interface HookContext {
+        /**
+         * The recommended place to share data between hooks
+         */
+        hookData: HookData;
+    }
+
     /**
      * Context on a function that is about to be executed
-     * This object will be passed to all pre and post invocation hooks and can be used to share information between hooks
+     * This object will be passed to all pre invocation hooks
      */
-    export interface PreInvocationContext {
+    export interface PreInvocationContext extends HookContext {
         /**
          * The context object passed to the function
          */
@@ -41,9 +53,19 @@ declare module '@azure/functions-worker' {
 
     /**
      * Context on a function that has just executed
-     * This object will be passed to all pre and post invocation hooks and can be used to share information between hooks
+     * This object will be passed to all post invocation hooks
      */
-    export interface PostInvocationContext extends PreInvocationContext {
+    export interface PostInvocationContext extends HookContext {
+        /**
+         * The context object passed to the function
+         */
+        invocationContext: Context;
+
+        /**
+         * The input values for this specific invocation
+         */
+        inputs: any[];
+
         /**
          * The result of the function, or null if there is no result. Changes to this value _will_ affect the overall result of the function
          */

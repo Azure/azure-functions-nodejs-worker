@@ -666,14 +666,14 @@ describe('invocationRequest', () => {
 
         testDisposables.push(
             workerApi.registerHook('preInvocation', (context: workerTypes.PreInvocationContext) => {
-                context['hello'] = 'world';
+                context.hookData['hello'] = 'world';
                 hookData += 'pre';
             })
         );
 
         testDisposables.push(
             workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
-                expect(context['hello']).to.equal('world');
+                expect(context.hookData['hello']).to.equal('world');
                 hookData += 'post';
             })
         );
