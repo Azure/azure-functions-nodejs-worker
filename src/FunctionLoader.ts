@@ -5,10 +5,7 @@ import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
-
-export interface PackageJson {
-    type?: 'commonjs' | 'module';
-}
+import { PackageJson } from './WorkerChannel';
 
 export interface IFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;

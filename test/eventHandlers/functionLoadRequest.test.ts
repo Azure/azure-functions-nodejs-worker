@@ -4,7 +4,8 @@
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { FunctionLoader, PackageJson } from '../../src/FunctionLoader';
+import { FunctionLoader } from '../../src/FunctionLoader';
+import { PackageJson } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;

@@ -4,12 +4,16 @@
 import { Context } from '@azure/functions';
 import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { IFunctionLoader, PackageJson } from './FunctionLoader';
+import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
 import path = require('path');
 
 type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
 type InvocationRequestAfter = (context: Context) => void;
+
+export interface PackageJson {
+    type?: 'commonjs' | 'module';
+}
 
 export class WorkerChannel {
     public eventStream: IEventStream;
