@@ -96,6 +96,12 @@ declare module '@azure/functions' {
         [name: string]: string;
     }
     /**
+     * HTTP response headers.
+     */
+    export interface HttpResponseHeaders {
+        [name: string]: string;
+    }
+    /**
      * Query string parameter keys and values from the URL.
      */
     export interface HttpRequestQuery {
@@ -229,6 +235,145 @@ declare module '@azure/functions' {
      * Possible values for an HTTP Request user type
      */
     export type HttpRequestUserType = 'AppService' | 'StaticWebApps';
+    /**
+     * Http response object and methods.
+     * This is the default of the res property in the Context object provided to your function when using HTTP triggers.
+     */
+    export interface HttpResponseFull {
+        /**
+         * HTTP response headers.
+         */
+        headers?: HttpResponseHeaders;
+        /**
+         *  HTTP response cookies.
+         */
+        cookies?: Cookie[];
+        /**
+         * HTTP response body.
+         */
+        body?: any;
+        /**
+         * HTTP response status code.
+         * @default 200
+         */
+        statusCode?: number | string;
+        /**
+         * Enable content negotiation of response body if true
+         * If false, treat response body as raw
+         * @default false
+         */
+        enableContentNegotiation?: boolean;
+        /**
+         * Sets the HTTP response status code
+         * @returns the updated HttpResponseFull instance
+         */
+        status: (statusCode: number | string) => HttpResponseFull;
+        /**
+         * Sets a particular header field to a value
+         * @returns the updated HttpResponseFull instance
+         */
+        setHeader(field: string, val: any): HttpResponseFull;
+        /**
+         * Has the same functionality as setHeader.
+         * Sets a particular header field to a value
+         * @returns the updated HttpResponseFull instance
+         */
+        header(field: string, val: any): HttpResponseFull;
+        /**
+         * Has the same functionality as setHeader.
+         * Sets a particular header field to a value
+         * @returns the updated HttpResponseFull instance
+         */
+        set(field: string, val: any): HttpResponseFull;
+        /**
+         * Get the value of a particular header field
+         */
+        getHeader(field: string): any;
+        /**
+         * Has the same functionality as getHeader
+         * Get the value of a particular header field
+         */
+        get(field: string): any;
+        /**
+         * Removes a particular header field
+         * @returns the updated HttpResponseFull instance
+         */
+        removeHeader(field: string): HttpResponseFull;
+        /**
+         * Set the 'Content-Type' header to a particular value
+         * @returns the updated HttpResponseFull instance
+         */
+        type(type: string): HttpResponseFull;
+        /**
+         * Automatically sets the content-type then calls context.done()
+         * @returns updated HttpResponseFull instance
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as the return value instead.
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
+         */
+        send(body?: any): HttpResponseFull;
+        /**
+         * Same as send()
+         * Automatically sets the content-type then calls context.done()
+         * @returns updated HttpResponseFull instance
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
+         */
+        end(body?: any): HttpResponseFull;
+        /**
+         * Sets the status code then calls send()
+         * @returns updated HttpResponseFull instance
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
+         */
+        sendStatus(statusCode: string | number): HttpResponseFull;
+        /**
+         * Sets the 'Content-Type' header to 'application/json' then calls send(body)
+         * @deprecated this method calls context.done() which is deprecated, use async/await and pass the response as your function's return value instead.
+         * See the docs here for more information: https://aka.ms/functions-js-async-await
+         */
+        json(body?: any): void;
+    }
+    /**
+     * Http response object.
+     * This is not the default on the Context object, but you may replace context.res with an object of this type when using HTTP triggers.
+     */
+    export interface HttpResponseSimple {
+        /**
+         * HTTP response headers.
+         */
+        headers?: HttpResponseHeaders;
+        /**
+         *  HTTP response cookies.
+         */
+        cookies?: Cookie[];
+        /**
+         * HTTP response body.
+         */
+        body?: any;
+        /**
+         * HTTP response status code.
+         * This property takes precedence over the `status` property
+         * @default 200
+         */
+        statusCode?: number | string;
+        /**
+         * HTTP response status code
+         * The same as `statusCode`. This property is ignored if `statusCode` is set
+         * @default 200
+         */
+        status?: number | string;
+        /**
+         * Enable content negotiation of response body if true
+         * If false, treat response body as raw
+         * @default false
+         */
+        enableContentNegotiation?: boolean;
+    }
+    /**
+     * Http response type.
+     */
+    export type HttpResponse = HttpResponseSimple | HttpResponseFull;
+
     /**
      * Http response cookie object to "Set-Cookie"
      */

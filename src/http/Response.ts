@@ -1,23 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Cookie } from '@azure/functions';
+import { Cookie, HttpResponseFull } from '@azure/functions';
 import { HeaderName, MediaType } from '../constants';
 
-interface IResponse {
-    statusCode?: string | number;
-    headers: {
-        [key: string]: any;
-    };
-    cookies: Cookie[];
-    body?: any;
-    get(field: string): any;
-    set(field: string, val: any): IResponse;
-    header(field: string, val: any): IResponse;
-    status(statusCode: string | number): IResponse;
-}
-
-export class Response implements IResponse {
+export class Response implements HttpResponseFull {
     statusCode?: string | number;
     headers: { [key: string]: any } = {};
     cookies: Cookie[] = [];
@@ -40,12 +27,12 @@ export class Response implements IResponse {
         return this;
     }
 
-    setHeader(field: string, val: any): IResponse {
+    setHeader(field: string, val: any): HttpResponseFull {
         this.headers[field.toLowerCase()] = val;
         return this;
     }
 
-    getHeader(field: string): IResponse {
+    getHeader(field: string): any {
         return this.headers[field.toLowerCase()];
     }
 
@@ -54,13 +41,14 @@ export class Response implements IResponse {
         return this;
     }
 
-    status(statusCode: string | number): IResponse {
+    status(statusCode: string | number): HttpResponseFull {
         this.statusCode = statusCode;
         return this;
     }
 
     sendStatus(statusCode: string | number) {
         this.status(statusCode);
+        // eslint-disable-next-line deprecation/deprecation
         return this.end();
     }
 
@@ -70,6 +58,7 @@ export class Response implements IResponse {
 
     json(body) {
         this.type(MediaType.json);
+        // eslint-disable-next-line deprecation/deprecation
         this.send(body);
         return;
     }

@@ -192,7 +192,7 @@ namespace Msg {
             invocationId: '1',
             message: "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.",
             level: LogLevel.Error,
-            logCategory: LogCategory.System,
+            logCategory: LogCategory.User,
         },
     };
     export const duplicateDoneLog: rpc.IStreamingMessage = {
@@ -201,7 +201,7 @@ namespace Msg {
             invocationId: '1',
             message: "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.",
             level: LogLevel.Error,
-            logCategory: LogCategory.System,
+            logCategory: LogCategory.User,
         },
     };
     export const unexpectedLogAfterDoneLog: rpc.IStreamingMessage = {

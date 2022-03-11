@@ -25,9 +25,13 @@ import { Response } from './http/Response';
 import EventEmitter = require('events');
 import LogLevel = rpc.RpcLog.Level;
 
-export function CreateContextAndInputs(info: FunctionInfo, request: rpc.IInvocationRequest, logCallback: LogCallback) {
+export function CreateContextAndInputs(
+    info: FunctionInfo,
+    request: rpc.IInvocationRequest,
+    userLogCallback: UserLogCallback
+) {
     const doneEmitter = new EventEmitter();
-    const context = new InvocationContext(info, request, logCallback, doneEmitter);
+    const context = new InvocationContext(info, request, userLogCallback, doneEmitter);
 
     const bindings: ContextBindings = {};
     const inputs: any[] = [];
@@ -91,7 +95,7 @@ class InvocationContext implements Context {
     constructor(
         info: FunctionInfo,
         request: rpc.IInvocationRequest,
-        logCallback: LogCallback,
+        userLogCallback: UserLogCallback,
         doneEmitter: EventEmitter
     ) {
         this.invocationId = <string>request.invocationId;
@@ -106,11 +110,11 @@ class InvocationContext implements Context {
         this.bindings = {};
 
         // Log message that is tied to function invocation
-        this.log = Object.assign((...args: any[]) => logCallback(LogLevel.Information, ...args), {
-            error: (...args: any[]) => logCallback(LogLevel.Error, ...args),
-            warn: (...args: any[]) => logCallback(LogLevel.Warning, ...args),
-            info: (...args: any[]) => logCallback(LogLevel.Information, ...args),
-            verbose: (...args: any[]) => logCallback(LogLevel.Trace, ...args),
+        this.log = Object.assign((...args: any[]) => userLogCallback(LogLevel.Information, ...args), {
+            error: (...args: any[]) => userLogCallback(LogLevel.Error, ...args),
+            warn: (...args: any[]) => userLogCallback(LogLevel.Warning, ...args),
+            info: (...args: any[]) => userLogCallback(LogLevel.Information, ...args),
+            verbose: (...args: any[]) => userLogCallback(LogLevel.Trace, ...args),
         });
 
         this.bindingData = getNormalizedBindingData(request);
@@ -129,7 +133,7 @@ export interface InvocationResult {
 
 export type DoneCallback = (err?: unknown, result?: any) => void;
 
-export type LogCallback = (level: LogLevel, ...args: any[]) => void;
+export type UserLogCallback = (level: LogLevel, ...args: any[]) => void;
 
 export interface Dict<T> {
     [key: string]: T;
