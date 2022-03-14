@@ -6,6 +6,11 @@ import { Disposable } from './Disposable';
 import { WorkerChannel } from './WorkerChannel';
 import Module = require('module');
 
+/**
+ * Intercepts the default "require" method so that we can provide our own "built-in" module
+ * This module is essentially the publicly accessible API for our worker
+ * This module is available to users only at runtime, not as an installable npm package
+ */
 export function setupWorkerModule(channel: WorkerChannel): void {
     const workerApi = {
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
