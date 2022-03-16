@@ -48,7 +48,7 @@ export async function workerInitRequest(channel: WorkerChannel, requestId: strin
 
     logColdStartWarning(channel);
     if (msg.functionAppDirectory) {
-        await channel.initAppDir(msg.functionAppDirectory);
+        await channel.updatePackageJson(msg.functionAppDirectory);
     }
 
     const workerCapabilities = {

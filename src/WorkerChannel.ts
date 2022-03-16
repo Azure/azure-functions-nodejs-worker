@@ -12,13 +12,12 @@ type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
 type InvocationRequestAfter = (context: Context) => void;
 
 export interface PackageJson {
-    type?: 'commonjs' | 'module';
+    type?: string;
 }
 
 export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
-    public functionAppDir: string;
     public packageJson: PackageJson;
     private _invocationRequestBefore: InvocationRequestBefore[];
     private _invocationRequestAfter: InvocationRequestAfter[];
@@ -26,7 +25,6 @@ export class WorkerChannel {
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
-        this.functionAppDir = '';
         this.packageJson = {};
         this._invocationRequestBefore = [];
         this._invocationRequestAfter = [];
@@ -72,10 +70,9 @@ export class WorkerChannel {
         }
     }
 
-    public async initAppDir(dir: string) {
-        this.functionAppDir = dir;
+    public async updatePackageJson(dir: string): Promise<void> {
         try {
-            this.packageJson = await readJson(path.join(this.functionAppDir, 'package.json'));
+            this.packageJson = await readJson(path.join(dir, 'package.json'));
         } catch {
             this.packageJson = {};
         }

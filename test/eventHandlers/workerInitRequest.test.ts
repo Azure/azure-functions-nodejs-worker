@@ -96,8 +96,7 @@ describe('workerInitRequest', () => {
                 'package.json': JSON.stringify(expectedPackageJson),
             },
         });
-        await channel.initAppDir(appDir);
-        expect(channel.functionAppDir).to.equal(appDir);
+        await channel.updatePackageJson(appDir);
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
         mock.restore();
     });
@@ -109,8 +108,7 @@ describe('workerInitRequest', () => {
                 'not-package-json': 'some content',
             },
         });
-        await channel.initAppDir(appDir);
-        expect(channel.functionAppDir).to.equal(appDir);
+        await channel.updatePackageJson(appDir);
         expect(channel.packageJson).to.be.empty;
         mock.restore();
     });

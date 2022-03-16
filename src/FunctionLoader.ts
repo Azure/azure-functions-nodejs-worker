@@ -72,14 +72,14 @@ export class FunctionLoader implements IFunctionLoader {
         }
     }
 
-    isESModule(filePath: string, packageJson: PackageJson): Boolean {
+    isESModule(filePath: string, packageJson: PackageJson): boolean {
         if (filePath.endsWith('.mjs')) {
             return true;
         }
         if (filePath.endsWith('.cjs')) {
             return false;
         }
-        if (packageJson['type'] && packageJson['type'] === 'module') {
+        if (packageJson.type === 'module') {
             return true;
         }
         return false;
