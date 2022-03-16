@@ -43,9 +43,6 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
         log(level, LogCategory.System, ...args);
     }
     function userLog(level: LogLevel, ...args: any[]) {
-        log(level, LogCategory.User, ...args);
-    }
-    function contextUserLog(level: LogLevel, ...args: any[]) {
         if (isDone) {
             let badAsyncMsg =
                 "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
@@ -53,7 +50,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
             systemLog(LogLevel.Warning, badAsyncMsg);
         }
-        userLog(level, ...args);
+        log(level, LogCategory.User, ...args);
     }
 
     // Log invocation details to ensure the invocation received by node worker
@@ -64,12 +61,12 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             const message = resultIsPromise
                 ? "Error: Choose either to return a promise or call 'done'.  Do not use both in your script."
                 : "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.";
-            userLog(LogLevel.Error, message);
+            systemLog(LogLevel.Error, message);
         }
         isDone = true;
     }
 
-    const { context, inputs, doneEmitter } = CreateContextAndInputs(info, msg, contextUserLog);
+    const { context, inputs, doneEmitter } = CreateContextAndInputs(info, msg, userLog);
     try {
         const legacyDoneTask = new Promise((resolve, reject) => {
             doneEmitter.on('done', (err?: unknown, result?: any) => {
