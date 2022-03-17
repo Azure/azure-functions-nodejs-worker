@@ -21,6 +21,7 @@ describe('workerInitRequest', () => {
     });
 
     afterEach(async () => {
+        mock.restore();
         await stream.afterEachEventHandlerTest();
     });
 
@@ -96,9 +97,34 @@ describe('workerInitRequest', () => {
                 'package.json': JSON.stringify(expectedPackageJson),
             },
         });
-        await channel.updatePackageJson(appDir);
+
+        const initMsg = {
+            requestId: 'id',
+            workerInitRequest: {
+                capabilities: {},
+                functionAppDirectory: appDir,
+            },
+        };
+        const expectedOutput = {
+            requestId: 'id',
+            workerInitResponse: {
+                capabilities: {
+                    RpcHttpBodyOnly: 'true',
+                    RpcHttpTriggerMetadataRemoved: 'true',
+                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
+                    UseNullableValueDictionaryForHttp: 'true',
+                    WorkerStatus: 'true',
+                    TypedDataCollection: 'true',
+                },
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+            },
+        };
+        stream.addTestMessage(initMsg);
+        await stream.assertCalledWith(expectedOutput);
+
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
-        mock.restore();
     });
 
     it('loads empty package.json', async () => {
@@ -108,8 +134,71 @@ describe('workerInitRequest', () => {
                 'not-package-json': 'some content',
             },
         });
-        await channel.updatePackageJson(appDir);
+
+        const initMsg = {
+            requestId: 'id',
+            workerInitRequest: {
+                capabilities: {},
+                functionAppDirectory: appDir,
+            },
+        };
+        const expectedOutput = {
+            requestId: 'id',
+            workerInitResponse: {
+                capabilities: {
+                    RpcHttpBodyOnly: 'true',
+                    RpcHttpTriggerMetadataRemoved: 'true',
+                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
+                    UseNullableValueDictionaryForHttp: 'true',
+                    WorkerStatus: 'true',
+                    TypedDataCollection: 'true',
+                },
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+            },
+        };
+        stream.addTestMessage(initMsg);
+        await stream.assertCalledWith(expectedOutput);
+
         expect(channel.packageJson).to.be.empty;
-        mock.restore();
+    });
+
+    it('ignores malformed package.json', async () => {
+        const appDir = 'appDir';
+        mock({
+            [appDir]: {
+                'package.json': 'not a valid json',
+            },
+        });
+
+        const initMsg = {
+            requestId: 'id',
+            workerInitRequest: {
+                capabilities: {},
+                functionAppDirectory: appDir,
+            },
+        };
+
+        const expectedOutput = {
+            requestId: 'id',
+            workerInitResponse: {
+                capabilities: {
+                    RpcHttpBodyOnly: 'true',
+                    RpcHttpTriggerMetadataRemoved: 'true',
+                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
+                    UseNullableValueDictionaryForHttp: 'true',
+                    WorkerStatus: 'true',
+                    TypedDataCollection: 'true',
+                },
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+            },
+        };
+        stream.addTestMessage(initMsg);
+        await stream.assertCalledWith(expectedOutput);
+
+        expect(channel.packageJson).to.be.empty;
     });
 });
