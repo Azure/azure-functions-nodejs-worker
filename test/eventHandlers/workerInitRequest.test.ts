@@ -9,6 +9,7 @@ import { logColdStartWarning } from '../../src/eventHandlers/workerInitRequest';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -39,6 +40,16 @@ namespace Msg {
             },
         },
     };
+
+    export function warning(message: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
 
     export const coldStartWarning: rpc.IStreamingMessage = {
         rpcLog: {
@@ -112,7 +123,10 @@ describe('workerInitRequest', () => {
         });
 
         stream.addTestMessage(Msg.init(appDir));
-        await stream.assertCalledWith(Msg.response);
+        await stream.assertCalledWith(
+            Msg.warning(`Worker failed to load package.json: file does not exist.`),
+            Msg.response
+        );
         expect(channel.packageJson).to.be.empty;
     });
 
@@ -125,7 +139,15 @@ describe('workerInitRequest', () => {
         });
 
         stream.addTestMessage(Msg.init(appDir));
-        await stream.assertCalledWith(Msg.response);
+        await stream.assertCalledWith(
+            Msg.warning(
+                `Worker failed to load package.json: file is not a valid JSON: ${path.join(
+                    appDir,
+                    'package.json'
+                )}: Unexpected token g in JSON at position 0`
+            ),
+            Msg.response
+        );
         expect(channel.packageJson).to.be.empty;
     });
 });

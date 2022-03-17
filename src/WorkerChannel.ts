@@ -6,7 +6,10 @@ import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { ensureErrorType } from './utils/ensureErrorType';
 import path = require('path');
+import LogLevel = rpc.RpcLog.Level;
+import LogCategory = rpc.RpcLog.RpcLogCategory;
 
 type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
 type InvocationRequestAfter = (context: Context) => void;
@@ -73,7 +76,22 @@ export class WorkerChannel {
     public async updatePackageJson(dir: string): Promise<void> {
         try {
             this.packageJson = await readJson(path.join(dir, 'package.json'));
-        } catch {
+        } catch (err) {
+            const error: Error = ensureErrorType(err);
+            let errorMsg: string;
+            if (error.name === 'SyntaxError') {
+                errorMsg = `file is not a valid JSON: ${error.message}`;
+            } else if (error.message.startsWith('ENOENT')) {
+                errorMsg = `file does not exist.`;
+            } else {
+                errorMsg = error.message;
+            }
+            errorMsg = `Worker failed to load package.json: ${errorMsg}`;
+            this.log({
+                message: errorMsg,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
             this.packageJson = {};
         }
     }

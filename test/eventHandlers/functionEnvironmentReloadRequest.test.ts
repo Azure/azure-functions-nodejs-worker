@@ -8,6 +8,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -48,6 +49,20 @@ namespace Msg {
             },
         };
     }
+
+    export function warning(message: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export const noPackageJsonWarning: rpc.IStreamingMessage = warning(
+        `Worker failed to load package.json: file does not exist.`
+    );
 }
 
 describe('functionEnvironmentReloadRequest', () => {
@@ -161,7 +176,12 @@ describe('functionEnvironmentReloadRequest', () => {
             },
         });
 
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.changingCwdLog(), Msg.reloadSuccess);
+        await stream.assertCalledWith(
+            Msg.reloadEnvVarsLog(2),
+            Msg.changingCwdLog(),
+            Msg.noPackageJsonWarning,
+            Msg.reloadSuccess
+        );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() != newDir);
@@ -172,9 +192,9 @@ describe('functionEnvironmentReloadRequest', () => {
     it('reloads package.json', async () => {
         const cwd = process.cwd();
         const oldDir = 'oldDir';
-        const oldDirAbsolute = `${cwd}/${oldDir}`;
+        const oldDirAbsolute = path.join(cwd, oldDir);
         const newDir = 'newDir';
-        const newDirAbsolute = `${cwd}/${newDir}`;
+        const newDirAbsolute = path.join(cwd, newDir);
         const oldPackageJson = {
             type: 'module',
             hello: 'world',
