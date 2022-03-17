@@ -157,7 +157,7 @@ describe('FunctionLoader', () => {
         expect(result).to.be.true;
     });
 
-    it('respects module package.json module type', () => {
+    it('respects package.json module type', () => {
         const result = loader.isESModule('test.js', {
             type: 'module',
         });
