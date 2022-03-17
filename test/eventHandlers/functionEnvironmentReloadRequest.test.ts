@@ -170,8 +170,11 @@ describe('functionEnvironmentReloadRequest', () => {
     });
 
     it('reloads package.json', async () => {
-        const oldDir = '/oldDir';
-        const newDir = '/newDir';
+        const cwd = process.cwd();
+        const oldDir = 'oldDir';
+        const oldDirAbsolute = `${cwd}/${oldDir}`;
+        const newDir = 'newDir';
+        const newDirAbsolute = `${cwd}/${newDir}`;
         const oldPackageJson = {
             type: 'module',
             hello: 'world',
@@ -192,19 +195,20 @@ describe('functionEnvironmentReloadRequest', () => {
         stream.addTestMessage({
             requestId: 'id',
             functionEnvironmentReloadRequest: {
-                functionAppDirectory: oldDir,
+                functionAppDirectory: oldDirAbsolute,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(oldDir), Msg.reloadSuccess);
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(oldDirAbsolute), Msg.reloadSuccess);
         expect(channel.packageJson).to.deep.equal(oldPackageJson);
 
         stream.addTestMessage({
             requestId: 'id',
             functionEnvironmentReloadRequest: {
-                functionAppDirectory: newDir,
+                functionAppDirectory: newDirAbsolute,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDir), Msg.reloadSuccess);
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDirAbsolute), Msg.reloadSuccess);
         expect(channel.packageJson).to.deep.equal(newPackageJson);
+        process.chdir(cwd);
     });
 });
