@@ -3,7 +3,9 @@
 
 import { expect } from 'chai';
 import 'mocha';
+import * as mock from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -37,23 +39,26 @@ namespace Msg {
         },
     };
 
-    export const changingCwdLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: `Changing current working directory to /`,
-            level: LogLevel.Information,
-            logCategory: LogCategory.System,
-        },
-    };
+    export function changingCwdLog(dir = '/'): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message: `Changing current working directory to ${dir}`,
+                level: LogLevel.Information,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
 }
 
 describe('functionEnvironmentReloadRequest', () => {
     let stream: TestEventStream;
+    let channel: WorkerChannel;
 
     // Reset `process.env` after this test suite so it doesn't affect other tests
     let originalEnv: NodeJS.ProcessEnv;
     before(() => {
         originalEnv = process.env;
-        ({ stream } = beforeEventHandlerSuite());
+        ({ stream, channel } = beforeEventHandlerSuite());
     });
 
     after(() => {
@@ -61,6 +66,7 @@ describe('functionEnvironmentReloadRequest', () => {
     });
 
     afterEach(async () => {
+        mock.restore();
         await stream.afterEachEventHandlerTest();
     });
 
@@ -155,11 +161,50 @@ describe('functionEnvironmentReloadRequest', () => {
             },
         });
 
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.changingCwdLog, Msg.reloadSuccess);
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.changingCwdLog(), Msg.reloadSuccess);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() != newDir);
         expect(process.cwd() == newDir);
         process.chdir(cwd);
+    });
+
+    it('reloads package.json', async () => {
+        const oldDir = '/oldDir';
+        const newDir = '/newDir';
+        const oldPackageJson = {
+            type: 'module',
+            hello: 'world',
+        };
+        const newPackageJson = {
+            type: 'commonjs',
+            notHello: 'notWorld',
+        };
+        mock({
+            [oldDir]: {
+                'package.json': JSON.stringify(oldPackageJson),
+            },
+            [newDir]: {
+                'package.json': JSON.stringify(newPackageJson),
+            },
+        });
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: oldDir,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(oldDir), Msg.reloadSuccess);
+        expect(channel.packageJson).to.deep.equal(oldPackageJson);
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: newDir,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDir), Msg.reloadSuccess);
+        expect(channel.packageJson).to.deep.equal(newPackageJson);
     });
 });
