@@ -31,7 +31,7 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
                 void functionLoadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
                 break;
             case 'invocationRequest':
-                invocationRequest(channel, msg.requestId, nonNullProp(msg, eventName));
+                void invocationRequest(channel, msg.requestId, nonNullProp(msg, eventName));
                 break;
             case 'workerInitRequest':
                 void workerInitRequest(channel, msg.requestId, nonNullProp(msg, eventName));

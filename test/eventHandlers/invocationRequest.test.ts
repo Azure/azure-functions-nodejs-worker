@@ -438,8 +438,8 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
-            Msg.asyncAndDoneLog
+            Msg.asyncAndDoneLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 
@@ -452,8 +452,8 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
-            Msg.duplicateDoneLog
+            Msg.duplicateDoneLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 
@@ -466,9 +466,9 @@ describe('invocationRequest', () => {
         sendInvokeMessage([httpInputData]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
-            Msg.invocResponse([getHttpResponse()]),
             Msg.unexpectedLogAfterDoneLog,
-            Msg.userTestLog
+            Msg.userTestLog,
+            Msg.invocResponse([getHttpResponse()])
         );
     });
 
