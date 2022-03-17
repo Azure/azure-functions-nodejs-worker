@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable deprecation/deprecation */
+
 import { AzureFunction, Context } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
