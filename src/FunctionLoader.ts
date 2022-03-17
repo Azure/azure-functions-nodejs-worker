@@ -79,10 +79,7 @@ export class FunctionLoader implements IFunctionLoader {
         if (filePath.endsWith('.cjs')) {
             return false;
         }
-        if (packageJson.type === 'module') {
-            return true;
-        }
-        return false;
+        return packageJson.type === 'module';
     }
 }
 
