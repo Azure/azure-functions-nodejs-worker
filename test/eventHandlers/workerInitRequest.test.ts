@@ -13,14 +13,17 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 namespace Msg {
-    export const initMessage = {
-        requestId: 'id',
-        workerInitRequest: {
-            capabilities: {},
-        },
-    };
+    export function initMsg(functionAppDirectory?: string): rpc.IStreamingMessage {
+        return {
+            requestId: 'id',
+            workerInitRequest: {
+                capabilities: {},
+                functionAppDirectory,
+            },
+        };
+    }
 
-    export const responseMsg = {
+    export const responseMsg: rpc.IStreamingMessage = {
         requestId: 'id',
         workerInitResponse: {
             capabilities: {
@@ -37,7 +40,7 @@ namespace Msg {
         },
     };
 
-    export const coldStartWarning = {
+    export const coldStartWarning: rpc.IStreamingMessage = {
         rpcLog: {
             message:
                 'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
@@ -61,14 +64,14 @@ describe('workerInitRequest', () => {
     });
 
     it('responds to init', async () => {
-        stream.addTestMessage(Msg.initMessage);
+        stream.addTestMessage(Msg.initMsg());
         await stream.assertCalledWith(Msg.responseMsg);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
         const version = process.version;
         if (version.split('.')[0] === 'v8') {
-            expect(() => stream.addTestMessage(Msg.initMessage)).to.throw(
+            expect(() => stream.addTestMessage(Msg.initMsg())).to.throw(
                 `Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
             );
         }
@@ -94,9 +97,9 @@ describe('workerInitRequest', () => {
                 'package.json': JSON.stringify(expectedPackageJson),
             },
         });
-        stream.addTestMessage(Msg.initMessage);
-        await stream.assertCalledWith(Msg.responseMsg);
 
+        stream.addTestMessage(Msg.initMsg(appDir));
+        await stream.assertCalledWith(Msg.responseMsg);
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
     });
 
@@ -107,9 +110,9 @@ describe('workerInitRequest', () => {
                 'not-package-json': 'some content',
             },
         });
-        stream.addTestMessage(Msg.initMessage);
-        await stream.assertCalledWith(Msg.responseMsg);
 
+        stream.addTestMessage(Msg.initMsg(appDir));
+        await stream.assertCalledWith(Msg.responseMsg);
         expect(channel.packageJson).to.be.empty;
     });
 
@@ -117,37 +120,12 @@ describe('workerInitRequest', () => {
         const appDir = 'appDir';
         mock({
             [appDir]: {
-                'package.json': 'not a valid json',
+                'package.json': 'gArB@g3 dAtA',
             },
         });
 
-        const initMsg = {
-            requestId: 'id',
-            workerInitRequest: {
-                capabilities: {},
-                functionAppDirectory: appDir,
-            },
-        };
-
-        const expectedOutput = {
-            requestId: 'id',
-            workerInitResponse: {
-                capabilities: {
-                    RpcHttpBodyOnly: 'true',
-                    RpcHttpTriggerMetadataRemoved: 'true',
-                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
-                    UseNullableValueDictionaryForHttp: 'true',
-                    WorkerStatus: 'true',
-                    TypedDataCollection: 'true',
-                },
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        };
-        stream.addTestMessage(initMsg);
-        await stream.assertCalledWith(expectedOutput);
-
+        stream.addTestMessage(Msg.initMsg(appDir));
+        await stream.assertCalledWith(Msg.responseMsg);
         expect(channel.packageJson).to.be.empty;
     });
 });
