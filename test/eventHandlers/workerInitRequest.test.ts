@@ -13,7 +13,7 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 namespace Msg {
-    export function initMsg(functionAppDirectory?: string): rpc.IStreamingMessage {
+    export function init(functionAppDirectory?: string): rpc.IStreamingMessage {
         return {
             requestId: 'id',
             workerInitRequest: {
@@ -23,7 +23,7 @@ namespace Msg {
         };
     }
 
-    export const responseMsg: rpc.IStreamingMessage = {
+    export const response: rpc.IStreamingMessage = {
         requestId: 'id',
         workerInitResponse: {
             capabilities: {
@@ -64,14 +64,14 @@ describe('workerInitRequest', () => {
     });
 
     it('responds to init', async () => {
-        stream.addTestMessage(Msg.initMsg());
-        await stream.assertCalledWith(Msg.responseMsg);
+        stream.addTestMessage(Msg.init());
+        await stream.assertCalledWith(Msg.response);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
         const version = process.version;
         if (version.split('.')[0] === 'v8') {
-            expect(() => stream.addTestMessage(Msg.initMsg())).to.throw(
+            expect(() => stream.addTestMessage(Msg.init())).to.throw(
                 `Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
             );
         }
@@ -98,8 +98,8 @@ describe('workerInitRequest', () => {
             },
         });
 
-        stream.addTestMessage(Msg.initMsg(appDir));
-        await stream.assertCalledWith(Msg.responseMsg);
+        stream.addTestMessage(Msg.init(appDir));
+        await stream.assertCalledWith(Msg.response);
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
     });
 
@@ -111,8 +111,8 @@ describe('workerInitRequest', () => {
             },
         });
 
-        stream.addTestMessage(Msg.initMsg(appDir));
-        await stream.assertCalledWith(Msg.responseMsg);
+        stream.addTestMessage(Msg.init(appDir));
+        await stream.assertCalledWith(Msg.response);
         expect(channel.packageJson).to.be.empty;
     });
 
@@ -124,8 +124,8 @@ describe('workerInitRequest', () => {
             },
         });
 
-        stream.addTestMessage(Msg.initMsg(appDir));
-        await stream.assertCalledWith(Msg.responseMsg);
+        stream.addTestMessage(Msg.init(appDir));
+        await stream.assertCalledWith(Msg.response);
         expect(channel.packageJson).to.be.empty;
     });
 });
