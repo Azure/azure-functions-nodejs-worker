@@ -34,7 +34,7 @@ export async function functionEnvironmentReloadRequest(
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await channel.updatePackageJson(msg.functionAppDirectory);
+            await channel.updatePackageJson('.');
         }
     } catch (err) {
         error = err;
