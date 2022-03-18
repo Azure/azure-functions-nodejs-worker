@@ -17,7 +17,7 @@ import LogLevel = rpc.RpcLog.Level;
  * @param requestId gRPC message request id
  * @param msg gRPC message content
  */
-export function workerInitRequest(channel: WorkerChannel, requestId: string, _msg: rpc.IWorkerInitRequest) {
+export async function workerInitRequest(channel: WorkerChannel, requestId: string, msg: rpc.IWorkerInitRequest) {
     // Validate version
     const version = process.version;
     if (
@@ -35,18 +35,21 @@ export function workerInitRequest(channel: WorkerChannel, requestId: string, _ms
             logCategory: LogCategory.System,
         });
     } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
-        const msg =
+        const errorMsg =
             'Incompatible Node.js version' +
             ' (' +
             version +
             ').' +
             ' The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x or Node.js v16.x' +
             ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
-        systemError(msg);
-        throw new InternalException(msg);
+        systemError(errorMsg);
+        throw new InternalException(errorMsg);
     }
 
     logColdStartWarning(channel);
+    if (msg.functionAppDirectory) {
+        await channel.updatePackageJson(msg.functionAppDirectory);
+    }
 
     const workerCapabilities = {
         RpcHttpTriggerMetadataRemoved: 'true',

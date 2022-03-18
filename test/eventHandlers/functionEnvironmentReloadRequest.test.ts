@@ -3,9 +3,12 @@
 
 import { expect } from 'chai';
 import 'mocha';
+import * as mock from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -37,23 +40,40 @@ namespace Msg {
         },
     };
 
-    export const changingCwdLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: `Changing current working directory to /`,
-            level: LogLevel.Information,
-            logCategory: LogCategory.System,
-        },
-    };
+    export function changingCwdLog(dir = '/'): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message: `Changing current working directory to ${dir}`,
+                level: LogLevel.Information,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export function warning(message: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export const noPackageJsonWarning: rpc.IStreamingMessage = warning(
+        `Worker failed to load package.json: file does not exist.`
+    );
 }
 
 describe('functionEnvironmentReloadRequest', () => {
     let stream: TestEventStream;
+    let channel: WorkerChannel;
 
     // Reset `process.env` after this test suite so it doesn't affect other tests
     let originalEnv: NodeJS.ProcessEnv;
     before(() => {
         originalEnv = process.env;
-        ({ stream } = beforeEventHandlerSuite());
+        ({ stream, channel } = beforeEventHandlerSuite());
     });
 
     after(() => {
@@ -61,6 +81,7 @@ describe('functionEnvironmentReloadRequest', () => {
     });
 
     afterEach(async () => {
+        mock.restore();
         await stream.afterEachEventHandlerTest();
     });
 
@@ -155,11 +176,59 @@ describe('functionEnvironmentReloadRequest', () => {
             },
         });
 
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.changingCwdLog, Msg.reloadSuccess);
+        await stream.assertCalledWith(
+            Msg.reloadEnvVarsLog(2),
+            Msg.changingCwdLog(),
+            Msg.noPackageJsonWarning,
+            Msg.reloadSuccess
+        );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() != newDir);
         expect(process.cwd() == newDir);
+        process.chdir(cwd);
+    });
+
+    it('reloads package.json', async () => {
+        const cwd = process.cwd();
+        const oldDir = 'oldDir';
+        const oldDirAbsolute = path.join(cwd, oldDir);
+        const newDir = 'newDir';
+        const newDirAbsolute = path.join(cwd, newDir);
+        const oldPackageJson = {
+            type: 'module',
+            hello: 'world',
+        };
+        const newPackageJson = {
+            type: 'commonjs',
+            notHello: 'notWorld',
+        };
+        mock({
+            [oldDir]: {
+                'package.json': JSON.stringify(oldPackageJson),
+            },
+            [newDir]: {
+                'package.json': JSON.stringify(newPackageJson),
+            },
+        });
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: oldDirAbsolute,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(oldDirAbsolute), Msg.reloadSuccess);
+        expect(channel.packageJson).to.deep.equal(oldPackageJson);
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: newDirAbsolute,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDirAbsolute), Msg.reloadSuccess);
+        expect(channel.packageJson).to.deep.equal(newPackageJson);
         process.chdir(cwd);
     });
 });

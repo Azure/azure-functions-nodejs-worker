@@ -25,7 +25,7 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
         const eventName = msg.content;
         switch (eventName) {
             case 'functionEnvironmentReloadRequest':
-                functionEnvironmentReloadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
+                void functionEnvironmentReloadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
                 break;
             case 'functionLoadRequest':
                 void functionLoadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
@@ -34,7 +34,7 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
                 void invocationRequest(channel, msg.requestId, nonNullProp(msg, eventName));
                 break;
             case 'workerInitRequest':
-                workerInitRequest(channel, msg.requestId, nonNullProp(msg, eventName));
+                void workerInitRequest(channel, msg.requestId, nonNullProp(msg, eventName));
                 break;
             case 'workerStatusRequest':
                 workerStatusRequest(channel, msg.requestId, nonNullProp(msg, eventName));
