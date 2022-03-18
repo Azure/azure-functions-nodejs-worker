@@ -27,7 +27,7 @@ export class Request implements HttpRequest {
     public body?: any;
     public rawBody?: any;
 
-    private _cachedUser?: HttpRequestUser | null;
+    #cachedUser?: HttpRequestUser | null;
 
     public constructor(rpcHttp: rpc.IRpcHttp) {
         this.method = <HttpMethod>rpcHttp.method;
@@ -41,11 +41,11 @@ export class Request implements HttpRequest {
     }
 
     public get user(): HttpRequestUser | null {
-        if (this._cachedUser === undefined) {
-            this._cachedUser = extractHttpUserFromHeaders(this.headers);
+        if (this.#cachedUser === undefined) {
+            this.#cachedUser = extractHttpUserFromHeaders(this.headers);
         }
 
-        return this._cachedUser;
+        return this.#cachedUser;
     }
 
     public get(field: string): string | undefined {
