@@ -12,7 +12,8 @@ export class Response implements HttpResponseFull {
     enableContentNegotiation?: boolean;
     [key: string]: any;
 
-    private _done: Function;
+    // NOTE: This is considered private and people should not be referencing it, but for the sake of backwards compatibility we will avoid using `#`
+    _done: Function;
 
     constructor(done: Function) {
         this._done = done;
@@ -68,7 +69,8 @@ export class Response implements HttpResponseFull {
     set = this.setHeader;
     get = this.getHeader;
 
-    private setContentType() {
+    // NOTE: This is considered private and people should not be referencing it, but for the sake of backwards compatibility we will avoid using `#`
+    setContentType() {
         if (this.body !== undefined) {
             if (this.get(HeaderName.contentType)) {
                 // use user defined content type, if exists
