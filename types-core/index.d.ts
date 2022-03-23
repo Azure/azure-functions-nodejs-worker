@@ -6,7 +6,7 @@ import { Context } from '@azure/functions';
 /**
  * This module is shipped as a built-in part of the Azure Functions Node.js worker and is available at runtime
  */
-declare module '@azure/functions-worker' {
+declare module '@azure/functions-core' {
     /**
      * Register a hook to interact with the lifecycle of Azure Functions.
      * Hooks are executed in the order they were registered and will block execution if they throw an error

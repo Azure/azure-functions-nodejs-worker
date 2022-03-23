@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback } from '@azure/functions-worker';
+import { HookCallback } from '@azure/functions-core';
 import { Disposable } from './Disposable';
 import { WorkerChannel } from './WorkerChannel';
 import Module = require('module');
@@ -19,7 +19,7 @@ export function setupWorkerModule(channel: WorkerChannel): void {
 
     Module.prototype.require = new Proxy(Module.prototype.require, {
         apply(target, thisArg, argArray) {
-            if (argArray[0] === '@azure/functions-worker') {
+            if (argArray[0] === '@azure/functions-core') {
                 return workerApi;
             } else {
                 return Reflect.apply(target, thisArg, argArray);

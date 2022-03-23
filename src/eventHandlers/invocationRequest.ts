@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-worker';
+import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';

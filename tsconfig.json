@@ -12,8 +12,8 @@
             "@azure/functions": [
                 "types"
             ],
-            "@azure/functions-worker": [
-                "workerTypes"
+            "@azure/functions-core": [
+                "types-core"
             ]
         }
     }

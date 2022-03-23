@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext } from '@azure/functions-worker';
+import { HookCallback, HookContext } from '@azure/functions-core';
 import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';

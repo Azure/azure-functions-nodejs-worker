@@ -4,7 +4,7 @@
 /* eslint-disable deprecation/deprecation */
 
 import { AzureFunction, Context } from '@azure/functions';
-import * as workerTypes from '@azure/functions-worker';
+import * as workerTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
@@ -305,7 +305,7 @@ describe('invocationRequest', () => {
 
     before(async () => {
         ({ stream, loader } = beforeEventHandlerSuite());
-        workerApi = await import('@azure/functions-worker');
+        workerApi = await import('@azure/functions-core');
     });
 
     beforeEach(async () => {
