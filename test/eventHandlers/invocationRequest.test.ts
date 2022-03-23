@@ -4,7 +4,7 @@
 /* eslint-disable deprecation/deprecation */
 
 import { AzureFunction, Context } from '@azure/functions';
-import * as workerTypes from '@azure/functions-core';
+import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
@@ -300,12 +300,12 @@ namespace InputData {
 describe('invocationRequest', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
-    let workerApi: typeof workerTypes;
-    let testDisposables: workerTypes.Disposable[] = [];
+    let coreApi: typeof coreTypes;
+    let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
         ({ stream, loader } = beforeEventHandlerSuite());
-        workerApi = await import('@azure/functions-core');
+        coreApi = await import('@azure/functions-core');
     });
 
     beforeEach(async () => {
@@ -314,7 +314,7 @@ describe('invocationRequest', () => {
 
     afterEach(async () => {
         await stream.afterEachEventHandlerTest();
-        workerApi.Disposable.from(...testDisposables).dispose();
+        coreApi.Disposable.from(...testDisposables).dispose();
         testDisposables = [];
     });
 
@@ -538,7 +538,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('preInvocation', () => {
+                coreApi.registerHook('preInvocation', () => {
                     hookData += 'pre';
                 })
             );
@@ -559,7 +559,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('preInvocation', (context: workerTypes.PreInvocationContext) => {
+                coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
                     expect(context.inputs.length).to.equal(1);
                     expect(context.inputs[0]).to.equal('testStringData');
                     context.inputs = ['changedStringData'];
@@ -581,7 +581,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                     hookData += 'post';
                     expect(context.result).to.equal('hello');
                     expect(context.error).to.be.null;
@@ -604,7 +604,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                     hookData += 'post';
                     expect(context.result).to.equal('hello');
                     expect(context.error).to.be.null;
@@ -628,7 +628,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                     hookData += 'post';
                     expect(context.result).to.be.null;
                     expect(context.error).to.equal(testError);
@@ -647,7 +647,7 @@ describe('invocationRequest', () => {
             loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
             testDisposables.push(
-                workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+                coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                     hookData += 'post';
                     expect(context.result).to.be.null;
                     expect(context.error).to.equal(testError);
@@ -667,14 +667,14 @@ describe('invocationRequest', () => {
         loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
         testDisposables.push(
-            workerApi.registerHook('preInvocation', (context: workerTypes.PreInvocationContext) => {
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
                 context.hookData['hello'] = 'world';
                 hookData += 'pre';
             })
         );
 
         testDisposables.push(
-            workerApi.registerHook('postInvocation', (context: workerTypes.PostInvocationContext) => {
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                 expect(context.hookData['hello']).to.equal('world');
                 hookData += 'post';
             })
@@ -689,11 +689,11 @@ describe('invocationRequest', () => {
         loader.getFunc.returns(async () => {});
         loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
-        const disposableA: workerTypes.Disposable = workerApi.registerHook('preInvocation', () => {
+        const disposableA: coreTypes.Disposable = coreApi.registerHook('preInvocation', () => {
             hookData += 'a';
         });
         testDisposables.push(disposableA);
-        const disposableB: workerTypes.Disposable = workerApi.registerHook('preInvocation', () => {
+        const disposableB: coreTypes.Disposable = coreApi.registerHook('preInvocation', () => {
             hookData += 'b';
         });
         testDisposables.push(disposableB);

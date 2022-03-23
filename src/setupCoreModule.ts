@@ -12,7 +12,7 @@ import Module = require('module');
  * This module is available to users only at runtime, not as an installable npm package
  */
 export function setupCoreModule(channel: WorkerChannel): void {
-    const workerApi = {
+    const coreApi = {
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         Disposable,
     };
@@ -20,7 +20,7 @@ export function setupCoreModule(channel: WorkerChannel): void {
     Module.prototype.require = new Proxy(Module.prototype.require, {
         apply(target, thisArg, argArray) {
             if (argArray[0] === '@azure/functions-core') {
-                return workerApi;
+                return coreApi;
             } else {
                 return Reflect.apply(target, thisArg, argArray);
             }
