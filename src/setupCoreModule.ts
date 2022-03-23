@@ -11,7 +11,7 @@ import Module = require('module');
  * This module is essentially the publicly accessible API for our worker
  * This module is available to users only at runtime, not as an installable npm package
  */
-export function setupWorkerModule(channel: WorkerChannel): void {
+export function setupCoreModule(channel: WorkerChannel): void {
     const workerApi = {
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         Disposable,
