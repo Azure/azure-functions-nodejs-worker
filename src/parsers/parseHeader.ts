@@ -77,9 +77,9 @@ function parseHeaderParams(data: string): HeaderParams {
 }
 
 export class HeaderParams {
-    private _params: { [name: string]: string } = {};
+    #params: { [name: string]: string } = {};
     public get(name: string): string {
-        const result = this._params[name.toLowerCase()];
+        const result = this.#params[name.toLowerCase()];
         if (result === undefined) {
             throw new Error(`Failed to find parameter with name "${name}".`);
         } else {
@@ -88,10 +88,10 @@ export class HeaderParams {
     }
 
     public has(name: string): boolean {
-        return this._params[name.toLowerCase()] !== undefined;
+        return this.#params[name.toLowerCase()] !== undefined;
     }
 
     public add(name: string, value: string): void {
-        this._params[name.toLowerCase()] = value;
+        this.#params[name.toLowerCase()] = value;
     }
 }

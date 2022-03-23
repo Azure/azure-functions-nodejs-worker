@@ -5,28 +5,29 @@ import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
 import { InternalException } from './utils/InternalException';
+import { PackageJson } from './WorkerChannel';
 
 export interface IFunctionLoader {
-    load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void>;
+    load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
     getInfo(functionId: string): FunctionInfo;
     getFunc(functionId: string): Function;
 }
 
 export class FunctionLoader implements IFunctionLoader {
-    private _loadedFunctions: {
+    #loadedFunctions: {
         [k: string]: {
             info: FunctionInfo;
             func: Function;
         };
     } = {};
 
-    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata): Promise<void> {
+    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
         if (metadata.isProxy === true) {
             return;
         }
         const scriptFilePath = <string>(metadata && metadata.scriptFile);
         let script: any;
-        if (scriptFilePath.endsWith('.mjs')) {
+        if (this.isESModule(scriptFilePath, packageJson)) {
             // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
             const scriptFileUrl = url.pathToFileURL(scriptFilePath);
             if (scriptFileUrl.href) {
@@ -47,14 +48,14 @@ export class FunctionLoader implements IFunctionLoader {
                 'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
             );
         }
-        this._loadedFunctions[functionId] = {
+        this.#loadedFunctions[functionId] = {
             info: new FunctionInfo(metadata),
             func: userFunction,
         };
     }
 
     getInfo(functionId: string): FunctionInfo {
-        const loadedFunction = this._loadedFunctions[functionId];
+        const loadedFunction = this.#loadedFunctions[functionId];
         if (loadedFunction && loadedFunction.info) {
             return loadedFunction.info;
         } else {
@@ -63,12 +64,22 @@ export class FunctionLoader implements IFunctionLoader {
     }
 
     getFunc(functionId: string): Function {
-        const loadedFunction = this._loadedFunctions[functionId];
+        const loadedFunction = this.#loadedFunctions[functionId];
         if (loadedFunction && loadedFunction.func) {
             return loadedFunction.func;
         } else {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
+    }
+
+    isESModule(filePath: string, packageJson: PackageJson): boolean {
+        if (filePath.endsWith('.mjs')) {
+            return true;
+        }
+        if (filePath.endsWith('.cjs')) {
+            return false;
+        }
+        return packageJson.type === 'module';
     }
 }
 

@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+/* eslint-disable deprecation/deprecation */
+
 import { AzureFunction, Context } from '@azure/functions';
 import * as workerTypes from '@azure/functions-worker';
 import { expect } from 'chai';

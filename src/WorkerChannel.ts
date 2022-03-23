@@ -2,20 +2,31 @@
 // Licensed under the MIT License.
 
 import { HookCallback, HookContext } from '@azure/functions-worker';
+import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { ensureErrorType } from './utils/ensureErrorType';
+import path = require('path');
+import LogLevel = rpc.RpcLog.Level;
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+
+export interface PackageJson {
+    type?: string;
+}
 
 export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
+    public packageJson: PackageJson;
     private _preInvocationHooks: HookCallback[] = [];
     private _postInvocationHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
+        this.packageJson = {};
     }
 
     /**
@@ -55,6 +66,29 @@ export class WorkerChannel {
                 return this._postInvocationHooks;
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
+        }
+    }
+
+    public async updatePackageJson(dir: string): Promise<void> {
+        try {
+            this.packageJson = await readJson(path.join(dir, 'package.json'));
+        } catch (err) {
+            const error: Error = ensureErrorType(err);
+            let errorMsg: string;
+            if (error.name === 'SyntaxError') {
+                errorMsg = `file is not a valid JSON: ${error.message}`;
+            } else if (error.message.startsWith('ENOENT')) {
+                errorMsg = `file does not exist.`;
+            } else {
+                errorMsg = error.message;
+            }
+            errorMsg = `Worker failed to load package.json: ${errorMsg}`;
+            this.log({
+                message: errorMsg,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
+            this.packageJson = {};
         }
     }
 }

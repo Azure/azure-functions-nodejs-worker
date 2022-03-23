@@ -18,7 +18,7 @@ export async function functionLoadRequest(channel: WorkerChannel, requestId: str
         let error: Error | null | undefined;
         let errorMessage: string | undefined;
         try {
-            await channel.functionLoader.load(msg.functionId, msg.metadata);
+            await channel.functionLoader.load(msg.functionId, msg.metadata, channel.packageJson);
         } catch (err) {
             error = ensureErrorType(err);
             errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${error.message}'`;

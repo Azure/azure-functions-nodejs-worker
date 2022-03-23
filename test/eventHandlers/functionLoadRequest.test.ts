@@ -5,6 +5,7 @@ import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionLoader } from '../../src/FunctionLoader';
+import { PackageJson } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -47,7 +48,7 @@ describe('functionLoadRequest', () => {
 
         const originalLoader = loader.load;
         try {
-            loader.load = sinon.stub<[string, rpc.IRpcFunctionMetadata], Promise<void>>().throws(err);
+            loader.load = sinon.stub<[string, rpc.IRpcFunctionMetadata, PackageJson], Promise<void>>().throws(err);
 
             stream.addTestMessage({
                 requestId: 'id',

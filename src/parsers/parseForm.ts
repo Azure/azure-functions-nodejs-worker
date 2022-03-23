@@ -33,13 +33,13 @@ export function parseForm(data: Buffer | string, contentType: string): Form {
 }
 
 export class Form implements types.Form {
-    private _parts: [string, types.FormPart][];
+    #parts: [string, types.FormPart][];
     constructor(parts: [string, types.FormPart][]) {
-        this._parts = parts;
+        this.#parts = parts;
     }
 
     public get(name: string): types.FormPart | null {
-        for (const [key, value] of this._parts) {
+        for (const [key, value] of this.#parts) {
             if (key === name) {
                 return value;
             }
@@ -49,7 +49,7 @@ export class Form implements types.Form {
 
     public getAll(name: string): types.FormPart[] {
         const result: types.FormPart[] = [];
-        for (const [key, value] of this._parts) {
+        for (const [key, value] of this.#parts) {
             if (key === name) {
                 result.push(value);
             }
@@ -58,7 +58,7 @@ export class Form implements types.Form {
     }
 
     public has(name: string): boolean {
-        for (const [key] of this._parts) {
+        for (const [key] of this.#parts) {
             if (key === name) {
                 return true;
             }
@@ -67,10 +67,10 @@ export class Form implements types.Form {
     }
 
     [Symbol.iterator](): Iterator<[string, types.FormPart]> {
-        return this._parts[Symbol.iterator]();
+        return this.#parts[Symbol.iterator]();
     }
 
     public get length(): number {
-        return this._parts.length;
+        return this.#parts.length;
     }
 }
