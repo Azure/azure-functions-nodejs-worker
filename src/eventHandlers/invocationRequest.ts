@@ -29,6 +29,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
     let resultIsPromise = false;
 
     const info = channel.functionLoader.getInfo(nonNullProp(msg, 'functionId'));
+    const asyncDoneLearnMoreLink = 'https://go.microsoft.com/fwlink/?linkid=2097909';
 
     function log(level: LogLevel, category: LogCategory, ...args: any[]) {
         channel.log({
@@ -47,7 +48,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             let badAsyncMsg =
                 "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
             badAsyncMsg += `Function name: ${info.name}. Invocation Id: ${msg.invocationId}. `;
-            badAsyncMsg += `Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 `;
+            badAsyncMsg += `Learn more: ${asyncDoneLearnMoreLink}`;
             systemLog(LogLevel.Warning, badAsyncMsg);
         }
         log(level, LogCategory.User, ...args);
@@ -59,7 +60,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
     function onDone(): void {
         if (isDone) {
             const message = resultIsPromise
-                ? "Error: Choose either to return a promise or call 'done'.  Do not use both in your script."
+                ? `Error: Choose either to return a promise or call 'done'. Do not use both in your script. Learn more: ${asyncDoneLearnMoreLink}`
                 : "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.";
             systemLog(LogLevel.Error, message);
         }
