@@ -20,8 +20,8 @@ export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
     public packageJson: PackageJson;
-    private _preInvocationHooks: HookCallback[] = [];
-    private _postInvocationHooks: HookCallback[] = [];
+    #preInvocationHooks: HookCallback[] = [];
+    #postInvocationHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
@@ -41,7 +41,7 @@ export class WorkerChannel {
     }
 
     public registerHook(hookName: string, callback: HookCallback): Disposable {
-        const hooks = this.getHooks(hookName);
+        const hooks = this.#getHooks(hookName);
         hooks.push(callback);
         return new Disposable(() => {
             const index = hooks.indexOf(callback);
@@ -52,18 +52,18 @@ export class WorkerChannel {
     }
 
     public async executeHooks(hookName: string, context: HookContext): Promise<void> {
-        const callbacks = this.getHooks(hookName);
+        const callbacks = this.#getHooks(hookName);
         for (const callback of callbacks) {
             await callback(context);
         }
     }
 
-    private getHooks(hookName: string): HookCallback[] {
+    #getHooks(hookName: string): HookCallback[] {
         switch (hookName) {
             case 'preInvocation':
-                return this._preInvocationHooks;
+                return this.#preInvocationHooks;
             case 'postInvocation':
-                return this._postInvocationHooks;
+                return this.#postInvocationHooks;
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
