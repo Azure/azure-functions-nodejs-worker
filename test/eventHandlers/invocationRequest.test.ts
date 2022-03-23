@@ -192,9 +192,10 @@ namespace Msg {
         rpcLog: {
             category: 'testFuncName.Invocation',
             invocationId: '1',
-            message: "Error: Choose either to return a promise or call 'done'.  Do not use both in your script.",
+            message:
+                "Error: Choose either to return a promise or call 'done'. Do not use both in your script. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909",
             level: LogLevel.Error,
-            logCategory: LogCategory.User,
+            logCategory: LogCategory.System,
         },
     };
     export const duplicateDoneLog: rpc.IStreamingMessage = {
@@ -203,7 +204,7 @@ namespace Msg {
             invocationId: '1',
             message: "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.",
             level: LogLevel.Error,
-            logCategory: LogCategory.User,
+            logCategory: LogCategory.System,
         },
     };
     export const unexpectedLogAfterDoneLog: rpc.IStreamingMessage = {
@@ -211,7 +212,7 @@ namespace Msg {
             category: 'testFuncName.Invocation',
             invocationId: '1',
             message:
-                "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ",
+                "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909",
             level: LogLevel.Warning,
             logCategory: LogCategory.System,
         },
