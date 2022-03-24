@@ -17,9 +17,9 @@ export interface PackageJson {
 }
 
 export class WorkerChannel {
-    public eventStream: IEventStream;
-    public functionLoader: IFunctionLoader;
-    public packageJson: PackageJson;
+    eventStream: IEventStream;
+    functionLoader: IFunctionLoader;
+    packageJson: PackageJson;
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
 
@@ -34,13 +34,13 @@ export class WorkerChannel {
      * @param requestId gRPC message request id
      * @param msg gRPC message content
      */
-    public log(log: rpc.IRpcLog) {
+    log(log: rpc.IRpcLog) {
         this.eventStream.write({
             rpcLog: log,
         });
     }
 
-    public registerHook(hookName: string, callback: HookCallback): Disposable {
+    registerHook(hookName: string, callback: HookCallback): Disposable {
         const hooks = this.#getHooks(hookName);
         hooks.push(callback);
         return new Disposable(() => {
@@ -51,7 +51,7 @@ export class WorkerChannel {
         });
     }
 
-    public async executeHooks(hookName: string, context: HookContext): Promise<void> {
+    async executeHooks(hookName: string, context: HookContext): Promise<void> {
         const callbacks = this.#getHooks(hookName);
         for (const callback of callbacks) {
             await callback(context);
@@ -69,7 +69,7 @@ export class WorkerChannel {
         }
     }
 
-    public async updatePackageJson(dir: string): Promise<void> {
+    async updatePackageJson(dir: string): Promise<void> {
         try {
             this.packageJson = await readJson(path.join(dir, 'package.json'));
         } catch (err) {

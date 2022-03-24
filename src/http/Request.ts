@@ -18,18 +18,18 @@ import { parseForm } from '../parsers/parseForm';
 import { extractHttpUserFromHeaders } from './extractHttpUserFromHeaders';
 
 export class Request implements HttpRequest {
-    public method: HttpMethod | null;
-    public url: string;
-    public originalUrl: string;
-    public headers: HttpRequestHeaders;
-    public query: HttpRequestQuery;
-    public params: HttpRequestParams;
-    public body?: any;
-    public rawBody?: any;
+    method: HttpMethod | null;
+    url: string;
+    originalUrl: string;
+    headers: HttpRequestHeaders;
+    query: HttpRequestQuery;
+    params: HttpRequestParams;
+    body?: any;
+    rawBody?: any;
 
     #cachedUser?: HttpRequestUser | null;
 
-    public constructor(rpcHttp: rpc.IRpcHttp) {
+    constructor(rpcHttp: rpc.IRpcHttp) {
         this.method = <HttpMethod>rpcHttp.method;
         this.url = <string>rpcHttp.url;
         this.originalUrl = <string>rpcHttp.url;
@@ -40,7 +40,7 @@ export class Request implements HttpRequest {
         this.rawBody = fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body);
     }
 
-    public get user(): HttpRequestUser | null {
+    get user(): HttpRequestUser | null {
         if (this.#cachedUser === undefined) {
             this.#cachedUser = extractHttpUserFromHeaders(this.headers);
         }
@@ -48,11 +48,11 @@ export class Request implements HttpRequest {
         return this.#cachedUser;
     }
 
-    public get(field: string): string | undefined {
+    get(field: string): string | undefined {
         return this.headers && this.headers[field.toLowerCase()];
     }
 
-    public parseFormBody(): Form {
+    parseFormBody(): Form {
         const contentType = this.get(HeaderName.contentType);
         if (!contentType) {
             throw new Error(`"${HeaderName.contentType}" header must be defined.`);

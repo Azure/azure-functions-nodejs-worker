@@ -38,7 +38,7 @@ export class Form implements types.Form {
         this.#parts = parts;
     }
 
-    public get(name: string): types.FormPart | null {
+    get(name: string): types.FormPart | null {
         for (const [key, value] of this.#parts) {
             if (key === name) {
                 return value;
@@ -47,7 +47,7 @@ export class Form implements types.Form {
         return null;
     }
 
-    public getAll(name: string): types.FormPart[] {
+    getAll(name: string): types.FormPart[] {
         const result: types.FormPart[] = [];
         for (const [key, value] of this.#parts) {
             if (key === name) {
@@ -57,7 +57,7 @@ export class Form implements types.Form {
         return result;
     }
 
-    public has(name: string): boolean {
+    has(name: string): boolean {
         for (const [key] of this.#parts) {
             if (key === name) {
                 return true;
@@ -70,7 +70,7 @@ export class Form implements types.Form {
         return this.#parts[Symbol.iterator]();
     }
 
-    public get length(): number {
+    get length(): number {
         return this.#parts.length;
     }
 }

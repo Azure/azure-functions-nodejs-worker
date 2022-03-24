@@ -26,7 +26,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Waits up to a second for the expected number of messages to be written and then validates those messages
      */
-    public async assertCalledWith(...expectedMsgs: rpc.IStreamingMessage[]): Promise<void> {
+    async assertCalledWith(...expectedMsgs: rpc.IStreamingMessage[]): Promise<void> {
         try {
             // Wait for up to a second for the expected number of messages to come in
             const maxTime = Date.now() + 1000;
@@ -55,7 +55,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Verifies the test didn't send any extraneous messages
      */
-    public async afterEachEventHandlerTest(): Promise<void> {
+    async afterEachEventHandlerTest(): Promise<void> {
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));
         await this.assertCalledWith();

@@ -7,16 +7,16 @@ import { toRpcHttp, toTypedData } from './converters';
 const returnBindingKey = '$return';
 
 export class FunctionInfo {
-    public name: string;
-    public directory: string;
-    public bindings: {
+    name: string;
+    directory: string;
+    bindings: {
         [key: string]: rpc.IBindingInfo;
     };
-    public outputBindings: {
+    outputBindings: {
         [key: string]: rpc.IBindingInfo & { converter: (any) => rpc.ITypedData };
     };
-    public httpOutputName: string;
-    public hasHttpTrigger: boolean;
+    httpOutputName: string;
+    hasHttpTrigger: boolean;
 
     constructor(metadata: rpc.IRpcFunctionMetadata) {
         this.name = <string>metadata.name;
@@ -53,11 +53,11 @@ export class FunctionInfo {
     /**
      * Return output binding details on the special key "$return" output binding
      */
-    public getReturnBinding() {
+    getReturnBinding() {
         return this.outputBindings[returnBindingKey];
     }
 
-    public getTimerTriggerName(): string | undefined {
+    getTimerTriggerName(): string | undefined {
         for (const name in this.bindings) {
             const type = this.bindings[name].type;
             if (type && type.toLowerCase() === 'timertrigger') {

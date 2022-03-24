@@ -2,5 +2,5 @@
 // Licensed under the MIT License.
 
 export class InternalException extends Error {
-    public isAzureFunctionsInternalException = true;
+    isAzureFunctionsInternalException = true;
 }
