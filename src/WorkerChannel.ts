@@ -1,18 +1,16 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context } from '@azure/functions';
+import { HookCallback, HookContext } from '@azure/functions-core';
 import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
 import { ensureErrorType } from './utils/ensureErrorType';
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
-
-type InvocationRequestBefore = (context: Context, userFn: Function) => Function;
-type InvocationRequestAfter = (context: Context) => void;
 
 export interface PackageJson {
     type?: string;
@@ -22,15 +20,13 @@ export class WorkerChannel {
     public eventStream: IEventStream;
     public functionLoader: IFunctionLoader;
     public packageJson: PackageJson;
-    private _invocationRequestBefore: InvocationRequestBefore[];
-    private _invocationRequestAfter: InvocationRequestAfter[];
+    #preInvocationHooks: HookCallback[] = [];
+    #postInvocationHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
         this.functionLoader = functionLoader;
         this.packageJson = {};
-        this._invocationRequestBefore = [];
-        this._invocationRequestAfter = [];
     }
 
     /**
@@ -44,32 +40,32 @@ export class WorkerChannel {
         });
     }
 
-    /**
-     * Register a patching function to be run before User Function is executed.
-     * Hook should return a patched version of User Function.
-     */
-    public registerBeforeInvocationRequest(beforeCb: InvocationRequestBefore): void {
-        this._invocationRequestBefore.push(beforeCb);
+    public registerHook(hookName: string, callback: HookCallback): Disposable {
+        const hooks = this.#getHooks(hookName);
+        hooks.push(callback);
+        return new Disposable(() => {
+            const index = hooks.indexOf(callback);
+            if (index > -1) {
+                hooks.splice(index, 1);
+            }
+        });
     }
 
-    /**
-     * Register a function to be run after User Function resolves.
-     */
-    public registerAfterInvocationRequest(afterCb: InvocationRequestAfter): void {
-        this._invocationRequestAfter.push(afterCb);
-    }
-
-    public runInvocationRequestBefore(context: Context, userFunction: Function): Function {
-        let wrappedFunction = userFunction;
-        for (const before of this._invocationRequestBefore) {
-            wrappedFunction = before(context, wrappedFunction);
+    public async executeHooks(hookName: string, context: HookContext): Promise<void> {
+        const callbacks = this.#getHooks(hookName);
+        for (const callback of callbacks) {
+            await callback(context);
         }
-        return wrappedFunction;
     }
 
-    public runInvocationRequestAfter(context: Context) {
-        for (const after of this._invocationRequestAfter) {
-            after(context);
+    #getHooks(hookName: string): HookCallback[] {
+        switch (hookName) {
+            case 'preInvocation':
+                return this.#preInvocationHooks;
+            case 'postInvocation':
+                return this.#postInvocationHooks;
+            default:
+                throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
     }
 
