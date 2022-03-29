@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Context } from '@azure/functions';
+import { AzureFunction, Context } from '@azure/functions';
 
 /**
  * This module is shipped as a built-in part of the Azure Functions Node.js worker and is available at runtime
@@ -45,6 +45,11 @@ declare module '@azure/functions-core' {
          * The input values for this specific invocation. Changes to this array _will_ affect the inputs passed to your function
          */
         inputs: any[];
+
+        /**
+         * The function callback for this specific invocation. Changes to this value _will_ affect the function itself
+         */
+        functionCallback: AzureFunction;
     }
 
     /**

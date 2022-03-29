@@ -576,6 +576,25 @@ describe('invocationRequest', () => {
         });
     }
 
+    it('preInvocationHook respects change to functionCallback', async () => {
+        loader.getFunc.returns(async (invocContext: Context) => {
+            invocContext.log('old function');
+        });
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                expect(context.functionCallback).to.be.a('function');
+                context.functionCallback = async (invocContext: Context) => {
+                    invocContext.log('new function');
+                };
+            })
+        );
+
+        sendInvokeMessage([InputData.string]);
+        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.userTestLog('new function'), Msg.invocResponse([]));
+    });
+
     for (const [func, suffix] of TestFunc.logHookData) {
         it('postInvocationHook' + suffix, async () => {
             loader.getFunc.returns(func);
