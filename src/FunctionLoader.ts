@@ -18,6 +18,7 @@ export class FunctionLoader implements IFunctionLoader {
         [k: string]: {
             info: FunctionInfo;
             func: Function;
+            thisArg: unknown;
         };
     } = {};
 
@@ -42,15 +43,11 @@ export class FunctionLoader implements IFunctionLoader {
             script = require(scriptFilePath);
         }
         const entryPoint = <string>(metadata && metadata.entryPoint);
-        const userFunction = getEntryPoint(script, entryPoint);
-        if (typeof userFunction !== 'function') {
-            throw new InternalException(
-                'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
-            );
-        }
+        const [userFunction, thisArg] = getEntryPoint(script, entryPoint);
         this.#loadedFunctions[functionId] = {
             info: new FunctionInfo(metadata),
             func: userFunction,
+            thisArg,
         };
     }
 
@@ -66,7 +63,8 @@ export class FunctionLoader implements IFunctionLoader {
     getFunc(functionId: string): Function {
         const loadedFunction = this.#loadedFunctions[functionId];
         if (loadedFunction && loadedFunction.func) {
-            return loadedFunction.func;
+            // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
+            return loadedFunction.func.bind(loadedFunction.thisArg);
         } else {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
@@ -83,9 +81,10 @@ export class FunctionLoader implements IFunctionLoader {
     }
 }
 
-function getEntryPoint(f: any, entryPoint?: string): Function {
+function getEntryPoint(f: any, entryPoint?: string): [Function, unknown] {
+    let thisArg: unknown;
     if (f !== null && typeof f === 'object') {
-        const obj = f;
+        thisArg = f;
         if (entryPoint) {
             // the module exports multiple functions
             // and an explicit entry point was named
@@ -99,12 +98,6 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
             // 'run' or 'index' by convention
             f = f.run || f.index;
         }
-
-        if (typeof f === 'function') {
-            return function () {
-                return f.apply(obj, arguments);
-            };
-        }
     }
 
     if (!f) {
@@ -116,7 +109,11 @@ function getEntryPoint(f: any, entryPoint?: string): Function {
             "you must indicate the entry point, either by naming it 'run' or 'index', or by naming it " +
             "explicitly via the 'entryPoint' metadata property.";
         throw new InternalException(msg);
+    } else if (typeof f !== 'function') {
+        throw new InternalException(
+            'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
+        );
     }
 
-    return f;
+    return [f, thisArg];
 }

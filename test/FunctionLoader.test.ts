@@ -144,6 +144,28 @@ describe('FunctionLoader', () => {
         expect(result.then).to.be.a('function');
     });
 
+    it("function returned is a clone so that it can't affect other executions", async () => {
+        mock('test', { test: async () => {} });
+
+        await loader.load(
+            'functionId',
+            <rpc.IRpcFunctionMetadata>{
+                scriptFile: 'test',
+                entryPoint: 'test',
+            },
+            {}
+        );
+
+        const userFunction = loader.getFunc('functionId');
+        Object.assign(userFunction, { hello: 'world' });
+
+        const userFunction2 = loader.getFunc('functionId');
+
+        expect(userFunction).to.not.equal(userFunction2);
+        expect(userFunction['hello']).to.equal('world');
+        expect(userFunction2['hello']).to.be.undefined;
+    });
+
     it('respects .cjs extension', () => {
         const result = loader.isESModule('test.cjs', {
             type: 'module',
