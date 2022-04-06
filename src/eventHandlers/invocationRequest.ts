@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { AzureFunction } from '@azure/functions';
 import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
@@ -82,11 +83,17 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
         });
 
         const hookData: HookData = {};
-        const userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
-        const preInvocContext: PreInvocationContext = { hookData, invocationContext: context, inputs };
+        let userFunction = channel.functionLoader.getFunc(nonNullProp(msg, 'functionId'));
+        const preInvocContext: PreInvocationContext = {
+            hookData,
+            invocationContext: context,
+            functionCallback: <AzureFunction>userFunction,
+            inputs,
+        };
 
         await channel.executeHooks('preInvocation', preInvocContext);
         inputs = preInvocContext.inputs;
+        userFunction = preInvocContext.functionCallback;
 
         let rawResult = userFunction(context, ...inputs);
         resultIsPromise = rawResult && typeof rawResult.then === 'function';
