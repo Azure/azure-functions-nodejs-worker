@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { HookCallback } from '@azure/functions-core';
+import { version } from './constants';
 import { Disposable } from './Disposable';
 import { WorkerChannel } from './WorkerChannel';
 import Module = require('module');
@@ -15,6 +16,7 @@ export function setupCoreModule(channel: WorkerChannel): void {
     const coreApi = {
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         Disposable,
+        version: version,
     };
 
     Module.prototype.require = new Proxy(Module.prototype.require, {

@@ -8,6 +8,11 @@ import { AzureFunction, Context } from '@azure/functions';
  */
 declare module '@azure/functions-core' {
     /**
+     * The version of the Node.js worker
+     */
+    export const version: string;
+
+    /**
      * Register a hook to interact with the lifecycle of Azure Functions.
      * Hooks are executed in the order they were registered and will block execution if they throw an error
      */
