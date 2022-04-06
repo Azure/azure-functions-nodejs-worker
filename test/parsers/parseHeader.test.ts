@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import { getHeaderValue, parseContentDisposition, parseContentType } from '../src/parsers/parseHeader';
+import { getHeaderValue, parseContentDisposition, parseContentType } from '../../src/parsers/parseHeader';
 
 describe('getHeaderValue', () => {
     it('normal', async () => {

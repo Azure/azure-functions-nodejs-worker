@@ -4,8 +4,8 @@
 import { Cookie } from '@azure/functions';
 import { expect } from 'chai';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { toRpcHttp, toRpcHttpCookieList } from '../src/converters';
+import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { toRpcHttp, toRpcHttpCookieList } from '../../src/converters/RpcHttpConverters';
 
 describe('Rpc Converters', () => {
     /** NullableBool */

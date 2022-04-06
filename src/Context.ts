@@ -14,11 +14,10 @@ import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import {
     convertKeysToCamelCase,
-    fromRpcTraceContext,
-    fromTypedData,
     getBindingDefinitions,
     getNormalizedBindingData,
-} from './converters';
+} from './converters/BindingConverters';
+import { fromRpcTraceContext, fromTypedData } from './converters/RpcConverters';
 import { FunctionInfo } from './FunctionInfo';
 import { Request } from './http/Request';
 import { Response } from './http/Response';

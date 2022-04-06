@@ -3,14 +3,14 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import {
     fromRpcTraceContext,
     toNullableBool,
     toNullableDouble,
     toNullableString,
     toNullableTimestamp,
-} from '../src/converters';
+} from '../../src/converters/RpcConverters';
 
 describe('Rpc Converters', () => {
     /** NullableBool */
