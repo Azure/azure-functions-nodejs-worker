@@ -4,9 +4,11 @@
 import { expect } from 'chai';
 import { fromString } from 'long';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { fromTypedData, getBindingDefinitions, getNormalizedBindingData, toRpcHttp } from '../src/converters';
-import { FunctionInfo } from '../src/FunctionInfo';
+import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { getBindingDefinitions, getNormalizedBindingData } from '../../src/converters/BindingConverters';
+import { fromTypedData } from '../../src/converters/RpcConverters';
+import { toRpcHttp } from '../../src/converters/RpcHttpConverters';
+import { FunctionInfo } from '../../src/FunctionInfo';
 
 describe('Binding Converters', () => {
     it('normalizes binding trigger metadata for HTTP', () => {

@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import { parseForm } from '../src/parsers/parseForm';
+import { parseForm } from '../../src/parsers/parseForm';
 
 describe('parseForm', () => {
     describe('multipart', () => {

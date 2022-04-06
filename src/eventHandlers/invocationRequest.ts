@@ -6,7 +6,7 @@ import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/fu
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';
-import { toTypedData } from '../converters';
+import { toTypedData } from '../converters/RpcConverters';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
 import { toRpcStatus } from '../utils/toRpcStatus';

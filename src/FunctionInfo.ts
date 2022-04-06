@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { toRpcHttp, toTypedData } from './converters';
+import { toTypedData } from './converters/RpcConverters';
+import { toRpcHttp } from './converters/RpcHttpConverters';
 
 const returnBindingKey = '$return';
 
