@@ -253,6 +253,28 @@ namespace Msg {
             },
         };
     }
+    export function executingHooksLog(count: number, hookName: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                category: 'testFuncName.Invocation',
+                invocationId: '1',
+                message: `Executing ${count} "${hookName}" hooks`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+    export function executedHooksLog(hookName: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                category: 'testFuncName.Invocation',
+                invocationId: '1',
+                message: `Executed "${hookName}" hooks`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
     export function invocResponse(
         expectedOutputData?: rpc.IParameterBinding[] | null,
         expectedReturnValue?: rpc.ITypedData | null
@@ -547,6 +569,8 @@ describe('invocationRequest', () => {
             sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
+                Msg.executingHooksLog(1, 'preInvocation'),
+                Msg.executedHooksLog('preInvocation'),
                 Msg.userTestLog('preinvoc'),
                 Msg.invocResponse([], { string: 'hello' })
             );
@@ -570,6 +594,8 @@ describe('invocationRequest', () => {
             sendInvokeMessage([InputData.string]);
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
+                Msg.executingHooksLog(1, 'preInvocation'),
+                Msg.executedHooksLog('preInvocation'),
                 Msg.userTestLog('changedStringData'),
                 Msg.invocResponse([])
             );
@@ -592,7 +618,13 @@ describe('invocationRequest', () => {
         );
 
         sendInvokeMessage([InputData.string]);
-        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.userTestLog('new function'), Msg.invocResponse([]));
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.userTestLog('new function'),
+            Msg.invocResponse([])
+        );
     });
 
     for (const [func, suffix] of TestFunc.logHookData) {
@@ -605,6 +637,7 @@ describe('invocationRequest', () => {
                     hookData += 'post';
                     expect(context.result).to.equal('hello');
                     expect(context.error).to.be.null;
+                    context.invocationContext.log('hello from post');
                 })
             );
 
@@ -612,6 +645,9 @@ describe('invocationRequest', () => {
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
                 Msg.userTestLog('invoc'),
+                Msg.executingHooksLog(1, 'postInvocation'),
+                Msg.userTestLog('hello from post'),
+                Msg.executedHooksLog('postInvocation'),
                 Msg.invocResponse([], { string: 'hello' })
             );
             expect(hookData).to.equal('invocpost');
@@ -636,6 +672,8 @@ describe('invocationRequest', () => {
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
                 Msg.userTestLog('invoc'),
+                Msg.executingHooksLog(1, 'postInvocation'),
+                Msg.executedHooksLog('postInvocation'),
                 Msg.invocResponse([], { string: 'world' })
             );
             expect(hookData).to.equal('invocpost');
@@ -656,7 +694,12 @@ describe('invocationRequest', () => {
             );
 
             sendInvokeMessage([InputData.http]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed);
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.executingHooksLog(1, 'postInvocation'),
+                Msg.executedHooksLog('postInvocation'),
+                Msg.invocResFailed
+            );
             expect(hookData).to.equal('post');
         });
     }
@@ -677,7 +720,12 @@ describe('invocationRequest', () => {
             );
 
             sendInvokeMessage([InputData.http]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], { string: 'hello' }));
+            await stream.assertCalledWith(
+                Msg.receivedInvocLog(),
+                Msg.executingHooksLog(1, 'postInvocation'),
+                Msg.executedHooksLog('postInvocation'),
+                Msg.invocResponse([], { string: 'hello' })
+            );
             expect(hookData).to.equal('post');
         });
     }
@@ -701,7 +749,14 @@ describe('invocationRequest', () => {
         );
 
         sendInvokeMessage([InputData.http]);
-        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
         expect(hookData).to.equal('prepost');
     });
 
@@ -719,12 +774,22 @@ describe('invocationRequest', () => {
         testDisposables.push(disposableB);
 
         sendInvokeMessage([InputData.http]);
-        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(2, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.invocResponse([])
+        );
         expect(hookData).to.equal('ab');
 
         disposableA.dispose();
         sendInvokeMessage([InputData.http]);
-        await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([]));
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.invocResponse([])
+        );
         expect(hookData).to.equal('abb');
 
         disposableB.dispose();

@@ -51,10 +51,31 @@ export class WorkerChannel {
         });
     }
 
-    async executeHooks(hookName: string, context: HookContext): Promise<void> {
+    async executeHooks(
+        hookName: string,
+        context: HookContext,
+        invocationId?: string | null,
+        msgCategory?: string
+    ): Promise<void> {
         const callbacks = this.#getHooks(hookName);
-        for (const callback of callbacks) {
-            await callback(context);
+        if (callbacks.length > 0) {
+            this.log({
+                message: `Executing ${callbacks.length} "${hookName}" hooks`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+                invocationId,
+                category: msgCategory,
+            });
+            for (const callback of callbacks) {
+                await callback(context);
+            }
+            this.log({
+                message: `Executed "${hookName}" hooks`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+                invocationId,
+                category: msgCategory,
+            });
         }
     }
 

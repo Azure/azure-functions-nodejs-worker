@@ -28,25 +28,27 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
     response.outputData = [];
 
     let isDone = false;
+    let isExecutingPostInvocationHooks = false;
     let resultIsPromise = false;
 
     const info = channel.functionLoader.getInfo(nonNullProp(msg, 'functionId'));
     const asyncDoneLearnMoreLink = 'https://go.microsoft.com/fwlink/?linkid=2097909';
 
-    function log(level: LogLevel, category: LogCategory, ...args: any[]) {
+    const msgCategory = `${info.name}.Invocation`;
+    function log(level: LogLevel, logCategory: LogCategory, ...args: any[]) {
         channel.log({
             invocationId: msg.invocationId,
-            category: `${info.name}.Invocation`,
+            category: msgCategory,
             message: format.apply(null, <[any, any[]]>args),
             level: level,
-            logCategory: category,
+            logCategory,
         });
     }
     function systemLog(level: LogLevel, ...args: any[]) {
         log(level, LogCategory.System, ...args);
     }
     function userLog(level: LogLevel, ...args: any[]) {
-        if (isDone) {
+        if (isDone && !isExecutingPostInvocationHooks) {
             let badAsyncMsg =
                 "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. ";
             badAsyncMsg += `Function name: ${info.name}. Invocation Id: ${msg.invocationId}. `;
@@ -91,7 +93,7 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
             inputs,
         };
 
-        await channel.executeHooks('preInvocation', preInvocContext);
+        await channel.executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
         inputs = preInvocContext.inputs;
         userFunction = preInvocContext.functionCallback;
 
@@ -120,7 +122,13 @@ export async function invocationRequest(channel: WorkerChannel, requestId: strin
         } catch (err) {
             postInvocContext.error = err;
         }
-        await channel.executeHooks('postInvocation', postInvocContext);
+
+        try {
+            isExecutingPostInvocationHooks = true;
+            await channel.executeHooks('postInvocation', postInvocContext, msg.invocationId, msgCategory);
+        } finally {
+            isExecutingPostInvocationHooks = false;
+        }
 
         if (isError(postInvocContext.error)) {
             throw postInvocContext.error;
