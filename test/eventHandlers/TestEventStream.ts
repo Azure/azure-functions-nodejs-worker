@@ -36,6 +36,13 @@ export class TestEventStream extends EventEmitter implements IEventStream {
             }
 
             const calls = this.written.getCalls();
+
+            // First, validate the "shortened" form of the messages. This will result in a more readable error for most test failures
+            const shortExpectedMsgs = expectedMsgs.map(getShortenedMsg);
+            const shortActualMsgs = calls.map((c) => getShortenedMsg(c.args[0]));
+            expect(shortActualMsgs).to.deep.equal(shortExpectedMsgs);
+
+            // Next, do a more comprehensive check on the messages
             expect(calls.length).to.equal(
                 expectedMsgs.length,
                 'Message count does not match. This may be caused by the previous test writing extraneous messages.'
@@ -60,6 +67,41 @@ export class TestEventStream extends EventEmitter implements IEventStream {
         await new Promise((resolve) => setTimeout(resolve, 20));
         await this.assertCalledWith();
     }
+}
+
+function getShortenedMsg(msg: rpc.IStreamingMessage): string {
+    if (msg.rpcLog?.message) {
+        return msg.rpcLog.message;
+    } else {
+        for (const [k, v] of Object.entries(msg)) {
+            // only interested in response messages
+            if (/response/i.test(k)) {
+                let result: string;
+                let errorMsg: string | undefined;
+                switch (v.result?.status) {
+                    case rpc.StatusResult.Status.Success:
+                        result = 'success';
+                        break;
+                    case rpc.StatusResult.Status.Failure:
+                        result = 'failed';
+                        errorMsg = v.result.exception?.message;
+                        break;
+                    case rpc.StatusResult.Status.Cancelled:
+                        result = 'cancelled';
+                        break;
+                    default:
+                        result = 'unknown';
+                        break;
+                }
+                let shortMsg = `Message: "${k}". Result: "${result}"`;
+                if (errorMsg) {
+                    shortMsg += ` Error: "${errorMsg}"`;
+                }
+                return shortMsg;
+            }
+        }
+    }
+    return 'Unknown message';
 }
 
 /**
