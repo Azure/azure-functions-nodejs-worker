@@ -7,66 +7,68 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { isError } from '../utils/ensureErrorType';
 import { InternalException } from '../utils/InternalException';
 import { systemError } from '../utils/Logger';
-import { toRpcStatus } from '../utils/toRpcStatus';
 import { WorkerChannel } from '../WorkerChannel';
+import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 /**
  * Host sends capabilities/init data to worker and requests the worker to initialize itself
- * @param requestId gRPC message request id
- * @param msg gRPC message content
  */
-export async function workerInitRequest(channel: WorkerChannel, requestId: string, msg: rpc.IWorkerInitRequest) {
-    // Validate version
-    const version = process.version;
-    if (
-        (version.startsWith('v17.') || version.startsWith('v15.')) &&
-        process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development'
-    ) {
-        const msg =
-            'Node.js version used (' +
-            version +
-            ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
-            ' https://aka.ms/functions-node-versions';
-        channel.log({
-            message: msg,
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
-        });
-    } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
-        const errorMsg =
-            'Incompatible Node.js version' +
-            ' (' +
-            version +
-            ').' +
-            ' The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x or Node.js v16.x' +
-            ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
-        systemError(errorMsg);
-        throw new InternalException(errorMsg);
+export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'workerInitResponse'> {
+    readonly responseName = 'workerInitResponse';
+
+    getDefaultResponse(_msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
+        return {};
     }
 
-    logColdStartWarning(channel);
-    if (msg.functionAppDirectory) {
-        await channel.updatePackageJson(msg.functionAppDirectory);
+    async handleEvent(channel: WorkerChannel, msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
+        const response = this.getDefaultResponse(msg);
+
+        // Validate version
+        const version = process.version;
+        if (
+            (version.startsWith('v17.') || version.startsWith('v15.')) &&
+            process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development'
+        ) {
+            const msg =
+                'Node.js version used (' +
+                version +
+                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
+                ' https://aka.ms/functions-node-versions';
+            channel.log({
+                message: msg,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
+        } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
+            const errorMsg =
+                'Incompatible Node.js version' +
+                ' (' +
+                version +
+                ').' +
+                ' The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x or Node.js v16.x' +
+                ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
+            systemError(errorMsg);
+            throw new InternalException(errorMsg);
+        }
+
+        logColdStartWarning(channel);
+        if (msg.functionAppDirectory) {
+            await channel.updatePackageJson(msg.functionAppDirectory);
+        }
+
+        response.capabilities = {
+            RpcHttpTriggerMetadataRemoved: 'true',
+            RpcHttpBodyOnly: 'true',
+            IgnoreEmptyValuedRpcHttpHeaders: 'true',
+            UseNullableValueDictionaryForHttp: 'true',
+            WorkerStatus: 'true',
+            TypedDataCollection: 'true',
+        };
+
+        return response;
     }
-
-    const workerCapabilities = {
-        RpcHttpTriggerMetadataRemoved: 'true',
-        RpcHttpBodyOnly: 'true',
-        IgnoreEmptyValuedRpcHttpHeaders: 'true',
-        UseNullableValueDictionaryForHttp: 'true',
-        WorkerStatus: 'true',
-        TypedDataCollection: 'true',
-    };
-
-    channel.eventStream.write({
-        requestId: requestId,
-        workerInitResponse: {
-            result: toRpcStatus(),
-            capabilities: workerCapabilities,
-        },
-    });
 }
 
 export function logColdStartWarning(channel: WorkerChannel, delayInMs?: number): void {

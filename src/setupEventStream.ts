@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { functionEnvironmentReloadRequest } from './eventHandlers/functionEnvironmentReloadRequest';
-import { functionLoadRequest } from './eventHandlers/functionLoadRequest';
-import { invocationRequest } from './eventHandlers/invocationRequest';
-import { workerInitRequest } from './eventHandlers/workerInitRequest';
-import { workerStatusRequest } from './eventHandlers/workerStatusRequest';
+import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
+import { FunctionEnvironmentReloadHandler } from './eventHandlers/functionEnvironmentReloadRequest';
+import { FunctionLoadHandler } from './eventHandlers/functionLoadRequest';
+import { InvocationHandler } from './eventHandlers/invocationRequest';
+import { WorkerInitHandler } from './eventHandlers/workerInitRequest';
+import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
@@ -22,40 +23,7 @@ import LogLevel = rpc.RpcLog.Level;
  */
 export function setupEventStream(workerId: string, channel: WorkerChannel): void {
     channel.eventStream.on('data', (msg) => {
-        const eventName = msg.content;
-        switch (eventName) {
-            case 'functionEnvironmentReloadRequest':
-                void functionEnvironmentReloadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
-                break;
-            case 'functionLoadRequest':
-                void functionLoadRequest(channel, msg.requestId, nonNullProp(msg, eventName));
-                break;
-            case 'invocationRequest':
-                void invocationRequest(channel, msg.requestId, nonNullProp(msg, eventName));
-                break;
-            case 'workerInitRequest':
-                void workerInitRequest(channel, msg.requestId, nonNullProp(msg, eventName));
-                break;
-            case 'workerStatusRequest':
-                workerStatusRequest(channel, msg.requestId, nonNullProp(msg, eventName));
-                break;
-            case 'closeSharedMemoryResourcesRequest':
-            case 'fileChangeEventRequest':
-            case 'functionLoadRequestCollection':
-            case 'functionsMetadataRequest':
-            case 'invocationCancel':
-            case 'startStream':
-            case 'workerHeartbeat':
-            case 'workerTerminate':
-                // Not yet implemented
-                break;
-            default:
-                channel.log({
-                    message: `Worker ${workerId} had no handler for message '${eventName}'`,
-                    level: LogLevel.Error,
-                    logCategory: LogCategory.System,
-                });
-        }
+        void handleMessage(workerId, channel, msg);
     });
 
     channel.eventStream.on('error', function (err) {
@@ -73,4 +41,78 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
         }
         oldWrite.apply(channel.eventStream, [msg]);
     };
+}
+
+async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rpc.StreamingMessage): Promise<void> {
+    const outMsg: rpc.IStreamingMessage = {
+        requestId: inMsg.requestId,
+    };
+
+    let eventHandler: EventHandler | undefined;
+    let request: SupportedRequest | undefined;
+    try {
+        const eventName = inMsg.content;
+        switch (eventName) {
+            case 'functionEnvironmentReloadRequest':
+                eventHandler = new FunctionEnvironmentReloadHandler();
+                break;
+            case 'functionLoadRequest':
+                eventHandler = new FunctionLoadHandler();
+                break;
+            case 'invocationRequest':
+                eventHandler = new InvocationHandler();
+                break;
+            case 'workerInitRequest':
+                eventHandler = new WorkerInitHandler();
+                break;
+            case 'workerStatusRequest':
+                // Worker sends the host empty response to evaluate the worker's latency
+                // The response doesn't even allow a `result` property, which is why we don't implement an EventHandler class
+                outMsg.workerStatusResponse = {};
+                channel.eventStream.write(outMsg);
+                return;
+            case 'closeSharedMemoryResourcesRequest':
+            case 'fileChangeEventRequest':
+            case 'functionLoadRequestCollection':
+            case 'functionsMetadataRequest':
+            case 'invocationCancel':
+            case 'startStream':
+            case 'workerHeartbeat':
+            case 'workerTerminate':
+                // Not yet implemented
+                return;
+            default:
+                throw new InternalException(`Worker ${workerId} had no handler for message '${eventName}'`);
+        }
+
+        request = nonNullProp(inMsg, eventName);
+        const response = await eventHandler.handleEvent(channel, request);
+        response.result = { status: rpc.StatusResult.Status.Success };
+        outMsg[eventHandler.responseName] = response;
+    } catch (err) {
+        const error = ensureErrorType(err);
+        if (error.isAzureFunctionsInternalException) {
+            channel.log({
+                message: error.message,
+                level: LogLevel.Error,
+                logCategory: LogCategory.System,
+            });
+        }
+
+        if (eventHandler && request) {
+            const response = eventHandler.getDefaultResponse(request);
+            response.result = {
+                status: rpc.StatusResult.Status.Failure,
+                exception: {
+                    message: error.message,
+                    stackTrace: error.stack,
+                },
+            };
+            outMsg[eventHandler.responseName] = response;
+        }
+    }
+
+    if (eventHandler) {
+        channel.eventStream.write(outMsg);
+    }
 }
