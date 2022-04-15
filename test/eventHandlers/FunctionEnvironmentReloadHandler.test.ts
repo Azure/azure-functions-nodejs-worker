@@ -61,7 +61,7 @@ namespace Msg {
     }
 
     export const noPackageJsonWarning: rpc.IStreamingMessage = warning(
-        `Worker failed to load package.json: file does not exist.`
+        `Worker failed to load package.json: file does not exist`
     );
 }
 

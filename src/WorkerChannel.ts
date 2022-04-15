@@ -2,19 +2,14 @@
 // Licensed under the MIT License.
 
 import { HookCallback, HookContext } from '@azure/functions-core';
-import { readJson } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import { ensureErrorType } from './utils/ensureErrorType';
-import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
-
-export interface PackageJson {
-    type?: string;
-}
 
 export class WorkerChannel {
     eventStream: IEventStream;
@@ -92,20 +87,11 @@ export class WorkerChannel {
 
     async updatePackageJson(dir: string): Promise<void> {
         try {
-            this.packageJson = await readJson(path.join(dir, 'package.json'));
+            this.packageJson = await parsePackageJson(dir);
         } catch (err) {
-            const error: Error = ensureErrorType(err);
-            let errorMsg: string;
-            if (error.name === 'SyntaxError') {
-                errorMsg = `file is not a valid JSON: ${error.message}`;
-            } else if (error.message.startsWith('ENOENT')) {
-                errorMsg = `file does not exist.`;
-            } else {
-                errorMsg = error.message;
-            }
-            errorMsg = `Worker failed to load package.json: ${errorMsg}`;
+            const error = ensureErrorType(err);
             this.log({
-                message: errorMsg,
+                message: `Worker failed to load package.json: ${error.message}`,
                 level: LogLevel.Warning,
                 logCategory: LogCategory.System,
             });

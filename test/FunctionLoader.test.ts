@@ -166,36 +166,6 @@ describe('FunctionLoader', () => {
         expect(userFunction2['hello']).to.be.undefined;
     });
 
-    it('respects .cjs extension', () => {
-        const result = loader.isESModule('test.cjs', {
-            type: 'module',
-        });
-        expect(result).to.be.false;
-    });
-
-    it('respects .mjs extension', () => {
-        const result = loader.isESModule('test.mjs', {
-            type: 'commonjs',
-        });
-        expect(result).to.be.true;
-    });
-
-    it('respects package.json module type', () => {
-        const result = loader.isESModule('test.js', {
-            type: 'module',
-        });
-        expect(result).to.be.true;
-    });
-
-    it('defaults to using commonjs', () => {
-        expect(loader.isESModule('test.js', {})).to.be.false;
-        expect(
-            loader.isESModule('test.js', {
-                type: 'commonjs',
-            })
-        ).to.be.false;
-    });
-
     afterEach(() => {
         mock.stopAll();
     });

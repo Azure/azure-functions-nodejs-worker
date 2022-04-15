@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 
 import { access, constants } from 'fs';
+import { pathExists } from 'fs-extra';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { isError } from '../utils/ensureErrorType';
+import { loadScriptFile } from '../loadScriptFile';
+import { ensureErrorType, isError } from '../utils/ensureErrorType';
 import { InternalException } from '../utils/InternalException';
 import { systemError } from '../utils/Logger';
+import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -24,6 +27,12 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
         const response = this.getDefaultResponse(msg);
+
+        channel.log({
+            message: 'Received WorkerInitRequest',
+            level: LogLevel.Debug,
+            logCategory: LogCategory.System,
+        });
 
         // Validate version
         const version = process.version;
@@ -54,8 +63,34 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         }
 
         logColdStartWarning(channel);
-        if (msg.functionAppDirectory) {
-            await channel.updatePackageJson(msg.functionAppDirectory);
+        const functionAppDirectory = nonNullProp(msg, 'functionAppDirectory');
+        await channel.updatePackageJson(functionAppDirectory);
+
+        const entryPointFile = channel.packageJson.main;
+        if (entryPointFile) {
+            channel.log({
+                message: `Loading entry point "${entryPointFile}"`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            });
+            try {
+                const entryPointFullPath = path.join(functionAppDirectory, entryPointFile);
+                if (!(await pathExists(entryPointFullPath))) {
+                    throw new Error(`file does not exist`);
+                }
+
+                await loadScriptFile(entryPointFullPath, channel.packageJson);
+                channel.log({
+                    message: `Loaded entry point "${entryPointFile}"`,
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                });
+            } catch (err) {
+                const error = ensureErrorType(err);
+                error.isAzureFunctionsInternalException = true;
+                error.message = `Worker was unable to load entry point "${entryPointFile}": ${error.message}`;
+                throw error;
+            }
         }
 
         response.capabilities = {

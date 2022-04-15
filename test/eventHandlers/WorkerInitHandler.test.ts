@@ -2,19 +2,20 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as escapeStringRegexp from 'escape-string-regexp';
 import 'mocha';
-import * as mock from 'mock-fs';
+import * as mockFs from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
-import { TestEventStream } from './TestEventStream';
+import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
 import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 namespace Msg {
-    export function init(functionAppDirectory?: string): rpc.IStreamingMessage {
+    export function init(functionAppDirectory: string = __dirname): rpc.IStreamingMessage {
         return {
             requestId: 'id',
             workerInitRequest: {
@@ -41,11 +42,68 @@ namespace Msg {
         },
     };
 
+    export function failedResponse(fileName: string, errorMessage: string): RegExpStreamingMessage {
+        const expectedMsg: rpc.IStreamingMessage = {
+            requestId: 'id',
+            workerInitResponse: {
+                result: {
+                    status: rpc.StatusResult.Status.Failure,
+                    exception: {
+                        message: errorMessage,
+                    },
+                },
+            },
+        };
+        return new RegExpStreamingMessage(expectedMsg, {
+            'workerInitResponse.result.exception.stackTrace': new RegExp(
+                `Error: ${escapeStringRegexp(errorMessage)}\\s*at`
+            ),
+        });
+    }
+
+    export const receivedInitLog: rpc.IStreamingMessage = {
+        rpcLog: {
+            message: 'Received WorkerInitRequest',
+            level: LogLevel.Debug,
+            logCategory: LogCategory.System,
+        },
+    };
+
+    export function loadingEntryPoint(fileName: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message: `Loading entry point "${fileName}"`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export function loadedEntryPoint(fileName: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message: `Loaded entry point "${fileName}"`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
     export function warning(message: string): rpc.IStreamingMessage {
         return {
             rpcLog: {
                 message,
                 level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            },
+        };
+    }
+
+    export function error(message: string): rpc.IStreamingMessage {
+        return {
+            rpcLog: {
+                message,
+                level: LogLevel.Error,
                 logCategory: LogCategory.System,
             },
         };
@@ -70,13 +128,14 @@ describe('WorkerInitHandler', () => {
     });
 
     afterEach(async () => {
-        mock.restore();
+        mockFs.restore();
         await stream.afterEachEventHandlerTest();
     });
 
     it('responds to init', async () => {
+        mockFs({ [__dirname]: { 'package.json': '{}' } });
         stream.addTestMessage(Msg.init());
-        await stream.assertCalledWith(Msg.response);
+        await stream.assertCalledWith(Msg.receivedInitLog, Msg.response);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
@@ -103,20 +162,20 @@ describe('WorkerInitHandler', () => {
         const expectedPackageJson = {
             type: 'module',
         };
-        mock({
+        mockFs({
             [appDir]: {
                 'package.json': JSON.stringify(expectedPackageJson),
             },
         });
 
         stream.addTestMessage(Msg.init(appDir));
-        await stream.assertCalledWith(Msg.response);
+        await stream.assertCalledWith(Msg.receivedInitLog, Msg.response);
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
     });
 
     it('loads empty package.json', async () => {
         const appDir = 'appDir';
-        mock({
+        mockFs({
             [appDir]: {
                 'not-package-json': 'some content',
             },
@@ -124,7 +183,8 @@ describe('WorkerInitHandler', () => {
 
         stream.addTestMessage(Msg.init(appDir));
         await stream.assertCalledWith(
-            Msg.warning(`Worker failed to load package.json: file does not exist.`),
+            Msg.receivedInitLog,
+            Msg.warning(`Worker failed to load package.json: file does not exist`),
             Msg.response
         );
         expect(channel.packageJson).to.be.empty;
@@ -132,7 +192,7 @@ describe('WorkerInitHandler', () => {
 
     it('ignores malformed package.json', async () => {
         const appDir = 'appDir';
-        mock({
+        mockFs({
             [appDir]: {
                 'package.json': 'gArB@g3 dAtA',
             },
@@ -140,8 +200,9 @@ describe('WorkerInitHandler', () => {
 
         stream.addTestMessage(Msg.init(appDir));
         await stream.assertCalledWith(
+            Msg.receivedInitLog,
             Msg.warning(
-                `Worker failed to load package.json: file is not a valid JSON: ${path.join(
+                `Worker failed to load package.json: file content is not valid JSON: ${path.join(
                     appDir,
                     'package.json'
                 )}: Unexpected token g in JSON at position 0`
@@ -149,5 +210,73 @@ describe('WorkerInitHandler', () => {
             Msg.response
         );
         expect(channel.packageJson).to.be.empty;
+    });
+
+    for (const extension of ['.js', '.mjs']) {
+        it(`Loads entry point (${extension})`, async () => {
+            const fileName = `entryPointFiles/doNothing${extension}`;
+            const expectedPackageJson = {
+                main: fileName,
+            };
+            mockFs({
+                [__dirname]: {
+                    'package.json': JSON.stringify(expectedPackageJson),
+                    // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                    entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
+                },
+            });
+
+            stream.addTestMessage(Msg.init(__dirname));
+            await stream.assertCalledWith(
+                Msg.receivedInitLog,
+                Msg.loadingEntryPoint(fileName),
+                Msg.loadedEntryPoint(fileName),
+                Msg.response
+            );
+        });
+    }
+
+    it('Fails for missing entry point', async () => {
+        const fileName = 'entryPointFiles/missing.js';
+        const expectedPackageJson = {
+            main: fileName,
+        };
+        mockFs({
+            [__dirname]: {
+                'package.json': JSON.stringify(expectedPackageJson),
+            },
+        });
+
+        stream.addTestMessage(Msg.init(__dirname));
+        const errorMessage = `Worker was unable to load entry point "${fileName}": file does not exist`;
+        await stream.assertCalledWith(
+            Msg.receivedInitLog,
+            Msg.loadingEntryPoint(fileName),
+            Msg.error(errorMessage),
+            Msg.failedResponse(fileName, errorMessage)
+        );
+    });
+
+    it('Fails for invalid entry point', async () => {
+        const fileName = 'entryPointFiles/throwError.js';
+        const expectedPackageJson = {
+            main: fileName,
+        };
+        mockFs({
+            [__dirname]: {
+                'package.json': JSON.stringify(expectedPackageJson),
+                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
+            },
+        });
+
+        stream.addTestMessage(Msg.init(__dirname));
+        const errorMessage = `Worker was unable to load entry point "${fileName}": test`;
+        await stream.assertCalledWith(
+            Msg.receivedInitLog,
+            Msg.loadingEntryPoint(fileName),
+            Msg.error(errorMessage),
+            Msg.failedResponse(fileName, errorMessage)
+        );
     });
 });

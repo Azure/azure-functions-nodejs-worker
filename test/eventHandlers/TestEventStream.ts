@@ -26,7 +26,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Waits up to a second for the expected number of messages to be written and then validates those messages
      */
-    async assertCalledWith(...expectedMsgs: rpc.IStreamingMessage[]): Promise<void> {
+    async assertCalledWith(...expectedMsgs: (rpc.IStreamingMessage | RegExpStreamingMessage)[]): Promise<void> {
         try {
             // Wait for up to a second for the expected number of messages to come in
             const maxTime = Date.now() + 1000;
@@ -48,10 +48,17 @@ export class TestEventStream extends EventEmitter implements IEventStream {
                 'Message count does not match. This may be caused by the previous test writing extraneous messages.'
             );
             for (let i = 0; i < expectedMsgs.length; i++) {
-                const expectedMsg = convertHttpResponse(expectedMsgs[i]);
                 const call = calls[i];
                 expect(call.args).to.have.length(1);
                 const actualMsg = convertHttpResponse(call.args[0]);
+
+                let expectedMsg = expectedMsgs[i];
+                if (expectedMsg instanceof RegExpStreamingMessage) {
+                    expectedMsg.validateRegExpProps(actualMsg);
+                    expectedMsg = expectedMsg.expectedMsg;
+                }
+                expectedMsg = convertHttpResponse(expectedMsg);
+
                 expect(actualMsg).to.deep.equal(expectedMsg);
             }
         } finally {
@@ -69,7 +76,8 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     }
 }
 
-function getShortenedMsg(msg: rpc.IStreamingMessage): string {
+function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage): string {
+    msg = msg instanceof RegExpStreamingMessage ? msg.expectedMsg : msg;
     if (msg.rpcLog?.message) {
         return msg.rpcLog.message;
     } else {
@@ -122,4 +130,39 @@ function convertHttpResponse(msg: rpc.IStreamingMessage): rpc.IStreamingMessage 
         }
     }
     return msg;
+}
+
+type RegExpProps = { [keyPath: string]: RegExp };
+
+/**
+ * Allows you to use regular expressions to validate properties of the message instead of just deep equal
+ */
+export class RegExpStreamingMessage {
+    expectedMsg: rpc.IStreamingMessage;
+    #regExpProps: RegExpProps;
+
+    constructor(expectedMsg: rpc.IStreamingMessage, regExpProps: RegExpProps) {
+        this.expectedMsg = expectedMsg;
+        this.#regExpProps = regExpProps;
+    }
+
+    validateRegExpProps(actualMsg: rpc.IStreamingMessage) {
+        for (const [keyPath, regExp] of Object.entries(this.#regExpProps)) {
+            let lastKey: string = keyPath;
+            let lastObject: {} = actualMsg;
+            let value: unknown = actualMsg;
+            for (const subpath of keyPath.split('.')) {
+                if (typeof value === 'object' && value !== null) {
+                    lastKey = subpath;
+                    lastObject = value;
+                    value = value[subpath];
+                } else {
+                    break;
+                }
+            }
+            expect(value).to.match(regExp);
+
+            delete lastObject[lastKey];
+        }
+    }
 }

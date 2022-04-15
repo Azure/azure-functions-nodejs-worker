@@ -1,11 +1,12 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from './FunctionInfo';
+import { loadScriptFile } from './loadScriptFile';
+import { PackageJson } from './parsers/parsePackageJson';
 import { InternalException } from './utils/InternalException';
-import { PackageJson } from './WorkerChannel';
+import { nonNullProp } from './utils/nonNull';
 
 export interface IFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
@@ -26,22 +27,7 @@ export class FunctionLoader implements IFunctionLoader {
         if (metadata.isProxy === true) {
             return;
         }
-        const scriptFilePath = <string>(metadata && metadata.scriptFile);
-        let script: any;
-        if (this.isESModule(scriptFilePath, packageJson)) {
-            // IMPORTANT: pathToFileURL is only supported in Node.js version >= v10.12.0
-            const scriptFileUrl = url.pathToFileURL(scriptFilePath);
-            if (scriptFileUrl.href) {
-                // use eval so it doesn't get compiled into a require()
-                script = await eval('import(scriptFileUrl.href)');
-            } else {
-                throw new InternalException(
-                    `'${scriptFilePath}' could not be converted to file URL (${scriptFileUrl.href})`
-                );
-            }
-        } else {
-            script = require(scriptFilePath);
-        }
+        const script: any = await loadScriptFile(nonNullProp(metadata, 'scriptFile'), packageJson);
         const entryPoint = <string>(metadata && metadata.entryPoint);
         const [userFunction, thisArg] = getEntryPoint(script, entryPoint);
         this.#loadedFunctions[functionId] = {
@@ -68,16 +54,6 @@ export class FunctionLoader implements IFunctionLoader {
         } else {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
-    }
-
-    isESModule(filePath: string, packageJson: PackageJson): boolean {
-        if (filePath.endsWith('.mjs')) {
-            return true;
-        }
-        if (filePath.endsWith('.cjs')) {
-            return false;
-        }
-        return packageJson.type === 'module';
     }
 }
 
