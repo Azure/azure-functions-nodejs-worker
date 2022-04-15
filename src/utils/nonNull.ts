@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { InternalException } from './InternalException';
+
 /**
  * Retrieves a property by name from an object and checks that it's not null and not undefined.  It is strongly typed
  * for the property and will give a compile error if the given name is not a property of the source.
@@ -18,7 +20,7 @@ export function nonNullProp<TSource, TKey extends keyof TSource>(
  */
 export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: string): T {
     if (value === null || value === undefined) {
-        throw new Error(
+        throw new InternalException(
             'Internal error: Expected value to be neither null nor undefined' +
                 (propertyNameOrMessage ? `: ${propertyNameOrMessage}` : '')
         );

@@ -3,38 +3,34 @@
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { ensureErrorType } from '../utils/ensureErrorType';
-import { toRpcStatus } from '../utils/toRpcStatus';
+import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
+import { EventHandler } from './EventHandler';
 
 /**
  * Worker responds after loading required metadata to load function with the load result
- * @param requestId gRPC message request id
- * @param msg gRPC message content
  */
-export async function functionLoadRequest(channel: WorkerChannel, requestId: string, msg: rpc.IFunctionLoadRequest) {
-    if (msg.functionId && msg.metadata) {
-        let error: Error | null | undefined;
-        let errorMessage: string | undefined;
+export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'functionLoadResponse'> {
+    readonly responseName = 'functionLoadResponse';
+
+    getDefaultResponse(msg: rpc.IFunctionLoadRequest): rpc.IFunctionLoadResponse {
+        return { functionId: msg.functionId };
+    }
+
+    async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
+        const response = this.getDefaultResponse(msg);
+
+        const functionId = nonNullProp(msg, 'functionId');
+        const metadata = nonNullProp(msg, 'metadata');
         try {
-            await channel.functionLoader.load(msg.functionId, msg.metadata, channel.packageJson);
+            await channel.functionLoader.load(functionId, metadata, channel.packageJson);
         } catch (err) {
-            error = ensureErrorType(err);
-            errorMessage = `Worker was unable to load function ${msg.metadata.name}: '${error.message}'`;
-            channel.log({
-                message: errorMessage,
-                level: LogLevel.Error,
-                logCategory: LogCategory.System,
-            });
+            const error = ensureErrorType(err);
+            error.isAzureFunctionsInternalException = true;
+            error.message = `Worker was unable to load function ${metadata.name}: '${error.message}'`;
+            throw error;
         }
 
-        channel.eventStream.write({
-            requestId: requestId,
-            functionLoadResponse: {
-                functionId: msg.functionId,
-                result: toRpcStatus(error, errorMessage),
-            },
-        });
+        return response;
     }
 }

@@ -239,7 +239,6 @@ namespace Msg {
                     stackTrace: 'testErrorStack',
                 },
             },
-            outputData: [],
         },
     };
     export function receivedInvocLog(): rpc.IStreamingMessage {
