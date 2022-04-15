@@ -3,10 +3,10 @@
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
-import { FunctionEnvironmentReloadHandler } from './eventHandlers/functionEnvironmentReloadRequest';
-import { FunctionLoadHandler } from './eventHandlers/functionLoadRequest';
-import { InvocationHandler } from './eventHandlers/invocationRequest';
-import { WorkerInitHandler } from './eventHandlers/workerInitRequest';
+import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnvironmentReloadHandler';
+import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
+import { InvocationHandler } from './eventHandlers/InvocationHandler';
+import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';

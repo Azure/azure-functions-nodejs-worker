@@ -319,7 +319,7 @@ namespace InputData {
     };
 }
 
-describe('invocationRequest', () => {
+describe('InvocationHandler', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
     let coreApi: typeof coreTypes;

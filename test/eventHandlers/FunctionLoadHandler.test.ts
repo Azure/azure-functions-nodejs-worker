@@ -11,7 +11,7 @@ import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-describe('functionLoadRequest', () => {
+describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
 

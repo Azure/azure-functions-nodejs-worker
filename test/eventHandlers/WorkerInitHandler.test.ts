@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import 'mocha';
 import * as mock from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { logColdStartWarning } from '../../src/eventHandlers/workerInitRequest';
+import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
@@ -61,7 +61,7 @@ namespace Msg {
     };
 }
 
-describe('workerInitRequest', () => {
+describe('WorkerInitHandler', () => {
     let channel: WorkerChannel;
     let stream: TestEventStream;
 
