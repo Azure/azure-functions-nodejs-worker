@@ -65,7 +65,7 @@ namespace Msg {
     );
 }
 
-describe('functionEnvironmentReloadRequest', () => {
+describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;
     let channel: WorkerChannel;
 

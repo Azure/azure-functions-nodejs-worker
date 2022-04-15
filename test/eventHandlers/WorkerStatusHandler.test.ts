@@ -5,7 +5,7 @@ import 'mocha';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 
-describe('workerStatusRequest', () => {
+describe('WorkerStatusHandler', () => {
     let stream: TestEventStream;
 
     before(() => {
