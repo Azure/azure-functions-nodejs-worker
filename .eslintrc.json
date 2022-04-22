@@ -54,6 +54,8 @@
     },
     "ignorePatterns": [
         "**/*.js",
+        "**/*.mjs",
+        "**/*.cjs",
         "dist",
         "azure-functions-language-worker-protobuf"
     ]
