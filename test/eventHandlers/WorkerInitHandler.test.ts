@@ -212,7 +212,7 @@ describe('WorkerInitHandler', () => {
         expect(channel.packageJson).to.be.empty;
     });
 
-    for (const extension of ['.js', '.mjs']) {
+    for (const extension of ['.js', '.mjs', '.cjs']) {
         it(`Loads entry point (${extension})`, async () => {
             const fileName = `entryPointFiles/doNothing${extension}`;
             const expectedPackageJson = {
