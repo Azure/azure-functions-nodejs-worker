@@ -104,7 +104,7 @@ declare module '@azure/functions-core' {
     }
 
     /**
-     * Context on a function app that has is about to be deallocated
+     * Context on a function app that is about to be deallocated
      * This object will be passed to all app teardown hooks
      */
     export interface AppTeardownContext extends HookContext {
