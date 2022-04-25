@@ -43,7 +43,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await channel.updatePackageJson(msg.functionAppDirectory);
+            await channel.updateFunctionAppDirectory(msg.functionAppDirectory);
         }
 
         return response;
