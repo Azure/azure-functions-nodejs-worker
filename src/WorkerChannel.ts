@@ -130,7 +130,24 @@ export class WorkerChannel {
 
     async updateFunctionAppDirectory(functionAppDirectory: string): Promise<void> {
         await this.#updatePackageJson(functionAppDirectory);
+        await this.#loadEntryPointFile(functionAppDirectory);
+    }
 
+    async #updatePackageJson(dir: string): Promise<void> {
+        try {
+            this.packageJson = await parsePackageJson(dir);
+        } catch (err) {
+            const error = ensureErrorType(err);
+            this.log({
+                message: `Worker failed to load package.json: ${error.message}`,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
+            this.packageJson = {};
+        }
+    }
+
+    async #loadEntryPointFile(functionAppDirectory: string): Promise<void> {
         const entryPointFile = this.packageJson.main;
         if (entryPointFile) {
             this.log({
@@ -156,20 +173,6 @@ export class WorkerChannel {
                 error.message = `Worker was unable to load entry point "${entryPointFile}": ${error.message}`;
                 throw error;
             }
-        }
-    }
-
-    async #updatePackageJson(dir: string): Promise<void> {
-        try {
-            this.packageJson = await parsePackageJson(dir);
-        } catch (err) {
-            const error = ensureErrorType(err);
-            this.log({
-                message: `Worker failed to load package.json: ${error.message}`,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
-            this.packageJson = {};
         }
     }
 }
