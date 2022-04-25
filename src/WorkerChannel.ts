@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 
 import { HookCallback, HookContext, HookData } from '@azure/functions-core';
+import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { loadScriptFile } from './loadScriptFile';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import { ensureErrorType } from './utils/ensureErrorType';
+import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
@@ -93,7 +96,38 @@ export class WorkerChannel {
         }
     }
 
-    async updatePackageJson(dir: string): Promise<void> {
+    async updateFunctionAppDirectory(functionAppDirectory: string): Promise<void> {
+        await this.#updatePackageJson(functionAppDirectory);
+
+        const entryPointFile = this.packageJson.main;
+        if (entryPointFile) {
+            this.log({
+                message: `Loading entry point "${entryPointFile}"`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            });
+            try {
+                const entryPointFullPath = path.join(functionAppDirectory, entryPointFile);
+                if (!(await pathExists(entryPointFullPath))) {
+                    throw new Error(`file does not exist`);
+                }
+
+                await loadScriptFile(entryPointFullPath, this.packageJson);
+                this.log({
+                    message: `Loaded entry point "${entryPointFile}"`,
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                });
+            } catch (err) {
+                const error = ensureErrorType(err);
+                error.isAzureFunctionsInternalException = true;
+                error.message = `Worker was unable to load entry point "${entryPointFile}": ${error.message}`;
+                throw error;
+            }
+        }
+    }
+
+    async #updatePackageJson(dir: string): Promise<void> {
         try {
             this.packageJson = await parsePackageJson(dir);
         } catch (err) {
