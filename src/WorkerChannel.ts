@@ -81,6 +81,38 @@ export class WorkerChannel {
         }
     }
 
+    getBaseHookContext(): HookContext {
+        return {
+            hookData: this.#hookData,
+            logger: {
+                log: (msg: string) => {
+                    this.log({
+                        category: 'executionHooksLog',
+                        message: msg,
+                        level: LogLevel.Debug,
+                        logCategory: LogCategory.User,
+                    });
+                },
+                warn: (msg: string) => {
+                    this.log({
+                        category: 'executionHooksWarn',
+                        message: msg,
+                        level: LogLevel.Warning,
+                        logCategory: LogCategory.User,
+                    });
+                },
+                error: (msg: string) => {
+                    this.log({
+                        category: 'executionHooksError',
+                        message: msg,
+                        level: LogLevel.Error,
+                        logCategory: LogCategory.User,
+                    });
+                },
+            },
+        };
+    }
+
     #getHooks(hookName: string): HookCallback[] {
         switch (hookName) {
             case 'preInvocation':
