@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunction } from '@azure/functions';
-import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
+import { PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';
@@ -90,10 +90,9 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 });
             });
 
-            const hookData: HookData = {};
             let userFunction = channel.functionLoader.getFunc(functionId);
             const preInvocContext: PreInvocationContext = {
-                hookData,
+                hookData: {},
                 invocationContext: context,
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
@@ -117,7 +116,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData,
+                hookData: {},
                 invocationContext: context,
                 inputs,
                 result: null,

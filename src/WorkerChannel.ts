@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext } from '@azure/functions-core';
+import { HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -15,6 +15,7 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
+    #hookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartupHooks: HookCallback[] = [];
@@ -63,6 +64,7 @@ export class WorkerChannel {
                 invocationId,
                 category: msgCategory,
             });
+            context.hookData = this.#hookData;
             for (const callback of callbacks) {
                 await callback(context);
             }
