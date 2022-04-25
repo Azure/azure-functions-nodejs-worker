@@ -38,6 +38,14 @@ declare module '@azure/functions-core' {
          * The recommended place to share data between hooks
          */
         hookData: HookData;
+        /**
+         * The recommended place to emit logs
+         */
+        logger: {
+            log: (msg: string) => void;
+            warn: (msg: string) => void;
+            error: (msg: string) => void;
+        };
     }
 
     /**

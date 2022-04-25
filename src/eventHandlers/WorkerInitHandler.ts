@@ -37,7 +37,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         }
 
         const context: AppStartupContext = {
-            hookData: {},
+            ...channel.getBaseHookContext(),
             something: '',
         };
         await channel.executeHooks('appStartup', context);

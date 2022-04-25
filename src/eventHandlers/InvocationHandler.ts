@@ -92,7 +92,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
             let userFunction = channel.functionLoader.getFunc(functionId);
             const preInvocContext: PreInvocationContext = {
-                hookData: {},
+                ...channel.getBaseHookContext(),
                 invocationContext: context,
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
@@ -116,7 +116,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData: {},
+                ...channel.getBaseHookContext(),
                 invocationContext: context,
                 inputs,
                 result: null,
