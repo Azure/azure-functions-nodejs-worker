@@ -3,6 +3,7 @@
 
 import { AppStartupContext, HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { pathExists } from 'fs-extra';
+import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -83,35 +84,24 @@ export class WorkerChannel {
     }
 
     getBaseHookContext(): HookContext {
+        const logger = Object.assign((...args: any[]) => this.#userLog(LogLevel.Information, ...args), {
+            info: (...args: any[]) => this.#userLog(LogLevel.Information, ...args),
+            warn: (...args: any[]) => this.#userLog(LogLevel.Warning, ...args),
+            error: (...args: any[]) => this.#userLog(LogLevel.Error, ...args),
+            verbose: (...args: any[]) => this.#userLog(LogLevel.Trace, ...args),
+        });
         return {
             hookData: this.#hookData,
-            logger: {
-                log: (msg: string) => {
-                    this.log({
-                        category: 'executionHooksLog',
-                        message: msg,
-                        level: LogLevel.Debug,
-                        logCategory: LogCategory.User,
-                    });
-                },
-                warn: (msg: string) => {
-                    this.log({
-                        category: 'executionHooksWarn',
-                        message: msg,
-                        level: LogLevel.Warning,
-                        logCategory: LogCategory.User,
-                    });
-                },
-                error: (msg: string) => {
-                    this.log({
-                        category: 'executionHooksError',
-                        message: msg,
-                        level: LogLevel.Error,
-                        logCategory: LogCategory.User,
-                    });
-                },
-            },
+            logger,
         };
+    }
+
+    #userLog(level: LogLevel, ...args: any[]): void {
+        this.log({
+            message: format.apply(null, <[any, any[]]>args),
+            logCategory: LogCategory.User,
+            level,
+        });
     }
 
     #getHooks(hookName: string): HookCallback[] {
