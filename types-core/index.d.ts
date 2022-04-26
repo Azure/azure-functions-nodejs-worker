@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { AzureFunction, Context } from '@azure/functions';
+import { AzureFunction, Context, Logger } from '@azure/functions';
 
 /**
  * This module is shipped as a built-in part of the Azure Functions Node.js worker and is available at runtime
@@ -41,11 +41,7 @@ declare module '@azure/functions-core' {
         /**
          * The recommended place to emit logs
          */
-        logger: {
-            log: (msg: string) => void;
-            warn: (msg: string) => void;
-            error: (msg: string) => void;
-        };
+        logger: Logger;
     }
 
     /**
