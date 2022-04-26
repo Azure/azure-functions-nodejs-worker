@@ -32,8 +32,9 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         logColdStartWarning(channel);
         const functionAppDirectory = nonNullProp(msg, 'functionAppDirectory');
-        const hostVersion = nonNullProp(msg, 'hostVersion');
-        channel.hostVersion = hostVersion;
+        if (msg.hostVersion) {
+            channel.hostVersion = msg.hostVersion;
+        }
         await channel.updateFunctionAppDirectory(functionAppDirectory);
 
         response.capabilities = {

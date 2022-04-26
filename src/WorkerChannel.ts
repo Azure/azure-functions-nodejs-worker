@@ -19,8 +19,8 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
-    hostVersion = '';
-    #functionAppDirectory = '';
+    hostVersion: string | undefined;
+    functionAppDirectory = '';
     #hookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
@@ -121,8 +121,8 @@ export class WorkerChannel {
     }
 
     async updateFunctionAppDirectory(functionAppDirectory: string): Promise<void> {
-        if (functionAppDirectory !== this.#functionAppDirectory) {
-            this.#functionAppDirectory = functionAppDirectory;
+        if (functionAppDirectory !== this.functionAppDirectory) {
+            this.functionAppDirectory = functionAppDirectory;
             this.#clearHooks();
             await this.#updatePackageJson(functionAppDirectory);
             await this.#loadEntryPointFile(functionAppDirectory);
