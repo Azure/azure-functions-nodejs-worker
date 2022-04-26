@@ -19,6 +19,7 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
+    hostVersion = '';
     #functionAppDirectory = '';
     #hookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
@@ -130,6 +131,7 @@ export class WorkerChannel {
                 logger: baseContext.logger,
                 hookData: baseContext.hookData,
                 functionAppDirectory: functionAppDirectory,
+                hostVersion: this.hostVersion,
             };
             await this.executeHooks('appStartup', appStartupContext);
         }
