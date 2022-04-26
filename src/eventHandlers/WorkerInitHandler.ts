@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { AppStartupContext } from '@azure/functions-core';
+import { AppStartupContext, HookContext } from '@azure/functions-core';
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
@@ -36,11 +36,13 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             await channel.updatePackageJson(functionAppDirectory);
         }
 
-        const context: AppStartupContext = {
-            ...channel.getBaseHookContext(),
-            something: '',
+        const baseContext: HookContext = channel.getBaseHookContext();
+        const appStartupContext: AppStartupContext = {
+            logger: baseContext.logger,
+            hookData: baseContext.hookData,
+            functionAppDirectory: functionAppDirectory,
         };
-        await channel.executeHooks('appStartup', context);
+        await channel.executeHooks('appStartup', appStartupContext);
 
         response.capabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',
