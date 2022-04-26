@@ -100,7 +100,7 @@ declare module '@azure/functions-core' {
      * This object will be passed to all app startup hooks
      */
     export interface AppStartupContext extends HookContext {
-        something: any;
+        functionAppDirectory: string;
     }
 
     /**
@@ -108,7 +108,7 @@ declare module '@azure/functions-core' {
      * This object will be passed to all app teardown hooks
      */
     export interface AppTeardownContext extends HookContext {
-        otherThing: any;
+        functionAppDirectory: string;
     }
 
     /**
