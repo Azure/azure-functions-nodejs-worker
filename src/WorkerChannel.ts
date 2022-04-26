@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext, HookData } from '@azure/functions-core';
+import { AppStartupContext, HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
@@ -18,6 +18,7 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
+    #functionAppDirectory = '';
     #hookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
@@ -129,8 +130,19 @@ export class WorkerChannel {
     }
 
     async updateFunctionAppDirectory(functionAppDirectory: string): Promise<void> {
-        await this.#updatePackageJson(functionAppDirectory);
-        await this.#loadEntryPointFile(functionAppDirectory);
+        if (functionAppDirectory !== this.#functionAppDirectory) {
+            this.#functionAppDirectory = functionAppDirectory;
+            this.#clearHooks();
+            await this.#updatePackageJson(functionAppDirectory);
+            await this.#loadEntryPointFile(functionAppDirectory);
+            const baseContext: HookContext = this.getBaseHookContext();
+            const appStartupContext: AppStartupContext = {
+                logger: baseContext.logger,
+                hookData: baseContext.hookData,
+                functionAppDirectory: functionAppDirectory,
+            };
+            await this.executeHooks('appStartup', appStartupContext);
+        }
     }
 
     async #updatePackageJson(dir: string): Promise<void> {
@@ -174,5 +186,10 @@ export class WorkerChannel {
                 throw error;
             }
         }
+    }
+
+    #clearHooks() {
+        this.#preInvocationHooks = this.#postInvocationHooks = this.#appStartupHooks = this.#appTeardownHooks = [];
+        this.#hookData = {};
     }
 }
