@@ -30,10 +30,10 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning(channel);
-        const functionAppDirectory = msg.functionAppDirectory;
-        if (functionAppDirectory) {
-            await channel.updatePackageJson(functionAppDirectory);
-        }
+        const functionAppDirectory = nonNullProp(msg, 'functionAppDirectory');
+        const hostVersion = nonNullProp(msg, 'hostVersion');
+        channel.hostVersion = hostVersion;
+        await channel.updateFunctionAppDirectory(functionAppDirectory);
 
         response.capabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',

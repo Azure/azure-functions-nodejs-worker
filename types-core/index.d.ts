@@ -96,7 +96,14 @@ declare module '@azure/functions-core' {
      * This object will be passed to all app startup hooks
      */
     export interface AppStartupContext extends HookContext {
+        /**
+         * Absolute directory of the function app
+         */
         functionAppDirectory: string;
+        /**
+         * The version of the host running the function app
+         */
+        hostVersion: string;
     }
 
     /**
@@ -104,6 +111,9 @@ declare module '@azure/functions-core' {
      * This object will be passed to all app teardown hooks
      */
     export interface AppTeardownContext extends HookContext {
+        /**
+         * Absolute directory of the function app
+         */
         functionAppDirectory: string;
     }
 
