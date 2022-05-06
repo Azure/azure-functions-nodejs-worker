@@ -16,7 +16,7 @@ export async function loadScriptFile(filePath: string, packageJson: PackageJson)
             throw new InternalException(`'${filePath}' could not be converted to file URL (${fileUrl.href})`);
         }
     } else {
-        script = require(filePath);
+        script = require(/* webpackIgnore: true */ filePath);
     }
     return script;
 }
