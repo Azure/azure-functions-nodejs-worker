@@ -48,6 +48,8 @@ steps:
     displayName: 'npm ci'
   - script: npm run build
     displayName: 'npm run build'
+  - script: npm run webpack
+    displayName: 'npm run webpack'
   - task: UseDotNet@2
     displayName: 'Install .NET 6'
     inputs:
