@@ -7,8 +7,6 @@ import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { loadScriptFile } from '../loadScriptFile';
 import { ensureErrorType, isError } from '../utils/ensureErrorType';
-import { InternalException } from '../utils/InternalException';
-import { systemError } from '../utils/Logger';
 import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
@@ -33,34 +31,6 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });
-
-        // Validate version
-        const version = process.version;
-        if (
-            (version.startsWith('v17.') || version.startsWith('v15.')) &&
-            process.env.AZURE_FUNCTIONS_ENVIRONMENT == 'Development'
-        ) {
-            const msg =
-                'Node.js version used (' +
-                version +
-                ') is not officially supported. You may use it during local development, but must use an officially supported version on Azure:' +
-                ' https://aka.ms/functions-node-versions';
-            channel.log({
-                message: msg,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
-        } else if (!(version.startsWith('v14.') || version.startsWith('v16.'))) {
-            const errorMsg =
-                'Incompatible Node.js version' +
-                ' (' +
-                version +
-                ').' +
-                ' The version of the Azure Functions runtime you are using (v4) supports Node.js v14.x or Node.js v16.x' +
-                ' Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions';
-            systemError(errorMsg);
-            throw new InternalException(errorMsg);
-        }
 
         logColdStartWarning(channel);
         const functionAppDirectory = nonNullProp(msg, 'functionAppDirectory');
