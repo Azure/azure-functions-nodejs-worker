@@ -1,6 +1,7 @@
 variables: {
   NODE_14: '14.x',
-  NODE_16: '16.x'
+  NODE_16: '16.x',
+  NODE_18: '18.x'
 }
 
 pr:
@@ -21,18 +22,27 @@ jobs:
       UBUNTU_NODE16:
         IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_16)
+      UBUNTU_NODE18:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_18)
       WINDOWS_NODE14:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_14)
       WINDOWS_NODE16:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_16)
+      WINDOWS_NODE18:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_18)
       MAC_NODE14:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_14)
       MAC_NODE16:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_16)
+      MAC_NODE18:
+        IMAGE_TYPE: 'macOS-latest'
+        NODE_VERSION: $(NODE_18)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:
@@ -67,18 +77,27 @@ jobs:
       UBUNTU_NODE16:
         IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_16)
+      UBUNTU_NODE18:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_18)
       WINDOWS_NODE14:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_14)
       WINDOWS_NODE16:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_16)
+      WINDOWS_NODE18:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_18)
       MAC_NODE14:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_14)
       MAC_NODE16:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_16)
+      MAC_NODE18:
+        IMAGE_TYPE: 'macOS-latest'
+        NODE_VERSION: $(NODE_18)
   pool:
     vmImage: $(IMAGE_TYPE)
   steps:

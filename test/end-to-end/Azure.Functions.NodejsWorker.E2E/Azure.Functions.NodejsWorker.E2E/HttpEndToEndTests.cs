@@ -52,17 +52,11 @@ namespace Azure.Functions.NodeJs.Tests.E2E
             HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger(functionName, queryString);
             string actualMessage = await response.Content.ReadAsStringAsync();
 
-            var nodeVersion = Environment.GetEnvironmentVariable("nodeVersion");
-            if (nodeVersion.Equals("14.x") || nodeVersion.Equals("16.x")) {
-                Assert.Equal(expectedStatusCode, response.StatusCode);
-                
-                if (!string.IsNullOrEmpty(expectedMessage)) {
-                    Assert.False(string.IsNullOrEmpty(actualMessage));
-                    Assert.Contains(expectedMessage, actualMessage);
-                }
-            } else {
-                // This function will fail to load on the worker side
-                Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+            Assert.Equal(expectedStatusCode, response.StatusCode);
+            
+            if (!string.IsNullOrEmpty(expectedMessage)) {
+                Assert.False(string.IsNullOrEmpty(actualMessage));
+                Assert.Contains(expectedMessage, actualMessage);
             }
         }
 
