@@ -36,4 +36,4 @@ jobs:
       workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/drop/types'
       verbose: true
       customCommand: 'publish package.tgz ${{ parameters.NpmPublishArgs }}'
-      publishEndpoint: 'TypeScript Types Publish'
+      customEndpoint: 'TypeScript Types Publish'
