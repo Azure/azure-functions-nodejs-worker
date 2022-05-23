@@ -4,7 +4,7 @@ parameters:
   type: string
   default: 'latest'
 - name: NpmPublishDryRun
-  displayName: 'Dry Run?'
+  displayName: 'Dry Run'
   type: boolean
   default: true
 
@@ -39,5 +39,5 @@ jobs:
       command: custom
       workingDir: '$(Pipeline.Workspace)/nodeWorkerCI/drop/types'
       verbose: true
-      customCommand: 'publish package.tgz --tag ${{ parameters.NpmPublishTag }} --dry-run ${{ parameters.NpmPublishDryRun }}'
+      customCommand: 'publish package.tgz --tag ${{ parameters.NpmPublishTag }} --dry-run ${{ lower(parameters.NpmPublishDryRun) }}'
       customEndpoint: 'TypeScript Types Publish'
