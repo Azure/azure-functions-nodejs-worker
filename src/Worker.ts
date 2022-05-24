@@ -6,9 +6,11 @@ import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
+import { startBlockedMonitor } from './utils/blockedMonitor';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
+import { isEnvironmentVariableSet } from './utils/util';
 import { WorkerChannel } from './WorkerChannel';
 
 export function startNodeWorker(args) {
@@ -69,4 +71,8 @@ export function startNodeWorker(args) {
     process.on('exit', (code) => {
         systemLog(`Worker ${workerId} exited with code ${code}`);
     });
+
+    if (isEnvironmentVariableSet(process.env.AZURE_FUNCTIONS_NODE_BLOCK_LOG)) {
+        startBlockedMonitor(channel);
+    }
 }
