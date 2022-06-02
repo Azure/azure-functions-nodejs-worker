@@ -35,6 +35,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         });
 
         process.env = Object.assign({}, msg.environmentVariables);
+
         // Change current working directory
         if (msg.functionAppDirectory) {
             channel.log({
@@ -43,7 +44,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await channel.updateFunctionAppDirectory(msg.functionAppDirectory);
+            await channel.initalizeApp(msg.functionAppDirectory);
         }
 
         return response;

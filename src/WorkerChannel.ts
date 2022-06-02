@@ -20,7 +20,6 @@ export class WorkerChannel {
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
     hostVersion: string | undefined;
-    functionAppDirectory = '';
     #hookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
@@ -120,21 +119,17 @@ export class WorkerChannel {
         }
     }
 
-    async updateFunctionAppDirectory(functionAppDirectory: string): Promise<void> {
-        if (functionAppDirectory !== this.functionAppDirectory) {
-            this.functionAppDirectory = functionAppDirectory;
-            this.#clearHooks();
-            await this.#updatePackageJson(functionAppDirectory);
-            await this.#loadEntryPointFile(functionAppDirectory);
-            const baseContext: HookContext = this.getBaseHookContext();
-            const appStartupContext: AppStartupContext = {
-                logger: baseContext.logger,
-                hookData: baseContext.hookData,
-                functionAppDirectory: functionAppDirectory,
-                hostVersion: this.hostVersion,
-            };
-            await this.executeHooks('appStartup', appStartupContext);
-        }
+    async initalizeApp(functionAppDirectory: string): Promise<void> {
+        await this.#updatePackageJson(functionAppDirectory);
+        await this.#loadEntryPointFile(functionAppDirectory);
+        const { logger, hookData }: HookContext = this.getBaseHookContext();
+        const appStartupContext: AppStartupContext = {
+            logger,
+            hookData,
+            functionAppDirectory,
+            hostVersion: this.hostVersion,
+        };
+        await this.executeHooks('appStartup', appStartupContext);
     }
 
     async #updatePackageJson(dir: string): Promise<void> {
@@ -178,10 +173,5 @@ export class WorkerChannel {
                 throw error;
             }
         }
-    }
-
-    #clearHooks() {
-        this.#preInvocationHooks = this.#postInvocationHooks = this.#appStartupHooks = this.#appTeardownHooks = [];
-        this.#hookData = {};
     }
 }

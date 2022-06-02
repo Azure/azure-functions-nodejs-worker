@@ -34,7 +34,8 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         if (msg.hostVersion) {
             channel.hostVersion = msg.hostVersion;
         }
-        await channel.updateFunctionAppDirectory(functionAppDirectory);
+
+        await channel.initalizeApp(functionAppDirectory);
 
         response.capabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',
