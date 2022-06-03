@@ -130,7 +130,6 @@ describe('WorkerInitHandler', () => {
     afterEach(async () => {
         mockFs.restore();
         await stream.afterEachEventHandlerTest();
-        channel.functionAppDirectory = '';
     });
 
     it('responds to init', async () => {
