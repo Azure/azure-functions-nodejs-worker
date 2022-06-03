@@ -6,14 +6,32 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 import blockedAt = require('blocked-at');
 
-export function startBlockedMonitor(channel: { log: (log: rpc.IRpcLog) => void }, threshold = 100): NodeJS.Timer {
-    let blockedHistory: { time: string; duration: number; stack: string; resource: string }[] = [];
+export function startBlockedMonitor(
+    channel: { log: (log: rpc.IRpcLog) => void },
+    threshold = 500,
+    intreval = 10000
+): NodeJS.Timer {
+    function logBlockedWarning(message: string) {
+        channel.log({
+            message,
+            level: LogLevel.Warning,
+            logCategory: LogCategory.System,
+        });
+    }
+
+    logBlockedWarning(
+        `Monitoring for blocking code is turned on, with a threshold of ${threshold} ms. This will have a negative impact on performance. Adjust "AZURE_FUNCTIONS_NODE_BLOCK_LOG" to turn it off. ` +
+            'IMPORTANT NOTE: The stack traces are only an approximation and you should analyze all synchronous operations'
+    );
+
+    let blockedHistory: { time: string; duration: number; stack: string }[] = [];
 
     //threshold - minimum miliseconds of blockage to report.
     //other parameters are default, more details on https://github.com/naugtur/blocked-at.
     blockedAt(
-        (ms, stack, resource) => {
-            blockedHistory.push({ time: new Date().toUTCString(), duration: ms, stack: stack, resource: resource });
+        (ms, stack) => {
+            const date = new Date();
+            blockedHistory.push({ time: date.toISOString(), duration: ms, stack: stack });
         },
         { threshold: threshold }
     );
@@ -21,12 +39,8 @@ export function startBlockedMonitor(channel: { log: (log: rpc.IRpcLog) => void }
     // Log blockedHistory if it's not empty each 10 seconds
     return setInterval(() => {
         if (blockedHistory.length > 0) {
-            channel.log({
-                message: `Event loop blocked: ${JSON.stringify(blockedHistory)}`,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
+            logBlockedWarning(`Blocking code monitoring history: ${JSON.stringify(blockedHistory)}`);
             blockedHistory = [];
         }
-    }, 10000);
+    }, intreval);
 }
