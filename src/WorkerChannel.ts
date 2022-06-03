@@ -82,22 +82,28 @@ export class WorkerChannel {
         }
     }
 
-    getBaseHookContext(): HookContext {
-        const logger = Object.assign((...args: any[]) => this.#userLog(LogLevel.Information, ...args), {
-            info: (...args: any[]) => this.#userLog(LogLevel.Information, ...args),
-            warn: (...args: any[]) => this.#userLog(LogLevel.Warning, ...args),
-            error: (...args: any[]) => this.#userLog(LogLevel.Error, ...args),
-            verbose: (...args: any[]) => this.#userLog(LogLevel.Trace, ...args),
+    getBaseHookContext(functionInvocationId?: string, msgCategory?: string): HookContext {
+        const log = (logLevel: LogLevel, ...args: any[]) =>
+            this.#userLog(logLevel, functionInvocationId, msgCategory, ...args);
+
+        const logger = Object.assign((...args: any[]) => log(LogLevel.Information, ...args), {
+            info: (...args: any[]) => log(LogLevel.Information, ...args),
+            warn: (...args: any[]) => log(LogLevel.Warning, ...args),
+            error: (...args: any[]) => log(LogLevel.Error, ...args),
+            verbose: (...args: any[]) => log(LogLevel.Trace, ...args),
         });
+
         return {
             hookData: this.#hookData,
             logger,
         };
     }
 
-    #userLog(level: LogLevel, ...args: any[]): void {
+    #userLog(level: LogLevel, functionInvocationId?: string, msgCategory?: string, ...args: any[]): void {
         this.log({
             message: format.apply(null, <[any, any[]]>args),
+            category: msgCategory,
+            invocationId: functionInvocationId,
             logCategory: LogCategory.User,
             level,
         });
