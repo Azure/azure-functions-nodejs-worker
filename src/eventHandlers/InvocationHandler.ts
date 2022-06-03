@@ -95,8 +95,9 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             // create a copy of the hook data in the worker context (set by app hooks)
             // the same hook data object is shared in the invocation hooks of the same invocation
             const baseInvocationContext: HookContext = {
-                ...channel.getBaseHookContext(),
+                ...channel.getBaseHookContext(invocationId, msgCategory),
             };
+
             const preInvocContext: PreInvocationContext = {
                 hookData: baseInvocationContext.hookData,
                 logger: baseInvocationContext.logger,
@@ -104,8 +105,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
             };
-
-            await channel.executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
+            await channel.executeHooks('preInvocation', preInvocContext, invocationId, msgCategory);
             inputs = preInvocContext.inputs;
             userFunction = preInvocContext.functionCallback;
 
@@ -123,8 +123,8 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData: baseInvocationContext.hookData,
-                logger: baseInvocationContext.logger,
+                hookData: preInvocContext.hookData,
+                logger: preInvocContext.logger,
                 invocationContext: context,
                 inputs,
                 result: null,
