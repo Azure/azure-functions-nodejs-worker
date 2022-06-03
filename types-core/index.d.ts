@@ -19,14 +19,12 @@ declare module '@azure/functions-core' {
     export function registerHook(hookName: 'preInvocation', callback: PreInvocationCallback): Disposable;
     export function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
     export function registerHook(hookName: 'appStartup', callback: AppStartupCallback): Disposable;
-    export function registerHook(hookName: 'appTeardown', callback: AppTeardownCallback): Disposable;
     export function registerHook(hookName: string, callback: HookCallback): Disposable;
 
     export type HookCallback = (context: HookContext) => void | Promise<void>;
     export type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
     export type PostInvocationCallback = (context: PostInvocationContext) => void | Promise<void>;
     export type AppStartupCallback = (context: AppStartupContext) => void | Promise<void>;
-    export type AppTeardownCallback = (context: AppTeardownCallback) => void | Promise<void>;
 
     export type HookData = { [key: string]: any };
 
@@ -104,17 +102,6 @@ declare module '@azure/functions-core' {
          * The version of the host running the function app
          */
         hostVersion?: string;
-    }
-
-    /**
-     * Context on a function app that is about to be deallocated
-     * This object will be passed to all app teardown hooks
-     */
-    export interface AppTeardownContext extends HookContext {
-        /**
-         * Absolute directory of the function app
-         */
-        functionAppDirectory: string;
     }
 
     /**
