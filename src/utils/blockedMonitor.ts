@@ -24,7 +24,7 @@ export function startBlockedMonitor(
             'IMPORTANT NOTE: The stack traces are only an approximation and you should analyze all synchronous operations'
     );
 
-    let blockedHistory: { time: string; duration: number; stack: string }[] = [];
+    let blockedHistory: { time: string; duration: number; stack: string[] }[] = [];
 
     //threshold - minimum miliseconds of blockage to report.
     //other parameters are default, more details on https://github.com/naugtur/blocked-at.

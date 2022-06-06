@@ -7,12 +7,14 @@
     "dependencies": {
         "@grpc/grpc-js": "^1.2.7",
         "@grpc/proto-loader": "^0.6.4",
+        "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
         "long": "^4.0.0",
         "minimist": "^1.2.5",
         "uuid": "^8.3.0"
     },
     "devDependencies": {
+        "@types/blocked-at": "^1.0.1",
         "@types/chai": "^4.2.22",
         "@types/chai-as-promised": "^7.1.5",
         "@types/fs-extra": "^9.0.13",
@@ -25,7 +27,6 @@
         "@types/sinon": "^7.0.0",
         "@typescript-eslint/eslint-plugin": "^5.12.1",
         "@typescript-eslint/parser": "^5.12.1",
-        "blocked-at": "^1.2.0",
         "chai": "^4.2.0",
         "chai-as-promised": "^7.1.1",
         "escape-string-regexp": "^4.0.0",
