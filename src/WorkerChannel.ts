@@ -64,7 +64,6 @@ export class WorkerChannel {
                 invocationId,
                 category: msgCategory,
             });
-            context.hookData = this.#hookData;
             for (const callback of callbacks) {
                 await callback(context);
             }
