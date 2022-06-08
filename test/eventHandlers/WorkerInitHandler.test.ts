@@ -15,7 +15,7 @@ import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-namespace Msg {
+export namespace Msg {
     export function init(functionAppDirectory: string = __dirname): rpc.IStreamingMessage {
         return {
             requestId: 'id',
