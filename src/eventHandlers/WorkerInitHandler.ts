@@ -4,6 +4,7 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { appStartup } from '../appStartup';
 import { isError } from '../utils/ensureErrorType';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
@@ -35,7 +36,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             channel.hostVersion = msg.hostVersion;
         }
 
-        await channel.initalizeApp(functionAppDirectory);
+        await appStartup(functionAppDirectory, channel);
 
         response.capabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',

@@ -1,16 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { AppStartupContext, HookCallback, HookContext, HookData } from '@azure/functions-core';
-import { pathExists } from 'fs-extra';
+import { HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
-import { loadScriptFile } from './loadScriptFile';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import { ensureErrorType } from './utils/ensureErrorType';
-import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
@@ -81,12 +78,6 @@ export class WorkerChannel {
         }
     }
 
-    getBaseHookContext(): HookContext {
-        return {
-            hookData: this.#hookData,
-        };
-    }
-
     #getHooks(hookName: string): HookCallback[] {
         switch (hookName) {
             case 'preInvocation':
@@ -100,19 +91,13 @@ export class WorkerChannel {
         }
     }
 
-    async initalizeApp(functionAppDirectory: string): Promise<void> {
-        await this.#updatePackageJson(functionAppDirectory);
-        await this.#loadEntryPointFile(functionAppDirectory);
-        const { hookData }: HookContext = this.getBaseHookContext();
-        const appStartupContext: AppStartupContext = {
-            hookData,
-            functionAppDirectory,
-            hostVersion: this.hostVersion,
+    getBaseHookContext(): HookContext {
+        return {
+            hookData: this.#hookData,
         };
-        await this.executeHooks('appStartup', appStartupContext);
     }
 
-    async #updatePackageJson(dir: string): Promise<void> {
+    async updatePackageJson(dir: string): Promise<void> {
         try {
             this.packageJson = await parsePackageJson(dir);
         } catch (err) {
@@ -123,35 +108,6 @@ export class WorkerChannel {
                 logCategory: LogCategory.System,
             });
             this.packageJson = {};
-        }
-    }
-
-    async #loadEntryPointFile(functionAppDirectory: string): Promise<void> {
-        const entryPointFile = this.packageJson.main;
-        if (entryPointFile) {
-            this.log({
-                message: `Loading entry point "${entryPointFile}"`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
-            });
-            try {
-                const entryPointFullPath = path.join(functionAppDirectory, entryPointFile);
-                if (!(await pathExists(entryPointFullPath))) {
-                    throw new Error(`file does not exist`);
-                }
-
-                await loadScriptFile(entryPointFullPath, this.packageJson);
-                this.log({
-                    message: `Loaded entry point "${entryPointFile}"`,
-                    level: LogLevel.Debug,
-                    logCategory: LogCategory.System,
-                });
-            } catch (err) {
-                const error = ensureErrorType(err);
-                error.isAzureFunctionsInternalException = true;
-                error.message = `Worker was unable to load entry point "${entryPointFile}": ${error.message}`;
-                throw error;
-            }
         }
     }
 }
