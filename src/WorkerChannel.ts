@@ -3,7 +3,6 @@
 
 import { AppStartupContext, HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { pathExists } from 'fs-extra';
-import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -82,31 +81,10 @@ export class WorkerChannel {
         }
     }
 
-    getBaseHookContext(functionInvocationId?: string, msgCategory?: string): HookContext {
-        const log = (logLevel: LogLevel, ...args: any[]) =>
-            this.#userLog(logLevel, functionInvocationId, msgCategory, ...args);
-
-        const logger = Object.assign((...args: any[]) => log(LogLevel.Information, ...args), {
-            info: (...args: any[]) => log(LogLevel.Information, ...args),
-            warn: (...args: any[]) => log(LogLevel.Warning, ...args),
-            error: (...args: any[]) => log(LogLevel.Error, ...args),
-            verbose: (...args: any[]) => log(LogLevel.Trace, ...args),
-        });
-
+    getBaseHookContext(): HookContext {
         return {
             hookData: this.#hookData,
-            logger,
         };
-    }
-
-    #userLog(level: LogLevel, functionInvocationId?: string, msgCategory?: string, ...args: any[]): void {
-        this.log({
-            message: format.apply(null, <[any, any[]]>args),
-            category: msgCategory,
-            invocationId: functionInvocationId,
-            logCategory: LogCategory.User,
-            level,
-        });
     }
 
     #getHooks(hookName: string): HookCallback[] {
@@ -125,9 +103,8 @@ export class WorkerChannel {
     async initalizeApp(functionAppDirectory: string): Promise<void> {
         await this.#updatePackageJson(functionAppDirectory);
         await this.#loadEntryPointFile(functionAppDirectory);
-        const { logger, hookData }: HookContext = this.getBaseHookContext();
+        const { hookData }: HookContext = this.getBaseHookContext();
         const appStartupContext: AppStartupContext = {
-            logger,
             hookData,
             functionAppDirectory,
             hostVersion: this.hostVersion,
