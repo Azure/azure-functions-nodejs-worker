@@ -272,4 +272,44 @@ describe('FunctionEnvironmentReloadHandler', () => {
         );
         expect(channel.packageJson).to.deep.equal(packageJson);
     });
+
+    for (const extension of ['.js', '.mjs', '.cjs']) {
+        it(`Loads entry point (${extension}) in specialization scenario`, async () => {
+            const cwd = process.cwd();
+            const tempDir = 'temp';
+            const fileName = `entryPointFiles/doNothing${extension}`;
+            const expectedPackageJson = {
+                main: fileName,
+            };
+            mock({
+                [tempDir]: {},
+                [__dirname]: {
+                    'package.json': JSON.stringify(expectedPackageJson),
+                    // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                    entryPointFiles: mock.load(path.join(__dirname, 'entryPointFiles')),
+                },
+            });
+
+            stream.addTestMessage(WorkerInitMsg.init(path.join(cwd, tempDir)));
+            await stream.assertCalledWith(
+                WorkerInitMsg.receivedInitLog,
+                WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+                WorkerInitMsg.response
+            );
+
+            stream.addTestMessage({
+                requestId: 'id',
+                functionEnvironmentReloadRequest: {
+                    functionAppDirectory: __dirname,
+                },
+            });
+            await stream.assertCalledWith(
+                Msg.reloadEnvVarsLog(0),
+                Msg.changingCwdLog(__dirname),
+                WorkerInitMsg.loadingEntryPoint(fileName),
+                WorkerInitMsg.loadedEntryPoint(fileName),
+                Msg.reloadSuccess
+            );
+        });
+    }
 });

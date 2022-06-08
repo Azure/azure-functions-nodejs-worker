@@ -214,10 +214,7 @@ describe('WorkerInitHandler', () => {
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {
-        it(`Loads entry point (${extension})`, async function (this: ITestCallbackContext) {
-            // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
-            this.skip();
-
+        it(`Loads entry point (${extension}) in non-specialization scenario`, async () => {
             const fileName = `entryPointFiles/doNothing${extension}`;
             const expectedPackageJson = {
                 main: fileName,
