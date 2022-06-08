@@ -16,7 +16,7 @@ export class WorkerChannel {
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
     hostVersion: string | undefined;
-    #hookData: HookData = {};
+    appHookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartupHooks: HookCallback[] = [];
@@ -88,12 +88,6 @@ export class WorkerChannel {
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
-    }
-
-    getBaseHookContext(): HookContext {
-        return {
-            hookData: this.#hookData,
-        };
     }
 
     async updatePackageJson(dir: string): Promise<void> {

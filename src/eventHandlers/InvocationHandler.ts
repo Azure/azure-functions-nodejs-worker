@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunction } from '@azure/functions';
-import { HookContext, PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
+import { HookData, PostInvocationContext, PreInvocationContext } from '@azure/functions-core';
 import { format } from 'util';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../Context';
@@ -94,12 +94,12 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
             // create a copy of the hook data in the worker context (set by app hooks)
             // the same hook data object is shared in the invocation hooks of the same invocation
-            const baseInvocationContext: HookContext = {
-                ...channel.getBaseHookContext(),
+            const invocationHookData: HookData = {
+                ...channel.appHookData,
             };
 
             const preInvocContext: PreInvocationContext = {
-                hookData: baseInvocationContext.hookData,
+                hookData: invocationHookData,
                 invocationContext: context,
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
@@ -122,7 +122,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData: preInvocContext.hookData,
+                hookData: invocationHookData,
                 invocationContext: context,
                 inputs,
                 result: null,

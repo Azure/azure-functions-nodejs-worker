@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { AppStartupContext, HookContext } from '@azure/functions-core';
+import { AppStartupContext } from '@azure/functions-core';
 import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { loadScriptFile } from './loadScriptFile';
@@ -14,9 +14,8 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 export async function appStartup(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
     await channel.updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory, channel);
-    const { hookData }: HookContext = channel.getBaseHookContext();
     const appStartupContext: AppStartupContext = {
-        hookData,
+        hookData: channel.appHookData,
         functionAppDirectory,
         hostVersion: channel.hostVersion,
     };
