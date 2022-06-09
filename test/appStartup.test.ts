@@ -55,10 +55,18 @@ describe('appStartup', () => {
     });
 
     it('runs app startup hooks in non-specialization scenario', async () => {
+        const hostVersion = '2.7.0';
+        const functionAppDirectory = __dirname;
+        const expectedStartupContext: coreTypes.AppStartupContext = {
+            functionAppDirectory,
+            hostVersion,
+            hookData: {},
+        };
+
         const startupFunc = sinon.spy();
         testDisposables.push(coreApi.registerHook('appStartup', startupFunc));
 
-        stream.addTestMessage(WorkerInitMsg.init());
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, hostVersion));
 
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
@@ -69,6 +77,7 @@ describe('appStartup', () => {
         );
 
         expect(startupFunc.callCount).to.be.equal(1);
+        expect(startupFunc.args[0][0]).to.deep.equal(expectedStartupContext);
         expect(channel.packageJson).to.be.empty;
     });
     it('runs app startup hooks only once in specialiation scenario', () => {});

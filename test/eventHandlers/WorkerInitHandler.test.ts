@@ -16,12 +16,13 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 export namespace Msg {
-    export function init(functionAppDirectory: string = __dirname): rpc.IStreamingMessage {
+    export function init(functionAppDirectory: string = __dirname, hostVersion?: string): rpc.IStreamingMessage {
         return {
             requestId: 'id',
             workerInitRequest: {
                 capabilities: {},
                 functionAppDirectory,
+                hostVersion,
             },
         };
     }
