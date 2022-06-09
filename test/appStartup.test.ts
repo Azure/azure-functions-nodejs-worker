@@ -5,6 +5,7 @@ import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { WorkerChannel } from '../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './eventHandlers/beforeEventHandlerSuite';
 import { Msg as EnvReloadMsg } from './eventHandlers/FunctionEnvironmentReloadHandler.test';
 import { TestEventStream } from './eventHandlers/TestEventStream';
@@ -38,7 +39,7 @@ namespace Msg {
 }
 
 describe('appStartup', () => {
-    // let channel: WorkerChannel;
+    let channel: WorkerChannel;
     let stream: TestEventStream;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
@@ -48,7 +49,7 @@ describe('appStartup', () => {
     before(async () => {
         originalCwd = process.cwd();
         originalEnv = process.env;
-        ({ stream } = beforeEventHandlerSuite());
+        ({ stream, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
     });
 
@@ -126,7 +127,34 @@ describe('appStartup', () => {
         expect(startupFunc.callCount).to.be.equal(1);
         expect(startupFunc.args[0][0]).to.deep.equal(expectedStartupContext);
     });
-    it('persists hookData changes from app startup hooks in worker channel', () => {});
+
+    it('persists hookData changes from app startup hooks in worker channel', async () => {
+        const functionAppDirectory = __dirname;
+        const expectedHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+        const startupFunc = sinon.spy((context: coreTypes.AppStartupContext) => {
+            context.hookData = expectedHookData;
+        });
+        testDisposables.push(coreApi.registerHook('appStartup', startupFunc));
+
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+            Msg.executingHooksLog(1, 'appStartup'),
+            Msg.executedHooksLog('appStartup'),
+            WorkerInitMsg.response
+        );
+
+        expect(startupFunc.callCount).to.be.equal(1);
+        expect(channel.appHookData).to.deep.equal(expectedHookData);
+    });
+
     it('passes app startup hookData changes to invocation hooks', () => {});
     it('does not persist invocation hooks hookData changes', () => {});
 });
