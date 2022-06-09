@@ -13,7 +13,7 @@ import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-namespace Msg {
+export namespace Msg {
     export function reloadEnvVarsLog(numVars: number): rpc.IStreamingMessage {
         return {
             rpcLog: {
