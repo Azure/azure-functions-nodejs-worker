@@ -11,6 +11,14 @@ import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
+/**
+ * App startup can happen in two places, depending on if the worker was specialized or not
+ * 1. The worker can start in "normal" mode, meaning `workerInitRequest` will reference the user's app
+ * 2. The worker can start in "placeholder" mode, meaning `workerInitRequest` will reference a dummy app to "warm up" the worker and `functionEnvironmentReloadRequest` will be sent with the user's actual app.
+ *    This process is called worker specialization and it helps with cold start times.
+ *    The dummy app should never have actual startup code, so it should be safe to call `appStartup` twice in this case
+ *    Worker specialization happens only once, so we don't need to worry about cleaning up resources from previous `functionEnvironmentReloadRequest`s.
+ */
 export async function appStartup(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
     await channel.updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory, channel);
