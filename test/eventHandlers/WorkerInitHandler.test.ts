@@ -4,6 +4,7 @@
 import { expect } from 'chai';
 import * as escapeStringRegexp from 'escape-string-regexp';
 import 'mocha';
+import { ITestCallbackContext } from 'mocha';
 import * as mockFs from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
@@ -213,7 +214,10 @@ describe('WorkerInitHandler', () => {
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {
-        it(`Loads entry point (${extension})`, async () => {
+        it(`Loads entry point (${extension})`, async function (this: ITestCallbackContext) {
+            // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
+            this.skip();
+
             const fileName = `entryPointFiles/doNothing${extension}`;
             const expectedPackageJson = {
                 main: fileName,
@@ -236,7 +240,10 @@ describe('WorkerInitHandler', () => {
         });
     }
 
-    it('Fails for missing entry point', async () => {
+    it('Fails for missing entry point', async function (this: ITestCallbackContext) {
+        // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
+        this.skip();
+
         const fileName = 'entryPointFiles/missing.js';
         const expectedPackageJson = {
             main: fileName,
@@ -257,7 +264,10 @@ describe('WorkerInitHandler', () => {
         );
     });
 
-    it('Fails for invalid entry point', async () => {
+    it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
+        // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
+        this.skip();
+
         const fileName = 'entryPointFiles/throwError.js';
         const expectedPackageJson = {
             main: fileName,
