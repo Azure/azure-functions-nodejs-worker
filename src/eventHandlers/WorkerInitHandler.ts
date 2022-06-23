@@ -31,12 +31,20 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning(channel);
-        const functionAppDirectory = nonNullProp(msg, 'functionAppDirectory');
+
         if (msg.hostVersion) {
             channel.hostVersion = msg.hostVersion;
         }
 
-        await appStartup(functionAppDirectory, channel);
+        if (msg.functionAppDirectory) {
+            await appStartup(msg.functionAppDirectory, channel);
+        } else {
+            channel.log({
+                message: 'functionAppDirectory was undefined in workerInitRequest message. Skipping startup logic.',
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
+        }
 
         response.capabilities = {
             RpcHttpTriggerMetadataRemoved: 'true',
