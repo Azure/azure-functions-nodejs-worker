@@ -38,7 +38,7 @@ namespace Msg {
     }
 }
 
-describe('appStartup', () => {
+describe('startApp', () => {
     let channel: WorkerChannel;
     let stream: TestEventStream;
     let coreApi: typeof coreTypes;
@@ -64,41 +64,41 @@ describe('appStartup', () => {
         process.chdir(originalCwd);
     });
 
-    it('runs app startup hooks in non-specialization scenario', async () => {
+    it('runs app start hooks in non-specialization scenario', async () => {
         const hostVersion = '2.7.0';
         const functionAppDirectory = __dirname;
-        const expectedStartupContext: coreTypes.AppStartupContext = {
+        const expectedStartContext: coreTypes.AppStartContext = {
             functionAppDirectory,
             hostVersion,
             hookData: {},
         };
 
-        const startupFunc = sinon.spy();
-        testDisposables.push(coreApi.registerHook('appStartup', startupFunc));
+        const startFunc = sinon.spy();
+        testDisposables.push(coreApi.registerHook('appStart', startFunc));
 
         stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, hostVersion));
 
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStartup'),
-            Msg.executedHooksLog('appStartup'),
+            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executedHooksLog('appStart'),
             WorkerInitMsg.response
         );
 
-        expect(startupFunc.callCount).to.be.equal(1);
-        expect(startupFunc.args[0][0]).to.deep.equal(expectedStartupContext);
+        expect(startFunc.callCount).to.be.equal(1);
+        expect(startFunc.args[0][0]).to.deep.equal(expectedStartContext);
     });
 
-    it('runs app startup hooks only once in specialiation scenario', async () => {
+    it('runs app start hooks only once in specialiation scenario', async () => {
         const hostVersion = '2.7.0';
         const functionAppDirectory = __dirname;
-        const expectedStartupContext: coreTypes.AppStartupContext = {
+        const expectedStartContext: coreTypes.AppStartContext = {
             functionAppDirectory,
             hostVersion,
             hookData: {},
         };
-        const startupFunc = sinon.spy();
+        const startFunc = sinon.spy();
 
         stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, hostVersion));
         await stream.assertCalledWith(
@@ -107,7 +107,7 @@ describe('appStartup', () => {
             WorkerInitMsg.response
         );
 
-        testDisposables.push(coreApi.registerHook('appStartup', startupFunc));
+        testDisposables.push(coreApi.registerHook('appStart', startFunc));
 
         stream.addTestMessage({
             requestId: 'id',
@@ -119,16 +119,16 @@ describe('appStartup', () => {
             EnvReloadMsg.reloadEnvVarsLog(0),
             EnvReloadMsg.changingCwdLog(functionAppDirectory),
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStartup'),
-            Msg.executedHooksLog('appStartup'),
+            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executedHooksLog('appStart'),
             EnvReloadMsg.reloadSuccess
         );
 
-        expect(startupFunc.callCount).to.be.equal(1);
-        expect(startupFunc.args[0][0]).to.deep.equal(expectedStartupContext);
+        expect(startFunc.callCount).to.be.equal(1);
+        expect(startFunc.args[0][0]).to.deep.equal(expectedStartContext);
     });
 
-    it('persists hookData changes from app startup hooks in worker channel', async () => {
+    it('persists hookData changes from app start hooks in worker channel', async () => {
         const functionAppDirectory = __dirname;
         const expectedHookData = {
             hello: 'world',
@@ -136,25 +136,25 @@ describe('appStartup', () => {
                 test2: 3,
             },
         };
-        const startupFunc = sinon.spy((context: coreTypes.AppStartupContext) => {
+        const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
             context.hookData = expectedHookData;
         });
-        testDisposables.push(coreApi.registerHook('appStartup', startupFunc));
+        testDisposables.push(coreApi.registerHook('appStart', startFunc));
 
         stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
 
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStartup'),
-            Msg.executedHooksLog('appStartup'),
+            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executedHooksLog('appStart'),
             WorkerInitMsg.response
         );
 
-        expect(startupFunc.callCount).to.be.equal(1);
+        expect(startFunc.callCount).to.be.equal(1);
         expect(channel.appHookData).to.deep.equal(expectedHookData);
     });
 
-    it('passes app startup hookData changes to invocation hooks', () => {});
+    it('passes app start hookData changes to invocation hooks', () => {});
     it('does not persist invocation hooks hookData changes', () => {});
 });

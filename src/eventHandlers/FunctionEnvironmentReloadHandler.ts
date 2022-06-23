@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { appStartup } from '../appStartup';
+import { startApp } from '../startApp';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -45,7 +45,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await appStartup(msg.functionAppDirectory, channel);
+            await startApp(msg.functionAppDirectory, channel);
         }
 
         return response;

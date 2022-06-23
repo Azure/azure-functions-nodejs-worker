@@ -19,7 +19,7 @@ export class WorkerChannel {
     appHookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
-    #appStartupHooks: HookCallback[] = [];
+    #appStartHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
@@ -83,8 +83,8 @@ export class WorkerChannel {
                 return this.#preInvocationHooks;
             case 'postInvocation':
                 return this.#postInvocationHooks;
-            case 'appStartup':
-                return this.#appStartupHooks;
+            case 'appStart':
+                return this.#appStartHooks;
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }

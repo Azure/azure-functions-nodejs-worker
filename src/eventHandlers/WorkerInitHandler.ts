@@ -4,7 +4,7 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { appStartup } from '../appStartup';
+import { startApp } from '../startApp';
 import { isError } from '../utils/ensureErrorType';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
@@ -37,7 +37,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         }
 
         if (msg.functionAppDirectory) {
-            await appStartup(msg.functionAppDirectory, channel);
+            await startApp(msg.functionAppDirectory, channel);
         } else {
             channel.log({
                 message: 'functionAppDirectory was undefined in workerInitRequest message. Skipping startup logic.',
