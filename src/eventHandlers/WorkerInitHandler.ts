@@ -6,6 +6,7 @@ import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { startApp } from '../startApp';
 import { isError } from '../utils/ensureErrorType';
+import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -32,18 +33,14 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         logColdStartWarning(channel);
 
+        channel.hostVersion = nonNullProp(msg, 'hostVersion');
+
         if (msg.hostVersion) {
             channel.hostVersion = msg.hostVersion;
         }
 
         if (msg.functionAppDirectory) {
             await startApp(msg.functionAppDirectory, channel);
-        } else {
-            channel.log({
-                message: 'functionAppDirectory was undefined in workerInitRequest message. Skipping startup logic.',
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
         }
 
         response.capabilities = {
