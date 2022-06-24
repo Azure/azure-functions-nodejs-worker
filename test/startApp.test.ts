@@ -71,6 +71,7 @@ describe('startApp', () => {
             functionAppDirectory,
             hostVersion,
             hookData: {},
+            appHookData: {},
         };
 
         const startFunc = sinon.spy();
@@ -97,6 +98,7 @@ describe('startApp', () => {
             functionAppDirectory,
             hostVersion,
             hookData: {},
+            appHookData: {},
         };
         const startFunc = sinon.spy();
 
@@ -128,7 +130,7 @@ describe('startApp', () => {
         expect(startFunc.args[0][0]).to.deep.equal(expectedStartContext);
     });
 
-    it('persists hookData changes from app start hooks in worker channel', async () => {
+    it('persists changes for app-level scope hookData', async () => {
         const functionAppDirectory = __dirname;
         const expectedHookData = {
             hello: 'world',
@@ -152,9 +154,6 @@ describe('startApp', () => {
         );
 
         expect(startFunc.callCount).to.be.equal(1);
-        expect(channel.appHookData).to.deep.equal(expectedHookData);
+        expect(channel.appLevelOnlyHookData).to.deep.equal(expectedHookData);
     });
-
-    it('passes app start hookData changes to invocation hooks', () => {});
-    it('does not persist invocation hooks hookData changes', () => {});
 });

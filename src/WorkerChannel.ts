@@ -16,7 +16,10 @@ export class WorkerChannel {
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
     hostVersion: string | undefined;
+    // this hook data will be passed to (and set by) all hooks in all scopes
     appHookData: HookData = {};
+    // this hook data is limited to the app-level scope and persisted only for app-level hooks
+    appLevelOnlyHookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartHooks: HookCallback[] = [];

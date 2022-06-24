@@ -23,12 +23,14 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
     await channel.updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory, channel);
     const appStartContext: AppStartContext = {
-        hookData: channel.appHookData,
+        hookData: channel.appLevelOnlyHookData,
+        appHookData: channel.appHookData,
         functionAppDirectory,
         hostVersion: channel.hostVersion,
     };
     await channel.executeHooks('appStart', appStartContext);
-    channel.appHookData = appStartContext.hookData;
+    channel.appHookData = appStartContext.appHookData;
+    channel.appLevelOnlyHookData = appStartContext.hookData;
 }
 
 async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {

@@ -33,9 +33,13 @@ declare module '@azure/functions-core' {
      */
     export interface HookContext {
         /**
-         * The recommended place to share data between hooks
+         * The recommended place to share data between hooks in the same scope (app-level vs invocation-level)
          */
         hookData: HookData;
+        /**
+         * The recommended place to share data across scopes for all hooks
+         */
+        appHookData: HookData;
     }
 
     /**

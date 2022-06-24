@@ -94,12 +94,12 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
             // create a copy of the hook data in the worker context (set by app hooks)
             // the same hook data object is shared in the invocation hooks of the same invocation
-            const invocationHookData: HookData = {
-                ...channel.appHookData,
-            };
+            const invocationHookData: HookData = {};
+            const appHookData: HookData = channel.appHookData;
 
             const preInvocContext: PreInvocationContext = {
                 hookData: invocationHookData,
+                appHookData,
                 invocationContext: context,
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
@@ -122,7 +122,8 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData: invocationHookData,
+                hookData: preInvocContext.hookData,
+                appHookData: preInvocContext.appHookData,
                 invocationContext: context,
                 inputs,
                 result: null,
@@ -145,6 +146,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 throw postInvocContext.error;
             }
             const result = postInvocContext.result;
+            channel.appHookData = postInvocContext.appHookData;
 
             // Allow HTTP response from context.res if HTTP response is not defined from the context.bindings object
             if (info.httpOutputName && context.res && context.bindings[info.httpOutputName] === undefined) {
