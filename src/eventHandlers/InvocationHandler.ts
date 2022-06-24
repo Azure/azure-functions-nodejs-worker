@@ -92,8 +92,6 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
             let userFunction = channel.functionLoader.getFunc(functionId);
 
-            // create a copy of the hook data in the worker context (set by app hooks)
-            // the same hook data object is shared in the invocation hooks of the same invocation
             const invocationHookData: HookData = {};
             const appHookData: HookData = channel.appHookData;
 
