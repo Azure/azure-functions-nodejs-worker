@@ -11,6 +11,8 @@ import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from '../../src/FunctionInfo';
 import { FunctionLoader } from '../../src/FunctionLoader';
+import { WorkerChannel } from '../../src/WorkerChannel';
+import { Msg as AppStartMsg } from '../startApp.test';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
@@ -323,16 +325,19 @@ namespace InputData {
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
+    let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
-        ({ stream, loader } = beforeEventHandlerSuite());
+        ({ stream, loader, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
     });
 
     beforeEach(async () => {
         hookData = '';
+        channel.appHookData = {};
+        channel.appLevelOnlyHookData = {};
     });
 
     afterEach(async () => {
@@ -779,8 +784,8 @@ describe('InvocationHandler', () => {
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStart'),
-            Msg.executedHooksLog('appStart'),
+            AppStartMsg.executingHooksLog(1, 'appStart'),
+            AppStartMsg.executedHooksLog('appStart'),
             WorkerInitMsg.response
         );
         expect(startFunc.callCount).to.be.equal(1);
@@ -832,8 +837,8 @@ describe('InvocationHandler', () => {
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStart'),
-            Msg.executedHooksLog('appStart'),
+            AppStartMsg.executingHooksLog(1, 'appStart'),
+            AppStartMsg.executedHooksLog('appStart'),
             WorkerInitMsg.response
         );
         expect(startFunc.callCount).to.be.equal(1);

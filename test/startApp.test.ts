@@ -13,7 +13,7 @@ import { Msg as WorkerInitMsg } from './eventHandlers/WorkerInitHandler.test';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-namespace Msg {
+export namespace Msg {
     export function executingHooksLog(count: number, hookName: string): rpc.IStreamingMessage {
         return {
             rpcLog: {
@@ -62,6 +62,8 @@ describe('startApp', () => {
         coreApi.Disposable.from(...testDisposables).dispose();
         testDisposables = [];
         process.chdir(originalCwd);
+        channel.appHookData = {};
+        channel.appLevelOnlyHookData = {};
     });
 
     it('runs app start hooks in non-specialization scenario', async () => {
