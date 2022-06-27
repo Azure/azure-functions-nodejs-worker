@@ -774,7 +774,7 @@ describe('InvocationHandler', () => {
             },
         };
         const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
-            context.appHookData = expectedAppHookData;
+            Object.assign(context.appHookData, expectedAppHookData);
             hookData += 'appStart';
         });
         testDisposables.push(coreApi.registerHook('appStart', startFunc));
@@ -822,12 +822,12 @@ describe('InvocationHandler', () => {
     it('hookData changes from appStart hooks are not persisted in invocation hook contexts', async () => {
         const functionAppDirectory = __dirname;
         const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
-            context.hookData = {
+            Object.assign(context.hookData, {
                 hello: 'world',
                 test: {
                     test2: 3,
                 },
-            };
+            });
             hookData += 'appStart';
         });
         testDisposables.push(coreApi.registerHook('appStart', startFunc));
@@ -888,7 +888,7 @@ describe('InvocationHandler', () => {
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
-                context.appHookData = expectedAppHookData;
+                Object.assign(context.appHookData, expectedAppHookData);
                 hookData += 'pre';
             })
         );
@@ -931,8 +931,8 @@ describe('InvocationHandler', () => {
         loader.getInfo.returns(new FunctionInfo(Binding.queue));
 
         const pre1 = coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
-            context.appHookData = expectedAppHookData;
-            context.hookData = expectedInvocationHookData;
+            Object.assign(context.appHookData, expectedAppHookData);
+            Object.assign(context.hookData, expectedInvocationHookData);
             hookData += 'pre1';
         });
         testDisposables.push(pre1);

@@ -29,8 +29,6 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
         hostVersion: channel.hostVersion,
     };
     await channel.executeHooks('appStart', appStartContext);
-    channel.appHookData = appStartContext.appHookData;
-    channel.appLevelOnlyHookData = appStartContext.hookData;
 }
 
 async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
