@@ -132,30 +132,32 @@ describe('startApp', () => {
         expect(startFunc.args[0][0]).to.deep.equal(expectedStartContext);
     });
 
-    it('persists changes for app-level scope hookData', async () => {
+    it('allows different appStart hooks to share data', async () => {
         const functionAppDirectory = __dirname;
-        const expectedHookData = {
-            hello: 'world',
-            test: {
-                test2: 3,
-            },
-        };
-        const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
-            context.hookData = expectedHookData;
-        });
-        testDisposables.push(coreApi.registerHook('appStart', startFunc));
+        let hookData = '';
+        testDisposables.push(
+            coreApi.registerHook('appStart', (context) => {
+                context.hookData.hello = 'world';
+                hookData += 'start1';
+            })
+        );
+        testDisposables.push(
+            coreApi.registerHook('appStart', (context) => {
+                expect(context.hookData.hello).to.equal('world');
+                hookData += 'start2';
+            })
+        );
 
         stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
 
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executingHooksLog(2, 'appStart'),
             Msg.executedHooksLog('appStart'),
             WorkerInitMsg.response
         );
 
-        expect(startFunc.callCount).to.be.equal(1);
-        expect(channel.appLevelOnlyHookData).to.deep.equal(expectedHookData);
+        expect(hookData).to.equal('start1start2');
     });
 });

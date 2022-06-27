@@ -101,7 +101,7 @@ declare module '@azure/functions-core' {
         /**
          * The version of the host running the function app
          */
-        hostVersion?: string;
+        hostVersion: string;
     }
 
     /**
