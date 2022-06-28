@@ -11,8 +11,11 @@ import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from '../../src/FunctionInfo';
 import { FunctionLoader } from '../../src/FunctionLoader';
+import { WorkerChannel } from '../../src/WorkerChannel';
+import { Msg as AppStartMsg } from '../startApp.test';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -322,16 +325,19 @@ namespace InputData {
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<FunctionLoader>;
+    let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
-        ({ stream, loader } = beforeEventHandlerSuite());
+        ({ stream, loader, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
     });
 
     beforeEach(async () => {
         hookData = '';
+        channel.appHookData = {};
+        channel.appLevelOnlyHookData = {};
     });
 
     afterEach(async () => {
@@ -757,6 +763,226 @@ describe('InvocationHandler', () => {
             Msg.invocResponse([])
         );
         expect(hookData).to.equal('prepost');
+    });
+
+    it('appHookData changes from appStart hooks are persisted in invocation hook contexts', async () => {
+        const functionAppDirectory = __dirname;
+        const expectedAppHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+        const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
+            Object.assign(context.appHookData, expectedAppHookData);
+            hookData += 'appStart';
+        });
+        testDisposables.push(coreApi.registerHook('appStart', startFunc));
+
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+            AppStartMsg.executingHooksLog(1, 'appStart'),
+            AppStartMsg.executedHooksLog('appStart'),
+            WorkerInitMsg.response
+        );
+        expect(startFunc.callCount).to.be.equal(1);
+
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                expect(context.appHookData).to.deep.equal(expectedAppHookData);
+                hookData += 'preInvoc';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.appHookData).to.deep.equal(expectedAppHookData);
+                hookData += 'postInvoc';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+        expect(hookData).to.equal('appStartpreInvocpostInvoc');
+    });
+
+    it('hookData changes from appStart hooks are not persisted in invocation hook contexts', async () => {
+        const functionAppDirectory = __dirname;
+        const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
+            Object.assign(context.hookData, {
+                hello: 'world',
+                test: {
+                    test2: 3,
+                },
+            });
+            hookData += 'appStart';
+        });
+        testDisposables.push(coreApi.registerHook('appStart', startFunc));
+
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+            AppStartMsg.executingHooksLog(1, 'appStart'),
+            AppStartMsg.executedHooksLog('appStart'),
+            WorkerInitMsg.response
+        );
+        expect(startFunc.callCount).to.be.equal(1);
+
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                expect(context.hookData).to.be.empty;
+                expect(context.appHookData).to.be.empty;
+                hookData += 'preInvoc';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.hookData).to.be.empty;
+                expect(context.appHookData).to.be.empty;
+                hookData += 'postInvoc';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+
+        expect(hookData).to.equal('appStartpreInvocpostInvoc');
+    });
+
+    it('appHookData changes are persisted between invocation-level hooks', async () => {
+        const expectedAppHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                Object.assign(context.appHookData, expectedAppHookData);
+                hookData += 'pre';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.appHookData).to.deep.equal(expectedAppHookData);
+                hookData += 'post';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+
+        expect(hookData).to.equal('prepost');
+    });
+
+    it('appHookData changes are persisted across different invocations while hookData changes are not', async () => {
+        const expectedAppHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+        const expectedInvocationHookData = {
+            hello2: 'world2',
+            test2: {
+                test4: 5,
+            },
+        };
+
+        loader.getFunc.returns(async () => {});
+        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+
+        const pre1 = coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+            Object.assign(context.appHookData, expectedAppHookData);
+            Object.assign(context.hookData, expectedInvocationHookData);
+            hookData += 'pre1';
+        });
+        testDisposables.push(pre1);
+
+        const post1 = coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+            expect(context.appHookData).to.deep.equal(expectedAppHookData);
+            expect(context.hookData).to.deep.equal(expectedInvocationHookData);
+            hookData += 'post1';
+        });
+        testDisposables.push(post1);
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+        expect(hookData).to.equal('pre1post1');
+
+        pre1.dispose();
+        post1.dispose();
+
+        const pre2 = coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+            expect(context.appHookData).to.deep.equal(expectedAppHookData);
+            expect(context.hookData).to.be.empty;
+            hookData += 'pre2';
+        });
+        testDisposables.push(pre2);
+
+        const post2 = coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+            expect(context.appHookData).to.deep.equal(expectedAppHookData);
+            expect(context.hookData).to.be.empty;
+            hookData += 'post2';
+        });
+        testDisposables.push(post2);
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+
+        expect(hookData).to.equal('pre1post1pre2post2');
     });
 
     it('dispose hooks', async () => {

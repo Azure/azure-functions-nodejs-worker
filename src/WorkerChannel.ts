@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext } from '@azure/functions-core';
+import { HookCallback, HookContext, HookData } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -15,8 +15,21 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
+    /**
+     * This will only be set after worker init request is received
+     */
+    hostVersion?: string;
+    /**
+     * this hook data will be passed to (and set by) all hooks in all scopes
+     */
+    appHookData: HookData = {};
+    /**
+     * this hook data is limited to the app-level scope and persisted only for app-level hooks
+     */
+    appLevelOnlyHookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
+    #appStartHooks: HookCallback[] = [];
 
     constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
         this.eventStream = eventStream;
@@ -80,6 +93,8 @@ export class WorkerChannel {
                 return this.#preInvocationHooks;
             case 'postInvocation':
                 return this.#postInvocationHooks;
+            case 'appStart':
+                return this.#appStartHooks;
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
