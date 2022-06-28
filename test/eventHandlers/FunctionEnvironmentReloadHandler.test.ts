@@ -77,6 +77,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         originalCwd = process.cwd();
         originalEnv = process.env;
         ({ stream, channel } = beforeEventHandlerSuite());
+        channel.hostVersion = '2.7.0';
     });
 
     after(() => {

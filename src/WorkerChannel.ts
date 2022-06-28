@@ -15,10 +15,17 @@ export class WorkerChannel {
     eventStream: IEventStream;
     functionLoader: IFunctionLoader;
     packageJson: PackageJson;
-    hostVersion = '';
-    // this hook data will be passed to (and set by) all hooks in all scopes
+    /**
+     * This will only be set after worker init request is received
+     */
+    hostVersion?: string;
+    /**
+     * this hook data will be passed to (and set by) all hooks in all scopes
+     */
     appHookData: HookData = {};
-    // this hook data is limited to the app-level scope and persisted only for app-level hooks
+    /**
+     * this hook data is limited to the app-level scope and persisted only for app-level hooks
+     */
     appLevelOnlyHookData: HookData = {};
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];

@@ -35,10 +35,6 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         channel.hostVersion = nonNullProp(msg, 'hostVersion');
 
-        if (msg.hostVersion) {
-            channel.hostVersion = msg.hostVersion;
-        }
-
         if (msg.functionAppDirectory) {
             await startApp(msg.functionAppDirectory, channel);
         }
