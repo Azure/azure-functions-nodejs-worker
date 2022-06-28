@@ -72,12 +72,12 @@ describe('FunctionEnvironmentReloadHandler', () => {
     // Reset `process.env` after this test suite so it doesn't affect other tests
     let originalEnv: NodeJS.ProcessEnv;
     before(() => {
-        originalEnv = process.env;
+        originalEnv = { ...process.env };
         ({ stream, channel } = beforeEventHandlerSuite());
     });
 
     after(() => {
-        process.env = originalEnv;
+        Object.assign(process.env, originalEnv);
     });
 
     afterEach(async () => {
@@ -101,6 +101,27 @@ describe('FunctionEnvironmentReloadHandler', () => {
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
+    });
+
+    it('preserves case insensitivity of environment variables', async () => {
+        process.env.PlaceholderVariable = 'TRUE';
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    hello: 'world',
+                    SystemDrive: 'Q:',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        expect(process.env.hello).to.equal('world');
+        expect(process.env.HeLlO).to.equal('world');
+        expect(process.env.SystemDrive).to.equal('Q:');
+        expect(process.env.systemdrive).to.equal('Q:');
+        expect(process.env.PlaceholderVariable).to.be.undefined;
+        expect(process.env.placeholdervariable).to.be.undefined;
     });
 
     it('reloading environment variables removes existing environment variables', async () => {

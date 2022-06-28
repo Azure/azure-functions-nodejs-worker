@@ -34,7 +34,11 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             logCategory: LogCategory.System,
         });
 
-        process.env = Object.assign({}, msg.environmentVariables);
+        // reset existing env vars
+        Object.keys(process.env).map((key) => delete process.env[key]);
+        // set new env vars
+        Object.assign(process.env, msg.environmentVariables);
+
         // Change current working directory
         if (msg.functionAppDirectory) {
             channel.log({
