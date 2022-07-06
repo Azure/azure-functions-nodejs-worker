@@ -15,13 +15,14 @@ import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-namespace Msg {
-    export function init(functionAppDirectory: string = __dirname): rpc.IStreamingMessage {
+export namespace Msg {
+    export function init(functionAppDirectory: string = __dirname, hostVersion = '2.7.0'): rpc.IStreamingMessage {
         return {
             requestId: 'id',
             workerInitRequest: {
                 capabilities: {},
                 functionAppDirectory,
+                hostVersion,
             },
         };
     }
@@ -214,10 +215,7 @@ describe('WorkerInitHandler', () => {
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {
-        it(`Loads entry point (${extension})`, async function (this: ITestCallbackContext) {
-            // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
-            this.skip();
-
+        it(`Loads entry point (${extension}) in non-specialization scenario`, async () => {
             const fileName = `entryPointFiles/doNothing${extension}`;
             const expectedPackageJson = {
                 main: fileName,

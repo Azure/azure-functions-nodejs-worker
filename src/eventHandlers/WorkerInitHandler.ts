@@ -4,7 +4,9 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { startApp } from '../startApp';
 import { isError } from '../utils/ensureErrorType';
+import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -30,9 +32,11 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning(channel);
-        const functionAppDirectory = msg.functionAppDirectory;
-        if (functionAppDirectory) {
-            await channel.updatePackageJson(functionAppDirectory);
+
+        channel.hostVersion = nonNullProp(msg, 'hostVersion');
+
+        if (msg.functionAppDirectory) {
+            await startApp(msg.functionAppDirectory, channel);
         }
 
         response.capabilities = {

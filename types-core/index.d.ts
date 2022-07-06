@@ -18,11 +18,13 @@ declare module '@azure/functions-core' {
      */
     export function registerHook(hookName: 'preInvocation', callback: PreInvocationCallback): Disposable;
     export function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
+    export function registerHook(hookName: 'appStart', callback: AppStartCallback): Disposable;
     export function registerHook(hookName: string, callback: HookCallback): Disposable;
 
     export type HookCallback = (context: HookContext) => void | Promise<void>;
     export type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
     export type PostInvocationCallback = (context: PostInvocationContext) => void | Promise<void>;
+    export type AppStartCallback = (context: AppStartContext) => void | Promise<void>;
 
     export type HookData = { [key: string]: any };
 
@@ -31,9 +33,13 @@ declare module '@azure/functions-core' {
      */
     export interface HookContext {
         /**
-         * The recommended place to share data between hooks
+         * The recommended place to share data between hooks in the same scope (app-level vs invocation-level)
          */
         hookData: HookData;
+        /**
+         * The recommended place to share data across scopes for all hooks
+         */
+        appHookData: HookData;
     }
 
     /**
@@ -81,6 +87,21 @@ declare module '@azure/functions-core' {
          * The error for the function, or null if there is no error. Changes to this value _will_ affect the overall result of the function
          */
         error: any;
+    }
+
+    /**
+     * Context on a function app that is about to be started
+     * This object will be passed to all app start hooks
+     */
+    export interface AppStartContext extends HookContext {
+        /**
+         * Absolute directory of the function app
+         */
+        functionAppDirectory: string;
+        /**
+         * The version of the host running the function app
+         */
+        hostVersion: string;
     }
 
     /**
