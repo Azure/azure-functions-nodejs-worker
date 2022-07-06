@@ -48,13 +48,13 @@ describe('startApp', () => {
 
     before(async () => {
         originalCwd = process.cwd();
-        originalEnv = process.env;
+        originalEnv = { ...process.env };
         ({ stream, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
     });
 
     after(() => {
-        process.env = originalEnv;
+        Object.assign(process.env, originalEnv);
     });
 
     afterEach(async () => {
