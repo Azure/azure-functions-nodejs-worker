@@ -103,28 +103,31 @@ describe('FunctionEnvironmentReloadHandler', () => {
         expect(process.env.PlaceholderVariable).to.be.undefined;
     });
 
-    if (process.platform === 'win32') {
-        it('preserves case insensitivity of environment variables on Windows', async () => {
-            process.env.PlaceholderVariable = 'TRUE';
-            stream.addTestMessage({
-                requestId: 'id',
-                functionEnvironmentReloadRequest: {
-                    environmentVariables: {
-                        hello: 'world',
-                        SystemDrive: 'Q:',
-                    },
-                    functionAppDirectory: null,
+    it('preserves OS-specific casing behavior of environment variables', async () => {
+        process.env.PlaceholderVariable = 'TRUE';
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    hello: 'world',
+                    SystemDrive: 'Q:',
                 },
-            });
-            await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
-            expect(process.env.hello).to.equal('world');
-            expect(process.env.HeLlO).to.equal('world');
-            expect(process.env.SystemDrive).to.equal('Q:');
-            expect(process.env.systemdrive).to.equal('Q:');
-            expect(process.env.PlaceholderVariable).to.be.undefined;
-            expect(process.env.placeholdervariable).to.be.undefined;
+                functionAppDirectory: null,
+            },
         });
-    }
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        expect(process.env.hello).to.equal('world');
+        expect(process.env.SystemDrive).to.equal('Q:');
+        expect(process.env.PlaceholderVariable).to.be.undefined;
+        expect(process.env.placeholdervariable).to.be.undefined;
+        if (process.platform === 'win32') {
+            expect(process.env.HeLlO).to.equal('world');
+            expect(process.env.systemdrive).to.equal('Q:');
+        } else {
+            expect(process.env.HeLlO).to.be.undefined;
+            expect(process.env.systemdrive).to.be.undefined;
+        }
+    });
 
     it('reloading environment variables removes existing environment variables', async () => {
         process.env.PlaceholderVariable = 'TRUE';
