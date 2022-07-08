@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { startApp } from '../startApp';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -34,7 +35,11 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             logCategory: LogCategory.System,
         });
 
-        process.env = Object.assign({}, msg.environmentVariables);
+        // reset existing env vars
+        Object.keys(process.env).map((key) => delete process.env[key]);
+        // set new env vars
+        Object.assign(process.env, msg.environmentVariables);
+
         // Change current working directory
         if (msg.functionAppDirectory) {
             channel.log({
@@ -43,7 +48,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await channel.updatePackageJson(msg.functionAppDirectory);
+            await startApp(msg.functionAppDirectory, channel);
         }
 
         return response;

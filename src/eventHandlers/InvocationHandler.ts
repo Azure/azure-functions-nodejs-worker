@@ -90,16 +90,18 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 });
             });
 
-            const hookData: HookData = {};
             let userFunction = channel.functionLoader.getFunc(functionId);
+
+            const invocationHookData: HookData = {};
+
             const preInvocContext: PreInvocationContext = {
-                hookData,
+                hookData: invocationHookData,
+                appHookData: channel.appHookData,
                 invocationContext: context,
                 functionCallback: <AzureFunction>userFunction,
                 inputs,
             };
-
-            await channel.executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
+            await channel.executeHooks('preInvocation', preInvocContext, invocationId, msgCategory);
             inputs = preInvocContext.inputs;
             userFunction = preInvocContext.functionCallback;
 
@@ -117,7 +119,8 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             }
 
             const postInvocContext: PostInvocationContext = {
-                hookData,
+                hookData: invocationHookData,
+                appHookData: channel.appHookData,
                 invocationContext: context,
                 inputs,
                 result: null,

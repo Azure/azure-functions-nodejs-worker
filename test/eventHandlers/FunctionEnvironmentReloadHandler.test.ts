@@ -8,11 +8,12 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
+import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
 import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-namespace Msg {
+export namespace Msg {
     export function reloadEnvVarsLog(numVars: number): rpc.IStreamingMessage {
         return {
             rpcLog: {
@@ -69,19 +70,23 @@ describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;
     let channel: WorkerChannel;
 
-    // Reset `process.env` after this test suite so it doesn't affect other tests
+    // Reset `process.env` and process.cwd() after this test suite so it doesn't affect other tests
     let originalEnv: NodeJS.ProcessEnv;
+    let originalCwd: string;
     before(() => {
-        originalEnv = process.env;
+        originalEnv = { ...process.env };
+        originalCwd = process.cwd();
         ({ stream, channel } = beforeEventHandlerSuite());
+        channel.hostVersion = '2.7.0';
     });
 
     after(() => {
-        process.env = originalEnv;
+        Object.assign(process.env, originalEnv);
     });
 
     afterEach(async () => {
         mock.restore();
+        process.chdir(originalCwd);
         await stream.afterEachEventHandlerTest();
     });
 
@@ -101,6 +106,32 @@ describe('FunctionEnvironmentReloadHandler', () => {
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
+    });
+
+    it('preserves OS-specific casing behavior of environment variables', async () => {
+        process.env.PlaceholderVariable = 'TRUE';
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    hello: 'world',
+                    SystemDrive: 'Q:',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        expect(process.env.hello).to.equal('world');
+        expect(process.env.SystemDrive).to.equal('Q:');
+        expect(process.env.PlaceholderVariable).to.be.undefined;
+        expect(process.env.placeholdervariable).to.be.undefined;
+        if (process.platform === 'win32') {
+            expect(process.env.HeLlO).to.equal('world');
+            expect(process.env.systemdrive).to.equal('Q:');
+        } else {
+            expect(process.env.HeLlO).to.be.undefined;
+            expect(process.env.systemdrive).to.be.undefined;
+        }
     });
 
     it('reloading environment variables removes existing environment variables', async () => {
@@ -229,6 +260,83 @@ describe('FunctionEnvironmentReloadHandler', () => {
         });
         await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDirAbsolute), Msg.reloadSuccess);
         expect(channel.packageJson).to.deep.equal(newPackageJson);
-        process.chdir(cwd);
     });
+
+    it('correctly loads package.json in specialization scenario', async () => {
+        const cwd = process.cwd();
+        const tempDir = 'temp';
+        const appDir = 'app';
+        const packageJson = {
+            type: 'module',
+            hello: 'world',
+        };
+
+        mock({
+            [tempDir]: {},
+            [appDir]: {
+                'package.json': JSON.stringify(packageJson),
+            },
+        });
+
+        stream.addTestMessage(WorkerInitMsg.init(path.join(cwd, tempDir)));
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning(`Worker failed to load package.json: file does not exist`),
+            WorkerInitMsg.response
+        );
+        expect(channel.packageJson).to.be.empty;
+
+        stream.addTestMessage({
+            requestId: 'id',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: path.join(cwd, appDir),
+            },
+        });
+        await stream.assertCalledWith(
+            Msg.reloadEnvVarsLog(0),
+            Msg.changingCwdLog(path.join(cwd, appDir)),
+            Msg.reloadSuccess
+        );
+        expect(channel.packageJson).to.deep.equal(packageJson);
+    });
+
+    for (const extension of ['.js', '.mjs', '.cjs']) {
+        it(`Loads entry point (${extension}) in specialization scenario`, async () => {
+            const cwd = process.cwd();
+            const tempDir = 'temp';
+            const fileName = `entryPointFiles/doNothing${extension}`;
+            const expectedPackageJson = {
+                main: fileName,
+            };
+            mock({
+                [tempDir]: {},
+                [__dirname]: {
+                    'package.json': JSON.stringify(expectedPackageJson),
+                    // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                    entryPointFiles: mock.load(path.join(__dirname, 'entryPointFiles')),
+                },
+            });
+
+            stream.addTestMessage(WorkerInitMsg.init(path.join(cwd, tempDir)));
+            await stream.assertCalledWith(
+                WorkerInitMsg.receivedInitLog,
+                WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+                WorkerInitMsg.response
+            );
+
+            stream.addTestMessage({
+                requestId: 'id',
+                functionEnvironmentReloadRequest: {
+                    functionAppDirectory: __dirname,
+                },
+            });
+            await stream.assertCalledWith(
+                Msg.reloadEnvVarsLog(0),
+                Msg.changingCwdLog(__dirname),
+                WorkerInitMsg.loadingEntryPoint(fileName),
+                WorkerInitMsg.loadedEntryPoint(fileName),
+                Msg.reloadSuccess
+            );
+        });
+    }
 });
