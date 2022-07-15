@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { RpcTraceContext } from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import {
     fromRpcTraceContext,
     toNullableBool,
@@ -35,7 +35,7 @@ describe('Rpc Converters', () => {
         const tracestatevalue = 'traces';
         const attributesvalue = { traceparent: 'traceparent', tracestate: 'tracestate' };
 
-        const input = <rpc.IRpcTraceContext>{
+        const input = <RpcTraceContext>{
             traceParent: traceparentvalue,
             traceState: tracestatevalue,
             attributes: attributesvalue,

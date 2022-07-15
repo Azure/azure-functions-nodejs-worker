@@ -2,14 +2,15 @@
 // Licensed under the MIT License.
 
 import { TraceContext } from '@azure/functions';
-import { isLong } from 'long';
 import {
-    AzureFunctionsRpcMessages as rpc,
-    INullableBool,
-    INullableDouble,
-    INullableString,
-    INullableTimestamp,
-} from '../../azure-functions-language-worker-protobuf/src/rpc';
+    RpcNullableBool,
+    RpcNullableDouble,
+    RpcNullableString,
+    RpcNullableTimestamp,
+    RpcTraceContext,
+    RpcTypedData,
+} from '@azure/functions-core';
+import { isLong } from 'long';
 import { InternalException } from '../utils/InternalException';
 
 /**
@@ -18,7 +19,7 @@ import { InternalException } from '../utils/InternalException';
  * @param typedData ITypedData object containing one of a string, json, or bytes property
  * @param convertStringToJson Optionally parse the string input type as JSON
  */
-export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson = true) {
+export function fromTypedData(typedData?: RpcTypedData, convertStringToJson = true) {
     typedData = typedData || {};
     let str = typedData.string || typedData.json;
     if (str !== undefined) {
@@ -49,7 +50,7 @@ export function fromTypedData(typedData?: rpc.ITypedData, convertStringToJson = 
  * Converts 'IRpcTraceContext' input from RPC layer to dictionary of key value pairs.
  * @param traceContext IRpcTraceContext object containing the activityId, tracestate and attributes.
  */
-export function fromRpcTraceContext(traceContext: rpc.IRpcTraceContext | null | undefined): TraceContext {
+export function fromRpcTraceContext(traceContext: RpcTraceContext | null | undefined): TraceContext {
     if (traceContext) {
         return <TraceContext>{
             traceparent: traceContext.traceParent,
@@ -66,7 +67,7 @@ export function fromRpcTraceContext(traceContext: rpc.IRpcTraceContext | null | 
  * TypedData can be string, json, or bytes
  * @param inputObject A JavaScript object that is a string, Buffer, ArrayBufferView, number, or object.
  */
-export function toTypedData(inputObject): rpc.ITypedData {
+export function toTypedData(inputObject): RpcTypedData {
     if (typeof inputObject === 'string') {
         return { string: inputObject };
     } else if (Buffer.isBuffer(inputObject)) {
@@ -91,9 +92,9 @@ export function toTypedData(inputObject): rpc.ITypedData {
  * @param nullable Input to be converted to an INullableBool if it is a valid boolean
  * @param propertyName The name of the property that the caller will assign the output to. Used for debugging.
  */
-export function toNullableBool(nullable: boolean | undefined, propertyName: string): undefined | INullableBool {
+export function toNullableBool(nullable: boolean | undefined, propertyName: string): undefined | RpcNullableBool {
     if (typeof nullable === 'boolean') {
-        return <INullableBool>{
+        return <RpcNullableBool>{
             value: nullable,
         };
     }
@@ -116,15 +117,15 @@ export function toNullableBool(nullable: boolean | undefined, propertyName: stri
 export function toNullableDouble(
     nullable: number | string | undefined,
     propertyName: string
-): undefined | INullableDouble {
+): undefined | RpcNullableDouble {
     if (typeof nullable === 'number') {
-        return <INullableDouble>{
+        return <RpcNullableDouble>{
             value: nullable,
         };
     } else if (typeof nullable === 'string') {
         if (!isNaN(<any>nullable)) {
             const parsedNumber = parseFloat(nullable);
-            return <INullableDouble>{
+            return <RpcNullableDouble>{
                 value: parsedNumber,
             };
         }
@@ -165,9 +166,9 @@ export function toRpcString(nullable: string | undefined, propertyName: string):
  * @param nullable Input to be converted to an INullableString if it is a valid string
  * @param propertyName The name of the property that the caller will assign the output to. Used for debugging.
  */
-export function toNullableString(nullable: string | undefined, propertyName: string): undefined | INullableString {
+export function toNullableString(nullable: string | undefined, propertyName: string): undefined | RpcNullableString {
     if (typeof nullable === 'string') {
-        return <INullableString>{
+        return <RpcNullableString>{
             value: nullable,
         };
     }
@@ -190,7 +191,7 @@ export function toNullableString(nullable: string | undefined, propertyName: str
 export function toNullableTimestamp(
     dateTime: Date | number | undefined,
     propertyName: string
-): INullableTimestamp | undefined {
+): RpcNullableTimestamp | undefined {
     if (dateTime != null) {
         try {
             const timeInMilliseconds = typeof dateTime === 'number' ? dateTime : dateTime.getTime();

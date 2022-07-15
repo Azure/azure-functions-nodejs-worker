@@ -3,6 +3,11 @@
 
 declare module '@azure/functions' {
     /**
+     * Sets the programming model contained in this package to be the one used by the Azure Functions worker
+     */
+    function setup(): void;
+
+    /**
      * Interface for your Azure Function code. This function must be exported (via module.exports or exports)
      * and will execute when triggered. It is recommended that you declare this function as async, which
      * implicitly returns a Promise.

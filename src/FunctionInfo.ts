@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { RpcBindingInfo, RpcFunctionMetadata, RpcTypedData } from '@azure/functions-core';
 import { toTypedData } from './converters/RpcConverters';
 import { toRpcHttp } from './converters/RpcHttpConverters';
 
@@ -11,15 +11,15 @@ export class FunctionInfo {
     name: string;
     directory: string;
     bindings: {
-        [key: string]: rpc.IBindingInfo;
+        [key: string]: RpcBindingInfo;
     };
     outputBindings: {
-        [key: string]: rpc.IBindingInfo & { converter: (any) => rpc.ITypedData };
+        [key: string]: RpcBindingInfo & { converter: (any) => RpcTypedData };
     };
     httpOutputName: string;
     hasHttpTrigger: boolean;
 
-    constructor(metadata: rpc.IRpcFunctionMetadata) {
+    constructor(metadata: RpcFunctionMetadata) {
         this.name = <string>metadata.name;
         this.directory = <string>metadata.directory;
         this.bindings = {};
@@ -32,7 +32,7 @@ export class FunctionInfo {
 
             // determine output bindings & assign rpc converter (http has quirks)
             Object.keys(bindings)
-                .filter((name) => bindings[name].direction !== rpc.BindingInfo.Direction.in)
+                .filter((name) => bindings[name].direction !== RpcBindingInfo.Direction.in)
                 .forEach((name) => {
                     const type = bindings[name].type;
                     if (type && type.toLowerCase() === 'http') {

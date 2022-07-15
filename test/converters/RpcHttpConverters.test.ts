@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { Cookie } from '@azure/functions';
+import { RpcHttpCookie } from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { toRpcHttp, toRpcHttpCookieList } from '../../src/converters/RpcHttpConverters';
 
 describe('Rpc Converters', () => {
@@ -69,16 +69,16 @@ describe('Rpc Converters', () => {
 
         const rpcCookies = toRpcHttpCookieList(cookieInputs);
         expect(rpcCookies[0].name).to.equal('none-cookie');
-        expect(rpcCookies[0].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.ExplicitNone);
+        expect(rpcCookies[0].sameSite).to.equal(RpcHttpCookie.SameSite.ExplicitNone);
 
         expect(rpcCookies[1].name).to.equal('lax-cookie');
-        expect(rpcCookies[1].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.Lax);
+        expect(rpcCookies[1].sameSite).to.equal(RpcHttpCookie.SameSite.Lax);
 
         expect(rpcCookies[2].name).to.equal('strict-cookie');
-        expect(rpcCookies[2].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.Strict);
+        expect(rpcCookies[2].sameSite).to.equal(RpcHttpCookie.SameSite.Strict);
 
         expect(rpcCookies[3].name).to.equal('default-cookie');
-        expect(rpcCookies[3].sameSite).to.equal(rpc.RpcHttpCookie.SameSite.None);
+        expect(rpcCookies[3].sameSite).to.equal(RpcHttpCookie.SameSite.None);
     });
 
     it('throws on invalid input', () => {

@@ -1,40 +1,70 @@
 {
-    "name": "azure-functions-nodejs-worker",
-    "author": "Microsoft Corporation",
+    "name": "@azure/functions",
     "version": "3.4.0",
-    "description": "Microsoft Azure Functions NodeJS Worker",
-    "license": "(MIT OR Apache-2.0)",
+    "description": "Microsoft Azure Functions NodeJS Framework",
+    "keywords": [
+        "azure",
+        "azure-functions",
+        "serverless",
+        "typescript"
+    ],
+    "author": "Microsoft",
+    "license": "MIT",
+    "homepage": "https://github.com/Azure/azure-functions-nodejs-framework",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Azure/azure-functions-nodejs-framework.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Azure/azure-functions-nodejs-framework/issues"
+    },
+    "main": "dist/src/main-bundle.js",
+    "types": "types/index.d.ts",
+    "files": [
+        "dist/src/main-bundle.js",
+        "types/index.d.ts",
+        "LICENSE",
+        "README.md",
+        "NOTICE.html",
+        "_manifest"
+    ],
+    "scripts": {
+        "build": "node ./node_modules/typescript/bin/tsc",
+        "test": "node ./dist/test/main.js",
+        "lint": "eslint .",
+        "lint-fix": "eslint . --fix",
+        "updateVersion": "ts-node ./scripts/updateVersion.ts",
+        "watch": "node ./node_modules/typescript/bin/tsc --watch",
+        "webpack": "webpack --mode production"
+    },
     "dependencies": {
-        "@grpc/grpc-js": "^1.2.7",
-        "@grpc/proto-loader": "^0.6.4",
-        "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
         "long": "^4.0.0",
-        "minimist": "^1.2.5",
         "uuid": "^8.3.0"
     },
     "devDependencies": {
-        "@types/blocked-at": "^1.0.1",
         "@types/chai": "^4.2.22",
         "@types/chai-as-promised": "^7.1.5",
         "@types/fs-extra": "^9.0.13",
+        "@types/long": "^4.0.2",
         "@types/minimist": "^1.2.2",
-        "@types/mocha": "^2.2.48",
+        "@types/mocha": "^9.1.1",
         "@types/mock-fs": "^4.13.1",
         "@types/mock-require": "^2.0.1",
         "@types/node": "^16.9.6",
         "@types/semver": "^7.3.9",
         "@types/sinon": "^7.0.0",
+        "@types/uuid": "^8.3.4",
         "@typescript-eslint/eslint-plugin": "^5.12.1",
         "@typescript-eslint/parser": "^5.12.1",
         "chai": "^4.2.0",
         "chai-as-promised": "^7.1.1",
-        "escape-string-regexp": "^4.0.0",
         "eslint": "^7.32.0",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-deprecation": "^1.3.2",
         "eslint-plugin-header": "^3.1.1",
         "eslint-plugin-prettier": "^4.0.0",
+        "globby": "^11.0.0",
         "minimist": "^1.2.6",
         "mocha": "^9.1.1",
         "mocha-junit-reporter": "^2.0.2",
@@ -42,7 +72,6 @@
         "mock-fs": "^5.1.2",
         "mock-require": "^2.0.2",
         "prettier": "^2.4.1",
-        "protobufjs": "^6.11.3",
         "rimraf": "^2.6.3",
         "semver": "^7.3.5",
         "shx": "^0.3.3",
@@ -53,28 +82,5 @@
         "typescript4": "npm:typescript@~4.0.0",
         "webpack": "^5.72.1",
         "webpack-cli": "^4.8.0"
-    },
-    "homepage": "https://github.com/Azure/azure-functions-nodejs-worker",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Azure/azure-functions-nodejs-worker.git"
-    },
-    "bugs": {
-        "url": "https://github.com/Azure/azure-functions-nodejs-worker/issues"
-    },
-    "scripts": {
-        "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
-        "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && node ./node_modules/typescript/bin/tsc",
-        "gen": "node scripts/generateProtos.js",
-        "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
-        "lint": "eslint .",
-        "lint-fix": "eslint . --fix",
-        "updateVersion": "ts-node ./scripts/updateVersion.ts",
-        "watch": "node ./node_modules/typescript/bin/tsc --watch",
-        "webpack": "webpack --mode production"
-    },
-    "files": [
-        "dist"
-    ],
-    "main": "dist/src/nodejsWorker.js"
+    }
 }

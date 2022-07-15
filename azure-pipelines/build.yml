@@ -1,8 +1,3 @@
-parameters:
-- name: IsPrerelease
-  type: boolean
-  default: true
-
 pr:
   branches:
     include:
@@ -29,77 +24,36 @@ jobs:
   - script: npm run webpack
     displayName: 'npm run webpack'
   - task: CopyFiles@2
-    displayName: 'Copy worker files to staging'
+    displayName: 'Copy framework files to staging'
     inputs:
       sourceFolder: '$(Build.SourcesDirectory)'
       contents: |
-        dist/src/nodejsWorker.js
-        dist/src/worker-bundle.js
+        dist/src/main-bundle.js
+        types/index.d.ts
         LICENSE
         NOTICE.html
         package.json
-        worker.config.json
-      targetFolder: '$(Build.ArtifactStagingDirectory)/worker'
+        README.md
+      targetFolder: '$(Build.ArtifactStagingDirectory)/framework'
       cleanTargetFolder: true
   - script: npm prune --production
     displayName: 'npm prune --production' # so that only production dependencies are included in SBOM
   - task: ManifestGeneratorTask@0
-    displayName: 'Generate SBOM for worker'
+    displayName: 'Generate SBOM for framework'
     inputs:
-      BuildDropPath: '$(Build.ArtifactStagingDirectory)/worker'
+      BuildDropPath: '$(Build.ArtifactStagingDirectory)/framework'
       # The list of components can't be determined from the webpacked file in the staging dir, so reference the original node_modules folder
       BuildComponentPath: '$(Build.SourcesDirectory)/node_modules'
-      PackageName: 'Azure Functions Node.js Worker'
-  - task: NuGetCommand@2
-    displayName: 'NuGet pack worker'
-    inputs:
-      command: pack
-      packagesToPack: '$(Build.SourcesDirectory)/Worker.nuspec'
-      packDestination: '$(Build.ArtifactStagingDirectory)/worker'
-      basePath: '$(Build.ArtifactStagingDirectory)/worker'
-      ${{ if eq(parameters.IsPrerelease, true) }}:
-        buildProperties: 'prereleaseSuffix=-alpha.$(Build.BuildNumber)'
-  - task: NuGetCommand@2
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/v3.x'), eq(variables['UPLOADPACKAGETOPRERELEASEFEED'], true))
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-      nuGetFeedType: 'internal'
-      publishVstsFeed: 'e6a70c92-4128-439f-8012-382fe78d6396/f37f760c-aebd-443e-9714-ce725cd427df'
-      allowPackageConflicts: true
-    displayName: 'Push NuGet package to the AzureFunctionsPreRelease feed'
-  # In order for the SBOM to be accurate, we want to explicitly specify the components folder, but the types package doesn't have any components
-  # We'll create an empty folder that _would_ store the components if it had any
-  - bash: |
-      mkdir types/node_modules
-    displayName: 'mkdir types/node_modules'
-  - task: CopyFiles@2
-    displayName: 'Copy types files to staging'
-    inputs:
-      sourceFolder: '$(Build.SourcesDirectory)/types'
-      contents: |
-        index.d.ts
-        LICENSE
-        package.json
-        README.md
-      targetFolder: '$(Build.ArtifactStagingDirectory)/types'
-      cleanTargetFolder: true
-  - task: ManifestGeneratorTask@0
-    displayName: 'Generate SBOM for types'
-    inputs:
-      BuildDropPath: '$(Build.ArtifactStagingDirectory)/types'
-      BuildComponentPath: '$(Build.SourcesDirectory)/types/node_modules'
-      PackageName: 'Azure Functions Type Definitions'
+      PackageName: 'Azure Functions Node.js Framework'
   - script: npm pack
-    displayName: 'npm pack types'
-    workingDirectory: '$(Build.ArtifactStagingDirectory)/types'
+    displayName: 'npm pack framework'
+    workingDirectory: '$(Build.ArtifactStagingDirectory)/framework'
   - task: CopyFiles@2
-    displayName: 'Copy packages to staging drop folder'
+    displayName: 'Copy package to staging drop folder'
     inputs:
       sourceFolder: '$(Build.ArtifactStagingDirectory)'
       contents: |
-        worker/*.nupkg
-        types/*.tgz
+        framework/*.tgz
       targetFolder: '$(Build.ArtifactStagingDirectory)/drop'
       cleanTargetFolder: true
   - task: PublishPipelineArtifact@1

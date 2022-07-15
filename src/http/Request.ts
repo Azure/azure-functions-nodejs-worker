@@ -10,7 +10,7 @@ import {
     HttpRequestQuery,
     HttpRequestUser,
 } from '@azure/functions';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { RpcHttpData, RpcTypedData } from '@azure/functions-core';
 import { HeaderName } from '../constants';
 import { fromTypedData } from '../converters/RpcConverters';
 import { fromNullableMapping, fromRpcHttpBody } from '../converters/RpcHttpConverters';
@@ -29,15 +29,15 @@ export class Request implements HttpRequest {
 
     #cachedUser?: HttpRequestUser | null;
 
-    constructor(rpcHttp: rpc.IRpcHttp) {
+    constructor(rpcHttp: RpcHttpData) {
         this.method = <HttpMethod>rpcHttp.method;
         this.url = <string>rpcHttp.url;
         this.originalUrl = <string>rpcHttp.url;
         this.headers = fromNullableMapping(rpcHttp.nullableHeaders, rpcHttp.headers);
         this.query = fromNullableMapping(rpcHttp.nullableQuery, rpcHttp.query);
         this.params = fromNullableMapping(rpcHttp.nullableParams, rpcHttp.params);
-        this.body = fromTypedData(<rpc.ITypedData>rpcHttp.body);
-        this.rawBody = fromRpcHttpBody(<rpc.ITypedData>rpcHttp.body);
+        this.body = fromTypedData(<RpcTypedData>rpcHttp.body);
+        this.rawBody = fromRpcHttpBody(<RpcTypedData>rpcHttp.body);
     }
 
     get user(): HttpRequestUser | null {

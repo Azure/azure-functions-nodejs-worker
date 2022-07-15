@@ -39,7 +39,7 @@ azure-functions-language-worker-protobuf/*
 
 dist
 pkg
-types/*.tgz
+*.tgz
 
 Azure.Functions.Cli
 Azure.Functions.Cli.zip

@@ -1,14 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { RpcInvocationRequest, RpcParameterBinding } from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { CreateContextAndInputs } from '../src/Context';
 import { FunctionInfo } from '../src/FunctionInfo';
 
-const timerTriggerInput: rpc.IParameterBinding = {
+const timerTriggerInput: RpcParameterBinding = {
     name: 'myTimer',
     data: {
         json: JSON.stringify({
@@ -25,13 +25,15 @@ const timerTriggerInput: rpc.IParameterBinding = {
 
 describe('Context', () => {
     let _logger: any;
+    let doneEmitter: any;
 
     beforeEach(() => {
         _logger = sinon.spy();
+        doneEmitter = sinon.spy();
     });
 
     it('camelCases timer trigger input when appropriate', async () => {
-        const msg: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const msg: RpcInvocationRequest = <RpcInvocationRequest>{
             functionId: 'id',
             invocationId: '1',
             inputData: [timerTriggerInput],
@@ -47,7 +49,7 @@ describe('Context', () => {
                 },
             },
         });
-        const workerOutputs = CreateContextAndInputs(info, msg, _logger);
+        const workerOutputs = CreateContextAndInputs(info, msg, _logger, doneEmitter);
         const myTimerWorker = workerOutputs.inputs[0];
         expect(myTimerWorker.schedule).to.be.empty;
         expect(myTimerWorker.scheduleStatus.last).to.equal('2016-10-04T10:15:00+00:00');
@@ -57,7 +59,7 @@ describe('Context', () => {
     });
 
     it('Does not add sys to bindingData for non-http', async () => {
-        const msg: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const msg: RpcInvocationRequest = <RpcInvocationRequest>{
             functionId: 'id',
             invocationId: '1',
             inputData: [timerTriggerInput],
@@ -74,14 +76,14 @@ describe('Context', () => {
             },
         });
 
-        const { context } = CreateContextAndInputs(info, msg, _logger);
+        const { context } = CreateContextAndInputs(info, msg, _logger, doneEmitter);
         expect(context.bindingData.sys).to.be.undefined;
         expect(context.bindingData.invocationId).to.equal('1');
         expect(context.invocationId).to.equal('1');
     });
 
     it('Adds correct sys properties for bindingData and http', async () => {
-        const inputDataValue: rpc.IParameterBinding = {
+        const inputDataValue: RpcParameterBinding = {
             name: 'req',
             data: {
                 http: {
@@ -91,7 +93,7 @@ describe('Context', () => {
                 },
             },
         };
-        const msg: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const msg: RpcInvocationRequest = <RpcInvocationRequest>{
             functionId: 'id',
             invocationId: '1',
             inputData: [inputDataValue],
@@ -108,7 +110,7 @@ describe('Context', () => {
             },
         });
 
-        const { context } = CreateContextAndInputs(info, msg, _logger);
+        const { context } = CreateContextAndInputs(info, msg, _logger, doneEmitter);
         const { bindingData } = context;
         expect(bindingData.sys.methodName).to.equal('test');
         expect(bindingData.sys.randGuid).to.not.be.undefined;
@@ -118,7 +120,7 @@ describe('Context', () => {
     });
 
     it('Adds correct header and query properties for bindingData and http using nullable values', async () => {
-        const inputDataValue: rpc.IParameterBinding = {
+        const inputDataValue: RpcParameterBinding = {
             name: 'req',
             data: {
                 http: {
@@ -144,7 +146,7 @@ describe('Context', () => {
                 },
             },
         };
-        const msg: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const msg: RpcInvocationRequest = <RpcInvocationRequest>{
             functionId: 'id',
             invocationId: '1',
             inputData: [inputDataValue],
@@ -161,7 +163,7 @@ describe('Context', () => {
             },
         });
 
-        const { context } = CreateContextAndInputs(info, msg, _logger);
+        const { context } = CreateContextAndInputs(info, msg, _logger, doneEmitter);
         const { bindingData } = context;
         expect(bindingData.invocationId).to.equal('1');
         expect(bindingData.headers.header1).to.equal('value1');
@@ -172,7 +174,7 @@ describe('Context', () => {
     });
 
     it('Adds correct header and query properties for bindingData and http using non-nullable values', async () => {
-        const inputDataValue: rpc.IParameterBinding = {
+        const inputDataValue: RpcParameterBinding = {
             name: 'req',
             data: {
                 http: {
@@ -188,7 +190,7 @@ describe('Context', () => {
                 },
             },
         };
-        const msg: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const msg: RpcInvocationRequest = <RpcInvocationRequest>{
             functionId: 'id',
             invocationId: '1',
             inputData: [inputDataValue],
@@ -205,7 +207,7 @@ describe('Context', () => {
             },
         });
 
-        const { context } = CreateContextAndInputs(info, msg, _logger);
+        const { context } = CreateContextAndInputs(info, msg, _logger, doneEmitter);
         const { bindingData } = context;
         expect(bindingData.invocationId).to.equal('1');
         expect(bindingData.headers.header1).to.equal('value1');

@@ -10,8 +10,8 @@ import {
     Logger,
     TraceContext,
 } from '@azure/functions';
+import { RpcInvocationRequest, RpcLog, RpcParameterBinding } from '@azure/functions-core';
 import { v4 as uuid } from 'uuid';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import {
     convertKeysToCamelCase,
     getBindingDefinitions,
@@ -22,20 +22,19 @@ import { FunctionInfo } from './FunctionInfo';
 import { Request } from './http/Request';
 import { Response } from './http/Response';
 import EventEmitter = require('events');
-import LogLevel = rpc.RpcLog.Level;
 
 export function CreateContextAndInputs(
     info: FunctionInfo,
-    request: rpc.IInvocationRequest,
-    userLogCallback: UserLogCallback
+    request: RpcInvocationRequest,
+    userLogCallback: UserLogCallback,
+    doneEmitter: EventEmitter
 ) {
-    const doneEmitter = new EventEmitter();
     const context = new InvocationContext(info, request, userLogCallback, doneEmitter);
 
     const bindings: ContextBindings = {};
     const inputs: any[] = [];
     let httpInput: Request | undefined;
-    for (const binding of <rpc.IParameterBinding[]>request.inputData) {
+    for (const binding of <RpcParameterBinding[]>request.inputData) {
         if (binding.data && binding.name) {
             let input;
             if (binding.data && binding.data.http) {
@@ -75,7 +74,6 @@ export function CreateContextAndInputs(
     return {
         context: <Context>context,
         inputs: inputs,
-        doneEmitter,
     };
 }
 
@@ -93,7 +91,7 @@ class InvocationContext implements Context {
 
     constructor(
         info: FunctionInfo,
-        request: rpc.IInvocationRequest,
+        request: RpcInvocationRequest,
         userLogCallback: UserLogCallback,
         doneEmitter: EventEmitter
     ) {
@@ -109,11 +107,11 @@ class InvocationContext implements Context {
         this.bindings = {};
 
         // Log message that is tied to function invocation
-        this.log = Object.assign((...args: any[]) => userLogCallback(LogLevel.Information, ...args), {
-            error: (...args: any[]) => userLogCallback(LogLevel.Error, ...args),
-            warn: (...args: any[]) => userLogCallback(LogLevel.Warning, ...args),
-            info: (...args: any[]) => userLogCallback(LogLevel.Information, ...args),
-            verbose: (...args: any[]) => userLogCallback(LogLevel.Trace, ...args),
+        this.log = Object.assign((...args: any[]) => userLogCallback(RpcLog.Level.Information, ...args), {
+            error: (...args: any[]) => userLogCallback(RpcLog.Level.Error, ...args),
+            warn: (...args: any[]) => userLogCallback(RpcLog.Level.Warning, ...args),
+            info: (...args: any[]) => userLogCallback(RpcLog.Level.Information, ...args),
+            verbose: (...args: any[]) => userLogCallback(RpcLog.Level.Trace, ...args),
         });
 
         this.bindingData = getNormalizedBindingData(request);
@@ -132,7 +130,7 @@ export interface InvocationResult {
 
 export type DoneCallback = (err?: unknown, result?: any) => void;
 
-export type UserLogCallback = (level: LogLevel, ...args: any[]) => void;
+export type UserLogCallback = (level: RpcLog.Level, ...args: any[]) => void;
 
 export interface Dict<T> {
     [key: string]: T;

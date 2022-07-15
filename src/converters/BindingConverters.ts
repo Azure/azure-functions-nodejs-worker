@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { BindingDefinition, ContextBindingData } from '@azure/functions';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { RpcBindingInfo, RpcInvocationRequest } from '@azure/functions-core';
 import { FunctionInfo } from '../FunctionInfo';
 import { fromTypedData } from './RpcConverters';
 
@@ -23,7 +23,7 @@ export function getBindingDefinitions(info: FunctionInfo): BindingDefinition[] {
     });
 }
 
-export function getNormalizedBindingData(request: rpc.IInvocationRequest): ContextBindingData {
+export function getNormalizedBindingData(request: RpcInvocationRequest): ContextBindingData {
     const bindingData: ContextBindingData = {
         invocationId: <string>request.invocationId,
     };
@@ -35,10 +35,8 @@ export function getNormalizedBindingData(request: rpc.IInvocationRequest): Conte
     return bindingData;
 }
 
-function getDirectionName(direction: rpc.BindingInfo.Direction | null | undefined): BindingDirection {
-    const directionName = Object.keys(rpc.BindingInfo.Direction).find(
-        (k) => rpc.BindingInfo.Direction[k] === direction
-    );
+function getDirectionName(direction: RpcBindingInfo.Direction | null | undefined): BindingDirection {
+    const directionName = Object.keys(RpcBindingInfo.Direction).find((k) => RpcBindingInfo.Direction[k] === direction);
     return isBindingDirection(directionName) ? (directionName as BindingDirection) : undefined;
 }
 

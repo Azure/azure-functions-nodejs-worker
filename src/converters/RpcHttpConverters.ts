@@ -2,10 +2,7 @@
 // Licensed under the MIT License.
 
 import { Cookie } from '@azure/functions';
-import {
-    AzureFunctionsRpcMessages as rpc,
-    INullableString,
-} from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { RpcHttpCookie, RpcHttpData, RpcNullableString, RpcTypedData } from '@azure/functions-core';
 import { Dict } from '../Context';
 import {
     fromTypedData,
@@ -23,7 +20,7 @@ import {
  * This is to avoid breaking changes in v2.
  * @param body The body from the RPC layer.
  */
-export function fromRpcHttpBody(body: rpc.ITypedData) {
+export function fromRpcHttpBody(body: RpcTypedData) {
     if (body && body.bytes) {
         return (<Buffer>body.bytes).toString();
     } else {
@@ -32,7 +29,7 @@ export function fromRpcHttpBody(body: rpc.ITypedData) {
 }
 
 export function fromNullableMapping(
-    nullableMapping: { [k: string]: INullableString } | null | undefined,
+    nullableMapping: { [k: string]: RpcNullableString } | null | undefined,
     originalMapping?: { [k: string]: string } | null
 ): Dict<string> {
     let converted = {};
@@ -51,7 +48,7 @@ export function fromNullableMapping(
  * 'http' types are a special case from other 'ITypedData' types, which come from primitive types.
  * @param inputMessage  An HTTP response object
  */
-export function toRpcHttp(inputMessage): rpc.ITypedData {
+export function toRpcHttp(inputMessage): RpcTypedData {
     // Check if we will fail to find any of these
     if (typeof inputMessage !== 'object' || Array.isArray(inputMessage)) {
         throw new Error(
@@ -59,7 +56,7 @@ export function toRpcHttp(inputMessage): rpc.ITypedData {
         );
     }
 
-    const httpMessage: rpc.IRpcHttp = inputMessage;
+    const httpMessage: RpcHttpData = inputMessage;
     httpMessage.headers = toRpcHttpHeaders(inputMessage.headers);
     httpMessage.cookies = toRpcHttpCookieList(inputMessage.cookies || []);
     let status = inputMessage.statusCode;
@@ -75,7 +72,7 @@ export function toRpcHttp(inputMessage): rpc.ITypedData {
  * Convert HTTP headers to a string/string mapping.
  * @param inputHeaders
  */
-function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
+function toRpcHttpHeaders(inputHeaders: RpcTypedData) {
     const rpcHttpHeaders: { [key: string]: string } = {};
     for (const key in inputHeaders) {
         if (inputHeaders[key] != null) {
@@ -86,11 +83,11 @@ function toRpcHttpHeaders(inputHeaders: rpc.ITypedData) {
 }
 
 /**
- * Convert HTTP 'Cookie' array to an array of 'IRpcHttpCookie' objects to be sent through the RPC layer
+ * Convert HTTP 'Cookie' array to an array of 'RpcHttpCookie' objects to be sent through the RPC layer
  * @param inputCookies array of 'Cookie' objects representing options for the 'Set-Cookie' response header
  */
-export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[] {
-    const rpcCookies: rpc.IRpcHttpCookie[] = [];
+export function toRpcHttpCookieList(inputCookies: Cookie[]): RpcHttpCookie[] {
+    const rpcCookies: RpcHttpCookie[] = [];
     inputCookies.forEach((cookie) => {
         rpcCookies.push(toRpcHttpCookie(cookie));
     });
@@ -102,21 +99,21 @@ export function toRpcHttpCookieList(inputCookies: Cookie[]): rpc.IRpcHttpCookie[
  * From RFC specifications for 'Set-Cookie' response header: https://www.rfc-editor.org/rfc/rfc6265.txt
  * @param inputCookie
  */
-function toRpcHttpCookie(inputCookie: Cookie): rpc.IRpcHttpCookie {
-    // Resolve SameSite enum, a one-off
-    let rpcSameSite: rpc.RpcHttpCookie.SameSite = rpc.RpcHttpCookie.SameSite.None;
+function toRpcHttpCookie(inputCookie: Cookie): RpcHttpCookie {
+    // Resolve RpcHttpCookie.SameSite enum, a one-off
+    let rpcSameSite: RpcHttpCookie.SameSite = RpcHttpCookie.SameSite.None;
     if (inputCookie && inputCookie.sameSite) {
         const sameSite = inputCookie.sameSite.toLocaleLowerCase();
         if (sameSite === 'lax') {
-            rpcSameSite = rpc.RpcHttpCookie.SameSite.Lax;
+            rpcSameSite = RpcHttpCookie.SameSite.Lax;
         } else if (sameSite === 'strict') {
-            rpcSameSite = rpc.RpcHttpCookie.SameSite.Strict;
+            rpcSameSite = RpcHttpCookie.SameSite.Strict;
         } else if (sameSite === 'none') {
-            rpcSameSite = rpc.RpcHttpCookie.SameSite.ExplicitNone;
+            rpcSameSite = RpcHttpCookie.SameSite.ExplicitNone;
         }
     }
 
-    const rpcCookie: rpc.IRpcHttpCookie = {
+    const rpcCookie: RpcHttpCookie = {
         name: inputCookie && toRpcString(inputCookie.name, 'cookie.name'),
         value: inputCookie && toRpcString(inputCookie.value, 'cookie.value'),
         domain: toNullableString(inputCookie && inputCookie.domain, 'cookie.domain'),

@@ -1,16 +1,17 @@
 module.exports = {
-    entry: "./dist/src/Worker.js",
+    entry: "./dist/src/main.js",
     output: {
         path: `${__dirname}/dist/src`,
-        filename: "worker-bundle.js",
-        library: "worker",
+        filename: "main-bundle.js",
         libraryTarget: "commonjs2"
     },
     target: 'node',
     node: {
         __dirname: false
     },
-    externals: [],
+    externals: {
+        '@azure/functions-core': 'commonjs2 @azure/functions-core'
+    },
     module: {
         parser: {
             javascript: {

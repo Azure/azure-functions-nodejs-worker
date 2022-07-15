@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { RpcBindingInfo, RpcFunctionMetadata, RpcInvocationRequest, RpcTypedData } from '@azure/functions-core';
 import { expect } from 'chai';
 import { fromString } from 'long';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { getBindingDefinitions, getNormalizedBindingData } from '../../src/converters/BindingConverters';
 import { fromTypedData } from '../../src/converters/RpcConverters';
 import { toRpcHttp } from '../../src/converters/RpcHttpConverters';
@@ -12,8 +12,8 @@ import { FunctionInfo } from '../../src/FunctionInfo';
 
 describe('Binding Converters', () => {
     it('normalizes binding trigger metadata for HTTP', () => {
-        const mockRequest: rpc.ITypedData = toRpcHttp({ url: 'https://mock' });
-        const triggerDataMock: { [k: string]: rpc.ITypedData } = {
+        const mockRequest: RpcTypedData = toRpcHttp({ url: 'https://mock' });
+        const triggerDataMock: { [k: string]: RpcTypedData } = {
             Headers: {
                 json: JSON.stringify({ Connection: 'Keep-Alive' }),
             },
@@ -41,7 +41,7 @@ describe('Binding Converters', () => {
             },
         };
 
-        const request: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const request: RpcInvocationRequest = <RpcInvocationRequest>{
             triggerMetadata: triggerDataMock,
             invocationId: '12341',
         };
@@ -66,7 +66,7 @@ describe('Binding Converters', () => {
     });
 
     it('normalizes binding trigger metadata containing arrays', () => {
-        const triggerDataMock: { [k: string]: rpc.ITypedData } = {
+        const triggerDataMock: { [k: string]: RpcTypedData } = {
             EnqueuedMessages: {
                 json: JSON.stringify(['Hello 1', 'Hello 2']),
             },
@@ -80,7 +80,7 @@ describe('Binding Converters', () => {
                 json: JSON.stringify({ MethodName: 'test-js', UtcNow: '2018', RandGuid: '3212' }),
             },
         };
-        const request: rpc.IInvocationRequest = <rpc.IInvocationRequest>{
+        const request: RpcInvocationRequest = <RpcInvocationRequest>{
             triggerMetadata: triggerDataMock,
             invocationId: '12341',
         };
@@ -111,22 +111,22 @@ describe('Binding Converters', () => {
     });
 
     it('catologues binding definitions', () => {
-        const functionMetaData: rpc.IRpcFunctionMetadata = <rpc.IRpcFunctionMetadata>{
+        const functionMetaData: RpcFunctionMetadata = <RpcFunctionMetadata>{
             name: 'MyFunction',
             directory: '.',
             scriptFile: 'index.js',
             bindings: {
                 req: {
                     type: 'httpTrigger',
-                    direction: rpc.BindingInfo.Direction.in,
+                    direction: RpcBindingInfo.Direction.in,
                 },
                 res: {
                     type: 'http',
-                    direction: rpc.BindingInfo.Direction.out,
+                    direction: RpcBindingInfo.Direction.out,
                 },
                 firstQueueOutput: {
                     type: 'queue',
-                    direction: rpc.BindingInfo.Direction.out,
+                    direction: RpcBindingInfo.Direction.out,
                 },
                 noDirection: {
                     type: 'queue',

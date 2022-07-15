@@ -9,10 +9,6 @@ import * as semver from 'semver';
 
 const repoRoot = path.join(__dirname, '..');
 const packageJsonPath = path.join(repoRoot, 'package.json');
-const typesRoot = path.join(repoRoot, 'types');
-const typesPackageJsonPath = path.join(typesRoot, 'package.json');
-const nuspecPath = path.join(repoRoot, 'Worker.nuspec');
-const nuspecVersionRegex = /<version>(.*)\$prereleaseSuffix\$<\/version>/i;
 const constantsPath = path.join(repoRoot, 'src', 'constants.ts');
 const constantsVersionRegex = /version = '(.*)'/i;
 
@@ -23,9 +19,6 @@ if (args.validate) {
     updateVersion(args.version);
 } else {
     console.log(`This script can be used to either update the version of the worker or validate that the repo is in a valid state with regards to versioning.
-
-NOTE: For the types package, only the major & minor version need to match the worker. We follow the same pattern as DefinitelyTyped as described here:
-https://github.com/DefinitelyTyped/DefinitelyTyped#how-do-definitely-typed-package-versions-relate-to-versions-of-the-corresponding-library
 
 Example usage:
 
@@ -39,35 +32,18 @@ function validateVersion() {
     const packageJson = readJSONSync(packageJsonPath);
     const packageJsonVersion = packageJson.version;
 
-    const typesPackageJson = readJSONSync(typesPackageJsonPath);
-    const typesPackageJsonVersion = typesPackageJson.version;
-
-    const nuspecVersion = getVersion(nuspecPath, nuspecVersionRegex);
-
     const constantsVersion = getVersion(constantsPath, constantsVersionRegex);
 
     console.log('Found the following versions:');
     console.log(`- package.json: ${packageJsonVersion}`);
-    console.log(`- types/package.json: ${typesPackageJsonVersion}`);
-    console.log(`- Worker.nuspec: ${nuspecVersion}`);
     console.log(`- src/constants.ts: ${constantsVersion}`);
 
     const parsedVersion = semver.parse(packageJsonVersion);
-    const parsedTypesVersion = semver.parse(typesPackageJsonVersion);
 
-    if (
-        !packageJsonVersion ||
-        !nuspecVersion ||
-        !constantsVersion ||
-        !typesPackageJsonVersion ||
-        !parsedVersion ||
-        !parsedTypesVersion
-    ) {
+    if (!packageJsonVersion || !constantsVersion || !parsedVersion) {
         throw new Error('Failed to detect valid versions in all expected files');
-    } else if (nuspecVersion !== packageJsonVersion || constantsVersion !== packageJsonVersion) {
+    } else if (constantsVersion !== packageJsonVersion) {
         throw new Error(`Worker versions do not match.`);
-    } else if (parsedVersion.major !== parsedTypesVersion.major || parsedVersion.minor !== parsedTypesVersion.minor) {
-        throw new Error(`Types package does not match the major/minor version of the worker.`);
     } else {
         console.log('Versions match! 🎉');
     }
@@ -84,14 +60,6 @@ function getVersion(filePath: string, regex: RegExp): string {
 
 function updateVersion(newVersion: string) {
     updatePackageJsonVersion(repoRoot, newVersion);
-
-    if (newVersion.endsWith('.0')) {
-        updatePackageJsonVersion(typesRoot, newVersion);
-    } else {
-        console.log(`Skipping types/package.json because this is a patch version.`);
-    }
-
-    updateVersionByRegex(nuspecPath, nuspecVersionRegex, newVersion);
 
     updateVersionByRegex(constantsPath, constantsVersionRegex, newVersion);
 }

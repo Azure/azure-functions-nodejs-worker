@@ -1,15 +1,15 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { RpcFunctionMetadata } from '@azure/functions-core';
 import { expect } from 'chai';
 import 'mocha';
-import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { FunctionInfo } from '../src/FunctionInfo';
 
 describe('FunctionInfo', () => {
     /** NullableBool */
     it('gets $return output binding converter for http', () => {
-        const metadata: rpc.IRpcFunctionMetadata = {
+        const metadata: RpcFunctionMetadata = {
             bindings: {
                 req: {
                     type: 'httpTrigger',
@@ -29,7 +29,7 @@ describe('FunctionInfo', () => {
     });
 
     it('"hasHttpTrigger" is true for http', () => {
-        const metadata: rpc.IRpcFunctionMetadata = {
+        const metadata: RpcFunctionMetadata = {
             bindings: {
                 req: {
                     type: 'httpTrigger',
@@ -45,7 +45,7 @@ describe('FunctionInfo', () => {
     });
 
     it('gets $return output binding converter for TypedData', () => {
-        const metadata: rpc.IRpcFunctionMetadata = {
+        const metadata: RpcFunctionMetadata = {
             bindings: {
                 input: {
                     type: 'queue',
