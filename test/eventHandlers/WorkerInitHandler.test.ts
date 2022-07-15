@@ -255,9 +255,6 @@ describe('WorkerInitHandler', () => {
     }
 
     it('Fails for missing entry point', async function (this: ITestCallbackContext) {
-        // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
-        this.skip();
-
         const fileName = 'entryPointFiles/missing.js';
         const expectedPackageJson = {
             main: fileName,
@@ -279,9 +276,6 @@ describe('WorkerInitHandler', () => {
     });
 
     it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
-        // Should be re-enabled after https://github.com/Azure/azure-functions-nodejs-worker/pull/577
-        this.skip();
-
         const fileName = 'entryPointFiles/throwError.js';
         const expectedPackageJson = {
             main: fileName,

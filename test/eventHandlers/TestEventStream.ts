@@ -6,7 +6,6 @@ import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
-import { Response } from '../../src/http/Response';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
     written: sinon.SinonSpy;
@@ -118,7 +117,7 @@ function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage): s
 function convertHttpResponse(msg: rpc.IStreamingMessage): rpc.IStreamingMessage {
     if (msg.invocationResponse?.outputData) {
         for (const entry of msg.invocationResponse.outputData) {
-            if (entry.data?.http instanceof Response) {
+            if (entry.data?.http) {
                 const res = entry.data.http;
                 entry.data.http = {
                     body: res.body,

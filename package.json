@@ -5,13 +5,12 @@
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
+        "@azure/functions": "file:../js-framework/azure-functions-3.4.0.tgz",
         "@grpc/grpc-js": "^1.2.7",
         "@grpc/proto-loader": "^0.6.4",
         "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
-        "long": "^4.0.0",
-        "minimist": "^1.2.5",
-        "uuid": "^8.3.0"
+        "minimist": "^1.2.5"
     },
     "devDependencies": {
         "@types/blocked-at": "^1.0.1",
@@ -49,8 +48,6 @@
         "sinon": "^7.0.0",
         "ts-node": "^3.3.0",
         "typescript": "^4.5.5",
-        "typescript3": "npm:typescript@~3.7.0",
-        "typescript4": "npm:typescript@~4.0.0",
         "webpack": "^5.72.1",
         "webpack-cli": "^4.8.0"
     },
@@ -64,13 +61,13 @@
     },
     "scripts": {
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
-        "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && node ./node_modules/typescript/bin/tsc",
+        "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
         "gen": "node scripts/generateProtos.js",
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
         "updateVersion": "ts-node ./scripts/updateVersion.ts",
-        "watch": "node ./node_modules/typescript/bin/tsc --watch",
+        "watch": "tsc --watch",
         "webpack": "webpack --mode production"
     },
     "files": [
