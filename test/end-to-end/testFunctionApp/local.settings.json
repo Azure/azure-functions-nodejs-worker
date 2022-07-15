@@ -1,8 +1,0 @@
-{
-    "IsEncrypted": false,
-    "Values": {
-      "AzureWebJobsEventHubSender":"",
-      "AzureWebJobsCosmosDBConnectionString":"",
-      "FUNCTIONS_WORKER_RUNTIME": "node"
-    }
-  }

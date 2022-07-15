@@ -1,7 +1,0 @@
-# **NOTE**: This file is only used if you pack locally. 
-# The official build/release pipeline has separate logic to control the package contents in "./azure-pipelines/build.yml".
-
-*.test.ts
-tsconfig.json
-dist
-*.tgz
