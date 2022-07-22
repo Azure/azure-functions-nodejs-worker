@@ -27,22 +27,34 @@ export namespace Msg {
         };
     }
 
-    export const response: rpc.IStreamingMessage = {
-        requestId: 'id',
-        workerInitResponse: {
-            capabilities: {
-                RpcHttpBodyOnly: 'true',
-                RpcHttpTriggerMetadataRemoved: 'true',
-                IgnoreEmptyValuedRpcHttpHeaders: 'true',
-                UseNullableValueDictionaryForHttp: 'true',
-                WorkerStatus: 'true',
-                TypedDataCollection: 'true',
-            },
-            result: {
-                status: rpc.StatusResult.Status.Success,
+    const workerMetadataRegExps = {
+        'workerInitResponse.workerMetadata.runtimeVersion': /^v[0-9]+\.[0-9]+\.[0-9]+$/,
+        'workerInitResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
+        'workerInitResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
+    };
+
+    export const response = new RegExpStreamingMessage(
+        {
+            requestId: 'id',
+            workerInitResponse: {
+                capabilities: {
+                    RpcHttpBodyOnly: 'true',
+                    RpcHttpTriggerMetadataRemoved: 'true',
+                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
+                    UseNullableValueDictionaryForHttp: 'true',
+                    WorkerStatus: 'true',
+                    TypedDataCollection: 'true',
+                },
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+                workerMetadata: {
+                    runtimeName: 'node',
+                },
             },
         },
-    };
+        workerMetadataRegExps
+    );
 
     export function failedResponse(fileName: string, errorMessage: string): RegExpStreamingMessage {
         const expectedMsg: rpc.IStreamingMessage = {
@@ -54,12 +66,16 @@ export namespace Msg {
                         message: errorMessage,
                     },
                 },
+                workerMetadata: {
+                    runtimeName: 'node',
+                },
             },
         };
         return new RegExpStreamingMessage(expectedMsg, {
             'workerInitResponse.result.exception.stackTrace': new RegExp(
                 `Error: ${escapeStringRegexp(errorMessage)}\\s*at`
             ),
+            ...workerMetadataRegExps,
         });
     }
 

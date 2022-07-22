@@ -4,6 +4,7 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { version as workerVersion } from '../constants';
 import { startApp } from '../startApp';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
@@ -19,7 +20,14 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
     readonly responseName = 'workerInitResponse';
 
     getDefaultResponse(_msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
-        return {};
+        return {
+            workerMetadata: {
+                runtimeName: 'node',
+                runtimeVersion: process.version,
+                workerBitness: process.arch,
+                workerVersion,
+            },
+        };
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
