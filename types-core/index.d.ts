@@ -232,7 +232,7 @@ declare module '@azure/functions-core' {
 
     interface InvocationArguments<TContext> {
         /**
-         * This is always the first argument passed to a function callback
+         * This is usually the first argument passed to a function callback
          */
         context: TContext;
 
