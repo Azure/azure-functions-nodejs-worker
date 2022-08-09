@@ -38,7 +38,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         // Log invocation details to ensure the invocation received by node worker
         coreCtx.log(RpcLogLevel.Debug, RpcLogCategory.System, 'Received FunctionInvocationRequest');
 
-        const programmingModel: ProgrammingModel<unknown> = nonNullProp(channel, 'programmingModel');
+        const programmingModel: ProgrammingModel = nonNullProp(channel, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);
 
         const hookData: HookData = {};

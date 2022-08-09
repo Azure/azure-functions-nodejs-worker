@@ -27,7 +27,7 @@ export class WorkerChannel {
      * this hook data is limited to the app-level scope and persisted only for app-level hooks
      */
     appLevelOnlyHookData: HookData = {};
-    programmingModel?: ProgrammingModel<unknown>;
+    programmingModel?: ProgrammingModel;
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartHooks: HookCallback[] = [];

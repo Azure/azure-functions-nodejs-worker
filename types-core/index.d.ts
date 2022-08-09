@@ -14,22 +14,14 @@ declare module '@azure/functions-core' {
      * Register a hook to interact with the lifecycle of Azure Functions.
      * Hooks are executed in the order they were registered and will block execution if they throw an error
      */
-    function registerHook<TContext = unknown>(
-        hookName: 'preInvocation',
-        callback: PreInvocationCallback<TContext>
-    ): Disposable;
-    function registerHook<TContext = unknown>(
-        hookName: 'postInvocation',
-        callback: PostInvocationCallback<TContext>
-    ): Disposable;
+    function registerHook(hookName: 'preInvocation', callback: PreInvocationCallback): Disposable;
+    function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
     function registerHook(hookName: 'appStart', callback: AppStartCallback): Disposable;
     function registerHook(hookName: string, callback: HookCallback): Disposable;
 
     type HookCallback = (context: HookContext) => void | Promise<void>;
-    type PreInvocationCallback<TContext = unknown> = (context: PreInvocationContext<TContext>) => void | Promise<void>;
-    type PostInvocationCallback<TContext = unknown> = (
-        context: PostInvocationContext<TContext>
-    ) => void | Promise<void>;
+    type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
+    type PostInvocationCallback = (context: PostInvocationContext) => void | Promise<void>;
     type AppStartCallback = (context: AppStartContext) => void | Promise<void>;
 
     type HookData = { [key: string]: any };
@@ -52,11 +44,11 @@ declare module '@azure/functions-core' {
      * Context on a function that is about to be executed
      * This object will be passed to all pre invocation hooks
      */
-    interface PreInvocationContext<TContext = unknown> extends HookContext {
+    interface PreInvocationContext extends HookContext {
         /**
          * The context object passed to the function
          */
-        invocationContext: TContext;
+        invocationContext: unknown;
 
         /**
          * The input values for this specific invocation. Changes to this array _will_ affect the inputs passed to your function
@@ -66,18 +58,18 @@ declare module '@azure/functions-core' {
         /**
          * The function callback for this specific invocation. Changes to this value _will_ affect the function itself
          */
-        functionCallback: FunctionCallback<TContext>;
+        functionCallback: FunctionCallback;
     }
 
     /**
      * Context on a function that has just executed
      * This object will be passed to all post invocation hooks
      */
-    interface PostInvocationContext<TContext = unknown> extends HookContext {
+    interface PostInvocationContext extends HookContext {
         /**
          * The context object passed to the function
          */
-        invocationContext: TContext;
+        invocationContext: unknown;
 
         /**
          * The input values for this specific invocation
@@ -141,19 +133,19 @@ declare module '@azure/functions-core' {
      * Only one programming model can be set. The last programming model registered will be used
      * If not explicitly set, a default programming model included with the worker will be used
      */
-    function setProgrammingModel<TContext>(programmingModel: ProgrammingModel<TContext>): void;
+    function setProgrammingModel(programmingModel: ProgrammingModel): void;
 
     /**
      * Returns the currently registered programming model
      * If not explicitly set, a default programming model included with the worker will be used
      */
-    function getProgrammingModel<TContext>(): ProgrammingModel<TContext>;
+    function getProgrammingModel(): ProgrammingModel;
 
     /**
      * A set of information and methods that describe the model for handling a Node.js function app
      * Currently, this is mainly focused on invocation
      */
-    interface ProgrammingModel<TContext> {
+    interface ProgrammingModel {
         /**
          * A name for this programming model, generally only used for tracking purposes
          */
@@ -167,7 +159,7 @@ declare module '@azure/functions-core' {
         /**
          * Returns a new instance of the invocation model for each invocation
          */
-        getInvocationModel(coreContext: CoreInvocationContext): InvocationModel<TContext>;
+        getInvocationModel(coreContext: CoreInvocationContext): InvocationModel;
     }
 
     /**
@@ -205,12 +197,12 @@ declare module '@azure/functions-core' {
     /**
      * A set of methods that describe the model for invoking a function
      */
-    interface InvocationModel<TContext> {
+    interface InvocationModel {
         /**
          * Returns the context object and inputs to be passed to all following invocation methods
          * This is run before preInvocation hooks
          */
-        getArguments(): Promise<InvocationArguments<TContext>>;
+        getArguments(): Promise<InvocationArguments>;
 
         /**
          * The main method that executes the user's function callback
@@ -219,7 +211,7 @@ declare module '@azure/functions-core' {
          * @param inputs The input array returned in `getArguments`, potentially modified by preInvocation hooks
          * @param callback The function callback to be executed
          */
-        invokeFunction(context: TContext, inputs: unknown[], callback: FunctionCallback<TContext>): Promise<unknown>;
+        invokeFunction(context: unknown, inputs: unknown[], callback: FunctionCallback): Promise<unknown>;
 
         /**
          * Returns the invocation response to send back to the host
@@ -227,14 +219,14 @@ declare module '@azure/functions-core' {
          * @param context The context object created in `getArguments`
          * @param result The result of the function callback, potentially modified by postInvocation hooks
          */
-        getResponse(context: TContext, result: unknown): Promise<RpcInvocationResponse>;
+        getResponse(context: unknown, result: unknown): Promise<RpcInvocationResponse>;
     }
 
-    interface InvocationArguments<TContext> {
+    interface InvocationArguments {
         /**
          * This is usually the first argument passed to a function callback
          */
-        context: TContext;
+        context: unknown;
 
         /**
          * The remaining arguments passed to a function callback, generally describing the trigger/input bindings
@@ -242,7 +234,7 @@ declare module '@azure/functions-core' {
         inputs: unknown[];
     }
 
-    type FunctionCallback<TContext = unknown> = (context: TContext, ...inputs: unknown[]) => unknown;
+    type FunctionCallback = (context: unknown, ...inputs: unknown[]) => unknown;
 
     // #region rpc types
     interface RpcFunctionMetadata {

@@ -20,7 +20,7 @@ interface LoadedFunction {
     thisArg: unknown;
 }
 
-export class FunctionLoader<TContext = unknown> {
+export class FunctionLoader {
     #loadedFunctions: { [k: string]: LoadedFunction | undefined } = {};
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
@@ -38,7 +38,7 @@ export class FunctionLoader<TContext = unknown> {
         return loadedFunction.metadata;
     }
 
-    getCallback(functionId: string): FunctionCallback<TContext> {
+    getCallback(functionId: string): FunctionCallback {
         const loadedFunction = this.#getLoadedFunction(functionId);
         // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
         return loadedFunction.callback.bind(loadedFunction.thisArg);

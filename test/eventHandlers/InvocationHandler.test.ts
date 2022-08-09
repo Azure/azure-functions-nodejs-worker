@@ -321,15 +321,22 @@ namespace InputData {
     };
 }
 
+type TestFunctionLoader = sinon.SinonStubbedInstance<
+    FunctionLoader & { getCallback(functionId: string): AzureFunction }
+>;
+
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
-    let loader: sinon.SinonStubbedInstance<FunctionLoader<Context>>;
+    let loader: TestFunctionLoader;
     let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
-        ({ stream, loader, channel } = beforeEventHandlerSuite());
+        const result = beforeEventHandlerSuite();
+        stream = result.stream;
+        loader = <TestFunctionLoader>result.loader;
+        channel = result.channel;
         coreApi = await import('@azure/functions-core');
     });
 
@@ -611,11 +618,11 @@ describe('InvocationHandler', () => {
         loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
-            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext<Context>) => {
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
                 expect(context.functionCallback).to.be.a('function');
-                context.functionCallback = async (invocContext: Context) => {
+                context.functionCallback = <coreTypes.FunctionCallback>(async (invocContext: Context) => {
                     invocContext.log('new function');
-                };
+                });
             })
         );
 
