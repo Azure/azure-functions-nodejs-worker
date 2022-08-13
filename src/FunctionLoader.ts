@@ -20,7 +20,7 @@ interface LoadedFunction {
     thisArg: unknown;
 }
 
-export class FunctionLoader {
+export class FunctionLoader implements IFunctionLoader {
     #loadedFunctions: { [k: string]: LoadedFunction | undefined } = {};
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
