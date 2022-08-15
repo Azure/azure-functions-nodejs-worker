@@ -48,6 +48,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         }
 
         response.capabilities = {
+            RawHttpBodyBytes: 'true',
             RpcHttpTriggerMetadataRemoved: 'true',
             RpcHttpBodyOnly: 'true',
             IgnoreEmptyValuedRpcHttpHeaders: 'true',
