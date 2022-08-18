@@ -49,3 +49,4 @@ test/end-to-end/Azure.Functions.NodejsWorker.E2E/.vs
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/bin
 test/end-to-end/Azure.Functions.NodejsWorker.E2E/Azure.Functions.NodejsWorker.E2E/obj
 **/*-test-results.xml
+testResults

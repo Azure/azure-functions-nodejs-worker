@@ -14,7 +14,7 @@ using Xunit;
 namespace Azure.Functions.NodeJs.Tests.E2E
 {
     [Collection(Constants.FunctionAppCollectionName)]
-    public class HttpEndToEndTests 
+    public class HttpEndToEndTests
     {
         private readonly FunctionAppFixture _fixture;
 
@@ -61,24 +61,38 @@ namespace Azure.Functions.NodeJs.Tests.E2E
         }
 
         [Theory]
-        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/json", HttpStatusCode.OK)]
-        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1, \"b\":}", "application/json", HttpStatusCode.OK)]
-        [InlineData("HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/octet-stream", HttpStatusCode.OK)]
-        [InlineData("HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK)]
-
-        public async Task HttpTriggerTestsWithCustomMediaType(string functionName, string body, string mediaType, HttpStatusCode expectedStatusCode)
+        [MemberData(nameof(GetHttpTriggerTestsWithCustomMediaTypeData))]
+        public async Task HttpTriggerTestsWithCustomMediaType(string functionName, string body, string mediaType, HttpStatusCode expectedStatusCode, Encoding encoding = null)
         {
-            HttpResponseMessage response = await HttpHelpers.InvokeHttpTriggerWithBody(functionName, body, expectedStatusCode, mediaType);
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTriggerWithBody(functionName, body, expectedStatusCode, encoding, mediaType);
             JObject responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             Assert.Equal(expectedStatusCode, response.StatusCode);
             VerifyBodyAndRawBody(responseBody, body, mediaType);
         }
 
+        public static IEnumerable<object[]> GetHttpTriggerTestsWithCustomMediaTypeData()
+        {
+            return new List<object[]>
+            {
+                new object[] { "HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/json", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "{\"a\":1, \"b\":}", "application/json", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "{\"a\":1}", "application/octet-stream", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "{\"a\":1}", "multipart/form", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "{\"a\":1}", "multipart/whatever", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK, new UnicodeEncoding(bigEndian: true, byteOrderMark: true) },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK, new UnicodeEncoding(bigEndian: false, byteOrderMark: true) },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK, new UTF32Encoding(bigEndian: true, byteOrderMark: true) },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK, new UTF32Encoding(bigEndian: false, byteOrderMark: true) },
+                new object[] { "HttpTriggerBodyAndRawBody", "abc", "text/plain", HttpStatusCode.OK, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true) }
+            };
+        }
+
         [Fact]
         public async Task HttpTriggerWithCookieTests()
         {
-            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerSetsCookie");            
+            HttpResponseMessage response = await HttpHelpers.InvokeHttpTrigger("HttpTriggerSetsCookie");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             List<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value.ToList();
             Assert.Equal(5, cookies.Count);
