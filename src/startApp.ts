@@ -36,21 +36,20 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
     const entryPointPattern = channel.packageJson.main;
     if (entryPointPattern) {
         try {
-            const files = await globby(path.join(functionAppDirectory, entryPointPattern));
+            const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
             if (files.length === 0) {
                 throw new Error(`Found zero files matching the supplied pattern`);
             }
 
             for (const file of files) {
-                const relativeFilePath = path.relative(functionAppDirectory, file);
                 channel.log({
-                    message: `Loading entry point file "${relativeFilePath}"`,
+                    message: `Loading entry point file "${file}"`,
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
                 });
-                await loadScriptFile(file, channel.packageJson);
+                await loadScriptFile(path.join(functionAppDirectory, file), channel.packageJson);
                 channel.log({
-                    message: `Loaded entry point file "${relativeFilePath}"`,
+                    message: `Loaded entry point file "${file}"`,
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
                 });
