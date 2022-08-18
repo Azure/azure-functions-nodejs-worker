@@ -10,7 +10,9 @@ module.exports = {
     node: {
         __dirname: false
     },
-    externals: [],
+    externals: {
+        '@azure/functions-core': 'commonjs2 @azure/functions-core'
+    },
     module: {
         parser: {
             javascript: {
