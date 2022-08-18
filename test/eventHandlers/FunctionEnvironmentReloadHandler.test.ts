@@ -70,23 +70,13 @@ describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;
     let channel: WorkerChannel;
 
-    // Reset `process.env` and process.cwd() after this test suite so it doesn't affect other tests
-    let originalEnv: NodeJS.ProcessEnv;
-    let originalCwd: string;
     before(() => {
-        originalEnv = { ...process.env };
-        originalCwd = process.cwd();
         ({ stream, channel } = beforeEventHandlerSuite());
         channel.hostVersion = '2.7.0';
     });
 
-    after(() => {
-        Object.assign(process.env, originalEnv);
-    });
-
     afterEach(async () => {
         mock.restore();
-        process.chdir(originalCwd);
         await stream.afterEachEventHandlerTest();
     });
 
