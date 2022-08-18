@@ -68,38 +68,12 @@ jobs:
       publishVstsFeed: 'e6a70c92-4128-439f-8012-382fe78d6396/f37f760c-aebd-443e-9714-ce725cd427df'
       allowPackageConflicts: true
     displayName: 'Push NuGet package to the AzureFunctionsPreRelease feed'
-  # In order for the SBOM to be accurate, we want to explicitly specify the components folder, but the types package doesn't have any components
-  # We'll create an empty folder that _would_ store the components if it had any
-  - bash: |
-      mkdir types/node_modules
-    displayName: 'mkdir types/node_modules'
-  - task: CopyFiles@2
-    displayName: 'Copy types files to staging'
-    inputs:
-      sourceFolder: '$(Build.SourcesDirectory)/types'
-      contents: |
-        index.d.ts
-        LICENSE
-        package.json
-        README.md
-      targetFolder: '$(Build.ArtifactStagingDirectory)/types'
-      cleanTargetFolder: true
-  - task: ManifestGeneratorTask@0
-    displayName: 'Generate SBOM for types'
-    inputs:
-      BuildDropPath: '$(Build.ArtifactStagingDirectory)/types'
-      BuildComponentPath: '$(Build.SourcesDirectory)/types/node_modules'
-      PackageName: 'Azure Functions Type Definitions'
-  - script: npm pack
-    displayName: 'npm pack types'
-    workingDirectory: '$(Build.ArtifactStagingDirectory)/types'
   - task: CopyFiles@2
     displayName: 'Copy packages to staging drop folder'
     inputs:
       sourceFolder: '$(Build.ArtifactStagingDirectory)'
       contents: |
         worker/*.nupkg
-        types/*.tgz
       targetFolder: '$(Build.ArtifactStagingDirectory)/drop'
       cleanTargetFolder: true
   - task: PublishPipelineArtifact@1

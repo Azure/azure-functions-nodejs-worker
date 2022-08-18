@@ -43,27 +43,18 @@ describe('startApp', () => {
     let stream: TestEventStream;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
-    let originalEnv: NodeJS.ProcessEnv;
-    let originalCwd: string;
 
     before(async () => {
-        originalCwd = process.cwd();
-        originalEnv = { ...process.env };
         ({ stream, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
     });
 
-    after(() => {
-        Object.assign(process.env, originalEnv);
-    });
-
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest();
         coreApi.Disposable.from(...testDisposables).dispose();
         testDisposables = [];
-        process.chdir(originalCwd);
         channel.appHookData = {};
         channel.appLevelOnlyHookData = {};
+        await stream.afterEachEventHandlerTest();
     });
 
     it('runs app start hooks in non-specialization scenario', async () => {

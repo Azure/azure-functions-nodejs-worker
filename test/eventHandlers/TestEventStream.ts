@@ -6,13 +6,16 @@ import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
-import { Response } from '../../src/http/Response';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
+    originalEnv: NodeJS.ProcessEnv;
+    originalCwd: string;
     written: sinon.SinonSpy;
     constructor() {
         super();
         this.written = sinon.spy();
+        this.originalEnv = { ...process.env };
+        this.originalCwd = process.cwd();
     }
     write(message: rpc.IStreamingMessage) {
         this.written(message);
@@ -70,6 +73,15 @@ export class TestEventStream extends EventEmitter implements IEventStream {
      * Verifies the test didn't send any extraneous messages
      */
     async afterEachEventHandlerTest(): Promise<void> {
+        // Reset `process.env` and process.cwd() after each test so it doesn't affect other tests
+        process.chdir(this.originalCwd);
+        for (const key of Object.keys(process.env)) {
+            if (!(key in this.originalEnv)) {
+                delete process.env[key];
+            }
+        }
+        Object.assign(process.env, this.originalEnv);
+
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));
         await this.assertCalledWith();
@@ -118,7 +130,7 @@ function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage): s
 function convertHttpResponse(msg: rpc.IStreamingMessage): rpc.IStreamingMessage {
     if (msg.invocationResponse?.outputData) {
         for (const entry of msg.invocationResponse.outputData) {
-            if (entry.data?.http instanceof Response) {
+            if (entry.data?.http) {
                 const res = entry.data.http;
                 entry.data.http = {
                     body: res.body,

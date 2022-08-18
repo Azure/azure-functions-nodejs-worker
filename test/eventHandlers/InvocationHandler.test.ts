@@ -9,7 +9,6 @@ import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { FunctionInfo } from '../../src/FunctionInfo';
 import { FunctionLoader } from '../../src/FunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { Msg as AppStartMsg } from '../startApp.test';
@@ -322,15 +321,22 @@ namespace InputData {
     };
 }
 
+type TestFunctionLoader = sinon.SinonStubbedInstance<
+    FunctionLoader & { getCallback(functionId: string): AzureFunction }
+>;
+
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
-    let loader: sinon.SinonStubbedInstance<FunctionLoader>;
+    let loader: TestFunctionLoader;
     let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
-        ({ stream, loader, channel } = beforeEventHandlerSuite());
+        const result = beforeEventHandlerSuite();
+        stream = result.stream;
+        loader = <TestFunctionLoader>result.loader;
+        channel = result.channel;
         coreApi = await import('@azure/functions-core');
     });
 
@@ -382,8 +388,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.basic) {
         it('invokes function' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.httpRes);
             sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(
                 Msg.receivedInvocLog(),
@@ -395,8 +401,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnHttp) {
         it('returns correct data with $return binding' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.httpReturn));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.httpReturn);
             sendInvokeMessage([InputData.http]);
             const expectedOutput = getHttpResponse(undefined, '$return');
             const expectedReturnValue = {
@@ -416,8 +422,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnArray) {
         it('returns returned output if not http' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
             sendInvokeMessage([]);
             const expectedReturnValue = {
                 json: '["hello, seattle!","hello, tokyo!"]',
@@ -428,8 +434,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnArray) {
         it('returned output is ignored if http' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.httpRes);
             sendInvokeMessage([]);
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], undefined));
         });
@@ -437,8 +443,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.resHttp) {
         it('serializes output binding data through context.done' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.httpRes);
             sendInvokeMessage([InputData.http]);
             const expectedOutput = [getHttpResponse({ hello: 'world' })];
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse(expectedOutput));
@@ -447,18 +453,16 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.multipleBindings) {
         it('serializes multiple output bindings through context.done and context.bindings' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(
-                new FunctionInfo({
-                    bindings: {
-                        req: Binding.httpInput,
-                        res: Binding.httpOutput,
-                        queueOutput: Binding.queueOutput,
-                        overriddenQueueOutput: Binding.queueOutput,
-                    },
-                    name: 'testFuncName',
-                })
-            );
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns({
+                bindings: {
+                    req: Binding.httpInput,
+                    res: Binding.httpOutput,
+                    queueOutput: Binding.queueOutput,
+                    overriddenQueueOutput: Binding.queueOutput,
+                },
+                name: 'testFuncName',
+            });
             sendInvokeMessage([InputData.http]);
             const expectedOutput = [
                 getHttpResponse({ hello: 'world' }),
@@ -481,8 +485,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.error) {
         it('returns failed status for user error' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
             sendInvokeMessage([InputData.http]);
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed);
         });
@@ -497,17 +501,17 @@ describe('InvocationHandler', () => {
     });
 
     it('empty function does not return invocation response', async () => {
-        loader.getFunc.returns(() => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+        loader.getCallback.returns(() => {});
+        loader.getRpcMetadata.returns(Binding.httpRes);
         sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(Msg.receivedInvocLog());
     });
 
     it('logs error on calling context.done in async function', async () => {
-        loader.getFunc.returns(async (context: Context) => {
+        loader.getCallback.returns(async (context: Context) => {
             context.done();
         });
-        loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+        loader.getRpcMetadata.returns(Binding.httpRes);
         sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
@@ -517,11 +521,11 @@ describe('InvocationHandler', () => {
     });
 
     it('logs error on calling context.done more than once', async () => {
-        loader.getFunc.returns((context: Context) => {
+        loader.getCallback.returns((context: Context) => {
             context.done();
             context.done();
         });
-        loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+        loader.getRpcMetadata.returns(Binding.httpRes);
         sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
@@ -531,11 +535,11 @@ describe('InvocationHandler', () => {
     });
 
     it('logs error on calling context.log after context.done', async () => {
-        loader.getFunc.returns((context: Context) => {
+        loader.getCallback.returns((context: Context) => {
             context.done();
             context.log('testUserLog');
         });
-        loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+        loader.getRpcMetadata.returns(Binding.httpRes);
         sendInvokeMessage([InputData.http]);
         await stream.assertCalledWith(
             Msg.receivedInvocLog(),
@@ -547,11 +551,11 @@ describe('InvocationHandler', () => {
 
     it('logs error on calling context.log after async function', async () => {
         let _context: Context;
-        loader.getFunc.returns(async (context: Context) => {
+        loader.getCallback.returns(async (context: Context) => {
             _context = context;
             return 'hello';
         });
-        loader.getInfo.returns(new FunctionInfo(Binding.httpRes));
+        loader.getRpcMetadata.returns(Binding.httpRes);
         sendInvokeMessage([InputData.http]);
         // wait for first two messages to ensure invocation happens
         await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([getHttpResponse()]));
@@ -562,8 +566,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.logHookData) {
         it('preInvocationHook' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('preInvocation', () => {
@@ -585,8 +589,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.logInput) {
         it('preInvocationHook respects change to inputs' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -608,17 +612,17 @@ describe('InvocationHandler', () => {
     }
 
     it('preInvocationHook respects change to functionCallback', async () => {
-        loader.getFunc.returns(async (invocContext: Context) => {
+        loader.getCallback.returns(async (invocContext: Context) => {
             invocContext.log('old function');
         });
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
                 expect(context.functionCallback).to.be.a('function');
-                context.functionCallback = async (invocContext: Context) => {
+                context.functionCallback = <coreTypes.FunctionCallback>(async (invocContext: Context) => {
                     invocContext.log('new function');
-                };
+                });
             })
         );
 
@@ -634,15 +638,15 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.logHookData) {
         it('postInvocationHook' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
                     hookData += 'post';
                     expect(context.result).to.equal('hello');
                     expect(context.error).to.be.null;
-                    context.invocationContext.log('hello from post');
+                    (<Context>context.invocationContext).log('hello from post');
                 })
             );
 
@@ -661,8 +665,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.logHookData) {
         it('postInvocationHook respects change to context.result' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
@@ -687,8 +691,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.error) {
         it('postInvocationHook executes if function throws error' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
@@ -711,8 +715,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.error) {
         it('postInvocationHook respects change to context.error' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.queue));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.queue);
 
             testDisposables.push(
                 coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
@@ -736,8 +740,8 @@ describe('InvocationHandler', () => {
     }
 
     it('pre and post invocation hooks share data', async () => {
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -790,8 +794,8 @@ describe('InvocationHandler', () => {
         );
         expect(startFunc.callCount).to.be.equal(1);
 
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -843,8 +847,8 @@ describe('InvocationHandler', () => {
         );
         expect(startFunc.callCount).to.be.equal(1);
 
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -883,8 +887,8 @@ describe('InvocationHandler', () => {
             },
         };
 
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -927,8 +931,8 @@ describe('InvocationHandler', () => {
             },
         };
 
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         const pre1 = coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
             Object.assign(context.appHookData, expectedAppHookData);
@@ -986,8 +990,8 @@ describe('InvocationHandler', () => {
     });
 
     it('dispose hooks', async () => {
-        loader.getFunc.returns(async () => {});
-        loader.getInfo.returns(new FunctionInfo(Binding.queue));
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
 
         const disposableA: coreTypes.Disposable = coreApi.registerHook('preInvocation', () => {
             hookData += 'a';
@@ -1025,8 +1029,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnEmptyString) {
         it('returns and serializes falsy value in Durable: ""' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.activity));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.activity);
             sendInvokeMessage([]);
             const expectedReturnValue = { string: '' };
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], expectedReturnValue));
@@ -1035,8 +1039,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnZero) {
         it('returns and serializes falsy value in Durable: 0' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.activity));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.activity);
             sendInvokeMessage([]);
             const expectedReturnValue = { int: 0 };
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], expectedReturnValue));
@@ -1045,8 +1049,8 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnFalse) {
         it('returns and serializes falsy value in Durable: false' + suffix, async () => {
-            loader.getFunc.returns(func);
-            loader.getInfo.returns(new FunctionInfo(Binding.activity));
+            loader.getCallback.returns(func);
+            loader.getRpcMetadata.returns(Binding.activity);
             sendInvokeMessage([]);
             const expectedReturnValue = { json: 'false' };
             await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResponse([], expectedReturnValue));

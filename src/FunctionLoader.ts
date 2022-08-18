@@ -1,8 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { FunctionInfo } from './FunctionInfo';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { InternalException } from './utils/InternalException';
@@ -10,18 +10,18 @@ import { nonNullProp } from './utils/nonNull';
 
 export interface IFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
-    getInfo(functionId: string): FunctionInfo;
-    getFunc(functionId: string): Function;
+    getRpcMetadata(functionId: string): rpc.IRpcFunctionMetadata;
+    getCallback(functionId: string): FunctionCallback;
+}
+
+interface LoadedFunction {
+    metadata: rpc.IRpcFunctionMetadata;
+    callback: FunctionCallback;
+    thisArg: unknown;
 }
 
 export class FunctionLoader implements IFunctionLoader {
-    #loadedFunctions: {
-        [k: string]: {
-            info: FunctionInfo;
-            func: Function;
-            thisArg: unknown;
-        };
-    } = {};
+    #loadedFunctions: { [k: string]: LoadedFunction | undefined } = {};
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
         if (metadata.isProxy === true) {
@@ -29,35 +29,32 @@ export class FunctionLoader implements IFunctionLoader {
         }
         const script: any = await loadScriptFile(nonNullProp(metadata, 'scriptFile'), packageJson);
         const entryPoint = <string>(metadata && metadata.entryPoint);
-        const [userFunction, thisArg] = getEntryPoint(script, entryPoint);
-        this.#loadedFunctions[functionId] = {
-            info: new FunctionInfo(metadata),
-            func: userFunction,
-            thisArg,
-        };
+        const [callback, thisArg] = getEntryPoint(script, entryPoint);
+        this.#loadedFunctions[functionId] = { metadata, callback, thisArg };
     }
 
-    getInfo(functionId: string): FunctionInfo {
-        const loadedFunction = this.#loadedFunctions[functionId];
-        if (loadedFunction && loadedFunction.info) {
-            return loadedFunction.info;
-        } else {
-            throw new InternalException(`Function info for '${functionId}' is not loaded and cannot be invoked.`);
-        }
+    getRpcMetadata(functionId: string): rpc.IRpcFunctionMetadata {
+        const loadedFunction = this.#getLoadedFunction(functionId);
+        return loadedFunction.metadata;
     }
 
-    getFunc(functionId: string): Function {
+    getCallback(functionId: string): FunctionCallback {
+        const loadedFunction = this.#getLoadedFunction(functionId);
+        // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
+        return loadedFunction.callback.bind(loadedFunction.thisArg);
+    }
+
+    #getLoadedFunction(functionId: string): LoadedFunction {
         const loadedFunction = this.#loadedFunctions[functionId];
-        if (loadedFunction && loadedFunction.func) {
-            // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
-            return loadedFunction.func.bind(loadedFunction.thisArg);
+        if (loadedFunction) {
+            return loadedFunction;
         } else {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
     }
 }
 
-function getEntryPoint(f: any, entryPoint?: string): [Function, unknown] {
+function getEntryPoint(f: any, entryPoint?: string): [FunctionCallback, unknown] {
     let thisArg: unknown;
     if (f !== null && typeof f === 'object') {
         thisArg = f;

@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext, HookData } from '@azure/functions-core';
+import { HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
 import { IFunctionLoader } from './FunctionLoader';
@@ -27,6 +27,7 @@ export class WorkerChannel {
      * this hook data is limited to the app-level scope and persisted only for app-level hooks
      */
     appLevelOnlyHookData: HookData = {};
+    programmingModel?: ProgrammingModel;
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartHooks: HookCallback[] = [];

@@ -8,11 +8,24 @@ import { setupEventStream } from '../../src/setupEventStream';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 
+let testWorkerData:
+    | {
+          stream: TestEventStream;
+          loader: sinon.SinonStubbedInstance<FunctionLoader>;
+          channel: WorkerChannel;
+      }
+    | undefined = undefined;
+
 export function beforeEventHandlerSuite() {
-    const stream = new TestEventStream();
-    const loader = sinon.createStubInstance<FunctionLoader>(FunctionLoader);
-    const channel = new WorkerChannel(stream, loader);
-    setupEventStream('workerId', channel);
-    setupCoreModule(channel);
-    return { stream, loader, channel };
+    if (!testWorkerData) {
+        const stream = new TestEventStream();
+        const loader = sinon.createStubInstance<FunctionLoader>(FunctionLoader);
+        const channel = new WorkerChannel(stream, loader);
+        setupEventStream('workerId', channel);
+        setupCoreModule(channel);
+        testWorkerData = { stream, loader, channel };
+        // Clear out logs that happened during setup, so that they don't affect whichever test runs first
+        stream.written.resetHistory();
+    }
+    return testWorkerData;
 }

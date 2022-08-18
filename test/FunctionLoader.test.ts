@@ -53,7 +53,7 @@ describe('FunctionLoader', () => {
         );
 
         expect(() => {
-            loader.getFunc('functionId');
+            loader.getCallback('functionId');
         }).to.throw("Function code for 'functionId' is not loaded and cannot be invoked.");
     });
 
@@ -118,7 +118,7 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunc('functionId');
+        const userFunction = loader.getCallback('functionId');
 
         userFunction(context, (results) => {
             expect(results).to.eql({ prop: true });
@@ -137,11 +137,11 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunc('functionId');
-        const result = userFunction();
+        const userFunction = loader.getCallback('functionId');
+        const result = userFunction({});
 
         expect(result).to.be.not.an('undefined');
-        expect(result.then).to.be.a('function');
+        expect((<any>result).then).to.be.a('function');
     });
 
     it("function returned is a clone so that it can't affect other executions", async () => {
@@ -156,10 +156,10 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunc('functionId');
+        const userFunction = loader.getCallback('functionId');
         Object.assign(userFunction, { hello: 'world' });
 
-        const userFunction2 = loader.getFunc('functionId');
+        const userFunction2 = loader.getCallback('functionId');
 
         expect(userFunction).to.not.equal(userFunction2);
         expect(userFunction['hello']).to.equal('world');
