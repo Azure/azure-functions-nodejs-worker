@@ -6,6 +6,7 @@ import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { loadScriptFile } from './loadScriptFile';
 import { ensureErrorType } from './utils/ensureErrorType';
+import { ReadOnlyException } from './utils/ReadOnlyException';
 import { WorkerChannel } from './WorkerChannel';
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
@@ -23,8 +24,18 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
     await channel.updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory, channel);
     const appStartContext: AppStartContext = {
-        hookData: channel.appLevelOnlyHookData,
-        appHookData: channel.appHookData,
+        get hookData() {
+            return channel.appLevelOnlyHookData;
+        },
+        set hookData(_obj) {
+            throw new ReadOnlyException('hookData');
+        },
+        get appHookData() {
+            return channel.appHookData;
+        },
+        set appHookData(_obj) {
+            throw new ReadOnlyException('appHookData');
+        },
         functionAppDirectory,
     };
     await channel.executeHooks('appStart', appStartContext);
