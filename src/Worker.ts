@@ -4,6 +4,7 @@
 import * as parseArgs from 'minimist';
 import { FunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
+import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
 import { ensureErrorType } from './utils/ensureErrorType';
@@ -44,6 +45,7 @@ export function startNodeWorker(args) {
 
     const channel = new WorkerChannel(eventStream, new FunctionLoader());
     setupEventStream(workerId, channel);
+    setupCoreModule(channel);
 
     eventStream.write({
         requestId: requestId,
