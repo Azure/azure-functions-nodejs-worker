@@ -18,6 +18,9 @@ import LogLevel = rpc.RpcLog.Level;
 export function setupCoreModule(channel: WorkerChannel): void {
     const coreApi = {
         version: version,
+        get hostVersion() {
+            return channel.hostVersion;
+        },
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         setProgrammingModel: (programmingModel: ProgrammingModel) => {
             // Log when setting the programming model, except for the initial default one (partially because the grpc channels aren't fully setup at that time)

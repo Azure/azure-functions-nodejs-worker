@@ -41,7 +41,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         logColdStartWarning(channel);
 
-        channel.hostVersion = nonNullProp(msg, 'hostVersion');
+        channel._hostVersion = nonNullProp(msg, 'hostVersion');
 
         if (msg.functionAppDirectory) {
             await startApp(msg.functionAppDirectory, channel);

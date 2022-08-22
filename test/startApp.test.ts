@@ -54,15 +54,14 @@ describe('startApp', () => {
         testDisposables = [];
         channel.appHookData = {};
         channel.appLevelOnlyHookData = {};
+        channel._hostVersion = undefined;
         await stream.afterEachEventHandlerTest();
     });
 
     it('runs app start hooks in non-specialization scenario', async () => {
-        const hostVersion = '2.7.0';
         const functionAppDirectory = __dirname;
         const expectedStartContext: coreTypes.AppStartContext = {
             functionAppDirectory,
-            hostVersion,
             hookData: {},
             appHookData: {},
         };
@@ -70,7 +69,7 @@ describe('startApp', () => {
         const startFunc = sinon.spy();
         testDisposables.push(coreApi.registerHook('appStart', startFunc));
 
-        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, hostVersion));
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
 
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
@@ -85,17 +84,15 @@ describe('startApp', () => {
     });
 
     it('runs app start hooks only once in specialiation scenario', async () => {
-        const hostVersion = '2.7.0';
         const functionAppDirectory = __dirname;
         const expectedStartContext: coreTypes.AppStartContext = {
             functionAppDirectory,
-            hostVersion,
             hookData: {},
             appHookData: {},
         };
         const startFunc = sinon.spy();
 
-        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, hostVersion));
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
         await stream.assertCalledWith(
             WorkerInitMsg.receivedInitLog,
             WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
@@ -150,5 +147,26 @@ describe('startApp', () => {
         );
 
         expect(hookData).to.equal('start1start2');
+    });
+
+    it('correctly sets hostVersion in core API', async () => {
+        const functionAppDirectory = __dirname;
+        const expectedHostVersion = '2.7.0';
+        expect(() => coreApi.hostVersion).to.throw('Trying to access hostVersion before it is set.');
+        testDisposables.push(
+            coreApi.registerHook('appStart', () => {
+                expect(coreApi.hostVersion).to.equal(expectedHostVersion);
+            })
+        );
+
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory, expectedHostVersion));
+
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executedHooksLog('appStart'),
+            WorkerInitMsg.response
+        );
     });
 });

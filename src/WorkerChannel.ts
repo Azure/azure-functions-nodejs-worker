@@ -18,7 +18,16 @@ export class WorkerChannel {
     /**
      * This will only be set after worker init request is received
      */
-    hostVersion?: string;
+    _hostVersion?: string;
+
+    get hostVersion(): string {
+        if (!this._hostVersion) {
+            throw new Error('Trying to access hostVersion before it is set.');
+        } else {
+            return this._hostVersion;
+        }
+    }
+
     /**
      * this hook data will be passed to (and set by) all hooks in all scopes
      */
