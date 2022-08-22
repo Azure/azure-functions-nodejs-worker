@@ -6,7 +6,6 @@ import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { loadScriptFile } from './loadScriptFile';
 import { ensureErrorType } from './utils/ensureErrorType';
-import { nonNullProp } from './utils/nonNull';
 import { WorkerChannel } from './WorkerChannel';
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
@@ -27,7 +26,6 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
         hookData: channel.appLevelOnlyHookData,
         appHookData: channel.appHookData,
         functionAppDirectory,
-        hostVersion: nonNullProp(channel, 'hostVersion'),
     };
     await channel.executeHooks('appStart', appStartContext);
 }
