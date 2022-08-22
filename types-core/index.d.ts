@@ -11,6 +11,11 @@ declare module '@azure/functions-core' {
     const version: string;
 
     /**
+     * The version of the Functions Host
+     */
+    const hostVersion: string;
+
+    /**
      * Register a hook to interact with the lifecycle of Azure Functions.
      * Hooks are executed in the order they were registered and will block execution if they throw an error
      */
@@ -96,10 +101,6 @@ declare module '@azure/functions-core' {
          * Absolute directory of the function app
          */
         functionAppDirectory: string;
-        /**
-         * The version of the host running the function app
-         */
-        hostVersion: string;
     }
 
     /**
