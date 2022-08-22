@@ -88,7 +88,6 @@ describe('startApp', () => {
         const functionAppDirectory = __dirname;
         const expectedStartContext: coreTypes.AppStartContext = {
             functionAppDirectory,
-            hostVersion,
             hookData: {},
             appHookData: {},
         };

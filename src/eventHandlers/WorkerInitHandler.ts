@@ -5,6 +5,7 @@ import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { version as workerVersion } from '../constants';
+import { setupCoreModule } from '../setupCoreModule';
 import { startApp } from '../startApp';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
@@ -41,7 +42,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         logColdStartWarning(channel);
 
-        channel.hostVersion = nonNullProp(msg, 'hostVersion');
+        channel._hostVersion = nonNullProp(msg, 'hostVersion');
         setupCoreModule(channel);
 
         if (msg.functionAppDirectory) {

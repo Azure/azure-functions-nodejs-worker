@@ -16,11 +16,12 @@ let testWorkerData:
       }
     | undefined = undefined;
 
-export function beforeEventHandlerSuite() {
+export function beforeEventHandlerSuite(hostVersion = '2.7.0') {
     if (!testWorkerData) {
         const stream = new TestEventStream();
         const loader = sinon.createStubInstance<FunctionLoader>(FunctionLoader);
         const channel = new WorkerChannel(stream, loader);
+        channel._hostVersion = hostVersion;
         setupEventStream('workerId', channel);
         setupCoreModule(channel);
         testWorkerData = { stream, loader, channel };
