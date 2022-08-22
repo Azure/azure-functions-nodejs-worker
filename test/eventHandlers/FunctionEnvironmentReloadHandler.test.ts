@@ -72,7 +72,6 @@ describe('FunctionEnvironmentReloadHandler', () => {
 
     before(() => {
         ({ stream, channel } = beforeEventHandlerSuite());
-        channel._hostVersion = '2.7.0';
     });
 
     afterEach(async () => {

@@ -5,7 +5,6 @@ import { HookCallback, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { version } from './constants';
 import { Disposable } from './Disposable';
-import { nonNullProp } from './utils/nonNull';
 import { WorkerChannel } from './WorkerChannel';
 import Module = require('module');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -19,7 +18,9 @@ import LogLevel = rpc.RpcLog.Level;
 export function setupCoreModule(channel: WorkerChannel): void {
     const coreApi = {
         version: version,
-        hostVersion: nonNullProp(channel, 'hostVersion'),
+        get hostVersion() {
+            return channel.hostVersion;
+        },
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         setProgrammingModel: (programmingModel: ProgrammingModel) => {
             // Log when setting the programming model, except for the initial default one (partially because the grpc channels aren't fully setup at that time)
