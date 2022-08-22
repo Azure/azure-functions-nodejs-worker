@@ -769,6 +769,60 @@ describe('InvocationHandler', () => {
         expect(hookData).to.equal('prepost');
     });
 
+    it('enforces readonly property of hookData and appHookData in pre and post invocation hooks', async () => {
+        loader.getCallback.returns(async () => {});
+        loader.getRpcMetadata.returns(Binding.queue);
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                context.hookData['hello'] = 'world';
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.hookData = {
+                        foo: 'bar',
+                    };
+                }).to.throw('Attempting to set readonly property hookData');
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.appHookData = {
+                        foo: 'bar',
+                    };
+                }).to.throw('Attempting to set readonly property appHookData');
+                hookData += 'pre';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.hookData['hello']).to.equal('world');
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.hookData = {
+                        foo: 'bar',
+                    };
+                }).to.throw('Attempting to set readonly property hookData');
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.appHookData = {
+                        foo: 'bar',
+                    };
+                }).to.throw('Attempting to set readonly property appHookData');
+                hookData += 'post';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+        expect(hookData).to.equal('prepost');
+    });
+
     it('appHookData changes from appStart hooks are persisted in invocation hook contexts', async () => {
         const functionAppDirectory = __dirname;
         const expectedAppHookData = {

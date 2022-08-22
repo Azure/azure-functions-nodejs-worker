@@ -149,6 +149,36 @@ describe('startApp', () => {
         expect(hookData).to.equal('start1start2');
     });
 
+    it('enforces readonly property of hookData and appHookData in appStart contexts', async () => {
+        const functionAppDirectory = __dirname;
+        testDisposables.push(
+            coreApi.registerHook('appStart', (context) => {
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.hookData = {
+                        hello: 'world',
+                    };
+                }).to.throw('Attempting to set readonly property hookData');
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.appHookData = {
+                        hello: 'world',
+                    };
+                }).to.throw('Attempting to set readonly property appHookData');
+            })
+        );
+
+        stream.addTestMessage(WorkerInitMsg.init(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            WorkerInitMsg.receivedInitLog,
+            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+            Msg.executingHooksLog(1, 'appStart'),
+            Msg.executedHooksLog('appStart'),
+            WorkerInitMsg.response
+        );
+    });
+
     it('correctly sets hostVersion in core API', async () => {
         const functionAppDirectory = __dirname;
         const expectedHostVersion = '2.7.0';
