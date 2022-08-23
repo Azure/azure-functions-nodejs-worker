@@ -65,7 +65,6 @@ describe('terminateWorker', () => {
     it('handles worker_terminate request', async () => {
         stream.addTestMessage(Msg.workerTerminate());
         await stream.assertCalledWith(Msg.receivedWorkerTerminateLog);
-        expect(processExitStub.calledWith(0)).to.be.true;
     });
 
     it('ends event stream', async () => {
