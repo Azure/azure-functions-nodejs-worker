@@ -99,30 +99,6 @@ describe('terminateWorker', () => {
         expect(hookFunc.args[0][0]).to.deep.equal(expectedContext);
     });
 
-    it('runs more than one app terminate hook', async () => {
-        const gracePeriod = 5;
-        const expectedContext: coreTypes.AppTerminateContext = {
-            gracePeriod,
-            hookData: {},
-            appHookData: {},
-        };
-        const hookFunc = sinon.spy();
-        const hookFun2 = sinon.spy();
-        testDisposables.push(coreApi.registerHook('appTerminate', hookFunc));
-        testDisposables.push(coreApi.registerHook('appTerminate', hookFun2));
-
-        stream.addTestMessage(Msg.workerTerminate(gracePeriod));
-        await stream.assertCalledWith(
-            Msg.receivedWorkerTerminateLog,
-            AppStartMsg.executingHooksLog(2, 'appTerminate'),
-            AppStartMsg.executedHooksLog('appTerminate')
-        );
-        expect(hookFunc.callCount).to.be.equal(1);
-        expect(hookFunc.args[0][0]).to.deep.equal(expectedContext);
-        expect(hookFun2.callCount).to.be.equal(1);
-        expect(hookFun2.args[0][0]).to.deep.equal(expectedContext);
-    });
-
     it('allows app terminate hooks to share data', async () => {
         let hookData = '';
         testDisposables.push(
