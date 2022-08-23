@@ -45,6 +45,7 @@ export class WorkerChannel {
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartHooks: HookCallback[] = [];
+    #appTerminateHooks: HookCallback[] = [];
     functions: { [id: string]: RegisteredFunction } = {};
     hasIndexedFunctions = false;
 
@@ -112,6 +113,8 @@ export class WorkerChannel {
                 return this.#postInvocationHooks;
             case 'appStart':
                 return this.#appStartHooks;
+            case 'appTerminate':
+                return this.#appTerminateHooks;
             default:
                 throw new RangeError(`Unrecognized hook "${hookName}"`);
         }
