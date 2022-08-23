@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as sinon from 'sinon';
-import { LegacyFunctionLoader } from '../../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { setupCoreModule } from '../../src/setupCoreModule';
 import { setupEventStream } from '../../src/setupEventStream';
 import { WorkerChannel } from '../../src/WorkerChannel';

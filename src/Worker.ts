@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { LegacyFunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
+import { LegacyFunctionLoader } from './LegacyFunctionLoader';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
