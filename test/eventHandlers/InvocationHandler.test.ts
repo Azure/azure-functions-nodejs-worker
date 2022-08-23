@@ -939,8 +939,7 @@ describe('InvocationHandler', () => {
             },
         };
 
-        loader.getCallback.returns(async () => {});
-        loader.getRpcMetadata.returns(Binding.queue);
+        loader.getFunction.returns({ callback: async () => {}, metadata: Binding.queue });
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
@@ -1049,8 +1048,7 @@ describe('InvocationHandler', () => {
             },
         };
 
-        loader.getCallback.returns(async () => {});
-        loader.getRpcMetadata.returns(Binding.queue);
+        loader.getFunction.returns({ callback: async () => {}, metadata: Binding.queue });
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
