@@ -813,8 +813,10 @@ describe('InvocationHandler', () => {
     });
 
     it('enforces readonly property of hookData and appHookData in pre and post invocation hooks', async () => {
-        loader.getCallback.returns(async () => {});
-        loader.getRpcMetadata.returns(Binding.queue);
+        loader.getFunction.returns({
+            metadata: Binding.queue,
+            callback: async () => {},
+        });
 
         testDisposables.push(
             coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
