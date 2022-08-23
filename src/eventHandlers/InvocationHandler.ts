@@ -10,15 +10,19 @@ import {
     ProgrammingModel,
     RpcFunctionMetadata,
     RpcInvocationRequest,
+    RpcLogCategory,
+    RpcLogLevel,
 } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvocationResponse';
+import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
+import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
+import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
 import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
-import RpcLogCategory = rpc.RpcLog.RpcLogCategory;
-import RpcLogLevel = rpc.RpcLog.Level;
 
 /**
  * Host requests worker to invoke a Function
@@ -35,10 +39,15 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         let { metadata, callback } =
             channel.functions[functionId] || channel.legacyFunctionLoader.getFunction(functionId);
         const msgCategory = `${nonNullProp(metadata, 'name')}.Invocation`;
-        const coreCtx = new CoreInvocationContext(channel, msg, metadata, msgCategory);
+        const coreCtx = new CoreInvocationContext(
+            channel,
+            toCoreInvocationRequest(msg),
+            toCoreFunctionMetadata(metadata),
+            msgCategory
+        );
 
         // Log invocation details to ensure the invocation received by node worker
-        coreCtx.log(RpcLogLevel.Debug, RpcLogCategory.System, 'Received FunctionInvocationRequest');
+        coreCtx.log('debug', 'system', 'Received FunctionInvocationRequest');
 
         const programmingModel: ProgrammingModel = nonNullProp(channel, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);
@@ -113,7 +122,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             throw postInvocContext.error;
         }
 
-        return await invocModel.getResponse(context, postInvocContext.result);
+        return fromCoreInvocationResponse(await invocModel.getResponse(context, postInvocContext.result));
     }
 }
 
@@ -143,8 +152,8 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
             invocationId: this.request.invocationId,
             category: this.#msgCategory,
             message,
-            level: level,
-            logCategory: logCategory,
+            level: fromCoreLogLevel(level),
+            logCategory: fromCoreLogCategory(logCategory),
         });
     }
 }

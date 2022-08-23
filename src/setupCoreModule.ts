@@ -41,10 +41,6 @@ export function setupCoreModule(channel: WorkerChannel): void {
             return registerFunction(channel, metadata, callback);
         },
         Disposable,
-        // NOTE: We have to pass along any and all enums used in the RPC api to the core api
-        RpcLog: rpc.RpcLog,
-        RpcBindingInfo: rpc.BindingInfo,
-        RpcHttpCookie: rpc.RpcHttpCookie,
     };
 
     Module.prototype.require = new Proxy(Module.prototype.require, {

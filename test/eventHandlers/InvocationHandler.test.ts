@@ -323,7 +323,7 @@ namespace InputData {
 
 type TestFunctionLoader = sinon.SinonStubbedInstance<
     LegacyFunctionLoader & {
-        getFunction(functionId: string): { metadata: coreTypes.RpcFunctionMetadata; callback: AzureFunction };
+        getFunction(functionId: string): { metadata: rpc.IRpcFunctionMetadata; callback: AzureFunction };
     }
 >;
 
