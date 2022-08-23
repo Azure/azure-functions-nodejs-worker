@@ -5,10 +5,11 @@ import { google } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { InternalException } from '../utils/InternalException';
 
 export function secondsFromDuration(duration: google.protobuf.IDuration): Number {
-    const seconds = duration.seconds;
-    const nanos = duration.nanos;
-    if (!seconds && !nanos) {
+    if (!duration.seconds && !duration.nanos) {
         throw new InternalException('Duration empty');
     }
+
+    const seconds: number | Long = duration.seconds || 0;
+    const nanos: number = duration.nanos || 0;
     return Number(seconds) + Number(nanos) * 0.000000001;
 }
