@@ -781,13 +781,13 @@ describe('InvocationHandler', () => {
                     context.hookData = {
                         foo: 'bar',
                     };
-                }).to.throw(`Cannot assign to read-only property 'hookData'`);
+                }).to.throw(`Cannot assign to read only property 'hookData'`);
                 expect(() => {
                     // @ts-expect-error: setting readonly property
                     context.appHookData = {
                         foo: 'bar',
                     };
-                }).to.throw(`Cannot assign to read-only property 'appHookData'`);
+                }).to.throw(`Cannot assign to read only property 'appHookData'`);
                 hookData += 'pre';
             })
         );
@@ -800,13 +800,13 @@ describe('InvocationHandler', () => {
                     context.hookData = {
                         foo: 'bar',
                     };
-                }).to.throw(`Cannot assign to read-only property 'hookData'`);
+                }).to.throw(`Cannot assign to read only property 'hookData'`);
                 expect(() => {
                     // @ts-expect-error: setting readonly property
                     context.appHookData = {
                         foo: 'bar',
                     };
-                }).to.throw(`Cannot assign to read-only property 'appHookData'`);
+                }).to.throw(`Cannot assign to read only property 'appHookData'`);
                 hookData += 'post';
             })
         );
