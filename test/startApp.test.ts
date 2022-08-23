@@ -158,13 +158,13 @@ describe('startApp', () => {
                     context.hookData = {
                         hello: 'world',
                     };
-                }).to.throw('Attempting to set readonly property hookData');
+                }).to.throw(`Cannot assign to read-only property 'hookData'`);
                 expect(() => {
                     // @ts-expect-error: setting readonly property
                     context.appHookData = {
                         hello: 'world',
                     };
-                }).to.throw('Attempting to set readonly property appHookData');
+                }).to.throw(`Cannot assign to read-only property 'appHookData'`);
             })
         );
 

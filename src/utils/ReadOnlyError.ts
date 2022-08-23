@@ -5,6 +5,6 @@ import { InternalException } from './InternalException';
 
 export class ReadOnlyError extends InternalException implements TypeError {
     constructor(propertyName: string) {
-        super(`Attempting to set readonly property ${propertyName}`);
+        super(`Cannot assign to read-only property '${propertyName}'`);
     }
 }
