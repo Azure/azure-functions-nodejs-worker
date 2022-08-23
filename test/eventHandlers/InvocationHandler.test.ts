@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { LegacyFunctionLoader } from '../../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { Msg as AppStartMsg } from '../startApp.test';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';

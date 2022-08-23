@@ -4,7 +4,7 @@
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { LegacyFunctionLoader } from '../../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { PackageJson } from '../../src/parsers/parsePackageJson';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';

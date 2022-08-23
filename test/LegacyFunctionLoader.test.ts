@@ -6,7 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as mock from 'mock-require';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { LegacyFunctionLoader } from '../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../src/LegacyFunctionLoader';
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 

@@ -4,8 +4,8 @@
 import { FunctionCallback, HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
-import { ILegacyFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
+import { ILegacyFunctionLoader } from './LegacyFunctionLoader';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import { ensureErrorType } from './utils/ensureErrorType';
 import LogLevel = rpc.RpcLog.Level;
