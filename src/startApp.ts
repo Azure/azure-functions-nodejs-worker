@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { AppStartContext } from '@azure/functions-core';
-import { pathExists } from 'fs-extra';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { loadScriptFile } from './loadScriptFile';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { WorkerChannel } from './WorkerChannel';
+import globby = require('globby');
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -31,29 +31,31 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
 }
 
 async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
-    const entryPointFile = channel.packageJson.main;
-    if (entryPointFile) {
-        channel.log({
-            message: `Loading entry point "${entryPointFile}"`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
-        });
+    const entryPointPattern = channel.packageJson.main;
+    if (entryPointPattern) {
         try {
-            const entryPointFullPath = path.join(functionAppDirectory, entryPointFile);
-            if (!(await pathExists(entryPointFullPath))) {
-                throw new Error(`file does not exist`);
+            const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
+            if (files.length === 0) {
+                throw new Error(`Found zero files matching the supplied pattern`);
             }
 
-            await loadScriptFile(entryPointFullPath, channel.packageJson);
-            channel.log({
-                message: `Loaded entry point "${entryPointFile}"`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
-            });
+            for (const file of files) {
+                channel.log({
+                    message: `Loading entry point file "${file}"`,
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                });
+                await loadScriptFile(path.join(functionAppDirectory, file), channel.packageJson);
+                channel.log({
+                    message: `Loaded entry point file "${file}"`,
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                });
+            }
         } catch (err) {
             const error = ensureErrorType(err);
             error.isAzureFunctionsInternalException = true;
-            error.message = `Worker was unable to load entry point "${entryPointFile}": ${error.message}`;
+            error.message = `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`;
             throw error;
         }
     }

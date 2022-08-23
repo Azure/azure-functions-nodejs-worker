@@ -91,7 +91,7 @@ export namespace Msg {
     export function loadingEntryPoint(fileName: string): rpc.IStreamingMessage {
         return {
             rpcLog: {
-                message: `Loading entry point "${fileName}"`,
+                message: `Loading entry point file "${fileName}"`,
                 level: LogLevel.Debug,
                 logCategory: LogCategory.System,
             },
@@ -101,7 +101,7 @@ export namespace Msg {
     export function loadedEntryPoint(fileName: string): rpc.IStreamingMessage {
         return {
             rpcLog: {
-                message: `Loaded entry point "${fileName}"`,
+                message: `Loaded entry point file "${fileName}"`,
                 level: LogLevel.Debug,
                 logCategory: LogCategory.System,
             },
@@ -255,6 +255,33 @@ describe('WorkerInitHandler', () => {
         });
     }
 
+    it(`Loads entry point with glob`, async () => {
+        const main = `entryPointFiles/doNothing*.js`;
+        const expectedPackageJson = {
+            main,
+        };
+        mockFs({
+            [__dirname]: {
+                'package.json': JSON.stringify(expectedPackageJson),
+                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
+            },
+        });
+
+        const file1 = 'entryPointFiles/doNothing.js';
+        const file2 = 'entryPointFiles/doNothing2.js';
+
+        stream.addTestMessage(Msg.init(__dirname));
+        await stream.assertCalledWith(
+            Msg.receivedInitLog,
+            Msg.loadingEntryPoint(file1),
+            Msg.loadedEntryPoint(file1),
+            Msg.loadingEntryPoint(file2),
+            Msg.loadedEntryPoint(file2),
+            Msg.response
+        );
+    });
+
     it('Fails for missing entry point', async function (this: ITestCallbackContext) {
         const fileName = 'entryPointFiles/missing.js';
         const expectedPackageJson = {
@@ -267,10 +294,9 @@ describe('WorkerInitHandler', () => {
         });
 
         stream.addTestMessage(Msg.init(__dirname));
-        const errorMessage = `Worker was unable to load entry point "${fileName}": file does not exist`;
+        const errorMessage = `Worker was unable to load entry point "${fileName}": Found zero files matching the supplied pattern`;
         await stream.assertCalledWith(
             Msg.receivedInitLog,
-            Msg.loadingEntryPoint(fileName),
             Msg.error(errorMessage),
             Msg.failedResponse(fileName, errorMessage)
         );
