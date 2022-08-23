@@ -4,7 +4,7 @@
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { FunctionLoader } from '../../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../../src/FunctionLoader';
 import { PackageJson } from '../../src/parsers/parsePackageJson';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
@@ -13,7 +13,7 @@ import LogLevel = rpc.RpcLog.Level;
 
 describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;
-    let loader: sinon.SinonStubbedInstance<FunctionLoader>;
+    let loader: sinon.SinonStubbedInstance<LegacyFunctionLoader>;
 
     before(() => {
         ({ stream, loader } = beforeEventHandlerSuite());

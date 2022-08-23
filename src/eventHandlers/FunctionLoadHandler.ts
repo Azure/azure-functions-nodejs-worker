@@ -22,13 +22,15 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
 
         const functionId = nonNullProp(msg, 'functionId');
         const metadata = nonNullProp(msg, 'metadata');
-        try {
-            await channel.functionLoader.load(functionId, metadata, channel.packageJson);
-        } catch (err) {
-            const error = ensureErrorType(err);
-            error.isAzureFunctionsInternalException = true;
-            error.message = `Worker was unable to load function ${metadata.name}: '${error.message}'`;
-            throw error;
+        if (!channel.functions[functionId]) {
+            try {
+                await channel.legacyFunctionLoader.load(functionId, metadata, channel.packageJson);
+            } catch (err) {
+                const error = ensureErrorType(err);
+                error.isAzureFunctionsInternalException = true;
+                error.message = `Worker was unable to load function ${metadata.name}: '${error.message}'`;
+                throw error;
+            }
         }
 
         return response;

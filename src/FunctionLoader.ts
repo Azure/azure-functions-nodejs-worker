@@ -7,21 +7,19 @@ import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { InternalException } from './utils/InternalException';
 import { nonNullProp } from './utils/nonNull';
+import { RegisteredFunction } from './WorkerChannel';
 
-export interface IFunctionLoader {
+export interface ILegacyFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
-    getRpcMetadata(functionId: string): rpc.IRpcFunctionMetadata;
-    getCallback(functionId: string): FunctionCallback;
+    getFunction(functionId: string): RegisteredFunction;
 }
 
-interface LoadedFunction {
-    metadata: rpc.IRpcFunctionMetadata;
-    callback: FunctionCallback;
+interface LegacyRegisteredFunction extends RegisteredFunction {
     thisArg: unknown;
 }
 
-export class FunctionLoader implements IFunctionLoader {
-    #loadedFunctions: { [k: string]: LoadedFunction | undefined } = {};
+export class LegacyFunctionLoader implements ILegacyFunctionLoader {
+    #loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined } = {};
 
     async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
         if (metadata.isProxy === true) {
@@ -33,21 +31,14 @@ export class FunctionLoader implements IFunctionLoader {
         this.#loadedFunctions[functionId] = { metadata, callback, thisArg };
     }
 
-    getRpcMetadata(functionId: string): rpc.IRpcFunctionMetadata {
-        const loadedFunction = this.#getLoadedFunction(functionId);
-        return loadedFunction.metadata;
-    }
-
-    getCallback(functionId: string): FunctionCallback {
-        const loadedFunction = this.#getLoadedFunction(functionId);
-        // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
-        return loadedFunction.callback.bind(loadedFunction.thisArg);
-    }
-
-    #getLoadedFunction(functionId: string): LoadedFunction {
+    getFunction(functionId: string): RegisteredFunction {
         const loadedFunction = this.#loadedFunctions[functionId];
         if (loadedFunction) {
-            return loadedFunction;
+            return {
+                metadata: loadedFunction.metadata,
+                // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
+                callback: loadedFunction.callback.bind(loadedFunction.thisArg),
+            };
         } else {
             throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }

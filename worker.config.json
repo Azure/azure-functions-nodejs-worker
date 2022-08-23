@@ -3,6 +3,7 @@
         "language":"node",
         "extensions":[".js", ".mjs", ".cjs"],
         "defaultExecutablePath":"node",
-        "defaultWorkerPath":"dist/src/nodejsWorker.js"
+        "defaultWorkerPath":"dist/src/nodejsWorker.js",
+        "workerIndexing": "true"
     }
 }
