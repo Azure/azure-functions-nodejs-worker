@@ -1,19 +1,24 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
+import { FunctionCallback, HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
-import { IFunctionLoader } from './FunctionLoader';
+import { ILegacyFunctionLoader } from './FunctionLoader';
 import { IEventStream } from './GrpcClient';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import { ensureErrorType } from './utils/ensureErrorType';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
+export interface RegisteredFunction {
+    metadata: rpc.IRpcFunctionMetadata;
+    callback: FunctionCallback;
+}
+
 export class WorkerChannel {
     eventStream: IEventStream;
-    functionLoader: IFunctionLoader;
+    legacyFunctionLoader: ILegacyFunctionLoader;
     packageJson: PackageJson;
     /**
      * This will only be set after worker init request is received
@@ -40,10 +45,12 @@ export class WorkerChannel {
     #preInvocationHooks: HookCallback[] = [];
     #postInvocationHooks: HookCallback[] = [];
     #appStartHooks: HookCallback[] = [];
+    functions: { [id: string]: RegisteredFunction } = {};
+    hasIndexedFunctions = false;
 
-    constructor(eventStream: IEventStream, functionLoader: IFunctionLoader) {
+    constructor(eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
         this.eventStream = eventStream;
-        this.functionLoader = functionLoader;
+        this.legacyFunctionLoader = legacyFunctionLoader;
         this.packageJson = {};
     }
 

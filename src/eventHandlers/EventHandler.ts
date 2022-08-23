@@ -8,14 +8,16 @@ export type SupportedRequestName =
     | 'functionEnvironmentReloadRequest'
     | 'functionLoadRequest'
     | 'invocationRequest'
-    | 'workerInitRequest';
+    | 'workerInitRequest'
+    | 'functionsMetadataRequest';
 export type SupportedRequest = rpc.StreamingMessage[SupportedRequestName];
 
 export type SupportedResponseName =
     | 'functionEnvironmentReloadResponse'
     | 'functionLoadResponse'
     | 'invocationResponse'
-    | 'workerInitResponse';
+    | 'workerInitResponse'
+    | 'functionMetadataResponse';
 export type SupportedResponse = rpc.StreamingMessage[SupportedResponseName];
 
 export abstract class EventHandler<

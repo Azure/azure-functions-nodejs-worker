@@ -11,7 +11,8 @@
         "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
         "globby": "^11.0.0",
-        "minimist": "^1.2.5"
+        "minimist": "^1.2.5",
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "@types/blocked-at": "^1.0.1",
@@ -25,6 +26,7 @@
         "@types/node": "^16.9.6",
         "@types/semver": "^7.3.9",
         "@types/sinon": "^7.0.0",
+        "@types/uuid": "^8.3.4",
         "@typescript-eslint/eslint-plugin": "^5.12.1",
         "@typescript-eslint/parser": "^5.12.1",
         "chai": "^4.2.0",

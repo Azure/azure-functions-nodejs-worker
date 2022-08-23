@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { FunctionLoader } from './FunctionLoader';
+import { LegacyFunctionLoader } from './FunctionLoader';
 import { CreateGrpcEventStream } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
@@ -43,7 +43,7 @@ export function startNodeWorker(args) {
         throw error;
     }
 
-    const channel = new WorkerChannel(eventStream, new FunctionLoader());
+    const channel = new WorkerChannel(eventStream, new LegacyFunctionLoader());
     setupEventStream(workerId, channel);
     setupCoreModule(channel);
 

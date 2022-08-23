@@ -32,7 +32,8 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
         const functionId = nonNullProp(msg, 'functionId');
-        const metadata = channel.functionLoader.getRpcMetadata(functionId);
+        let { metadata, callback } =
+            channel.functions[functionId] || channel.legacyFunctionLoader.getFunction(functionId);
         const msgCategory = `${nonNullProp(metadata, 'name')}.Invocation`;
         const coreCtx = new CoreInvocationContext(channel, msg, metadata, msgCategory);
 
@@ -44,7 +45,6 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         const hookData: HookData = {};
         let { context, inputs } = await invocModel.getArguments();
-        let callback = channel.functionLoader.getCallback(functionId);
 
         const preInvocContext: PreInvocationContext = {
             get hookData() {

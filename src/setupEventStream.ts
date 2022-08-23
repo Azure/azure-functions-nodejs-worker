@@ -5,6 +5,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
 import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnvironmentReloadHandler';
 import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
+import { FunctionsMetadataHandler } from './eventHandlers/FunctionsMetadataHandler';
 import { InvocationHandler } from './eventHandlers/InvocationHandler';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { ensureErrorType } from './utils/ensureErrorType';
@@ -71,10 +72,12 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
                 outMsg.workerStatusResponse = {};
                 channel.eventStream.write(outMsg);
                 return;
+            case 'functionsMetadataRequest':
+                eventHandler = new FunctionsMetadataHandler();
+                break;
             case 'closeSharedMemoryResourcesRequest':
             case 'fileChangeEventRequest':
             case 'functionLoadRequestCollection':
-            case 'functionsMetadataRequest':
             case 'invocationCancel':
             case 'startStream':
             case 'workerHeartbeat':

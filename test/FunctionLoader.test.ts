@@ -6,16 +6,16 @@ import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as mock from 'mock-require';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { FunctionLoader } from '../src/FunctionLoader';
+import { LegacyFunctionLoader } from '../src/FunctionLoader';
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
-describe('FunctionLoader', () => {
-    let loader: FunctionLoader;
+describe('LegacyFunctionLoader', () => {
+    let loader: LegacyFunctionLoader;
     let context, logs;
 
     beforeEach(() => {
-        loader = new FunctionLoader();
+        loader = new LegacyFunctionLoader();
         logs = [];
         context = {
             _inputs: [],
@@ -53,7 +53,7 @@ describe('FunctionLoader', () => {
         );
 
         expect(() => {
-            loader.getCallback('functionId');
+            loader.getFunction('functionId');
         }).to.throw("Function code for 'functionId' is not loaded and cannot be invoked.");
     });
 
@@ -118,9 +118,9 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getCallback('functionId');
+        const userFunction = loader.getFunction('functionId');
 
-        userFunction(context, (results) => {
+        userFunction.callback(context, (results) => {
             expect(results).to.eql({ prop: true });
         });
     });
@@ -137,8 +137,8 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getCallback('functionId');
-        const result = userFunction({});
+        const userFunction = loader.getFunction('functionId');
+        const result = userFunction.callback({});
 
         expect(result).to.be.not.an('undefined');
         expect((<any>result).then).to.be.a('function');
@@ -156,10 +156,10 @@ describe('FunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getCallback('functionId');
+        const userFunction = loader.getFunction('functionId').callback;
         Object.assign(userFunction, { hello: 'world' });
 
-        const userFunction2 = loader.getCallback('functionId');
+        const userFunction2 = loader.getFunction('functionId').callback;
 
         expect(userFunction).to.not.equal(userFunction2);
         expect(userFunction['hello']).to.equal('world');

@@ -1,9 +1,10 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookCallback, ProgrammingModel } from '@azure/functions-core';
+import { FunctionCallback, FunctionMetadata, HookCallback, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { version } from './constants';
+import { registerFunction } from './coreApi/registerFunction';
 import { Disposable } from './Disposable';
 import { WorkerChannel } from './WorkerChannel';
 import Module = require('module');
@@ -35,6 +36,9 @@ export function setupCoreModule(channel: WorkerChannel): void {
         },
         getProgrammingModel: () => {
             return channel.programmingModel;
+        },
+        registerFunction: (metadata: FunctionMetadata, callback: FunctionCallback) => {
+            return registerFunction(channel, metadata, callback);
         },
         Disposable,
         // NOTE: We have to pass along any and all enums used in the RPC api to the core api
