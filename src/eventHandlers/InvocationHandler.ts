@@ -14,7 +14,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
-import { ReadOnlyException } from '../utils/ReadOnlyException';
+import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import RpcLogCategory = rpc.RpcLog.RpcLogCategory;
@@ -51,13 +51,13 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 return hookData;
             },
             set hookData(_obj) {
-                throw new ReadOnlyException('hookData');
+                throw new ReadOnlyError('hookData');
             },
             get appHookData() {
                 return channel.appHookData;
             },
             set appHookData(_obj) {
-                throw new ReadOnlyException('appHookData');
+                throw new ReadOnlyError('appHookData');
             },
             invocationContext: context,
             functionCallback: callback,
@@ -79,13 +79,13 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 return hookData;
             },
             set hookData(_obj) {
-                throw new ReadOnlyException('hookData');
+                throw new ReadOnlyError('hookData');
             },
             get appHookData() {
                 return channel.appHookData;
             },
             set appHookData(_obj) {
-                throw new ReadOnlyException('appHookData');
+                throw new ReadOnlyError('appHookData');
             },
             invocationContext: context,
             inputs,

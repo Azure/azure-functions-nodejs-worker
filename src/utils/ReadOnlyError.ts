@@ -3,7 +3,7 @@
 
 import { InternalException } from './InternalException';
 
-export class ReadOnlyException extends InternalException {
+export class ReadOnlyError extends InternalException implements TypeError {
     constructor(propertyName: string) {
         super(`Attempting to set readonly property ${propertyName}`);
     }
