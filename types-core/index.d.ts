@@ -130,11 +130,6 @@ declare module '@azure/functions-core' {
 
     interface AppTerminateContext extends HookContext {
         /**
-         * Absolute directory of the function app
-         */
-        // functionAppDirectory: string;
-
-        /**
          * Number of seconds allowed before forced shutdown of the app
          */
         gracePeriod: Number;
