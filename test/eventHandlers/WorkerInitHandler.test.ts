@@ -38,6 +38,7 @@ export namespace Msg {
             requestId: 'id',
             workerInitResponse: {
                 capabilities: {
+                    RawHttpBodyBytes: 'true',
                     RpcHttpBodyOnly: 'true',
                     RpcHttpTriggerMetadataRemoved: 'true',
                     IgnoreEmptyValuedRpcHttpHeaders: 'true',
