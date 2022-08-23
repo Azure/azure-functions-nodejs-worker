@@ -43,12 +43,14 @@ declare module '@azure/functions-core' {
     function registerHook(hookName: 'preInvocation', callback: PreInvocationCallback): Disposable;
     function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
     function registerHook(hookName: 'appStart', callback: AppStartCallback): Disposable;
+    function registerHook(hookName: 'appTerminate', callback: AppTerminateCallback): Disposable;
     function registerHook(hookName: string, callback: HookCallback): Disposable;
 
     type HookCallback = (context: HookContext) => void | Promise<void>;
     type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
     type PostInvocationCallback = (context: PostInvocationContext) => void | Promise<void>;
     type AppStartCallback = (context: AppStartContext) => void | Promise<void>;
+    type AppTerminateCallback = (context: AppTerminateContext) => void | Promise<void>;
 
     type HookData = { [key: string]: any };
 
@@ -124,6 +126,18 @@ declare module '@azure/functions-core' {
          * Absolute directory of the function app
          */
         functionAppDirectory: string;
+    }
+
+    interface AppTerminateContext extends HookContext {
+        /**
+         * Absolute directory of the function app
+         */
+        // functionAppDirectory: string;
+
+        /**
+         * Number of seconds allowed before forced shutdown of the app
+         */
+        gracePeriod: Number;
     }
 
     /**
