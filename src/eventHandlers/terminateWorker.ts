@@ -5,7 +5,7 @@ import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { secondsFromDuration } from '../parsers/secondsFromDuration';
 import { nonNullProp } from '../utils/nonNull';
-import { ReadOnlyException } from '../utils/ReadOnlyException';
+import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -24,13 +24,13 @@ export async function terminateWorker(channel: WorkerChannel, msg: rpc.IWorkerTe
             return channel.appLevelOnlyHookData;
         },
         set hookData(_obj) {
-            throw new ReadOnlyException('hookData');
+            throw new ReadOnlyError('hookData');
         },
         get appHookData() {
             return channel.appHookData;
         },
         set appHookData(_obj) {
-            throw new ReadOnlyException('appHookData');
+            throw new ReadOnlyError('appHookData');
         },
         gracePeriod,
     };
