@@ -37,12 +37,14 @@ declare module '@azure/functions-core' {
     interface HookContext {
         /**
          * The recommended place to share data between hooks in the same scope (app-level vs invocation-level)
+         * This object is readonly and attempting to overwrite it will throw an error
          */
-        hookData: HookData;
+        readonly hookData: HookData;
         /**
          * The recommended place to share data across scopes for all hooks
+         * This object is readonly and attempting to overwrite it will throw an error
          */
-        appHookData: HookData;
+        readonly appHookData: HookData;
     }
 
     /**

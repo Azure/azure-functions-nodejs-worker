@@ -14,6 +14,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { isError } from '../utils/ensureErrorType';
 import { nonNullProp } from '../utils/nonNull';
+import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import RpcLogCategory = rpc.RpcLog.RpcLogCategory;
@@ -46,8 +47,18 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         let callback = channel.functionLoader.getCallback(functionId);
 
         const preInvocContext: PreInvocationContext = {
-            hookData,
-            appHookData: channel.appHookData,
+            get hookData() {
+                return hookData;
+            },
+            set hookData(_obj) {
+                throw new ReadOnlyError('hookData');
+            },
+            get appHookData() {
+                return channel.appHookData;
+            },
+            set appHookData(_obj) {
+                throw new ReadOnlyError('appHookData');
+            },
             invocationContext: context,
             functionCallback: callback,
             inputs,
@@ -64,8 +75,18 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         callback = preInvocContext.functionCallback;
 
         const postInvocContext: PostInvocationContext = {
-            hookData,
-            appHookData: channel.appHookData,
+            get hookData() {
+                return hookData;
+            },
+            set hookData(_obj) {
+                throw new ReadOnlyError('hookData');
+            },
+            get appHookData() {
+                return channel.appHookData;
+            },
+            set appHookData(_obj) {
+                throw new ReadOnlyError('appHookData');
+            },
             invocationContext: context,
             inputs,
             result: null,
