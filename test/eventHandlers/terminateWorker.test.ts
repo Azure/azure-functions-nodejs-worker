@@ -79,7 +79,7 @@ describe('terminateWorker', () => {
         expect(processExitStub.calledWith(0)).to.be.true;
     });
 
-    it('runs app termiante hooks', async () => {
+    it('runs app terminate hooks', async () => {
         const gracePeriod = 5;
         const expectedContext: coreTypes.AppTerminateContext = {
             gracePeriod,
