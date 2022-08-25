@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzFuncSystemError, ensureErrorType } from './errors';
 import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
 import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnvironmentReloadHandler';
 import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
 import { FunctionsMetadataHandler } from './eventHandlers/FunctionsMetadataHandler';
 import { InvocationHandler } from './eventHandlers/InvocationHandler';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
-import { ensureErrorType } from './utils/ensureErrorType';
-import { InternalException } from './utils/InternalException';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
 import { WorkerChannel } from './WorkerChannel';
@@ -29,7 +28,7 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
 
     channel.eventStream.on('error', function (err) {
         systemError(`Worker ${workerId} encountered event stream error: `, err);
-        throw new InternalException(err);
+        throw new AzFuncSystemError(err);
     });
 
     // wrap event stream write to validate message correctness
@@ -38,7 +37,7 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
         const msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
             systemError(`Worker ${workerId} malformed message`, msgError);
-            throw new InternalException(msgError);
+            throw new AzFuncSystemError(msgError);
         }
         oldWrite.apply(channel.eventStream, [msg]);
     };
@@ -85,7 +84,7 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
                 // Not yet implemented
                 return;
             default:
-                throw new InternalException(`Worker ${workerId} had no handler for message '${eventName}'`);
+                throw new AzFuncSystemError(`Worker ${workerId} had no handler for message '${eventName}'`);
         }
 
         request = nonNullProp(inMsg, eventName);
@@ -94,7 +93,7 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
         outMsg[eventHandler.responseName] = response;
     } catch (err) {
         const error = ensureErrorType(err);
-        if (error.isAzureFunctionsInternalException) {
+        if (error.isAzureFunctionsSystemError) {
             channel.log({
                 message: error.message,
                 level: LogLevel.Error,

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as url from 'url';
+import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
-import { InternalException } from './utils/InternalException';
 
 export async function loadScriptFile(filePath: string, packageJson: PackageJson): Promise<unknown> {
     let script: unknown;
@@ -13,7 +13,7 @@ export async function loadScriptFile(filePath: string, packageJson: PackageJson)
             // use eval so it doesn't get compiled into a require()
             script = await eval('import(fileUrl.href)');
         } else {
-            throw new InternalException(`'${filePath}' could not be converted to file URL (${fileUrl.href})`);
+            throw new AzFuncSystemError(`'${filePath}' could not be converted to file URL (${fileUrl.href})`);
         }
     } else {
         script = require(/* webpackIgnore: true */ filePath);
