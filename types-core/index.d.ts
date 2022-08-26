@@ -60,12 +60,12 @@ declare module '@azure/functions-core' {
     interface HookContext {
         /**
          * The recommended place to share data between hooks in the same scope (app-level vs invocation-level)
-         * This object is readonly and attempting to overwrite it will throw an error
+         * This object is readonly. You may modify it, but attempting to overwrite it will throw an error
          */
         readonly hookData: HookData;
         /**
          * The recommended place to share data across scopes for all hooks
-         * This object is readonly and attempting to overwrite it will throw an error
+         * This object is readonly. You may modify it, but attempting to overwrite it will throw an error
          */
         readonly appHookData: HookData;
     }
@@ -77,8 +77,9 @@ declare module '@azure/functions-core' {
     interface PreInvocationContext extends HookContext {
         /**
          * The context object passed to the function
+         * This object is readonly. You may modify it, but attempting to overwrite it will throw an error
          */
-        invocationContext: unknown;
+        readonly invocationContext: unknown;
 
         /**
          * The input values for this specific invocation. Changes to this array _will_ affect the inputs passed to your function
@@ -98,8 +99,9 @@ declare module '@azure/functions-core' {
     interface PostInvocationContext extends HookContext {
         /**
          * The context object passed to the function
+         * This object is readonly. You may modify it, but attempting to overwrite it will throw an error
          */
-        invocationContext: unknown;
+        readonly invocationContext: unknown;
 
         /**
          * The input values for this specific invocation
