@@ -3,9 +3,9 @@
 
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
-import { InternalException } from './utils/InternalException';
 import { nonNullProp } from './utils/nonNull';
 import { RegisteredFunction } from './WorkerChannel';
 
@@ -40,7 +40,7 @@ export class LegacyFunctionLoader implements ILegacyFunctionLoader {
                 callback: loadedFunction.callback.bind(loadedFunction.thisArg),
             };
         } else {
-            throw new InternalException(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
+            throw new AzFuncSystemError(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
         }
     }
 }
@@ -72,9 +72,9 @@ function getEntryPoint(f: any, entryPoint?: string): [FunctionCallback, unknown]
             'If multiple functions are exported, ' +
             "you must indicate the entry point, either by naming it 'run' or 'index', or by naming it " +
             "explicitly via the 'entryPoint' metadata property.";
-        throw new InternalException(msg);
+        throw new AzFuncSystemError(msg);
     } else if (typeof f !== 'function') {
-        throw new InternalException(
+        throw new AzFuncSystemError(
             'The resolved entry point is not a function and cannot be invoked by the functions runtime. Make sure the function has been correctly exported.'
         );
     }

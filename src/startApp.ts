@@ -3,9 +3,8 @@
 
 import { AppStartContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzFuncSystemError, ensureErrorType, ReadOnlyError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
-import { ensureErrorType } from './utils/ensureErrorType';
-import { ReadOnlyError } from './utils/ReadOnlyError';
 import { WorkerChannel } from './WorkerChannel';
 import globby = require('globby');
 import path = require('path');
@@ -47,7 +46,7 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
         try {
             const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
             if (files.length === 0) {
-                throw new Error(`Found zero files matching the supplied pattern`);
+                throw new AzFuncSystemError(`Found zero files matching the supplied pattern`);
             }
 
             for (const file of files) {
@@ -65,7 +64,7 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
             }
         } catch (err) {
             const error = ensureErrorType(err);
-            error.isAzureFunctionsInternalException = true;
+            error.isAzureFunctionsSystemError = true;
             error.message = `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`;
             throw error;
         }

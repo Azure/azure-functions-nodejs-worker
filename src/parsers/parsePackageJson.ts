@@ -3,7 +3,7 @@
 
 import { pathExists, readJson } from 'fs-extra';
 import * as path from 'path';
-import { ensureErrorType } from '../utils/ensureErrorType';
+import { AzFuncSystemError, ensureErrorType } from '../errors';
 
 export interface PackageJson {
     type?: string;
@@ -17,12 +17,12 @@ export async function parsePackageJson(dir: string): Promise<PackageJson> {
     try {
         const filePath = path.join(dir, 'package.json');
         if (!(await pathExists(filePath))) {
-            throw new Error('file does not exist');
+            throw new AzFuncSystemError('file does not exist');
         }
 
         const data: unknown = await readJson(filePath);
         if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-            throw new Error('file content is not an object');
+            throw new AzFuncSystemError('file content is not an object');
         }
 
         const stringFields = ['main', 'type'];

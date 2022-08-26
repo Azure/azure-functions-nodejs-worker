@@ -4,10 +4,10 @@
 import { FunctionCallback, HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
+import { AzFuncRangeError, AzFuncSystemError, ensureErrorType } from './errors';
 import { IEventStream } from './GrpcClient';
 import { ILegacyFunctionLoader } from './LegacyFunctionLoader';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
-import { ensureErrorType } from './utils/ensureErrorType';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
@@ -27,7 +27,7 @@ export class WorkerChannel {
 
     get hostVersion(): string {
         if (!this._hostVersion) {
-            throw new Error('Trying to access hostVersion before it is set.');
+            throw new AzFuncSystemError('Cannot access hostVersion before worker init');
         } else {
             return this._hostVersion;
         }
@@ -116,7 +116,7 @@ export class WorkerChannel {
             case 'appTerminate':
                 return this.#appTerminateHooks;
             default:
-                throw new RangeError(`Unrecognized hook "${hookName}"`);
+                throw new AzFuncRangeError(`Unrecognized hook "${hookName}"`);
         }
     }
 

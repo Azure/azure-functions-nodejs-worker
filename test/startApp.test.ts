@@ -182,7 +182,7 @@ describe('startApp', () => {
     it('correctly sets hostVersion in core API', async () => {
         const functionAppDirectory = __dirname;
         const expectedHostVersion = '2.7.0';
-        expect(() => coreApi.hostVersion).to.throw('Trying to access hostVersion before it is set.');
+        expect(() => coreApi.hostVersion).to.throw('Cannot access hostVersion before worker init');
         testDisposables.push(
             coreApi.registerHook('appStart', () => {
                 expect(coreApi.hostVersion).to.equal(expectedHostVersion);

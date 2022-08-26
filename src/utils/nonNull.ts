@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InternalException } from './InternalException';
+import { AzFuncSystemError } from '../errors';
 
 /**
  * Retrieves a property by name from an object and checks that it's not null and not undefined.  It is strongly typed
@@ -20,7 +20,7 @@ export function nonNullProp<TSource, TKey extends keyof TSource>(
  */
 export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: string): T {
     if (value === null || value === undefined) {
-        throw new InternalException(
+        throw new AzFuncSystemError(
             'Internal error: Expected value to be neither null nor undefined' +
                 (propertyNameOrMessage ? `: ${propertyNameOrMessage}` : '')
         );

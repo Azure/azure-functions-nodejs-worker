@@ -18,9 +18,8 @@ import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvoca
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
-import { isError } from '../utils/ensureErrorType';
+import { isError, ReadOnlyError } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
-import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 
