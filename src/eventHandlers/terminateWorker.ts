@@ -8,7 +8,7 @@ import { WorkerChannel } from '../WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-export async function terminateWorker(channel: WorkerChannel, msg: rpc.IWorkerTerminate) {
+export async function terminateWorker(channel: WorkerChannel, _msg: rpc.IWorkerTerminate) {
     channel.log({
         message: 'Received workerTerminate message; gracefully shutting down worker',
         level: LogLevel.Debug,
