@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
+import { AzFuncSystemError, ensureErrorType } from './errors';
 import { CreateGrpcEventStream } from './GrpcClient';
 import { LegacyFunctionLoader } from './LegacyFunctionLoader';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
-import { ensureErrorType } from './utils/ensureErrorType';
-import { InternalException } from './utils/InternalException';
 import { systemError, systemLog } from './utils/Logger';
 import { isEnvironmentVariableSet } from './utils/util';
 import { WorkerChannel } from './WorkerChannel';
@@ -27,7 +26,7 @@ export function startNodeWorker(args) {
         if (!requestId) debugInfo.push(`'requestId' is ${requestId}`);
         if (!grpcMaxMessageLength) debugInfo.push(`'grpcMaxMessageLength' is ${grpcMaxMessageLength}`);
 
-        throw new InternalException(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
+        throw new AzFuncSystemError(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
     }
 
     const connection = `${host}:${port}`;
@@ -38,7 +37,7 @@ export function startNodeWorker(args) {
         eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
     } catch (err) {
         const error = ensureErrorType(err);
-        error.isAzureFunctionsInternalException = true;
+        error.isAzureFunctionsSystemError = true;
         error.message = 'Error creating GRPC event stream: ' + error.message;
         throw error;
     }
@@ -57,7 +56,7 @@ export function startNodeWorker(args) {
     process.on('uncaughtException', (err: unknown) => {
         const error = ensureErrorType(err);
         let errorMessage: string;
-        if (error.isAzureFunctionsInternalException) {
+        if (error.isAzureFunctionsSystemError) {
             errorMessage = `Worker ${workerId} uncaught exception: ${error.stack || err}`;
         } else {
             errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${

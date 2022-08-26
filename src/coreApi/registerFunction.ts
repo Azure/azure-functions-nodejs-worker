@@ -5,7 +5,7 @@ import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
 import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
-import { InternalException } from '../utils/InternalException';
+import { AzFuncSystemError } from '../errors';
 import { WorkerChannel } from '../WorkerChannel';
 import { fromCoreFunctionMetadata } from './converters/fromCoreFunctionMetadata';
 
@@ -15,7 +15,7 @@ export function registerFunction(
     callback: FunctionCallback
 ): Disposable {
     if (channel.hasIndexedFunctions) {
-        throw new InternalException('A function can only be registered during app startup.');
+        throw new AzFuncSystemError('A function can only be registered during app startup.');
     }
     const functionId = uuid();
 
@@ -33,7 +33,7 @@ export function registerFunction(
 
     return new Disposable(() => {
         if (channel.hasIndexedFunctions) {
-            throw new InternalException('A function can only be disposed during app startup.');
+            throw new AzFuncSystemError('A function can only be disposed during app startup.');
         } else {
             delete channel.functions[functionId];
         }

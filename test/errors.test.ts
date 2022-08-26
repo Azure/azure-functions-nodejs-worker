@@ -3,9 +3,9 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import { ensureErrorType } from '../../src/utils/ensureErrorType';
+import { ensureErrorType } from '../src/errors';
 
-describe('ensureErrorType', () => {
+describe('errors', () => {
     it('null', () => {
         validateError(ensureErrorType(null), 'Unknown error');
     });
