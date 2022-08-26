@@ -55,6 +55,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             UseNullableValueDictionaryForHttp: 'true',
             WorkerStatus: 'true',
             TypedDataCollection: 'true',
+            HandlesWorkerTerminateMessage: 'true',
         };
 
         return response;

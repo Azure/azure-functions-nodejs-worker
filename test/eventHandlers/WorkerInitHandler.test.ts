@@ -45,6 +45,7 @@ export namespace Msg {
                     UseNullableValueDictionaryForHttp: 'true',
                     WorkerStatus: 'true',
                     TypedDataCollection: 'true',
+                    HandlesWorkerTerminateMessage: 'true',
                 },
                 result: {
                     status: rpc.StatusResult.Status.Success,

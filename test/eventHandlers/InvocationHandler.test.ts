@@ -13,6 +13,7 @@ import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { Msg as AppStartMsg } from '../startApp.test';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
+import { Msg as WorkerTerminateMsg } from './terminateWorker.test';
 import { TestEventStream } from './TestEventStream';
 import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -333,6 +334,7 @@ describe('InvocationHandler', () => {
     let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let testDisposables: coreTypes.Disposable[] = [];
+    let processExitStub: sinon.SinonStub;
 
     before(async () => {
         const result = beforeEventHandlerSuite();
@@ -340,6 +342,7 @@ describe('InvocationHandler', () => {
         loader = <TestFunctionLoader>result.loader;
         channel = result.channel;
         coreApi = await import('@azure/functions-core');
+        processExitStub = sinon.stub(process, 'exit');
     });
 
     beforeEach(async () => {
@@ -352,6 +355,10 @@ describe('InvocationHandler', () => {
         await stream.afterEachEventHandlerTest();
         coreApi.Disposable.from(...testDisposables).dispose();
         testDisposables = [];
+    });
+
+    after(() => {
+        processExitStub.restore();
     });
 
     function sendInvokeMessage(inputData?: rpc.IParameterBinding[] | null): void {
@@ -924,6 +931,57 @@ describe('InvocationHandler', () => {
         expect(hookData).to.equal('appStartpreInvocpostInvoc');
     });
 
+    it('appHookData changes from invocation hooks are persisted in app terminate hook contexts', async () => {
+        const expectedAppHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+
+        loader.getFunction.returns({ callback: async () => {}, metadata: Binding.queue });
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                Object.assign(context.appHookData, expectedAppHookData);
+                hookData += 'preInvoc';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.appHookData).to.deep.equal(expectedAppHookData);
+                hookData += 'postInvoc';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+
+        const terminateFunc = sinon.spy((context: coreTypes.AppTerminateContext) => {
+            expect(context.appHookData).to.deep.equal(expectedAppHookData);
+            hookData += 'appTerminate';
+        });
+        testDisposables.push(coreApi.registerHook('appTerminate', terminateFunc));
+
+        stream.addTestMessage(WorkerTerminateMsg.workerTerminate());
+
+        await stream.assertCalledWith(
+            WorkerTerminateMsg.receivedWorkerTerminateLog,
+            AppStartMsg.executingHooksLog(1, 'appTerminate'),
+            AppStartMsg.executedHooksLog('appTerminate')
+        );
+        expect(terminateFunc.callCount).to.be.equal(1);
+        expect(hookData).to.equal('preInvocpostInvocappTerminate');
+    });
+
     it('hookData changes from appStart hooks are not persisted in invocation hook contexts', async () => {
         const functionAppDirectory = __dirname;
         const startFunc = sinon.spy((context: coreTypes.AppStartContext) => {
@@ -980,6 +1038,61 @@ describe('InvocationHandler', () => {
         );
 
         expect(hookData).to.equal('appStartpreInvocpostInvoc');
+    });
+
+    it('hookData changes from invocation hooks are not persisted in app terminate contexts', async () => {
+        const expectedAppHookData = {
+            hello: 'world',
+            test: {
+                test2: 3,
+            },
+        };
+
+        loader.getFunction.returns({ callback: async () => {}, metadata: Binding.queue });
+
+        testDisposables.push(
+            coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
+                Object.assign(context.hookData, expectedAppHookData);
+                expect(context.appHookData).to.be.empty;
+                hookData += 'preInvoc';
+            })
+        );
+
+        testDisposables.push(
+            coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {
+                expect(context.hookData).to.deep.equal(expectedAppHookData);
+                expect(context.appHookData).to.be.empty;
+                hookData += 'postInvoc';
+            })
+        );
+
+        sendInvokeMessage([InputData.http]);
+        await stream.assertCalledWith(
+            Msg.receivedInvocLog(),
+            Msg.executingHooksLog(1, 'preInvocation'),
+            Msg.executedHooksLog('preInvocation'),
+            Msg.executingHooksLog(1, 'postInvocation'),
+            Msg.executedHooksLog('postInvocation'),
+            Msg.invocResponse([])
+        );
+
+        const terminateFunc = sinon.spy((context: coreTypes.AppTerminateContext) => {
+            expect(context.appHookData).to.be.empty;
+            expect(context.hookData).to.be.empty;
+            hookData += 'appTerminate';
+        });
+        testDisposables.push(coreApi.registerHook('appTerminate', terminateFunc));
+
+        stream.addTestMessage(WorkerTerminateMsg.workerTerminate());
+
+        await stream.assertCalledWith(
+            WorkerTerminateMsg.receivedWorkerTerminateLog,
+            AppStartMsg.executingHooksLog(1, 'appTerminate'),
+            AppStartMsg.executedHooksLog('appTerminate')
+        );
+
+        expect(terminateFunc.callCount).to.be.equal(1);
+        expect(hookData).to.equal('preInvocpostInvocappTerminate');
     });
 
     it('appHookData changes are persisted between invocation-level hooks', async () => {

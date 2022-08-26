@@ -7,6 +7,7 @@ import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnviro
 import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
 import { FunctionsMetadataHandler } from './eventHandlers/FunctionsMetadataHandler';
 import { InvocationHandler } from './eventHandlers/InvocationHandler';
+import { terminateWorker } from './eventHandlers/terminateWorker';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { ensureErrorType } from './utils/ensureErrorType';
 import { InternalException } from './utils/InternalException';
@@ -66,6 +67,11 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
             case 'workerInitRequest':
                 eventHandler = new WorkerInitHandler();
                 break;
+            case 'workerTerminate':
+                // Worker terminate request is a special request which gracefully shuts down worker
+                // It doesn't have a response so we don't have an EventHandler class for it
+                await terminateWorker(channel, nonNullProp(inMsg, eventName));
+                return;
             case 'workerStatusRequest':
                 // Worker sends the host empty response to evaluate the worker's latency
                 // The response doesn't even allow a `result` property, which is why we don't implement an EventHandler class
@@ -81,7 +87,6 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
             case 'invocationCancel':
             case 'startStream':
             case 'workerHeartbeat':
-            case 'workerTerminate':
                 // Not yet implemented
                 return;
             default:
