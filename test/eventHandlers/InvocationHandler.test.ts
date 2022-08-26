@@ -819,7 +819,7 @@ describe('InvocationHandler', () => {
         expect(hookData).to.equal('prepost');
     });
 
-    it('enforces readonly property of hookData and appHookData in pre and post invocation hooks', async () => {
+    it('enforces readonly properties in pre and post invocation hooks', async () => {
         loader.getFunction.returns({
             metadata: Binding.queue,
             callback: async () => {},
@@ -840,6 +840,12 @@ describe('InvocationHandler', () => {
                         foo: 'bar',
                     };
                 }).to.throw(`Cannot assign to read only property 'appHookData'`);
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.invocationContext = {
+                        foo: 'bar',
+                    };
+                }).to.throw(`Cannot assign to read only property 'invocationContext'`);
                 hookData += 'pre';
             })
         );
@@ -859,6 +865,12 @@ describe('InvocationHandler', () => {
                         foo: 'bar',
                     };
                 }).to.throw(`Cannot assign to read only property 'appHookData'`);
+                expect(() => {
+                    // @ts-expect-error: setting readonly property
+                    context.invocationContext = {
+                        foo: 'bar',
+                    };
+                }).to.throw(`Cannot assign to read only property 'invocationContext'`);
                 hookData += 'post';
             })
         );

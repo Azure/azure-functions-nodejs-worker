@@ -67,7 +67,12 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');
             },
-            invocationContext: context,
+            get invocationContext() {
+                return context;
+            },
+            set invocationContext(_obj) {
+                throw new ReadOnlyError('invocationContext');
+            },
             functionCallback: callback,
             inputs,
         };
@@ -95,7 +100,12 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');
             },
-            invocationContext: context,
+            get invocationContext() {
+                return context;
+            },
+            set invocationContext(_obj) {
+                throw new ReadOnlyError('invocationContext');
+            },
             inputs,
             result: null,
             error: null,
