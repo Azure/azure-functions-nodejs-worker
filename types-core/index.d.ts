@@ -128,12 +128,7 @@ declare module '@azure/functions-core' {
         functionAppDirectory: string;
     }
 
-    interface AppTerminateContext extends HookContext {
-        /**
-         * Number of seconds allowed before forced shutdown of the app
-         */
-        gracePeriod: Number;
-    }
+    type AppTerminateContext = HookContext;
 
     /**
      * Represents a type which can release resources, such as event listening or a timer.

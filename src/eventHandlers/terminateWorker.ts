@@ -3,8 +3,6 @@
 
 import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { secondsFromDuration } from '../parsers/secondsFromDuration';
-import { nonNullProp } from '../utils/nonNull';
 import { ReadOnlyError } from '../utils/ReadOnlyError';
 import { WorkerChannel } from '../WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -16,8 +14,6 @@ export async function terminateWorker(channel: WorkerChannel, msg: rpc.IWorkerTe
         level: LogLevel.Debug,
         logCategory: LogCategory.System,
     });
-
-    const gracePeriod = secondsFromDuration(nonNullProp(msg, 'gracePeriod'));
 
     const appTerminateContext: AppTerminateContext = {
         get hookData() {
@@ -32,7 +28,6 @@ export async function terminateWorker(channel: WorkerChannel, msg: rpc.IWorkerTe
         set appHookData(_obj) {
             throw new ReadOnlyError('appHookData');
         },
-        gracePeriod,
     };
 
     await channel.executeHooks('appTerminate', appTerminateContext);

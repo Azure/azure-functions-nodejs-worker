@@ -80,16 +80,14 @@ describe('terminateWorker', () => {
     });
 
     it('runs app terminate hooks', async () => {
-        const gracePeriod = 5;
         const expectedContext: coreTypes.AppTerminateContext = {
-            gracePeriod,
             hookData: {},
             appHookData: {},
         };
         const hookFunc = sinon.spy();
         testDisposables.push(coreApi.registerHook('appTerminate', hookFunc));
 
-        stream.addTestMessage(Msg.workerTerminate(gracePeriod));
+        stream.addTestMessage(Msg.workerTerminate());
         await stream.assertCalledWith(
             Msg.receivedWorkerTerminateLog,
             AppStartMsg.executingHooksLog(1, 'appTerminate'),
