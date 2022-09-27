@@ -423,7 +423,7 @@ describe('InvocationHandler', () => {
                     body: { json: '{"hello":"world"}' },
                     cookies: [],
                     headers: {},
-                    statusCode: undefined,
+                    statusCode: null,
                 },
             };
             await stream.assertCalledWith(
