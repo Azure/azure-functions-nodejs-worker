@@ -64,11 +64,45 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
             }
         } catch (err) {
             const error = ensureErrorType(err);
-            channel.log({
-                message: `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
+            const message = `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`;
+
+            // If this is an old existing app, we can't throw an error about the entrypoint for backwards compat reasons
+            // More info here: https://github.com/Azure/azure-functions-nodejs-worker/issues/630
+            // However, if we determine this is the new programming model, we will do the "proper" thing and throw an error
+            if (await isNewProgrammingModel(functionAppDirectory)) {
+                channel.log({
+                    message:
+                        'No "function.json" files found, so assuming this app uses a programming model requiring a valid "main" field in "package.json".',
+                    level: LogLevel.Warning,
+                    logCategory: LogCategory.System,
+                });
+
+                error.isAzureFunctionsSystemError = true;
+                error.message = message;
+                throw error;
+            } else {
+                channel.log({
+                    message,
+                    level: LogLevel.Warning,
+                    logCategory: LogCategory.System,
+                });
+            }
         }
+    }
+}
+
+/**
+ * Best effort to determine if this is the new programming model based on the existence of "function.json" files
+ * Defaults to false if we can't figure it out
+ */
+async function isNewProgrammingModel(functionAppDirectory: string): Promise<boolean> {
+    try {
+        const files = await globby('*/function.json', {
+            cwd: functionAppDirectory,
+            caseSensitiveMatch: false,
+        });
+        return files.length === 0;
+    } catch {
+        return false;
     }
 }
