@@ -295,12 +295,8 @@ describe('WorkerInitHandler', () => {
         });
 
         stream.addTestMessage(Msg.init(__dirname));
-        const errorMessage = `Worker was unable to load entry point "${fileName}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.error(errorMessage),
-            Msg.failedResponse(fileName, errorMessage)
-        );
+        const warningMessage = `Worker was unable to load entry point "${fileName}": Found zero files matching the supplied pattern`;
+        await stream.assertCalledWith(Msg.receivedInitLog, Msg.warning(warningMessage), Msg.response);
     });
 
     it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
@@ -317,12 +313,12 @@ describe('WorkerInitHandler', () => {
         });
 
         stream.addTestMessage(Msg.init(__dirname));
-        const errorMessage = `Worker was unable to load entry point "${fileName}": test`;
+        const warningMessage = `Worker was unable to load entry point "${fileName}": test`;
         await stream.assertCalledWith(
             Msg.receivedInitLog,
             Msg.loadingEntryPoint(fileName),
-            Msg.error(errorMessage),
-            Msg.failedResponse(fileName, errorMessage)
+            Msg.warning(warningMessage),
+            Msg.response
         );
     });
 });
