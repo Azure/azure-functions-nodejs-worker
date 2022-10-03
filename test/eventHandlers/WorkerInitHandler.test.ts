@@ -137,15 +137,6 @@ export namespace Msg {
             logCategory: LogCategory.System,
         },
     };
-
-    export const noFunctionJsonWarning: rpc.IStreamingMessage = {
-        rpcLog: {
-            message:
-                'No "function.json" files found, so assuming this app uses a programming model requiring a valid "main" field in "package.json".',
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
-        },
-    };
 }
 
 describe('WorkerInitHandler', () => {
@@ -292,16 +283,13 @@ describe('WorkerInitHandler', () => {
         );
     });
 
-    it('Warns for missing entry point in old programming model', async function (this: ITestCallbackContext) {
+    it('Fails for missing entry point', async function (this: ITestCallbackContext) {
         const fileName = 'entryPointFiles/missing.js';
         const expectedPackageJson = {
             main: fileName,
         };
         mockFs({
             [__dirname]: {
-                HttpTrigger1: {
-                    'function.json': '{}',
-                },
                 'package.json': JSON.stringify(expectedPackageJson),
             },
         });
@@ -311,16 +299,13 @@ describe('WorkerInitHandler', () => {
         await stream.assertCalledWith(Msg.receivedInitLog, Msg.warning(warningMessage), Msg.response);
     });
 
-    it('Warns for invalid entry point in old programming model', async function (this: ITestCallbackContext) {
+    it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
         const fileName = 'entryPointFiles/throwError.js';
         const expectedPackageJson = {
             main: fileName,
         };
         mockFs({
             [__dirname]: {
-                HttpTrigger1: {
-                    'fuNcTion.json': '{}', // try different casing as well
-                },
                 'package.json': JSON.stringify(expectedPackageJson),
                 // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
                 entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
@@ -334,51 +319,6 @@ describe('WorkerInitHandler', () => {
             Msg.loadingEntryPoint(fileName),
             Msg.warning(warningMessage),
             Msg.response
-        );
-    });
-
-    it('Fails for missing entry point in new programming model', async () => {
-        const fileName = 'entryPointFiles/missing.js';
-        const expectedPackageJson = {
-            main: fileName,
-        };
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-            },
-        });
-
-        stream.addTestMessage(Msg.init(__dirname));
-        const errorMessage = `Worker was unable to load entry point "${fileName}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.noFunctionJsonWarning,
-            Msg.error(errorMessage),
-            Msg.failedResponse(fileName, errorMessage)
-        );
-    });
-
-    it('Fails for invalid entry point in new programming model', async () => {
-        const fileName = 'entryPointFiles/throwError.js';
-        const expectedPackageJson = {
-            main: fileName,
-        };
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-            },
-        });
-
-        stream.addTestMessage(Msg.init(__dirname));
-        const errorMessage = `Worker was unable to load entry point "${fileName}": test`;
-        await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.loadingEntryPoint(fileName),
-            Msg.noFunctionJsonWarning,
-            Msg.error(errorMessage),
-            Msg.failedResponse(fileName, errorMessage)
         );
     });
 });
