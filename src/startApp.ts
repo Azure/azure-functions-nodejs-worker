@@ -64,9 +64,11 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
             }
         } catch (err) {
             const error = ensureErrorType(err);
-            error.isAzureFunctionsSystemError = true;
-            error.message = `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`;
-            throw error;
+            channel.log({
+                message: `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`,
+                level: LogLevel.Warning,
+                logCategory: LogCategory.System,
+            });
         }
     }
 }
