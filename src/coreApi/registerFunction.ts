@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
-import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
 import { AzFuncSystemError } from '../errors';
+import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { fromCoreFunctionMetadata } from './converters/fromCoreFunctionMetadata';
 
@@ -14,13 +14,14 @@ export function registerFunction(
     metadata: FunctionMetadata,
     callback: FunctionCallback
 ): Disposable {
-    if (channel.hasIndexedFunctions) {
+    if (channel.hasFinishedStartup) {
         throw new AzFuncSystemError('A function can only be registered during app startup.');
     }
-    const functionId = uuid();
+
+    const functionId = nonNullProp(metadata, 'functionId');
 
     const rpcMetadata: rpc.IRpcFunctionMetadata = fromCoreFunctionMetadata(metadata);
-    rpcMetadata.functionId = functionId;
+    rpcMetadata.name = rpcMetadata.name || functionId;
     // `rawBindings` is what's actually used by the host
     // `bindings` is used by the js library in both the old host indexing and the new worker indexing
     rpcMetadata.rawBindings = Object.entries(metadata.bindings).map(([name, binding]) => {
@@ -32,7 +33,7 @@ export function registerFunction(
     channel.functions[functionId] = { metadata: rpcMetadata, callback };
 
     return new Disposable(() => {
-        if (channel.hasIndexedFunctions) {
+        if (channel.hasFinishedStartup) {
             throw new AzFuncSystemError('A function can only be disposed during app startup.');
         } else {
             delete channel.functions[functionId];

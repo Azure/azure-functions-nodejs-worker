@@ -18,6 +18,8 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
+        channel.hasFinishedStartup = true;
+
         const response = this.getDefaultResponse(msg);
 
         const functionId = nonNullProp(msg, 'functionId');

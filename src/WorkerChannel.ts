@@ -47,7 +47,7 @@ export class WorkerChannel {
     #appStartHooks: HookCallback[] = [];
     #appTerminateHooks: HookCallback[] = [];
     functions: { [id: string]: RegisteredFunction } = {};
-    hasIndexedFunctions = false;
+    hasFinishedStartup = false;
 
     constructor(eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
         this.eventStream = eventStream;

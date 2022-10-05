@@ -26,9 +26,9 @@ declare module '@azure/functions-core' {
      */
     interface FunctionMetadata {
         /**
-         * The function name
+         * The function id - must be unique within the app
          */
-        name: string;
+        functionId: string;
 
         /**
          * A dictionary of binding name to binding info
