@@ -34,7 +34,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         const response = this.getDefaultResponse(msg);
 
         channel.log({
-            message: 'Received WorkerInitRequest',
+            message: `Worker ${channel.workerId} received WorkerInitRequest`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });

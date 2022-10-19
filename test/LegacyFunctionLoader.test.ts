@@ -7,6 +7,7 @@ import 'mocha';
 import * as mock from 'mock-require';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { LegacyFunctionLoader } from '../src/LegacyFunctionLoader';
+import { nonNullValue } from '../src/utils/nonNull';
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -52,9 +53,7 @@ describe('LegacyFunctionLoader', () => {
             {}
         );
 
-        expect(() => {
-            loader.getFunction('functionId');
-        }).to.throw("Function code for 'functionId' is not loaded and cannot be invoked.");
+        expect(loader.getFunction('functionId')).to.be.undefined;
     });
 
     it('throws unable to determine function entry point with entryPoint name', async () => {
@@ -118,8 +117,7 @@ describe('LegacyFunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunction('functionId');
-
+        const userFunction = nonNullValue(loader.getFunction('functionId'));
         userFunction.callback(context, (results) => {
             expect(results).to.eql({ prop: true });
         });
@@ -137,7 +135,7 @@ describe('LegacyFunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunction('functionId');
+        const userFunction = nonNullValue(loader.getFunction('functionId'));
         const result = userFunction.callback({});
 
         expect(result).to.be.not.an('undefined');
@@ -156,10 +154,10 @@ describe('LegacyFunctionLoader', () => {
             {}
         );
 
-        const userFunction = loader.getFunction('functionId').callback;
+        const userFunction = nonNullValue(loader.getFunction('functionId')).callback;
         Object.assign(userFunction, { hello: 'world' });
 
-        const userFunction2 = loader.getFunction('functionId').callback;
+        const userFunction2 = nonNullValue(loader.getFunction('functionId')).callback;
 
         expect(userFunction).to.not.equal(userFunction2);
         expect(userFunction['hello']).to.equal('world');

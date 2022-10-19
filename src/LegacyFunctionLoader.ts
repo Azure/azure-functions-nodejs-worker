@@ -11,7 +11,7 @@ import { RegisteredFunction } from './WorkerChannel';
 
 export interface ILegacyFunctionLoader {
     load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
-    getFunction(functionId: string): RegisteredFunction;
+    getFunction(functionId: string): RegisteredFunction | undefined;
 }
 
 interface LegacyRegisteredFunction extends RegisteredFunction {
@@ -31,7 +31,7 @@ export class LegacyFunctionLoader implements ILegacyFunctionLoader {
         this.#loadedFunctions[functionId] = { metadata, callback, thisArg };
     }
 
-    getFunction(functionId: string): RegisteredFunction {
+    getFunction(functionId: string): RegisteredFunction | undefined {
         const loadedFunction = this.#loadedFunctions[functionId];
         if (loadedFunction) {
             return {
@@ -40,7 +40,7 @@ export class LegacyFunctionLoader implements ILegacyFunctionLoader {
                 callback: loadedFunction.callback.bind(loadedFunction.thisArg),
             };
         } else {
-            throw new AzFuncSystemError(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
+            return undefined;
         }
     }
 }

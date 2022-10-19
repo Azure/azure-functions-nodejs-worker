@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
-import { v4 as uuid } from 'uuid';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
 import { AzFuncSystemError } from '../errors';
@@ -14,10 +13,12 @@ export function registerFunction(
     metadata: FunctionMetadata,
     callback: FunctionCallback
 ): Disposable {
-    if (channel.hasIndexedFunctions) {
+    if (channel.workerIndexingLocked) {
         throw new AzFuncSystemError('A function can only be registered during app startup.');
     }
-    const functionId = uuid();
+    channel.isUsingWorkerIndexing = true;
+
+    const functionId = metadata.functionId || metadata.name;
 
     const rpcMetadata: rpc.IRpcFunctionMetadata = fromCoreFunctionMetadata(metadata);
     rpcMetadata.functionId = functionId;
@@ -32,7 +33,7 @@ export function registerFunction(
     channel.functions[functionId] = { metadata: rpcMetadata, callback };
 
     return new Disposable(() => {
-        if (channel.hasIndexedFunctions) {
+        if (channel.workerIndexingLocked) {
             throw new AzFuncSystemError('A function can only be disposed during app startup.');
         } else {
             delete channel.functions[functionId];

@@ -83,7 +83,7 @@ export namespace Msg {
 
     export const receivedInitLog: rpc.IStreamingMessage = {
         rpcLog: {
-            message: 'Received WorkerInitRequest',
+            message: 'Worker 00000000-0000-0000-0000-000000000000 received WorkerInitRequest',
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         },

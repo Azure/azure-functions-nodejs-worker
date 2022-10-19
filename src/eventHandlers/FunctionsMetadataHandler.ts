@@ -20,10 +20,12 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
         channel: WorkerChannel,
         msg: rpc.IFunctionsMetadataRequest
     ): Promise<rpc.IFunctionMetadataResponse> {
+        channel.workerIndexingLocked = true;
+
         const response = this.getDefaultResponse(msg);
 
         channel.log({
-            message: 'Received FunctionsMetadataRequest',
+            message: `Worker ${channel.workerId} received FunctionsMetadataRequest`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });
@@ -33,8 +35,6 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
             response.useDefaultMetadataIndexing = false;
             response.functionMetadataResults = functions.map((f) => f.metadata);
         }
-
-        channel.hasIndexedFunctions = true;
 
         return response;
     }

@@ -6,6 +6,8 @@ import { ensureErrorType } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
+import LogCategory = rpc.RpcLog.RpcLogCategory;
+import LogLevel = rpc.RpcLog.Level;
 
 /**
  * Worker responds after loading required metadata to load function with the load result
@@ -18,11 +20,19 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
+        channel.workerIndexingLocked = true;
+
         const response = this.getDefaultResponse(msg);
 
-        const functionId = nonNullProp(msg, 'functionId');
-        const metadata = nonNullProp(msg, 'metadata');
-        if (!channel.functions[functionId]) {
+        channel.log({
+            message: `Worker ${channel.workerId} received FunctionLoadRequest`,
+            level: LogLevel.Debug,
+            logCategory: LogCategory.System,
+        });
+
+        if (!channel.isUsingWorkerIndexing) {
+            const functionId = nonNullProp(msg, 'functionId');
+            const metadata = nonNullProp(msg, 'metadata');
             try {
                 await channel.legacyFunctionLoader.load(functionId, metadata, channel.packageJson);
             } catch (err) {

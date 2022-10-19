@@ -22,13 +22,13 @@ import LogLevel = rpc.RpcLog.Level;
  * This should have a way to handle all incoming gRPC messages.
  * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
  */
-export function setupEventStream(workerId: string, channel: WorkerChannel): void {
+export function setupEventStream(channel: WorkerChannel): void {
     channel.eventStream.on('data', (msg) => {
-        void handleMessage(workerId, channel, msg);
+        void handleMessage(channel, msg);
     });
 
     channel.eventStream.on('error', function (err) {
-        systemError(`Worker ${workerId} encountered event stream error: `, err);
+        systemError(`Worker ${channel.workerId} encountered event stream error: `, err);
         throw new AzFuncSystemError(err);
     });
 
@@ -37,14 +37,14 @@ export function setupEventStream(workerId: string, channel: WorkerChannel): void
     channel.eventStream.write = function checkWrite(msg) {
         const msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
-            systemError(`Worker ${workerId} malformed message`, msgError);
+            systemError(`Worker ${channel.workerId} malformed message`, msgError);
             throw new AzFuncSystemError(msgError);
         }
         oldWrite.apply(channel.eventStream, [msg]);
     };
 }
 
-async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rpc.StreamingMessage): Promise<void> {
+async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage): Promise<void> {
     const outMsg: rpc.IStreamingMessage = {
         requestId: inMsg.requestId,
     };
@@ -89,7 +89,7 @@ async function handleMessage(workerId: string, channel: WorkerChannel, inMsg: rp
                 // Not yet implemented
                 return;
             default:
-                throw new AzFuncSystemError(`Worker ${workerId} had no handler for message '${eventName}'`);
+                throw new AzFuncSystemError(`Worker ${channel.workerId} had no handler for message '${eventName}'`);
         }
 
         request = nonNullProp(inMsg, eventName);
