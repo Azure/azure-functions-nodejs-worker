@@ -23,12 +23,21 @@ declare module '@azure/functions-core' {
 
     /**
      * A slimmed down version of `RpcFunctionMetadata` that includes the minimum amount of information needed to register a function
+     * NOTE: All properties on this object need to be deterministic to support the multiple worker scenario. More info here: https://github.com/Azure/azure-functions-nodejs-worker/issues/638
      */
     interface FunctionMetadata {
         /**
-         * The function name
+         * The function name, used for display and tracking purposes
+         * Must be unique within the app
          */
         name: string;
+
+        /**
+         * The function id, used for tracking purposes
+         * Must be unique within the app
+         * If not specified, the function name will be used
+         */
+        functionId?: string;
 
         /**
          * A dictionary of binding name to binding info

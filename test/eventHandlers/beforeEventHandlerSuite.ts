@@ -20,8 +20,8 @@ export function beforeEventHandlerSuite() {
     if (!testWorkerData) {
         const stream = new TestEventStream();
         const loader = sinon.createStubInstance<LegacyFunctionLoader>(LegacyFunctionLoader);
-        const channel = new WorkerChannel(stream, loader);
-        setupEventStream('workerId', channel);
+        const channel = new WorkerChannel('00000000-0000-0000-0000-000000000000', stream, loader);
+        setupEventStream(channel);
         setupCoreModule(channel);
         testWorkerData = { stream, loader, channel };
         // Clear out logs that happened during setup, so that they don't affect whichever test runs first

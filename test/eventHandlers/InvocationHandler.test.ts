@@ -6,6 +6,7 @@
 import { AzureFunction, Context } from '@azure/functions';
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
+import * as escapeStringRegexp from 'escape-string-regexp';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
@@ -14,7 +15,7 @@ import { WorkerChannel } from '../../src/WorkerChannel';
 import { Msg as AppStartMsg } from '../startApp.test';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { Msg as WorkerTerminateMsg } from './terminateWorker.test';
-import { TestEventStream } from './TestEventStream';
+import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
 import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -73,7 +74,6 @@ namespace Binding {
 }
 
 const testError = new Error('testErrorMessage');
-testError.stack = 'testErrorStack';
 
 function addSuffix(asyncFunc: AzureFunction, callbackFunc: AzureFunction): [AzureFunction, string][] {
     return [
@@ -231,25 +231,33 @@ namespace Msg {
             },
         };
     }
-    export const invocResFailed: rpc.IStreamingMessage = {
-        requestId: 'testReqId',
-        invocationResponse: {
-            invocationId: '1',
-            result: {
-                status: rpc.StatusResult.Status.Failure,
-                exception: {
-                    message: 'testErrorMessage',
-                    stackTrace: 'testErrorStack',
+    export function invocResFailed(message = 'testErrorMessage'): RegExpStreamingMessage {
+        return new RegExpStreamingMessage(
+            {
+                requestId: 'testReqId',
+                invocationResponse: {
+                    invocationId: '1',
+                    result: {
+                        status: rpc.StatusResult.Status.Failure,
+                        exception: {
+                            message,
+                        },
+                    },
                 },
             },
-        },
-    };
+            {
+                'invocationResponse.result.exception.stackTrace': new RegExp(
+                    `Error: ${escapeStringRegexp(message)}\\s*at`
+                ),
+            }
+        );
+    }
     export function receivedInvocLog(): rpc.IStreamingMessage {
         return {
             rpcLog: {
                 category: 'testFuncName.Invocation',
                 invocationId: '1',
-                message: 'Received FunctionInvocationRequest',
+                message: 'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest',
                 level: LogLevel.Debug,
                 logCategory: LogCategory.System,
             },
@@ -324,7 +332,7 @@ namespace InputData {
 
 type TestFunctionLoader = sinon.SinonStubbedInstance<
     LegacyFunctionLoader & {
-        getFunction(functionId: string): { metadata: rpc.IRpcFunctionMetadata; callback: AzureFunction };
+        getFunction(functionId: string): { metadata: rpc.IRpcFunctionMetadata; callback: AzureFunction } | undefined;
     }
 >;
 
@@ -511,7 +519,7 @@ describe('InvocationHandler', () => {
                 callback: func,
             });
             sendInvokeMessage([InputData.http]);
-            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed);
+            await stream.assertCalledWith(Msg.receivedInvocLog(), Msg.invocResFailed());
         });
     }
 
@@ -521,6 +529,16 @@ describe('InvocationHandler', () => {
                 functionLoadResponse: 1,
             });
         }).to.throw('functionLoadResponse.object expected');
+    });
+
+    it('throws for unloaded function', async () => {
+        const errorMessage = "Function code for 'id' is not loaded and cannot be invoked.";
+        loader.getFunction.returns(undefined);
+        sendInvokeMessage();
+        await stream.assertCalledWith(
+            { rpcLog: { level: LogLevel.Error, logCategory: LogCategory.System, message: errorMessage } },
+            Msg.invocResFailed(errorMessage)
+        );
     });
 
     it('empty function does not return invocation response', async () => {
@@ -753,7 +771,7 @@ describe('InvocationHandler', () => {
                 Msg.receivedInvocLog(),
                 Msg.executingHooksLog(1, 'postInvocation'),
                 Msg.executedHooksLog('postInvocation'),
-                Msg.invocResFailed
+                Msg.invocResFailed()
             );
             expect(hookData).to.equal('post');
         });

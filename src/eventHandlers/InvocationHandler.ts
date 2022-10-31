@@ -18,9 +18,9 @@ import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvoca
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
-import { isError, ReadOnlyError } from '../errors';
+import { AzFuncSystemError, isError, ReadOnlyError } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
-import { WorkerChannel } from '../WorkerChannel';
+import { RegisteredFunction, WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 
 /**
@@ -35,8 +35,19 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
         const functionId = nonNullProp(msg, 'functionId');
-        let { metadata, callback } =
-            channel.functions[functionId] || channel.legacyFunctionLoader.getFunction(functionId);
+        let registeredFunc: RegisteredFunction | undefined;
+        if (channel.isUsingWorkerIndexing) {
+            registeredFunc = channel.functions[functionId];
+        } else {
+            registeredFunc = channel.legacyFunctionLoader.getFunction(functionId);
+        }
+
+        if (!registeredFunc) {
+            throw new AzFuncSystemError(`Function code for '${functionId}' is not loaded and cannot be invoked.`);
+        }
+
+        let { metadata, callback } = registeredFunc;
+
         const msgCategory = `${nonNullProp(metadata, 'name')}.Invocation`;
         const coreCtx = new CoreInvocationContext(
             channel,
@@ -46,7 +57,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         );
 
         // Log invocation details to ensure the invocation received by node worker
-        coreCtx.log('debug', 'system', 'Received FunctionInvocationRequest');
+        coreCtx.log('debug', 'system', `Worker ${channel.workerId} received FunctionInvocationRequest`);
 
         const programmingModel: ProgrammingModel = nonNullProp(channel, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);

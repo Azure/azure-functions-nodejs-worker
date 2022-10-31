@@ -42,8 +42,8 @@ export function startNodeWorker(args) {
         throw error;
     }
 
-    const channel = new WorkerChannel(eventStream, new LegacyFunctionLoader());
-    setupEventStream(workerId, channel);
+    const channel = new WorkerChannel(workerId, eventStream, new LegacyFunctionLoader());
+    setupEventStream(channel);
     setupCoreModule(channel);
 
     eventStream.write({

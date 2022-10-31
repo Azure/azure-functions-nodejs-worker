@@ -11,6 +11,16 @@ import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
+namespace Msg {
+    export const receivedLoadLog: rpc.IStreamingMessage = {
+        rpcLog: {
+            message: 'Worker 00000000-0000-0000-0000-000000000000 received FunctionLoadRequest',
+            level: LogLevel.Debug,
+            logCategory: LogCategory.System,
+        },
+    };
+}
+
 describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;
     let loader: sinon.SinonStubbedInstance<LegacyFunctionLoader>;
@@ -31,7 +41,7 @@ describe('FunctionLoadHandler', () => {
                 metadata: {},
             },
         });
-        await stream.assertCalledWith({
+        await stream.assertCalledWith(Msg.receivedLoadLog, {
             requestId: 'id',
             functionLoadResponse: {
                 functionId: 'funcId',
@@ -70,7 +80,7 @@ describe('FunctionLoadHandler', () => {
                 },
             };
 
-            await stream.assertCalledWith(errorRpcLog, {
+            await stream.assertCalledWith(Msg.receivedLoadLog, errorRpcLog, {
                 requestId: 'id',
                 functionLoadResponse: {
                     functionId: 'funcId',

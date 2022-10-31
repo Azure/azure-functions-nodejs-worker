@@ -17,6 +17,7 @@ export interface RegisteredFunction {
 }
 
 export class WorkerChannel {
+    workerId: string;
     eventStream: IEventStream;
     legacyFunctionLoader: ILegacyFunctionLoader;
     packageJson: PackageJson;
@@ -47,9 +48,11 @@ export class WorkerChannel {
     #appStartHooks: HookCallback[] = [];
     #appTerminateHooks: HookCallback[] = [];
     functions: { [id: string]: RegisteredFunction } = {};
-    hasIndexedFunctions = false;
+    workerIndexingLocked = false;
+    isUsingWorkerIndexing = false;
 
-    constructor(eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
+    constructor(workerId: string, eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
+        this.workerId = workerId;
         this.eventStream = eventStream;
         this.legacyFunctionLoader = legacyFunctionLoader;
         this.packageJson = {};
