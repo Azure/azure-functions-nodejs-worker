@@ -5,7 +5,7 @@ const logPrefix = 'LanguageWorkerConsoleLog';
 const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
 const supportedVersions: string[] = ['v14', 'v16', 'v18'];
-const devOnlyVersions: string[] = ['v15', 'v17'];
+const devOnlyVersions: string[] = ['v15', 'v17', 'v19'];
 let worker;
 
 // Try validating node version
