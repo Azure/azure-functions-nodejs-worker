@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
+import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
 import { AzFuncSystemError } from '../errors';
@@ -27,9 +28,16 @@ export function registerFunction(
     rpcMetadata.rawBindings = Object.entries(metadata.bindings).map(([name, binding]) => {
         return JSON.stringify({ ...binding, name });
     });
-    // The host validates that the `scriptFile` property is defined even though neither the host nor the worker needs it
-    // Long term we should adjust the host to remove that unnecessary validation, but for now we'll just set it to 'n/a'
-    rpcMetadata.scriptFile = 'n/a';
+
+    // The host validates that the `scriptFile` property is defined. Neither the host nor the worker needs it, but tooling like the portal may use it so we'll make a best guess
+    // (The real script file may be a separate file referenced from the entry point, or it may be coming from a different entry point entirely if there are some async shenanigans)
+    if (channel.currentEntryPoint) {
+        rpcMetadata.scriptFile = path.basename(channel.currentEntryPoint);
+        rpcMetadata.directory = path.dirname(channel.currentEntryPoint);
+    } else {
+        rpcMetadata.scriptFile = 'unknown';
+    }
+
     channel.functions[functionId] = { metadata: rpcMetadata, callback };
 
     return new Disposable(() => {

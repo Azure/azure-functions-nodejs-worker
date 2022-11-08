@@ -55,7 +55,13 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
                 });
-                await loadScriptFile(path.join(functionAppDirectory, file), channel.packageJson);
+                try {
+                    const entryPointFilePath = path.join(functionAppDirectory, file);
+                    channel.currentEntryPoint = entryPointFilePath;
+                    await loadScriptFile(entryPointFilePath, channel.packageJson);
+                } finally {
+                    channel.currentEntryPoint = undefined;
+                }
                 channel.log({
                     message: `Loaded entry point file "${file}"`,
                     level: LogLevel.Debug,
