@@ -50,6 +50,7 @@ export class WorkerChannel {
     functions: { [id: string]: RegisteredFunction } = {};
     workerIndexingLocked = false;
     isUsingWorkerIndexing = false;
+    currentEntryPoint?: string;
 
     constructor(workerId: string, eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
         this.workerId = workerId;
