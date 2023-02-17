@@ -28,7 +28,7 @@ export function setupEventStream(channel: WorkerChannel): void {
     });
 
     channel.eventStream.on('error', function (err) {
-        systemError(`Worker ${channel.workerId} encountered event stream error: `, err);
+        systemError(`Worker encountered event stream error: `, err);
         throw new AzFuncSystemError(err);
     });
 
@@ -37,7 +37,7 @@ export function setupEventStream(channel: WorkerChannel): void {
     channel.eventStream.write = function checkWrite(msg) {
         const msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
-            systemError(`Worker ${channel.workerId} malformed message`, msgError);
+            systemError(`Worker malformed message`, msgError);
             throw new AzFuncSystemError(msgError);
         }
         oldWrite.apply(channel.eventStream, [msg]);
@@ -89,7 +89,7 @@ async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage
                 // Not yet implemented
                 return;
             default:
-                throw new AzFuncSystemError(`Worker ${channel.workerId} had no handler for message '${eventName}'`);
+                throw new AzFuncSystemError(`Worker had no handler for message '${eventName}'`);
         }
 
         request = nonNullProp(inMsg, eventName);

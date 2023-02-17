@@ -57,9 +57,9 @@ export function startNodeWorker(args) {
         const error = ensureErrorType(err);
         let errorMessage: string;
         if (error.isAzureFunctionsSystemError) {
-            errorMessage = `Worker ${workerId} uncaught exception: ${error.stack || err}`;
+            errorMessage = `Worker uncaught exception: ${error.stack || err}`;
         } else {
-            errorMessage = `Worker ${workerId} uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${
+            errorMessage = `Worker uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${
                 error.stack || err
             }`;
         }
