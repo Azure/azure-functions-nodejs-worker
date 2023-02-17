@@ -28,7 +28,7 @@ export namespace Msg {
     }
 
     const workerMetadataRegExps = {
-        'workerInitResponse.workerMetadata.runtimeVersion': /^v[0-9]+\.[0-9]+\.[0-9]+$/,
+        'workerInitResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
         'workerInitResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
         'workerInitResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
     };

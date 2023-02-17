@@ -23,7 +23,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         return {
             workerMetadata: {
                 runtimeName: 'node',
-                runtimeVersion: process.version,
+                runtimeVersion: process.versions.node,
                 workerBitness: process.arch,
                 workerVersion,
             },
