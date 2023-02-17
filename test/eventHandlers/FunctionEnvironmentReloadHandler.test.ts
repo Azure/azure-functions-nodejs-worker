@@ -35,7 +35,7 @@ export namespace Msg {
 
     export const noHandlerRpcLog: rpc.IStreamingMessage = {
         rpcLog: {
-            message: "Worker 00000000-0000-0000-0000-000000000000 had no handler for message 'undefined'",
+            message: "Worker had no handler for message 'undefined'",
             level: LogLevel.Error,
             logCategory: LogCategory.System,
         },
