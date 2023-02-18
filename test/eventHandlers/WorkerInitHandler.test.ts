@@ -6,6 +6,7 @@ import * as escapeStringRegexp from 'escape-string-regexp';
 import 'mocha';
 import { ITestCallbackContext } from 'mocha';
 import * as mockFs from 'mock-fs';
+import * as semver from 'semver';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { WorkerChannel } from '../../src/WorkerChannel';
@@ -218,6 +219,10 @@ describe('WorkerInitHandler', () => {
             },
         });
 
+        const jsonError = semver.gte(process.versions.node, '19.0.0')
+            ? 'Unexpected token \'g\', "gArB@g3 dAtA" is not valid JSON'
+            : 'Unexpected token g in JSON at position 0';
+
         stream.addTestMessage(Msg.init(appDir));
         await stream.assertCalledWith(
             Msg.receivedInitLog,
@@ -225,7 +230,7 @@ describe('WorkerInitHandler', () => {
                 `Worker failed to load package.json: file content is not valid JSON: ${path.join(
                     appDir,
                     'package.json'
-                )}: Unexpected token g in JSON at position 0`
+                )}: ${jsonError}`
             ),
             Msg.response
         );
