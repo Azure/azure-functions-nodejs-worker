@@ -5,15 +5,18 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import * as mock from 'mock-require';
+import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { LegacyFunctionLoader } from '../src/LegacyFunctionLoader';
 import { nonNullValue } from '../src/utils/nonNull';
+import { WorkerChannel } from '../src/WorkerChannel';
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 describe('LegacyFunctionLoader', () => {
     let loader: LegacyFunctionLoader;
     let context, logs;
+    const channel: WorkerChannel = <WorkerChannel>(<any>sinon.createStubInstance(WorkerChannel));
 
     beforeEach(() => {
         loader = new LegacyFunctionLoader();
@@ -32,6 +35,7 @@ describe('LegacyFunctionLoader', () => {
         mock('test', {});
         await expect(
             loader.load(
+                channel,
                 'functionId',
                 <rpc.IRpcFunctionMetadata>{
                     scriptFile: 'test',
@@ -46,6 +50,7 @@ describe('LegacyFunctionLoader', () => {
     it('does not load proxy function', async () => {
         mock('test', {});
         await loader.load(
+            channel,
             'functionId',
             <rpc.IRpcFunctionMetadata>{
                 isProxy: true,
@@ -61,6 +66,7 @@ describe('LegacyFunctionLoader', () => {
         const entryPoint = 'wrongEntryPoint';
         await expect(
             loader.load(
+                channel,
                 'functionId',
                 <rpc.IRpcFunctionMetadata>{
                     scriptFile: 'test',
@@ -78,6 +84,7 @@ describe('LegacyFunctionLoader', () => {
         const entryPoint = 'test';
         await expect(
             loader.load(
+                channel,
                 'functionId',
                 <rpc.IRpcFunctionMetadata>{
                     scriptFile: 'test',
@@ -109,6 +116,7 @@ describe('LegacyFunctionLoader', () => {
         mock('test', new FuncObject());
 
         await loader.load(
+            channel,
             'functionId',
             <rpc.IRpcFunctionMetadata>{
                 scriptFile: 'test',
@@ -127,6 +135,7 @@ describe('LegacyFunctionLoader', () => {
         mock('test', { test: async () => {} });
 
         await loader.load(
+            channel,
             'functionId',
             <rpc.IRpcFunctionMetadata>{
                 scriptFile: 'test',
@@ -146,6 +155,7 @@ describe('LegacyFunctionLoader', () => {
         mock('test', { test: async () => {} });
 
         await loader.load(
+            channel,
             'functionId',
             <rpc.IRpcFunctionMetadata>{
                 scriptFile: 'test',

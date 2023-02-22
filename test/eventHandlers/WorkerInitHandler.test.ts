@@ -109,14 +109,28 @@ export namespace Msg {
         };
     }
 
-    export function warning(message: string): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            },
-        };
+    export function warning(message: string | RegExp): RegExpStreamingMessage | rpc.IStreamingMessage {
+        if (typeof message === 'string') {
+            return {
+                rpcLog: {
+                    message,
+                    level: LogLevel.Warning,
+                    logCategory: LogCategory.System,
+                },
+            };
+        } else {
+            return new RegExpStreamingMessage(
+                {
+                    rpcLog: {
+                        level: LogLevel.Warning,
+                        logCategory: LogCategory.System,
+                    },
+                },
+                {
+                    'rpcLog.message': message,
+                }
+            );
+        }
     }
 
     export function error(message: string): rpc.IStreamingMessage {
@@ -318,6 +332,49 @@ describe('WorkerInitHandler', () => {
             Msg.receivedInitLog,
             Msg.loadingEntryPoint(fileName),
             Msg.warning(warningMessage),
+            Msg.response
+        );
+    });
+
+    for (const rfpValue of ['1', 'https://url']) {
+        it(`Skips warn for long load time if rfp already set to ${rfpValue}`, async () => {
+            const fileName = 'entryPointFiles/longLoad.js';
+            mockFs({
+                [__dirname]: {
+                    'package.json': JSON.stringify({ main: fileName }),
+                    entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
+                },
+            });
+
+            process.env.WEBSITE_RUN_FROM_PACKAGE = rfpValue;
+            stream.addTestMessage(Msg.init(__dirname));
+            await stream.assertCalledWith(
+                Msg.receivedInitLog,
+                Msg.loadingEntryPoint(fileName),
+                Msg.loadedEntryPoint(fileName),
+                Msg.response
+            );
+        });
+    }
+
+    it('Warns for long load time', async () => {
+        const fileName = 'entryPointFiles/longLoad.js';
+        mockFs({
+            [__dirname]: {
+                'package.json': JSON.stringify({ main: fileName }),
+                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
+            },
+        });
+
+        stream.addTestMessage(Msg.init(__dirname));
+        await stream.assertCalledWith(
+            Msg.receivedInitLog,
+            Msg.loadingEntryPoint(fileName),
+            Msg.warning(/Loading "longLoad.js" took [0-9]+ms/),
+            Msg.warning(
+                'Set "WEBSITE_RUN_FROM_PACKAGE" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54'
+            ),
+            Msg.loadedEntryPoint(fileName),
             Msg.response
         );
     });

@@ -34,7 +34,7 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
             const functionId = nonNullProp(msg, 'functionId');
             const metadata = nonNullProp(msg, 'metadata');
             try {
-                await channel.legacyFunctionLoader.load(functionId, metadata, channel.packageJson);
+                await channel.legacyFunctionLoader.load(channel, functionId, metadata, channel.packageJson);
             } catch (err) {
                 const error = ensureErrorType(err);
                 error.isAzureFunctionsSystemError = true;
