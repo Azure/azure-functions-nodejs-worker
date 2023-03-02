@@ -1,7 +1,8 @@
 variables: {
   NODE_14: '14.x',
   NODE_16: '16.x',
-  NODE_18: '18.x'
+  NODE_18: '18.x',
+  NODE_20: '19.x' # Temporarily using v19 until v20 is released
 }
 
 pr: none
@@ -19,6 +20,9 @@ strategy:
       UBUNTU_NODE18:
         IMAGE_TYPE: 'ubuntu-latest'
         NODE_VERSION: $(NODE_18)
+      UBUNTU_NODE20:
+        IMAGE_TYPE: 'ubuntu-latest'
+        NODE_VERSION: $(NODE_20)
       WINDOWS_NODE14:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_14)
@@ -28,6 +32,9 @@ strategy:
       WINDOWS_NODE18:
         IMAGE_TYPE: 'windows-latest'
         NODE_VERSION: $(NODE_18)
+      WINDOWS_NODE20:
+        IMAGE_TYPE: 'windows-latest'
+        NODE_VERSION: $(NODE_20)
       MAC_NODE14:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_14)
@@ -37,6 +44,9 @@ strategy:
       MAC_NODE18:
         IMAGE_TYPE: 'macOS-latest'
         NODE_VERSION: $(NODE_18)
+      MAC_NODE20:
+        IMAGE_TYPE: 'macOS-latest'
+        NODE_VERSION: $(NODE_20)
 pool:
     vmImage: $(IMAGE_TYPE)
 steps:
