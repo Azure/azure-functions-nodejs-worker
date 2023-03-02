@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { EventEmitter } from 'events';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
@@ -41,9 +42,12 @@ export class TestEventStream extends EventEmitter implements IEventStream {
             const calls = this.written.getCalls();
 
             // First, validate the "shortened" form of the messages. This will result in a more readable error for most test failures
-            const shortExpectedMsgs = expectedMsgs.map(getShortenedMsg);
-            const shortActualMsgs = calls.map((c) => getShortenedMsg(c.args[0]));
-            expect(shortActualMsgs).to.deep.equal(shortExpectedMsgs);
+            if (!expectedMsgs.find((m) => m instanceof RegExpStreamingMessage)) {
+                // shortened message won't work if it's a regexp
+                const shortExpectedMsgs = expectedMsgs.map(getShortenedMsg);
+                const shortActualMsgs = calls.map((c) => getShortenedMsg(c.args[0]));
+                expect(shortActualMsgs).to.deep.equal(shortExpectedMsgs);
+            }
 
             // Next, do a more comprehensive check on the messages
             expect(calls.length).to.equal(
@@ -81,6 +85,10 @@ export class TestEventStream extends EventEmitter implements IEventStream {
             }
         }
         Object.assign(process.env, this.originalEnv);
+
+        // Reset require cache for entryPoint files that depend on timing
+        const filePath = path.join(__dirname, 'entryPointFiles/longLoad.js');
+        delete require.cache[require.resolve(filePath)];
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));

@@ -6,6 +6,7 @@ import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { PackageJson } from '../../src/parsers/parsePackageJson';
+import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -58,7 +59,9 @@ describe('FunctionLoadHandler', () => {
 
         const originalLoader = loader.load;
         try {
-            loader.load = sinon.stub<[string, rpc.IRpcFunctionMetadata, PackageJson], Promise<void>>().throws(err);
+            loader.load = sinon
+                .stub<[WorkerChannel, string, rpc.IRpcFunctionMetadata, PackageJson], Promise<void>>()
+                .throws(err);
 
             stream.addTestMessage({
                 requestId: 'id',

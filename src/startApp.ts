@@ -58,7 +58,7 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
                 try {
                     const entryPointFilePath = path.join(functionAppDirectory, file);
                     channel.currentEntryPoint = entryPointFilePath;
-                    await loadScriptFile(entryPointFilePath, channel.packageJson);
+                    await loadScriptFile(channel, entryPointFilePath, channel.packageJson);
                 } finally {
                     channel.currentEntryPoint = undefined;
                 }

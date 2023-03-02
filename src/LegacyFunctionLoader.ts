@@ -7,10 +7,15 @@ import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { nonNullProp } from './utils/nonNull';
-import { RegisteredFunction } from './WorkerChannel';
+import { RegisteredFunction, WorkerChannel } from './WorkerChannel';
 
 export interface ILegacyFunctionLoader {
-    load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void>;
+    load(
+        channel: WorkerChannel,
+        functionId: string,
+        metadata: rpc.IRpcFunctionMetadata,
+        packageJson: PackageJson
+    ): Promise<void>;
     getFunction(functionId: string): RegisteredFunction | undefined;
 }
 
@@ -21,11 +26,16 @@ interface LegacyRegisteredFunction extends RegisteredFunction {
 export class LegacyFunctionLoader implements ILegacyFunctionLoader {
     #loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined } = {};
 
-    async load(functionId: string, metadata: rpc.IRpcFunctionMetadata, packageJson: PackageJson): Promise<void> {
+    async load(
+        channel: WorkerChannel,
+        functionId: string,
+        metadata: rpc.IRpcFunctionMetadata,
+        packageJson: PackageJson
+    ): Promise<void> {
         if (metadata.isProxy === true) {
             return;
         }
-        const script: any = await loadScriptFile(nonNullProp(metadata, 'scriptFile'), packageJson);
+        const script: any = await loadScriptFile(channel, nonNullProp(metadata, 'scriptFile'), packageJson);
         const entryPoint = <string>(metadata && metadata.entryPoint);
         const [callback, thisArg] = getEntryPoint(script, entryPoint);
         this.#loadedFunctions[functionId] = { metadata, callback, thisArg };
