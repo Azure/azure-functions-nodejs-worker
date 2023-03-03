@@ -32,6 +32,7 @@ export namespace Msg {
         'workerInitResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
         'workerInitResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
         'workerInitResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
+        'workerInitResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
     };
 
     export const response = new RegExpStreamingMessage(
@@ -53,6 +54,9 @@ export namespace Msg {
                 },
                 workerMetadata: {
                     runtimeName: 'node',
+                    customProperties: {
+                        modelName: '@azure/functions',
+                    },
                 },
             },
         },

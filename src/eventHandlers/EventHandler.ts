@@ -31,7 +31,7 @@ export abstract class EventHandler<
     /**
      * The default response with any properties unique to this request that should be set for both success & failure scenarios
      */
-    abstract getDefaultResponse(request: TRequest): TResponse;
+    abstract getDefaultResponse(channel: WorkerChannel, request: TRequest): TResponse;
 
     /**
      * Handles the event and returns the response

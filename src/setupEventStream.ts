@@ -107,7 +107,7 @@ async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage
         }
 
         if (eventHandler && request) {
-            const response = eventHandler.getDefaultResponse(request);
+            const response = eventHandler.getDefaultResponse(channel, request);
             response.result = {
                 status: rpc.StatusResult.Status.Failure,
                 exception: {

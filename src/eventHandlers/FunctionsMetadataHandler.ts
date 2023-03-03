@@ -10,7 +10,7 @@ import LogLevel = rpc.RpcLog.Level;
 export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataRequest', 'functionMetadataResponse'> {
     readonly responseName = 'functionMetadataResponse';
 
-    getDefaultResponse(_msg: rpc.IFunctionsMetadataRequest): rpc.IFunctionMetadataResponse {
+    getDefaultResponse(_channel: WorkerChannel, _msg: rpc.IFunctionsMetadataRequest): rpc.IFunctionMetadataResponse {
         return {
             useDefaultMetadataIndexing: true,
         };
@@ -22,7 +22,7 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
     ): Promise<rpc.IFunctionMetadataResponse> {
         channel.workerIndexingLocked = true;
 
-        const response = this.getDefaultResponse(msg);
+        const response = this.getDefaultResponse(channel, msg);
 
         channel.log({
             message: `Worker ${channel.workerId} received FunctionsMetadataRequest`,

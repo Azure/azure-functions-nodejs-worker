@@ -29,7 +29,7 @@ import { EventHandler } from './EventHandler';
 export class InvocationHandler extends EventHandler<'invocationRequest', 'invocationResponse'> {
     readonly responseName = 'invocationResponse';
 
-    getDefaultResponse(msg: rpc.IInvocationRequest): rpc.IInvocationResponse {
+    getDefaultResponse(_channel: WorkerChannel, msg: rpc.IInvocationRequest): rpc.IInvocationResponse {
         return { invocationId: msg.invocationId };
     }
 
