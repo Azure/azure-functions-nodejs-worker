@@ -1,11 +1,11 @@
 {
     "name": "azure-functions-nodejs-worker",
     "author": "Microsoft Corporation",
-    "version": "3.5.3",
+    "version": "3.6.0",
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
-        "@azure/functions": "^3.5.0-alpha.5",
+        "@azure/functions": "^3.5.0",
         "@grpc/grpc-js": "^1.2.7",
         "@grpc/proto-loader": "^0.6.4",
         "blocked-at": "^1.2.0",
