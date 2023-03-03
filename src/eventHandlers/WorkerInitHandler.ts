@@ -4,12 +4,12 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { version as workerVersion } from '../constants';
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
+import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -19,19 +19,14 @@ import LogLevel = rpc.RpcLog.Level;
 export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'workerInitResponse'> {
     readonly responseName = 'workerInitResponse';
 
-    getDefaultResponse(_msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
+    getDefaultResponse(channel: WorkerChannel, _msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
         return {
-            workerMetadata: {
-                runtimeName: 'node',
-                runtimeVersion: process.versions.node,
-                workerBitness: process.arch,
-                workerVersion,
-            },
+            workerMetadata: getWorkerMetadata(channel),
         };
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
-        const response = this.getDefaultResponse(msg);
+        const response = this.getDefaultResponse(channel, msg);
 
         channel.log({
             message: `Worker ${channel.workerId} received WorkerInitRequest`,
@@ -45,6 +40,8 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         if (msg.functionAppDirectory) {
             await startApp(msg.functionAppDirectory, channel);
+            // model info may have changed, so we need to update this
+            response.workerMetadata = getWorkerMetadata(channel);
         }
 
         response.capabilities = {

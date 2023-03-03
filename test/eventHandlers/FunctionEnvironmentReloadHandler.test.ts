@@ -7,7 +7,7 @@ import * as mock from 'mock-fs';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
-import { TestEventStream } from './TestEventStream';
+import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
 import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
 import path = require('path');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -24,14 +24,30 @@ export namespace Msg {
         };
     }
 
-    export const reloadSuccess: rpc.IStreamingMessage = {
-        requestId: 'id',
-        functionEnvironmentReloadResponse: {
-            result: {
-                status: rpc.StatusResult.Status.Success,
+    const workerMetadataRegExps = {
+        'functionEnvironmentReloadResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
+        'functionEnvironmentReloadResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
+        'functionEnvironmentReloadResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
+        'functionEnvironmentReloadResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
+    };
+
+    export const reloadSuccess = new RegExpStreamingMessage(
+        {
+            requestId: 'id',
+            functionEnvironmentReloadResponse: {
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+                workerMetadata: {
+                    runtimeName: 'node',
+                    customProperties: {
+                        modelName: '@azure/functions',
+                    },
+                },
             },
         },
-    };
+        workerMetadataRegExps
+    );
 
     export const noHandlerRpcLog: rpc.IStreamingMessage = {
         rpcLog: {

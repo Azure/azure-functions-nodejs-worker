@@ -15,14 +15,14 @@ import LogLevel = rpc.RpcLog.Level;
 export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'functionLoadResponse'> {
     readonly responseName = 'functionLoadResponse';
 
-    getDefaultResponse(msg: rpc.IFunctionLoadRequest): rpc.IFunctionLoadResponse {
+    getDefaultResponse(_channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): rpc.IFunctionLoadResponse {
         return { functionId: msg.functionId };
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
         channel.workerIndexingLocked = true;
 
-        const response = this.getDefaultResponse(msg);
+        const response = this.getDefaultResponse(channel, msg);
 
         channel.log({
             message: `Worker ${channel.workerId} received FunctionLoadRequest`,

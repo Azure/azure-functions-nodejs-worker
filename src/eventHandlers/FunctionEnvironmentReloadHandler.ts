@@ -5,6 +5,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { startApp } from '../startApp';
 import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
+import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -17,15 +18,20 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
 > {
     readonly responseName = 'functionEnvironmentReloadResponse';
 
-    getDefaultResponse(_msg: rpc.IFunctionEnvironmentReloadRequest): rpc.IFunctionEnvironmentReloadResponse {
-        return {};
+    getDefaultResponse(
+        channel: WorkerChannel,
+        _msg: rpc.IFunctionEnvironmentReloadRequest
+    ): rpc.IFunctionEnvironmentReloadResponse {
+        return {
+            workerMetadata: getWorkerMetadata(channel),
+        };
     }
 
     async handleEvent(
         channel: WorkerChannel,
         msg: rpc.IFunctionEnvironmentReloadRequest
     ): Promise<rpc.IFunctionEnvironmentReloadResponse> {
-        const response = this.getDefaultResponse(msg);
+        const response = this.getDefaultResponse(channel, msg);
 
         // Add environment variables from incoming
         const numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
@@ -49,6 +55,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             });
             process.chdir(msg.functionAppDirectory);
             await startApp(msg.functionAppDirectory, channel);
+            // model info may have changed, so we need to update this
+            response.workerMetadata = getWorkerMetadata(channel);
         }
 
         return response;
