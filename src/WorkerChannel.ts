@@ -59,6 +59,13 @@ export class WorkerChannel {
         this.packageJson = {};
     }
 
+    reset(): void {
+        // Ideally this resets all app-related data
+        // That worked is tracked by https://github.com/Azure/azure-functions-nodejs-worker/issues/670
+        this.workerIndexingLocked = false;
+        this.isUsingWorkerIndexing = false;
+    }
+
     /**
      * Captured logs or relevant details can use the logs property
      * @param requestId gRPC message request id
