@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { EventEmitter } from 'events';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
@@ -86,9 +87,12 @@ export class TestEventStream extends EventEmitter implements IEventStream {
         }
         Object.assign(process.env, this.originalEnv);
 
-        // Reset require cache for entryPoint files that depend on timing
-        const filePath = path.join(__dirname, 'entryPointFiles/longLoad.js');
-        delete require.cache[require.resolve(filePath)];
+        // Reset require cache for entryPoint files, otherwise they're only ever loaded once
+        const entryPointFilesDir = path.join(__dirname, 'entryPointFiles');
+        const files = await fse.readdir(entryPointFilesDir);
+        for (const file of files) {
+            delete require.cache[require.resolve(path.join(entryPointFilesDir, file))];
+        }
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));

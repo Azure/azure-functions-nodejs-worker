@@ -80,6 +80,30 @@ export namespace Msg {
     export const noPackageJsonWarning: rpc.IStreamingMessage = warning(
         `Worker failed to load package.json: file does not exist`
     );
+
+    export function indexingSuccess(functions: rpc.IRpcFunctionMetadata[] = []): rpc.IStreamingMessage {
+        const response: rpc.IStreamingMessage = {
+            requestId: 'id',
+            functionMetadataResponse: {
+                useDefaultMetadataIndexing: functions.length === 0,
+                result: {
+                    status: rpc.StatusResult.Status.Success,
+                },
+            },
+        };
+        if (functions.length > 0) {
+            response.functionMetadataResponse!.functionMetadataResults = functions;
+        }
+        return response;
+    }
+
+    export const receivedIndexingLog: rpc.IStreamingMessage = {
+        rpcLog: {
+            message: 'Worker 00000000-0000-0000-0000-000000000000 received FunctionsMetadataRequest',
+            level: LogLevel.Debug,
+            logCategory: LogCategory.System,
+        },
+    };
 }
 
 describe('FunctionEnvironmentReloadHandler', () => {
@@ -92,6 +116,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
 
     afterEach(async () => {
         mock.restore();
+        channel.reset();
         await stream.afterEachEventHandlerTest();
     });
 
@@ -305,24 +330,26 @@ describe('FunctionEnvironmentReloadHandler', () => {
         expect(channel.packageJson).to.deep.equal(packageJson);
     });
 
+    const tempDir = 'temp';
+    const entryPointFilesFullPath = path.join(__dirname, 'entryPointFiles');
+    async function mockEntryPointFiles(fileName: string): Promise<string> {
+        const fileSubpath = `entryPointFiles/${fileName}`;
+        mock({
+            [tempDir]: {},
+            [__dirname]: {
+                'package.json': JSON.stringify({ main: fileSubpath }),
+                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
+                entryPointFiles: mock.load(entryPointFilesFullPath),
+            },
+        });
+        return fileSubpath;
+    }
+
     for (const extension of ['.js', '.mjs', '.cjs']) {
         it(`Loads entry point (${extension}) in specialization scenario`, async () => {
-            const cwd = process.cwd();
-            const tempDir = 'temp';
-            const fileName = `entryPointFiles/doNothing${extension}`;
-            const expectedPackageJson = {
-                main: fileName,
-            };
-            mock({
-                [tempDir]: {},
-                [__dirname]: {
-                    'package.json': JSON.stringify(expectedPackageJson),
-                    // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                    entryPointFiles: mock.load(path.join(__dirname, 'entryPointFiles')),
-                },
-            });
+            const fileSubpath = await mockEntryPointFiles(`doNothing${extension}`);
 
-            stream.addTestMessage(WorkerInitMsg.init(path.join(cwd, tempDir)));
+            stream.addTestMessage(WorkerInitMsg.init(path.join(process.cwd(), tempDir)));
             await stream.assertCalledWith(
                 WorkerInitMsg.receivedInitLog,
                 WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
@@ -338,9 +365,66 @@ describe('FunctionEnvironmentReloadHandler', () => {
             await stream.assertCalledWith(
                 Msg.reloadEnvVarsLog(0),
                 Msg.changingCwdLog(__dirname),
-                WorkerInitMsg.loadingEntryPoint(fileName),
-                WorkerInitMsg.loadedEntryPoint(fileName),
+                WorkerInitMsg.loadingEntryPoint(fileSubpath),
+                WorkerInitMsg.loadedEntryPoint(fileSubpath),
                 Msg.reloadSuccess
+            );
+        });
+    }
+
+    for (const isIndexingOnByDefault of [true, false]) {
+        it(`registerFunction for placeholders (indexing on by default: ${isIndexingOnByDefault})`, async () => {
+            const fileName = 'registerFunction.js';
+            const fileSubpath = await mockEntryPointFiles(fileName);
+            stream.addTestMessage(WorkerInitMsg.init(path.join(process.cwd(), tempDir)));
+            await stream.assertCalledWith(
+                WorkerInitMsg.receivedInitLog,
+                WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
+                WorkerInitMsg.response
+            );
+
+            if (isIndexingOnByDefault) {
+                stream.addTestMessage({
+                    requestId: 'id',
+                    functionsMetadataRequest: {
+                        functionAppDirectory: tempDir,
+                    },
+                });
+                await stream.assertCalledWith(Msg.receivedIndexingLog, Msg.indexingSuccess());
+            }
+
+            stream.addTestMessage({
+                requestId: 'id',
+                functionEnvironmentReloadRequest: {
+                    functionAppDirectory: __dirname,
+                },
+            });
+            await stream.assertCalledWith(
+                Msg.reloadEnvVarsLog(0),
+                Msg.changingCwdLog(__dirname),
+                WorkerInitMsg.loadingEntryPoint(fileSubpath),
+                WorkerInitMsg.loadedEntryPoint(fileSubpath),
+                Msg.reloadSuccess
+            );
+
+            stream.addTestMessage({
+                requestId: 'id',
+                functionsMetadataRequest: {
+                    functionAppDirectory: __dirname,
+                },
+            });
+            await stream.assertCalledWith(
+                Msg.receivedIndexingLog,
+                Msg.indexingSuccess([
+                    {
+                        bindings: {},
+                        directory: entryPointFilesFullPath,
+                        functionId: 'testFunc',
+                        name: 'testFunc',
+                        rawBindings: [],
+                        scriptFile: fileName,
+                    },
+                ])
             );
         });
     }
