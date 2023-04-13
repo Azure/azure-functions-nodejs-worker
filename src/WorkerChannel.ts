@@ -4,9 +4,9 @@
 import { FunctionCallback, HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
-import { AzFuncRangeError, AzFuncSystemError, ensureErrorType } from './errors';
 import { IEventStream } from './GrpcClient';
 import { ILegacyFunctionLoader } from './LegacyFunctionLoader';
+import { AzFuncRangeError, AzFuncSystemError, ensureErrorType } from './errors';
 import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -43,10 +43,10 @@ export class WorkerChannel {
      */
     appLevelOnlyHookData: HookData = {};
     programmingModel?: ProgrammingModel;
-    #preInvocationHooks: HookCallback[] = [];
-    #postInvocationHooks: HookCallback[] = [];
-    #appStartHooks: HookCallback[] = [];
-    #appTerminateHooks: HookCallback[] = [];
+    preInvocationHooks: HookCallback[] = [];
+    postInvocationHooks: HookCallback[] = [];
+    appStartHooks: HookCallback[] = [];
+    appTerminateHooks: HookCallback[] = [];
     functions: { [id: string]: RegisteredFunction } = {};
     workerIndexingLocked = false;
     isUsingWorkerIndexing = false;
@@ -119,13 +119,13 @@ export class WorkerChannel {
     #getHooks(hookName: string): HookCallback[] {
         switch (hookName) {
             case 'preInvocation':
-                return this.#preInvocationHooks;
+                return this.preInvocationHooks;
             case 'postInvocation':
-                return this.#postInvocationHooks;
+                return this.postInvocationHooks;
             case 'appStart':
-                return this.#appStartHooks;
+                return this.appStartHooks;
             case 'appTerminate':
-                return this.#appTerminateHooks;
+                return this.appTerminateHooks;
             default:
                 throw new AzFuncRangeError(`Unrecognized hook "${hookName}"`);
         }

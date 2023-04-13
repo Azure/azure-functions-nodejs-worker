@@ -3,13 +3,14 @@
 
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { RegisteredFunction, WorkerChannel } from './WorkerChannel';
 import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { nonNullProp } from './utils/nonNull';
-import { RegisteredFunction, WorkerChannel } from './WorkerChannel';
 
 export interface ILegacyFunctionLoader {
+    loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined };
     load(
         channel: WorkerChannel,
         functionId: string,
@@ -24,7 +25,7 @@ interface LegacyRegisteredFunction extends RegisteredFunction {
 }
 
 export class LegacyFunctionLoader implements ILegacyFunctionLoader {
-    #loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined } = {};
+    loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined } = {};
 
     async load(
         channel: WorkerChannel,
@@ -38,11 +39,11 @@ export class LegacyFunctionLoader implements ILegacyFunctionLoader {
         const script: any = await loadScriptFile(channel, nonNullProp(metadata, 'scriptFile'), packageJson);
         const entryPoint = <string>(metadata && metadata.entryPoint);
         const [callback, thisArg] = getEntryPoint(script, entryPoint);
-        this.#loadedFunctions[functionId] = { metadata, callback, thisArg };
+        this.loadedFunctions[functionId] = { metadata, callback, thisArg };
     }
 
     getFunction(functionId: string): RegisteredFunction | undefined {
-        const loadedFunction = this.#loadedFunctions[functionId];
+        const loadedFunction = this.loadedFunctions[functionId];
         if (loadedFunction) {
             return {
                 metadata: loadedFunction.metadata,

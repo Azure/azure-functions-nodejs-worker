@@ -3,11 +3,13 @@
 
 import { expect } from 'chai';
 import { EventEmitter } from 'events';
-import * as fse from 'fs-extra';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
+import { WorkerChannel } from '../../src/WorkerChannel';
+import { testAppSrcPath, testPackageJsonPath } from './testAppUtils';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
     originalEnv: NodeJS.ProcessEnv;
@@ -77,7 +79,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Verifies the test didn't send any extraneous messages
      */
-    async afterEachEventHandlerTest(): Promise<void> {
+    async afterEachEventHandlerTest(channel: WorkerChannel): Promise<void> {
         // Reset `process.env` and process.cwd() after each test so it doesn't affect other tests
         process.chdir(this.originalCwd);
         for (const key of Object.keys(process.env)) {
@@ -87,12 +89,25 @@ export class TestEventStream extends EventEmitter implements IEventStream {
         }
         Object.assign(process.env, this.originalEnv);
 
-        // Reset require cache for entryPoint files, otherwise they're only ever loaded once
-        const entryPointFilesDir = path.join(__dirname, 'entryPointFiles');
-        const files = await fse.readdir(entryPointFilesDir);
+        // Reset require cache for test app files, otherwise they're only ever loaded once
+        const files = await fs.readdir(testAppSrcPath);
         for (const file of files) {
-            delete require.cache[require.resolve(path.join(entryPointFilesDir, file))];
+            delete require.cache[require.resolve(path.join(testAppSrcPath, file))];
         }
+
+        await fs.writeFile(testPackageJsonPath, '{}');
+
+        // NOTE: Temporarily resetting a bunch of stuff here in the test code.
+        // This will be unnecessary once we fix https://github.com/Azure/azure-functions-nodejs-worker/issues/670
+        channel._hostVersion = undefined;
+        channel.legacyFunctionLoader.loadedFunctions = {};
+        channel.appStartHooks = [];
+        channel.appTerminateHooks = [];
+        channel.preInvocationHooks = [];
+        channel.postInvocationHooks = [];
+        channel.appHookData = {};
+        channel.appLevelOnlyHookData = {};
+        channel.reset();
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));
@@ -156,7 +171,7 @@ function convertHttpResponse(msg: rpc.IStreamingMessage): rpc.IStreamingMessage 
     return msg;
 }
 
-type RegExpProps = { [keyPath: string]: RegExp };
+export type RegExpProps = { [keyPath: string]: RegExp };
 
 /**
  * Allows you to use regular expressions to validate properties of the message instead of just deep equal
