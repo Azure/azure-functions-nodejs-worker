@@ -18,6 +18,15 @@ function stackTraceRegExpProps(responseName: string, message: string): RegExpPro
     };
 }
 
+function workerMetadataRegExps(responseName: string) {
+    return {
+        [`${responseName}.workerMetadata.runtimeVersion`]: /^[0-9]+\.[0-9]+\.[0-9]+$/,
+        [`${responseName}.workerMetadata.workerBitness`]: /^(x64|ia32|arm64)$/,
+        [`${responseName}.workerMetadata.workerVersion`]: /^3\.[0-9]+\.[0-9]+$/,
+        [`${responseName}.workerMetadata.customProperties.modelVersion`]: /^3\.[0-9]+\.[0-9]+$/,
+    };
+}
+
 export namespace msg {
     export function errorLog(message: string | RegExp): TestMessage {
         return log(message, LogLevel.Error);
@@ -120,13 +129,6 @@ export namespace msg {
             };
         }
 
-        const workerMetadataRegExps = {
-            'workerInitResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
-            'workerInitResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
-            'workerInitResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
-            'workerInitResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
-        };
-
         export const response = new RegExpStreamingMessage(
             {
                 requestId: 'testReqId',
@@ -152,7 +154,7 @@ export namespace msg {
                     },
                 },
             },
-            workerMetadataRegExps
+            workerMetadataRegExps('workerInitResponse')
         );
 
         export function failedResponse(fileName: string, errorMessage: string): RegExpStreamingMessage {
@@ -172,7 +174,7 @@ export namespace msg {
             };
             return new RegExpStreamingMessage(expectedMsg, {
                 ...stackTraceRegExpProps('workerInitResponse', errorMessage),
-                ...workerMetadataRegExps,
+                ...workerMetadataRegExps('workerInitResponse'),
             });
         }
     }
@@ -185,13 +187,6 @@ export namespace msg {
         export function changingCwdLog(dir = '/'): TestMessage {
             return msg.infoLog(`Changing current working directory to ${dir}`);
         }
-
-        const workerMetadataRegExps = {
-            'functionEnvironmentReloadResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
-            'functionEnvironmentReloadResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
-            'functionEnvironmentReloadResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
-            'functionEnvironmentReloadResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
-        };
 
         export const response = new RegExpStreamingMessage(
             {
@@ -208,7 +203,7 @@ export namespace msg {
                     },
                 },
             },
-            workerMetadataRegExps
+            workerMetadataRegExps('functionEnvironmentReloadResponse')
         );
     }
 
