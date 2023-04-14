@@ -9,7 +9,6 @@ import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
@@ -214,13 +213,12 @@ namespace InputData {
 
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
-    let loader: LegacyFunctionLoader;
     let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let processExitStub: sinon.SinonStub;
 
     before(async () => {
-        ({ stream, loader, channel } = beforeEventHandlerSuite());
+        ({ stream, channel } = beforeEventHandlerSuite());
         coreApi = await import('@azure/functions-core');
         processExitStub = sinon.stub(process, 'exit');
     });
@@ -261,7 +259,7 @@ describe('InvocationHandler', () => {
     }
 
     function registerV3Func(metadata: rpc.IRpcFunctionMetadata, callback: AzureFunction): void {
-        loader.loadedFunctions.testFuncId = {
+        channel.app.legacyFunctions.testFuncId = {
             metadata,
             callback: <coreTypes.FunctionCallback>callback,
             thisArg: undefined,
@@ -514,7 +512,6 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.logHookData) {
         it('postInvocationHook' + suffix, async () => {
-            channel.functions;
             registerV3Func(Binding.queue, func);
 
             coreApi.registerHook('postInvocation', (context: coreTypes.PostInvocationContext) => {

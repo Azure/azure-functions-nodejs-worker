@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import 'mocha';
-import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
+import { getLegacyFunction } from '../../src/LegacyFunctionLoader';
 import { WorkerChannel } from '../../src/WorkerChannel';
 import { nonNullValue } from '../../src/utils/nonNull';
 import { TestEventStream } from './TestEventStream';
@@ -13,10 +13,9 @@ import { msg } from './msg';
 describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;
     let channel: WorkerChannel;
-    let loader: LegacyFunctionLoader;
 
     before(() => {
-        ({ stream, channel, loader } = beforeEventHandlerSuite());
+        ({ stream, channel } = beforeEventHandlerSuite());
     });
 
     afterEach(async () => {
@@ -26,7 +25,7 @@ describe('FunctionLoadHandler', () => {
     it('responds to function load', async () => {
         stream.addTestMessage(msg.funcLoad.request('helloWorld.js'));
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
-        expect(Object.keys(loader.loadedFunctions).length).to.equal(1);
+        expect(Object.keys(channel.app.legacyFunctions).length).to.equal(1);
     });
 
     it('handles function load exception', async () => {
@@ -72,7 +71,7 @@ describe('FunctionLoadHandler', () => {
 
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
 
-        expect(Object.keys(loader.loadedFunctions).length).to.equal(0);
+        expect(Object.keys(channel.app.legacyFunctions).length).to.equal(0);
     });
 
     it('throws the resolved entry point is not a function', async () => {
@@ -93,10 +92,10 @@ describe('FunctionLoadHandler', () => {
 
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
 
-        const userFunction = nonNullValue(loader.getFunction('testFuncId')).callback;
+        const userFunction = nonNullValue(getLegacyFunction(channel, 'testFuncId')).callback;
         Object.assign(userFunction, { hello: 'world' });
 
-        const userFunction2 = nonNullValue(loader.getFunction('testFuncId')).callback;
+        const userFunction2 = nonNullValue(getLegacyFunction(channel, 'testFuncId')).callback;
 
         expect(userFunction).to.not.equal(userFunction2);
         expect(userFunction['hello']).to.equal('world');

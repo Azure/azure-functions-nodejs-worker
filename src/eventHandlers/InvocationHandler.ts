@@ -14,13 +14,15 @@ import {
     RpcLogLevel,
 } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { RegisteredFunction } from '../AppContext';
+import { getLegacyFunction } from '../LegacyFunctionLoader';
+import { WorkerChannel } from '../WorkerChannel';
 import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvocationResponse';
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
-import { AzFuncSystemError, isError, ReadOnlyError } from '../errors';
+import { AzFuncSystemError, ReadOnlyError, isError } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
-import { RegisteredFunction, WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 
 /**
@@ -36,10 +38,10 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
     async handleEvent(channel: WorkerChannel, msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
         const functionId = nonNullProp(msg, 'functionId');
         let registeredFunc: RegisteredFunction | undefined;
-        if (channel.isUsingWorkerIndexing) {
-            registeredFunc = channel.functions[functionId];
+        if (channel.app.isUsingWorkerIndexing) {
+            registeredFunc = channel.app.functions[functionId];
         } else {
-            registeredFunc = channel.legacyFunctionLoader.getFunction(functionId);
+            registeredFunc = getLegacyFunction(channel, functionId);
         }
 
         if (!registeredFunc) {
@@ -59,7 +61,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         // Log invocation details to ensure the invocation received by node worker
         coreCtx.log('debug', 'system', `Worker ${channel.workerId} received FunctionInvocationRequest`);
 
-        const programmingModel: ProgrammingModel = nonNullProp(channel, 'programmingModel');
+        const programmingModel: ProgrammingModel = nonNullProp(channel.app, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);
 
         const hookData: HookData = {};
@@ -73,7 +75,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 throw new ReadOnlyError('hookData');
             },
             get appHookData() {
-                return channel.appHookData;
+                return channel.app.appHookData;
             },
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');
@@ -106,7 +108,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 throw new ReadOnlyError('hookData');
             },
             get appHookData() {
-                return channel.appHookData;
+                return channel.app.appHookData;
             },
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');

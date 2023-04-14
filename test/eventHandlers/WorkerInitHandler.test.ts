@@ -60,13 +60,13 @@ describe('WorkerInitHandler', () => {
 
         stream.addTestMessage(msg.init.request(testAppPath));
         await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
-        expect(channel.packageJson).to.deep.equal(expectedPackageJson);
+        expect(channel.app.packageJson).to.deep.equal(expectedPackageJson);
     });
 
     it('loads empty package.json', async () => {
         stream.addTestMessage(msg.init.request('folderWithoutPackageJson'));
         await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
-        expect(channel.packageJson).to.be.empty;
+        expect(channel.app.packageJson).to.be.empty;
     });
 
     it('ignores malformed package.json', async () => {
@@ -84,7 +84,7 @@ describe('WorkerInitHandler', () => {
             ),
             msg.init.response
         );
-        expect(channel.packageJson).to.be.empty;
+        expect(channel.app.packageJson).to.be.empty;
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {

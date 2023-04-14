@@ -3,56 +3,38 @@
 
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { RegisteredFunction, WorkerChannel } from './WorkerChannel';
+import { RegisteredFunction } from './AppContext';
+import { WorkerChannel } from './WorkerChannel';
 import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { nonNullProp } from './utils/nonNull';
 
-export interface ILegacyFunctionLoader {
-    loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined };
-    load(
-        channel: WorkerChannel,
-        functionId: string,
-        metadata: rpc.IRpcFunctionMetadata,
-        packageJson: PackageJson
-    ): Promise<void>;
-    getFunction(functionId: string): RegisteredFunction | undefined;
-}
-
-interface LegacyRegisteredFunction extends RegisteredFunction {
-    thisArg: unknown;
-}
-
-export class LegacyFunctionLoader implements ILegacyFunctionLoader {
-    loadedFunctions: { [k: string]: LegacyRegisteredFunction | undefined } = {};
-
-    async load(
-        channel: WorkerChannel,
-        functionId: string,
-        metadata: rpc.IRpcFunctionMetadata,
-        packageJson: PackageJson
-    ): Promise<void> {
-        if (metadata.isProxy === true) {
-            return;
-        }
-        const script: any = await loadScriptFile(channel, nonNullProp(metadata, 'scriptFile'), packageJson);
-        const entryPoint = <string>(metadata && metadata.entryPoint);
-        const [callback, thisArg] = getEntryPoint(script, entryPoint);
-        this.loadedFunctions[functionId] = { metadata, callback, thisArg };
+export async function loadLegacyFunction(
+    channel: WorkerChannel,
+    functionId: string,
+    metadata: rpc.IRpcFunctionMetadata,
+    packageJson: PackageJson
+): Promise<void> {
+    if (metadata.isProxy === true) {
+        return;
     }
+    const script: any = await loadScriptFile(channel, nonNullProp(metadata, 'scriptFile'), packageJson);
+    const entryPoint = <string>(metadata && metadata.entryPoint);
+    const [callback, thisArg] = getEntryPoint(script, entryPoint);
+    channel.app.legacyFunctions[functionId] = { metadata, callback, thisArg };
+}
 
-    getFunction(functionId: string): RegisteredFunction | undefined {
-        const loadedFunction = this.loadedFunctions[functionId];
-        if (loadedFunction) {
-            return {
-                metadata: loadedFunction.metadata,
-                // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
-                callback: loadedFunction.callback.bind(loadedFunction.thisArg),
-            };
-        } else {
-            return undefined;
-        }
+export function getLegacyFunction(channel: WorkerChannel, functionId: string): RegisteredFunction | undefined {
+    const loadedFunction = channel.app.legacyFunctions[functionId];
+    if (loadedFunction) {
+        return {
+            metadata: loadedFunction.metadata,
+            // `bind` is necessary to set the `this` arg, but it's also nice because it makes a clone of the function, preventing this invocation from affecting future invocations
+            callback: loadedFunction.callback.bind(loadedFunction.thisArg),
+        };
+    } else {
+        return undefined;
     }
 }
 
