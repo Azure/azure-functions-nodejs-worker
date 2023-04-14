@@ -2,109 +2,13 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as fs from 'fs/promises';
 import 'mocha';
-import * as mock from 'mock-fs';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { WorkerChannel } from '../../src/WorkerChannel';
+import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
-import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
-import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
-import path = require('path');
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
-
-export namespace Msg {
-    export function reloadEnvVarsLog(numVars: number): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message: `Reloading environment variables. Found ${numVars} variables to reload.`,
-                level: LogLevel.Information,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    const workerMetadataRegExps = {
-        'functionEnvironmentReloadResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
-        'functionEnvironmentReloadResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
-        'functionEnvironmentReloadResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
-        'functionEnvironmentReloadResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
-    };
-
-    export const reloadSuccess = new RegExpStreamingMessage(
-        {
-            requestId: 'id',
-            functionEnvironmentReloadResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-                workerMetadata: {
-                    runtimeName: 'node',
-                    customProperties: {
-                        modelName: '@azure/functions',
-                    },
-                },
-            },
-        },
-        workerMetadataRegExps
-    );
-
-    export const noHandlerRpcLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: "Worker had no handler for message 'undefined'",
-            level: LogLevel.Error,
-            logCategory: LogCategory.System,
-        },
-    };
-
-    export function changingCwdLog(dir = '/'): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message: `Changing current working directory to ${dir}`,
-                level: LogLevel.Information,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    export function warning(message: string): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    export const noPackageJsonWarning: rpc.IStreamingMessage = warning(
-        `Worker failed to load package.json: file does not exist`
-    );
-
-    export function indexingSuccess(functions: rpc.IRpcFunctionMetadata[] = []): rpc.IStreamingMessage {
-        const response: rpc.IStreamingMessage = {
-            requestId: 'id',
-            functionMetadataResponse: {
-                useDefaultMetadataIndexing: functions.length === 0,
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-            },
-        };
-        if (functions.length > 0) {
-            response.functionMetadataResponse!.functionMetadataResults = functions;
-        }
-        return response;
-    }
-
-    export const receivedIndexingLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: 'Worker 00000000-0000-0000-0000-000000000000 received FunctionsMetadataRequest',
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
-        },
-    };
-}
+import { msg } from './msg';
+import { setTestAppMainField, testAppPath, testAppSrcPath, testPackageJsonPath } from './testAppUtils';
 
 describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;
@@ -115,15 +19,18 @@ describe('FunctionEnvironmentReloadHandler', () => {
     });
 
     afterEach(async () => {
-        mock.restore();
-        channel.reset();
-        await stream.afterEachEventHandlerTest();
+        await stream.afterEachEventHandlerTest(channel);
     });
+
+    async function mockPlaceholderInit(): Promise<void> {
+        stream.addTestMessage(msg.init.request('pathWithoutPackageJson'));
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
+    }
 
     it('reloads environment variables', async () => {
         process.env.PlaceholderVariable = 'TRUE';
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {
                     hello: 'world',
@@ -132,7 +39,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
@@ -141,7 +48,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
     it('preserves OS-specific casing behavior of environment variables', async () => {
         process.env.PlaceholderVariable = 'TRUE';
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {
                     hello: 'world',
@@ -150,7 +57,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
@@ -168,47 +75,47 @@ describe('FunctionEnvironmentReloadHandler', () => {
         process.env.PlaceholderVariable = 'TRUE';
         process.env.NODE_ENV = 'Debug';
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {},
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
         expect(process.env).to.be.empty;
     });
 
     it('reloads empty environment variables', async () => {
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {},
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
 
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: null,
         });
 
-        await stream.assertCalledWith(Msg.noHandlerRpcLog);
+        await stream.assertCalledWith(msg.noHandlerError);
 
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: null,
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
     });
 
     it('reloads environment variable and keeps cwd without functionAppDirectory', async () => {
         const cwd = process.cwd();
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {
                     hello: 'world',
@@ -217,7 +124,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(2), Msg.reloadSuccess);
+        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() == cwd);
@@ -227,7 +134,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         const cwd = process.cwd();
         const newDir = '/';
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
                 environmentVariables: {
                     hello: 'world',
@@ -238,10 +145,10 @@ describe('FunctionEnvironmentReloadHandler', () => {
         });
 
         await stream.assertCalledWith(
-            Msg.reloadEnvVarsLog(2),
-            Msg.changingCwdLog(),
-            Msg.noPackageJsonWarning,
-            Msg.reloadSuccess
+            msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.changingCwdLog(),
+            msg.noPackageJsonWarning,
+            msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
@@ -251,123 +158,76 @@ describe('FunctionEnvironmentReloadHandler', () => {
     });
 
     it('reloads package.json', async () => {
-        const cwd = process.cwd();
-        const oldDir = 'oldDir';
-        const oldDirAbsolute = path.join(cwd, oldDir);
-        const newDir = 'newDir';
-        const newDirAbsolute = path.join(cwd, newDir);
-        const oldPackageJson = {
-            type: 'module',
-            hello: 'world',
-        };
-        const newPackageJson = {
-            type: 'commonjs',
-            notHello: 'notWorld',
-        };
-        mock({
-            [oldDir]: {
-                'package.json': JSON.stringify(oldPackageJson),
-            },
-            [newDir]: {
-                'package.json': JSON.stringify(newPackageJson),
-            },
-        });
-
+        const oldPackageJson = { type: 'module', hello: 'world' };
+        await fs.writeFile(testPackageJsonPath, JSON.stringify(oldPackageJson));
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
-                functionAppDirectory: oldDirAbsolute,
+                functionAppDirectory: testAppPath,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(oldDirAbsolute), Msg.reloadSuccess);
+        await stream.assertCalledWith(
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.response
+        );
         expect(channel.packageJson).to.deep.equal(oldPackageJson);
 
+        const newPackageJson = { type: 'commonjs', notHello: 'notWorld' };
+        await fs.writeFile(testPackageJsonPath, JSON.stringify(newPackageJson));
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
-                functionAppDirectory: newDirAbsolute,
+                functionAppDirectory: testAppPath,
             },
         });
-        await stream.assertCalledWith(Msg.reloadEnvVarsLog(0), Msg.changingCwdLog(newDirAbsolute), Msg.reloadSuccess);
+        await stream.assertCalledWith(
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.response
+        );
         expect(channel.packageJson).to.deep.equal(newPackageJson);
     });
 
-    it('correctly loads package.json in specialization scenario', async () => {
-        const cwd = process.cwd();
-        const tempDir = 'temp';
-        const appDir = 'app';
-        const packageJson = {
-            type: 'module',
-            hello: 'world',
-        };
+    it('loads package.json (placeholder scenario)', async () => {
+        const packageJson = { type: 'module', hello: 'world' };
+        await fs.writeFile(testPackageJsonPath, JSON.stringify(packageJson));
 
-        mock({
-            [tempDir]: {},
-            [appDir]: {
-                'package.json': JSON.stringify(packageJson),
-            },
-        });
-
-        stream.addTestMessage(WorkerInitMsg.init(path.join(cwd, tempDir)));
-        await stream.assertCalledWith(
-            WorkerInitMsg.receivedInitLog,
-            WorkerInitMsg.warning(`Worker failed to load package.json: file does not exist`),
-            WorkerInitMsg.response
-        );
+        await mockPlaceholderInit();
         expect(channel.packageJson).to.be.empty;
 
         stream.addTestMessage({
-            requestId: 'id',
+            requestId: 'testReqId',
             functionEnvironmentReloadRequest: {
-                functionAppDirectory: path.join(cwd, appDir),
+                functionAppDirectory: testAppPath,
             },
         });
         await stream.assertCalledWith(
-            Msg.reloadEnvVarsLog(0),
-            Msg.changingCwdLog(path.join(cwd, appDir)),
-            Msg.reloadSuccess
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.response
         );
         expect(channel.packageJson).to.deep.equal(packageJson);
     });
 
-    const tempDir = 'temp';
-    const entryPointFilesFullPath = path.join(__dirname, 'entryPointFiles');
-    async function mockEntryPointFiles(fileName: string): Promise<string> {
-        const fileSubpath = `entryPointFiles/${fileName}`;
-        mock({
-            [tempDir]: {},
-            [__dirname]: {
-                'package.json': JSON.stringify({ main: fileSubpath }),
-                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                entryPointFiles: mock.load(entryPointFilesFullPath),
-            },
-        });
-        return fileSubpath;
-    }
-
     for (const extension of ['.js', '.mjs', '.cjs']) {
-        it(`Loads entry point (${extension}) in specialization scenario`, async () => {
-            const fileSubpath = await mockEntryPointFiles(`doNothing${extension}`);
+        it(`Loads entry point (${extension}) (placeholder scenario)`, async () => {
+            const fileSubpath = await setTestAppMainField(`doNothing${extension}`);
 
-            stream.addTestMessage(WorkerInitMsg.init(path.join(process.cwd(), tempDir)));
-            await stream.assertCalledWith(
-                WorkerInitMsg.receivedInitLog,
-                WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-                WorkerInitMsg.response
-            );
+            await mockPlaceholderInit();
 
             stream.addTestMessage({
-                requestId: 'id',
+                requestId: 'testReqId',
                 functionEnvironmentReloadRequest: {
-                    functionAppDirectory: __dirname,
+                    functionAppDirectory: testAppPath,
                 },
             });
             await stream.assertCalledWith(
-                Msg.reloadEnvVarsLog(0),
-                Msg.changingCwdLog(__dirname),
-                WorkerInitMsg.loadingEntryPoint(fileSubpath),
-                WorkerInitMsg.loadedEntryPoint(fileSubpath),
-                Msg.reloadSuccess
+                msg.envReload.reloadEnvVarsLog(0),
+                msg.envReload.changingCwdLog(testAppPath),
+                msg.loadingEntryPoint(fileSubpath),
+                msg.loadedEntryPoint(fileSubpath),
+                msg.envReload.response
             );
         });
     }
@@ -375,50 +235,45 @@ describe('FunctionEnvironmentReloadHandler', () => {
     for (const isIndexingOnByDefault of [true, false]) {
         it(`registerFunction for placeholders (indexing on by default: ${isIndexingOnByDefault})`, async () => {
             const fileName = 'registerFunction.js';
-            const fileSubpath = await mockEntryPointFiles(fileName);
-            stream.addTestMessage(WorkerInitMsg.init(path.join(process.cwd(), tempDir)));
-            await stream.assertCalledWith(
-                WorkerInitMsg.receivedInitLog,
-                WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-                WorkerInitMsg.response
-            );
+            const fileSubpath = await setTestAppMainField(fileName);
+            await mockPlaceholderInit();
 
             if (isIndexingOnByDefault) {
                 stream.addTestMessage({
-                    requestId: 'id',
+                    requestId: 'testReqId',
                     functionsMetadataRequest: {
-                        functionAppDirectory: tempDir,
+                        functionAppDirectory: 'pathWithoutPackageJson',
                     },
                 });
-                await stream.assertCalledWith(Msg.receivedIndexingLog, Msg.indexingSuccess());
+                await stream.assertCalledWith(msg.indexing.receivedRequestLog, msg.indexing.response());
             }
 
             stream.addTestMessage({
-                requestId: 'id',
+                requestId: 'testReqId',
                 functionEnvironmentReloadRequest: {
-                    functionAppDirectory: __dirname,
+                    functionAppDirectory: testAppPath,
                 },
             });
             await stream.assertCalledWith(
-                Msg.reloadEnvVarsLog(0),
-                Msg.changingCwdLog(__dirname),
-                WorkerInitMsg.loadingEntryPoint(fileSubpath),
-                WorkerInitMsg.loadedEntryPoint(fileSubpath),
-                Msg.reloadSuccess
+                msg.envReload.reloadEnvVarsLog(0),
+                msg.envReload.changingCwdLog(testAppPath),
+                msg.loadingEntryPoint(fileSubpath),
+                msg.loadedEntryPoint(fileSubpath),
+                msg.envReload.response
             );
 
             stream.addTestMessage({
-                requestId: 'id',
+                requestId: 'testReqId',
                 functionsMetadataRequest: {
-                    functionAppDirectory: __dirname,
+                    functionAppDirectory: testAppPath,
                 },
             });
             await stream.assertCalledWith(
-                Msg.receivedIndexingLog,
-                Msg.indexingSuccess([
+                msg.indexing.receivedRequestLog,
+                msg.indexing.response([
                     {
                         bindings: {},
-                        directory: entryPointFilesFullPath,
+                        directory: testAppSrcPath,
                         functionId: 'testFunc',
                         name: 'testFunc',
                         rawBindings: [],
@@ -428,4 +283,25 @@ describe('FunctionEnvironmentReloadHandler', () => {
             );
         });
     }
+
+    it('runs app start hooks (placeholder scenario)', async () => {
+        const fileSubpath = await setTestAppMainField('registerAppStartHook.js');
+        await mockPlaceholderInit();
+
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: testAppPath,
+            },
+        });
+        await stream.assertCalledWith(
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.changingCwdLog(testAppPath),
+            msg.loadingEntryPoint(fileSubpath),
+            msg.loadedEntryPoint(fileSubpath),
+            msg.executingAppHooksLog(1, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.envReload.response
+        );
+    });
 });

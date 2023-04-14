@@ -1,186 +1,42 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
-import * as escapeStringRegexp from 'escape-string-regexp';
+import * as fs from 'fs/promises';
 import 'mocha';
 import { ITestCallbackContext } from 'mocha';
-import * as mockFs from 'mock-fs';
 import * as semver from 'semver';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { WorkerChannel } from '../../src/WorkerChannel';
+import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
+import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
-import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
-import path = require('path');
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
-
-export namespace Msg {
-    export function init(functionAppDirectory: string = __dirname, hostVersion = '2.7.0'): rpc.IStreamingMessage {
-        return {
-            requestId: 'id',
-            workerInitRequest: {
-                capabilities: {},
-                functionAppDirectory,
-                hostVersion,
-            },
-        };
-    }
-
-    const workerMetadataRegExps = {
-        'workerInitResponse.workerMetadata.runtimeVersion': /^[0-9]+\.[0-9]+\.[0-9]+$/,
-        'workerInitResponse.workerMetadata.workerBitness': /^(x64|ia32|arm64)$/,
-        'workerInitResponse.workerMetadata.workerVersion': /^3\.[0-9]+\.[0-9]+$/,
-        'workerInitResponse.workerMetadata.customProperties.modelVersion': /^3\.[0-9]+\.[0-9]+$/,
-    };
-
-    export const response = new RegExpStreamingMessage(
-        {
-            requestId: 'id',
-            workerInitResponse: {
-                capabilities: {
-                    RawHttpBodyBytes: 'true',
-                    RpcHttpBodyOnly: 'true',
-                    RpcHttpTriggerMetadataRemoved: 'true',
-                    IgnoreEmptyValuedRpcHttpHeaders: 'true',
-                    UseNullableValueDictionaryForHttp: 'true',
-                    WorkerStatus: 'true',
-                    TypedDataCollection: 'true',
-                    HandlesWorkerTerminateMessage: 'true',
-                },
-                result: {
-                    status: rpc.StatusResult.Status.Success,
-                },
-                workerMetadata: {
-                    runtimeName: 'node',
-                    customProperties: {
-                        modelName: '@azure/functions',
-                    },
-                },
-            },
-        },
-        workerMetadataRegExps
-    );
-
-    export function failedResponse(fileName: string, errorMessage: string): RegExpStreamingMessage {
-        const expectedMsg: rpc.IStreamingMessage = {
-            requestId: 'id',
-            workerInitResponse: {
-                result: {
-                    status: rpc.StatusResult.Status.Failure,
-                    exception: {
-                        message: errorMessage,
-                    },
-                },
-                workerMetadata: {
-                    runtimeName: 'node',
-                },
-            },
-        };
-        return new RegExpStreamingMessage(expectedMsg, {
-            'workerInitResponse.result.exception.stackTrace': new RegExp(
-                `Error: ${escapeStringRegexp(errorMessage)}\\s*at`
-            ),
-            ...workerMetadataRegExps,
-        });
-    }
-
-    export const receivedInitLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: 'Worker 00000000-0000-0000-0000-000000000000 received WorkerInitRequest',
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
-        },
-    };
-
-    export function loadingEntryPoint(fileName: string): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message: `Loading entry point file "${fileName}"`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    export function loadedEntryPoint(fileName: string): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message: `Loaded entry point file "${fileName}"`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    export function warning(message: string | RegExp): RegExpStreamingMessage | rpc.IStreamingMessage {
-        if (typeof message === 'string') {
-            return {
-                rpcLog: {
-                    message,
-                    level: LogLevel.Warning,
-                    logCategory: LogCategory.System,
-                },
-            };
-        } else {
-            return new RegExpStreamingMessage(
-                {
-                    rpcLog: {
-                        level: LogLevel.Warning,
-                        logCategory: LogCategory.System,
-                    },
-                },
-                {
-                    'rpcLog.message': message,
-                }
-            );
-        }
-    }
-
-    export function error(message: string): rpc.IStreamingMessage {
-        return {
-            rpcLog: {
-                message,
-                level: LogLevel.Error,
-                logCategory: LogCategory.System,
-            },
-        };
-    }
-
-    export const coldStartWarning: rpc.IStreamingMessage = {
-        rpcLog: {
-            message:
-                'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
-        },
-    };
-}
+import { msg } from './msg';
+import { setTestAppMainField, testAppPath, testPackageJsonPath } from './testAppUtils';
 
 describe('WorkerInitHandler', () => {
     let channel: WorkerChannel;
     let stream: TestEventStream;
+    let coreApi: typeof coreTypes;
 
-    before(() => {
+    before(async () => {
         ({ stream, channel } = beforeEventHandlerSuite());
+        coreApi = await import('@azure/functions-core');
     });
 
     afterEach(async () => {
-        mockFs.restore();
-        await stream.afterEachEventHandlerTest();
+        await stream.afterEachEventHandlerTest(channel);
     });
 
     it('responds to init', async () => {
-        mockFs({ [__dirname]: { 'package.json': '{}' } });
-        stream.addTestMessage(Msg.init());
-        await stream.assertCalledWith(Msg.receivedInitLog, Msg.response);
+        stream.addTestMessage(msg.init.request(testAppPath));
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
         const version = process.version;
         if (version.split('.')[0] === 'v8') {
-            expect(() => stream.addTestMessage(Msg.init())).to.throw(
+            expect(() => stream.addTestMessage(msg.init.request())).to.throw(
                 `Incompatible Node.js version (${process.version}). The version of the Azure Functions runtime you are using (v3) supports Node.js v10.x and v12.x. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: https://aka.ms/functions-node-versions`
             );
         }
@@ -193,198 +49,215 @@ describe('WorkerInitHandler', () => {
 
         logColdStartWarning(channel, 10);
 
-        await stream.assertCalledWith(Msg.coldStartWarning);
+        await stream.assertCalledWith(msg.init.coldStartWarning);
     });
 
-    it('correctly loads package.json file', async () => {
-        const appDir = 'appDir';
+    it('loads package.json (non-placeholder scenario)', async () => {
         const expectedPackageJson = {
             type: 'module',
         };
-        mockFs({
-            [appDir]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-            },
-        });
+        await fs.writeFile(testPackageJsonPath, JSON.stringify(expectedPackageJson));
 
-        stream.addTestMessage(Msg.init(appDir));
-        await stream.assertCalledWith(Msg.receivedInitLog, Msg.response);
+        stream.addTestMessage(msg.init.request(testAppPath));
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
         expect(channel.packageJson).to.deep.equal(expectedPackageJson);
     });
 
     it('loads empty package.json', async () => {
-        const appDir = 'appDir';
-        mockFs({
-            [appDir]: {
-                'not-package-json': 'some content',
-            },
-        });
-
-        stream.addTestMessage(Msg.init(appDir));
-        await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.warning(`Worker failed to load package.json: file does not exist`),
-            Msg.response
-        );
+        stream.addTestMessage(msg.init.request('folderWithoutPackageJson'));
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
         expect(channel.packageJson).to.be.empty;
     });
 
     it('ignores malformed package.json', async () => {
-        const appDir = 'appDir';
-        mockFs({
-            [appDir]: {
-                'package.json': 'gArB@g3 dAtA',
-            },
-        });
+        await fs.writeFile(testPackageJsonPath, 'gArB@g3 dAtA');
 
         const jsonError = semver.gte(process.versions.node, '19.0.0')
             ? 'Unexpected token \'g\', "gArB@g3 dAtA" is not valid JSON'
             : 'Unexpected token g in JSON at position 0';
 
-        stream.addTestMessage(Msg.init(appDir));
+        stream.addTestMessage(msg.init.request(testAppPath));
         await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.warning(
-                `Worker failed to load package.json: file content is not valid JSON: ${path.join(
-                    appDir,
-                    'package.json'
-                )}: ${jsonError}`
+            msg.init.receivedRequestLog,
+            msg.warningLog(
+                `Worker failed to load package.json: file content is not valid JSON: ${testPackageJsonPath}: ${jsonError}`
             ),
-            Msg.response
+            msg.init.response
         );
         expect(channel.packageJson).to.be.empty;
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {
-        it(`Loads entry point (${extension}) in non-specialization scenario`, async () => {
-            const fileName = `entryPointFiles/doNothing${extension}`;
-            const expectedPackageJson = {
-                main: fileName,
-            };
-            mockFs({
-                [__dirname]: {
-                    'package.json': JSON.stringify(expectedPackageJson),
-                    // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                    entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-                },
-            });
+        it(`Loads entry point (${extension}) (non-placeholder scenario)`, async () => {
+            const fileSubpath = await setTestAppMainField(`doNothing${extension}`);
 
-            stream.addTestMessage(Msg.init(__dirname));
+            stream.addTestMessage(msg.init.request(testAppPath));
             await stream.assertCalledWith(
-                Msg.receivedInitLog,
-                Msg.loadingEntryPoint(fileName),
-                Msg.loadedEntryPoint(fileName),
-                Msg.response
+                msg.init.receivedRequestLog,
+                msg.loadingEntryPoint(fileSubpath),
+                msg.loadedEntryPoint(fileSubpath),
+                msg.init.response
             );
         });
     }
 
     it(`Loads entry point with glob`, async () => {
-        const main = `entryPointFiles/doNothing*.js`;
-        const expectedPackageJson = {
-            main,
-        };
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-            },
-        });
+        await setTestAppMainField('doNothing*.js');
 
-        const file1 = 'entryPointFiles/doNothing.js';
-        const file2 = 'entryPointFiles/doNothing2.js';
+        const file1 = 'src/doNothing.js';
+        const file2 = 'src/doNothing2.js';
 
-        stream.addTestMessage(Msg.init(__dirname));
+        stream.addTestMessage(msg.init.request(testAppPath));
         await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.loadingEntryPoint(file1),
-            Msg.loadedEntryPoint(file1),
-            Msg.loadingEntryPoint(file2),
-            Msg.loadedEntryPoint(file2),
-            Msg.response
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(file1),
+            msg.loadedEntryPoint(file1),
+            msg.loadingEntryPoint(file2),
+            msg.loadedEntryPoint(file2),
+            msg.init.response
         );
     });
 
     it('Fails for missing entry point', async function (this: ITestCallbackContext) {
-        const fileName = 'entryPointFiles/missing.js';
-        const expectedPackageJson = {
-            main: fileName,
-        };
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-            },
-        });
+        const fileSubpath = await setTestAppMainField('missing.js');
 
-        stream.addTestMessage(Msg.init(__dirname));
-        const warningMessage = `Worker was unable to load entry point "${fileName}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(Msg.receivedInitLog, Msg.warning(warningMessage), Msg.response);
+        stream.addTestMessage(msg.init.request(testAppPath));
+        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.warningLog(warningMessage), msg.init.response);
     });
 
     it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
-        const fileName = 'entryPointFiles/throwError.js';
-        const expectedPackageJson = {
-            main: fileName,
-        };
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify(expectedPackageJson),
-                // 'require' and 'mockFs' don't play well together so we need these files in both the mock and real file systems
-                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-            },
-        });
+        const fileSubpath = await setTestAppMainField('throwError.js');
 
-        stream.addTestMessage(Msg.init(__dirname));
-        const warningMessage = `Worker was unable to load entry point "${fileName}": test`;
+        stream.addTestMessage(msg.init.request(testAppPath));
+        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
         await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.loadingEntryPoint(fileName),
-            Msg.warning(warningMessage),
-            Msg.response
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(fileSubpath),
+            msg.warningLog(warningMessage),
+            msg.init.response
         );
     });
 
     for (const rfpValue of ['1', 'https://url']) {
         it(`Skips warn for long load time if rfp already set to ${rfpValue}`, async () => {
-            const fileName = 'entryPointFiles/longLoad.js';
-            mockFs({
-                [__dirname]: {
-                    'package.json': JSON.stringify({ main: fileName }),
-                    entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-                },
-            });
+            const fileSubpath = await setTestAppMainField('longLoad.js');
 
             process.env.WEBSITE_RUN_FROM_PACKAGE = rfpValue;
-            stream.addTestMessage(Msg.init(__dirname));
+            stream.addTestMessage(msg.init.request(testAppPath));
             await stream.assertCalledWith(
-                Msg.receivedInitLog,
-                Msg.loadingEntryPoint(fileName),
-                Msg.loadedEntryPoint(fileName),
-                Msg.response
+                msg.init.receivedRequestLog,
+                msg.loadingEntryPoint(fileSubpath),
+                msg.loadedEntryPoint(fileSubpath),
+                msg.init.response
             );
         });
     }
 
     it('Warns for long load time', async () => {
-        const fileName = 'entryPointFiles/longLoad.js';
-        mockFs({
-            [__dirname]: {
-                'package.json': JSON.stringify({ main: fileName }),
-                entryPointFiles: mockFs.load(path.join(__dirname, 'entryPointFiles')),
-            },
-        });
+        const fileSubpath = await setTestAppMainField('longLoad.js');
 
-        stream.addTestMessage(Msg.init(__dirname));
+        stream.addTestMessage(msg.init.request(testAppPath));
         await stream.assertCalledWith(
-            Msg.receivedInitLog,
-            Msg.loadingEntryPoint(fileName),
-            Msg.warning(/Loading "longLoad.js" took [0-9]+ms/),
-            Msg.warning(
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(fileSubpath),
+            msg.warningLog(/Loading "longLoad.js" took [0-9]+ms/),
+            msg.warningLog(
                 'Set "WEBSITE_RUN_FROM_PACKAGE" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54'
             ),
-            Msg.loadedEntryPoint(fileName),
-            Msg.response
+            msg.loadedEntryPoint(fileSubpath),
+            msg.init.response
+        );
+    });
+
+    it('runs app start hooks (non-placeholder scenario)', async () => {
+        const fileSubpath = await setTestAppMainField('registerAppStartHook.js');
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(fileSubpath),
+            msg.loadedEntryPoint(fileSubpath),
+            msg.executingAppHooksLog(1, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.init.response
+        );
+    });
+
+    it('allows different appStart hooks to share data', async () => {
+        const functionAppDirectory = __dirname;
+        let hookData = '';
+
+        coreApi.registerHook('appStart', (context) => {
+            context.hookData.hello = 'world';
+            hookData += 'start1';
+        });
+
+        coreApi.registerHook('appStart', (context) => {
+            expect(context.hookData.hello).to.equal('world');
+            hookData += 'start2';
+        });
+
+        stream.addTestMessage(msg.init.request(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.executingAppHooksLog(2, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.init.response
+        );
+
+        expect(hookData).to.equal('start1start2');
+    });
+
+    it('enforces readonly property of hookData and appHookData in appStart contexts', async () => {
+        const functionAppDirectory = __dirname;
+
+        coreApi.registerHook('appStart', (context) => {
+            expect(() => {
+                // @ts-expect-error: setting readonly property
+                context.hookData = {
+                    hello: 'world',
+                };
+            }).to.throw(`Cannot assign to read only property 'hookData'`);
+            expect(() => {
+                // @ts-expect-error: setting readonly property
+                context.appHookData = {
+                    hello: 'world',
+                };
+            }).to.throw(`Cannot assign to read only property 'appHookData'`);
+        });
+
+        stream.addTestMessage(msg.init.request(functionAppDirectory));
+
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.executingAppHooksLog(1, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.init.response
+        );
+    });
+
+    it('correctly sets hostVersion in core API', async () => {
+        const functionAppDirectory = __dirname;
+        const expectedHostVersion = '2.7.0';
+        expect(() => coreApi.hostVersion).to.throw('Cannot access hostVersion before worker init');
+
+        coreApi.registerHook('appStart', () => {
+            expect(coreApi.hostVersion).to.equal(expectedHostVersion);
+        });
+
+        stream.addTestMessage(msg.init.request(functionAppDirectory, expectedHostVersion));
+
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.executingAppHooksLog(1, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.init.response
         );
     });
 });

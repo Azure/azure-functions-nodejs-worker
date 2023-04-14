@@ -1,17 +1,16 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as sinon from 'sinon';
 import { LegacyFunctionLoader } from '../../src/LegacyFunctionLoader';
+import { WorkerChannel } from '../../src/WorkerChannel';
 import { setupCoreModule } from '../../src/setupCoreModule';
 import { setupEventStream } from '../../src/setupEventStream';
-import { WorkerChannel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 
 let testWorkerData:
     | {
           stream: TestEventStream;
-          loader: sinon.SinonStubbedInstance<LegacyFunctionLoader>;
+          loader: LegacyFunctionLoader;
           channel: WorkerChannel;
       }
     | undefined = undefined;
@@ -19,7 +18,7 @@ let testWorkerData:
 export function beforeEventHandlerSuite() {
     if (!testWorkerData) {
         const stream = new TestEventStream();
-        const loader = sinon.createStubInstance<LegacyFunctionLoader>(LegacyFunctionLoader);
+        const loader = new LegacyFunctionLoader();
         const channel = new WorkerChannel('00000000-0000-0000-0000-000000000000', stream, loader);
         setupEventStream(channel);
         setupCoreModule(channel);

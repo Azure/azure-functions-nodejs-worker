@@ -3,35 +3,11 @@
 
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
-import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { WorkerChannel } from '../../src/WorkerChannel';
-import { Msg as AppStartMsg } from '../startApp.test';
-import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { TestEventStream } from './TestEventStream';
-import { Msg as WorkerInitMsg } from './WorkerInitHandler.test';
+import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
+import { msg } from './msg';
 import sinon = require('sinon');
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
-
-export namespace Msg {
-    export function workerTerminate(gracePeriodSeconds = 5): rpc.IStreamingMessage {
-        return {
-            workerTerminate: {
-                gracePeriod: {
-                    seconds: gracePeriodSeconds,
-                },
-            },
-        };
-    }
-
-    export const receivedWorkerTerminateLog: rpc.IStreamingMessage = {
-        rpcLog: {
-            message: 'Received workerTerminate message; gracefully shutting down worker',
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
-        },
-    };
-}
 
 describe('terminateWorker', () => {
     let stream: TestEventStream;
@@ -39,7 +15,6 @@ describe('terminateWorker', () => {
     let processExitStub: sinon.SinonStub;
     let streamEndStub: sinon.SinonStub;
     let coreApi: typeof coreTypes;
-    let testDisposables: coreTypes.Disposable[] = [];
 
     before(async () => {
         ({ channel, stream } = beforeEventHandlerSuite());
@@ -49,13 +24,9 @@ describe('terminateWorker', () => {
     });
 
     afterEach(async () => {
-        coreApi.Disposable.from(...testDisposables).dispose();
-        testDisposables = [];
-        channel.appHookData = {};
-        channel.appLevelOnlyHookData = {};
         processExitStub.resetHistory();
         streamEndStub.resetHistory();
-        await stream.afterEachEventHandlerTest();
+        await stream.afterEachEventHandlerTest(channel);
     });
 
     after(() => {
@@ -63,19 +34,19 @@ describe('terminateWorker', () => {
     });
 
     it('handles worker_terminate request', async () => {
-        stream.addTestMessage(Msg.workerTerminate());
-        await stream.assertCalledWith(Msg.receivedWorkerTerminateLog);
+        stream.addTestMessage(msg.terminate.request());
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
     });
 
     it('ends event stream', async () => {
-        stream.addTestMessage(Msg.workerTerminate());
-        await stream.assertCalledWith(Msg.receivedWorkerTerminateLog);
+        stream.addTestMessage(msg.terminate.request());
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
         expect(streamEndStub.callCount).to.be.equal(1);
     });
 
     it('shuts down worker process', async () => {
-        stream.addTestMessage(Msg.workerTerminate());
-        await stream.assertCalledWith(Msg.receivedWorkerTerminateLog);
+        stream.addTestMessage(msg.terminate.request());
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
         expect(processExitStub.calledWith(0)).to.be.true;
     });
 
@@ -85,13 +56,13 @@ describe('terminateWorker', () => {
             appHookData: {},
         };
         const hookFunc = sinon.spy();
-        testDisposables.push(coreApi.registerHook('appTerminate', hookFunc));
+        coreApi.registerHook('appTerminate', hookFunc);
 
-        stream.addTestMessage(Msg.workerTerminate());
+        stream.addTestMessage(msg.terminate.request());
         await stream.assertCalledWith(
-            Msg.receivedWorkerTerminateLog,
-            AppStartMsg.executingHooksLog(1, 'appTerminate'),
-            AppStartMsg.executedHooksLog('appTerminate')
+            msg.terminate.receivedWorkerTerminateLog,
+            msg.executingAppHooksLog(1, 'appTerminate'),
+            msg.executedAppHooksLog('appTerminate')
         );
         expect(hookFunc.callCount).to.be.equal(1);
         expect(hookFunc.args[0][0]).to.deep.equal(expectedContext);
@@ -99,90 +70,80 @@ describe('terminateWorker', () => {
 
     it('allows app terminate hooks to share data', async () => {
         let hookData = '';
-        testDisposables.push(
-            coreApi.registerHook('appTerminate', (context) => {
-                context.hookData.hello = 'world';
-                context.appHookData.foo = 'bar';
-                hookData += 'term1';
-            })
-        );
-        testDisposables.push(
-            coreApi.registerHook('appTerminate', (context) => {
-                expect(context.hookData.hello).to.equal('world');
-                expect(context.appHookData.foo).to.equal('bar');
-                hookData += 'term2';
-            })
-        );
+        coreApi.registerHook('appTerminate', (context) => {
+            context.hookData.hello = 'world';
+            context.appHookData.foo = 'bar';
+            hookData += 'term1';
+        });
+        coreApi.registerHook('appTerminate', (context) => {
+            expect(context.hookData.hello).to.equal('world');
+            expect(context.appHookData.foo).to.equal('bar');
+            hookData += 'term2';
+        });
 
-        stream.addTestMessage(Msg.workerTerminate());
+        stream.addTestMessage(msg.terminate.request());
         await stream.assertCalledWith(
-            Msg.receivedWorkerTerminateLog,
-            AppStartMsg.executingHooksLog(2, 'appTerminate'),
-            AppStartMsg.executedHooksLog('appTerminate')
+            msg.terminate.receivedWorkerTerminateLog,
+            msg.executingAppHooksLog(2, 'appTerminate'),
+            msg.executedAppHooksLog('appTerminate')
         );
         expect(hookData).to.equal('term1term2');
     });
 
     it('allows app start and app terminate hooks to share data', async () => {
         let hookData = '';
-        testDisposables.push(
-            coreApi.registerHook('appStart', (context) => {
-                context.hookData.hello = 'world';
-                context.appHookData.foo = 'bar';
-                hookData += 'start';
-            })
-        );
-        testDisposables.push(
-            coreApi.registerHook('appTerminate', (context) => {
-                expect(context.hookData.hello).to.equal('world');
-                expect(context.appHookData.foo).to.equal('bar');
-                hookData += 'term';
-            })
+        coreApi.registerHook('appStart', (context) => {
+            context.hookData.hello = 'world';
+            context.appHookData.foo = 'bar';
+            hookData += 'start';
+        });
+        coreApi.registerHook('appTerminate', (context) => {
+            expect(context.hookData.hello).to.equal('world');
+            expect(context.appHookData.foo).to.equal('bar');
+            hookData += 'term';
+        });
+
+        stream.addTestMessage(msg.init.request());
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.executingAppHooksLog(1, 'appStart'),
+            msg.executedAppHooksLog('appStart'),
+            msg.init.response
         );
 
-        stream.addTestMessage(WorkerInitMsg.init());
+        stream.addTestMessage(msg.terminate.request());
         await stream.assertCalledWith(
-            WorkerInitMsg.receivedInitLog,
-            WorkerInitMsg.warning('Worker failed to load package.json: file does not exist'),
-            AppStartMsg.executingHooksLog(1, 'appStart'),
-            AppStartMsg.executedHooksLog('appStart'),
-            WorkerInitMsg.response
-        );
-
-        stream.addTestMessage(Msg.workerTerminate());
-        await stream.assertCalledWith(
-            Msg.receivedWorkerTerminateLog,
-            AppStartMsg.executingHooksLog(1, 'appTerminate'),
-            AppStartMsg.executedHooksLog('appTerminate')
+            msg.terminate.receivedWorkerTerminateLog,
+            msg.executingAppHooksLog(1, 'appTerminate'),
+            msg.executedAppHooksLog('appTerminate')
         );
 
         expect(hookData).to.equal('startterm');
     });
 
     it('enforces readonly property of hookData and appHookData in hook contexts', async () => {
-        testDisposables.push(
-            coreApi.registerHook('appTerminate', (context) => {
-                expect(() => {
-                    // @ts-expect-error: setting readonly property
-                    context.hookData = {
-                        hello: 'world',
-                    };
-                }).to.throw(`Cannot assign to read only property 'hookData'`);
-                expect(() => {
-                    // @ts-expect-error: setting readonly property
-                    context.appHookData = {
-                        hello: 'world',
-                    };
-                }).to.throw(`Cannot assign to read only property 'appHookData'`);
-            })
-        );
+        coreApi.registerHook('appTerminate', (context) => {
+            expect(() => {
+                // @ts-expect-error: setting readonly property
+                context.hookData = {
+                    hello: 'world',
+                };
+            }).to.throw(`Cannot assign to read only property 'hookData'`);
+            expect(() => {
+                // @ts-expect-error: setting readonly property
+                context.appHookData = {
+                    hello: 'world',
+                };
+            }).to.throw(`Cannot assign to read only property 'appHookData'`);
+        });
 
-        stream.addTestMessage(Msg.workerTerminate());
+        stream.addTestMessage(msg.terminate.request());
 
         await stream.assertCalledWith(
-            Msg.receivedWorkerTerminateLog,
-            AppStartMsg.executingHooksLog(1, 'appTerminate'),
-            AppStartMsg.executedHooksLog('appTerminate')
+            msg.terminate.receivedWorkerTerminateLog,
+            msg.executingAppHooksLog(1, 'appTerminate'),
+            msg.executedAppHooksLog('appTerminate')
         );
     });
 });
