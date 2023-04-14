@@ -4,9 +4,9 @@
 import * as path from 'path';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { WorkerChannel } from './WorkerChannel';
 import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
-import { WorkerChannel } from './WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -39,7 +39,11 @@ function warnIfLongLoadTime(channel: WorkerChannel, filePath: string, start: num
     const timeElapsed = Date.now() - start;
     const rfpName = 'WEBSITE_RUN_FROM_PACKAGE';
     const rfpValue = process.env[rfpName];
-    if (timeElapsed > 1000 && (rfpValue === undefined || rfpValue === '0')) {
+    if (
+        timeElapsed > 1000 &&
+        (rfpValue === undefined || rfpValue === '0') &&
+        process.env.AZURE_FUNCTIONS_ENVIRONMENT !== 'Development' // don't show in core tools
+    ) {
         channel.log({
             message: `Loading "${path.basename(filePath)}" took ${timeElapsed}ms`,
             level: LogLevel.Warning,
