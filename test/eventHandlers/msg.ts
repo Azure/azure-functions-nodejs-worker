@@ -21,7 +21,7 @@ function stackTraceRegExpProps(responseName: string, message: string): RegExpPro
 function workerMetadataRegExps(responseName: string) {
     return {
         [`${responseName}.workerMetadata.runtimeVersion`]: /^[0-9]+\.[0-9]+\.[0-9]+$/,
-        [`${responseName}.workerMetadata.workerBitness`]: /^(x64|ia32|arm64)$/,
+        [`${responseName}.workerMetadata.workerBitness`]: /^(x64|x86|arm64)$/,
         [`${responseName}.workerMetadata.workerVersion`]: /^3\.[0-9]+\.[0-9]+$/,
         [`${responseName}.workerMetadata.customProperties.modelVersion`]: /^3\.[0-9]+\.[0-9]+$/,
     };

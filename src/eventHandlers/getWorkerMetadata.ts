@@ -9,7 +9,8 @@ export function getWorkerMetadata(channel: WorkerChannel): rpc.IWorkerMetadata {
     const result: rpc.IWorkerMetadata = {
         runtimeName: 'node',
         runtimeVersion: process.versions.node,
-        workerBitness: process.arch,
+        // analytics team wants bitness to be consistent across workers, so we have to adjust this
+        workerBitness: process.arch === 'ia32' ? 'x86' : process.arch,
         workerVersion,
     };
     if (channel.programmingModel) {
