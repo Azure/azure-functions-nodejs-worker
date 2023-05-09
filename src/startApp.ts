@@ -43,6 +43,7 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
 async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
     const entryPointPattern = channel.packageJson.main;
     if (entryPointPattern) {
+        let currentFile: string | undefined = undefined;
         try {
             const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
             if (files.length === 0) {
@@ -50,6 +51,7 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
             }
 
             for (const file of files) {
+                currentFile = file;
                 channel.log({
                     message: `Loading entry point file "${file}"`,
                     level: LogLevel.Debug,
@@ -71,7 +73,9 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
         } catch (err) {
             const error = ensureErrorType(err);
             channel.log({
-                message: `Worker was unable to load entry point "${entryPointPattern}": ${error.message}`,
+                message: `Worker was unable to load entry point "${currentFile ? currentFile : entryPointPattern}": ${
+                    error.message
+                }`,
                 level: LogLevel.Warning,
                 logCategory: LogCategory.System,
             });
