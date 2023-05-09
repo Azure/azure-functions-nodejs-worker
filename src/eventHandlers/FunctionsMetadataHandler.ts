@@ -20,7 +20,7 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
         channel: WorkerChannel,
         msg: rpc.IFunctionsMetadataRequest
     ): Promise<rpc.IFunctionMetadataResponse> {
-        channel.workerIndexingLocked = true;
+        channel.app.workerIndexingLocked = true;
 
         const response = this.getDefaultResponse(channel, msg);
 
@@ -30,7 +30,7 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
             logCategory: LogCategory.System,
         });
 
-        const functions = Object.values(channel.functions);
+        const functions = Object.values(channel.app.functions);
         if (functions.length > 0) {
             response.useDefaultMetadataIndexing = false;
             response.functionMetadataResults = functions.map((f) => f.metadata);

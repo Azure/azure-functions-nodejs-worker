@@ -1,26 +1,22 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { FunctionCallback, HookCallback, HookContext, HookData, ProgrammingModel } from '@azure/functions-core';
+import { HookCallback, HookContext, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AppContext } from './AppContext';
 import { Disposable } from './Disposable';
 import { IEventStream } from './GrpcClient';
-import { ILegacyFunctionLoader } from './LegacyFunctionLoader';
 import { AzFuncRangeError, AzFuncSystemError, ensureErrorType } from './errors';
-import { PackageJson, parsePackageJson } from './parsers/parsePackageJson';
+import { parsePackageJson } from './parsers/parsePackageJson';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
-
-export interface RegisteredFunction {
-    metadata: rpc.IRpcFunctionMetadata;
-    callback: FunctionCallback;
-}
 
 export class WorkerChannel {
     workerId: string;
     eventStream: IEventStream;
-    legacyFunctionLoader: ILegacyFunctionLoader;
-    packageJson: PackageJson;
+    app = new AppContext();
+    defaultProgrammingModel?: ProgrammingModel;
+
     /**
      * This will only be set after worker init request is received
      */
@@ -34,36 +30,14 @@ export class WorkerChannel {
         }
     }
 
-    /**
-     * this hook data will be passed to (and set by) all hooks in all scopes
-     */
-    appHookData: HookData = {};
-    /**
-     * this hook data is limited to the app-level scope and persisted only for app-level hooks
-     */
-    appLevelOnlyHookData: HookData = {};
-    programmingModel?: ProgrammingModel;
-    preInvocationHooks: HookCallback[] = [];
-    postInvocationHooks: HookCallback[] = [];
-    appStartHooks: HookCallback[] = [];
-    appTerminateHooks: HookCallback[] = [];
-    functions: { [id: string]: RegisteredFunction } = {};
-    workerIndexingLocked = false;
-    isUsingWorkerIndexing = false;
-    currentEntryPoint?: string;
-
-    constructor(workerId: string, eventStream: IEventStream, legacyFunctionLoader: ILegacyFunctionLoader) {
+    constructor(workerId: string, eventStream: IEventStream) {
         this.workerId = workerId;
         this.eventStream = eventStream;
-        this.legacyFunctionLoader = legacyFunctionLoader;
-        this.packageJson = {};
     }
 
-    reset(): void {
-        // Ideally this resets all app-related data
-        // That worked is tracked by https://github.com/Azure/azure-functions-nodejs-worker/issues/670
-        this.workerIndexingLocked = false;
-        this.isUsingWorkerIndexing = false;
+    resetApp(): void {
+        this.app = new AppContext();
+        this.app.programmingModel = this.defaultProgrammingModel;
     }
 
     /**
@@ -119,13 +93,13 @@ export class WorkerChannel {
     #getHooks(hookName: string): HookCallback[] {
         switch (hookName) {
             case 'preInvocation':
-                return this.preInvocationHooks;
+                return this.app.preInvocationHooks;
             case 'postInvocation':
-                return this.postInvocationHooks;
+                return this.app.postInvocationHooks;
             case 'appStart':
-                return this.appStartHooks;
+                return this.app.appStartHooks;
             case 'appTerminate':
-                return this.appTerminateHooks;
+                return this.app.appTerminateHooks;
             default:
                 throw new AzFuncRangeError(`Unrecognized hook "${hookName}"`);
         }
@@ -133,7 +107,7 @@ export class WorkerChannel {
 
     async updatePackageJson(dir: string): Promise<void> {
         try {
-            this.packageJson = await parsePackageJson(dir);
+            this.app.packageJson = await parsePackageJson(dir);
         } catch (err) {
             const error = ensureErrorType(err);
             this.log({
@@ -141,7 +115,7 @@ export class WorkerChannel {
                 level: LogLevel.Warning,
                 logCategory: LogCategory.System,
             });
-            this.packageJson = {};
+            this.app.packageJson = {};
         }
     }
 }

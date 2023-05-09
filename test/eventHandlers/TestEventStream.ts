@@ -97,17 +97,8 @@ export class TestEventStream extends EventEmitter implements IEventStream {
 
         await fs.writeFile(testPackageJsonPath, '{}');
 
-        // NOTE: Temporarily resetting a bunch of stuff here in the test code.
-        // This will be unnecessary once we fix https://github.com/Azure/azure-functions-nodejs-worker/issues/670
         channel._hostVersion = undefined;
-        channel.legacyFunctionLoader.loadedFunctions = {};
-        channel.appStartHooks = [];
-        channel.appTerminateHooks = [];
-        channel.preInvocationHooks = [];
-        channel.postInvocationHooks = [];
-        channel.appHookData = {};
-        channel.appLevelOnlyHookData = {};
-        channel.reset();
+        channel.resetApp();
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));

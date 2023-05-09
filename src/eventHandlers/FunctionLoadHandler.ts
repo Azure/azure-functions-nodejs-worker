@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { loadLegacyFunction } from '../LegacyFunctionLoader';
+import { WorkerChannel } from '../WorkerChannel';
 import { ensureErrorType } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
-import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -20,7 +21,7 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
     }
 
     async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
-        channel.workerIndexingLocked = true;
+        channel.app.workerIndexingLocked = true;
 
         const response = this.getDefaultResponse(channel, msg);
 
@@ -30,11 +31,11 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
             logCategory: LogCategory.System,
         });
 
-        if (!channel.isUsingWorkerIndexing) {
+        if (!channel.app.isUsingWorkerIndexing) {
             const functionId = nonNullProp(msg, 'functionId');
             const metadata = nonNullProp(msg, 'metadata');
             try {
-                await channel.legacyFunctionLoader.load(channel, functionId, metadata, channel.packageJson);
+                await loadLegacyFunction(channel, functionId, metadata, channel.app.packageJson);
             } catch (err) {
                 const error = ensureErrorType(err);
                 error.isAzureFunctionsSystemError = true;

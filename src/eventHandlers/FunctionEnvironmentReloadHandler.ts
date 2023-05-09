@@ -31,7 +31,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         channel: WorkerChannel,
         msg: rpc.IFunctionEnvironmentReloadRequest
     ): Promise<rpc.IFunctionEnvironmentReloadResponse> {
-        channel.reset();
+        channel.resetApp();
 
         const response = this.getDefaultResponse(channel, msg);
 

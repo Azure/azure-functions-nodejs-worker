@@ -3,10 +3,10 @@
 
 import { FunctionCallback, FunctionMetadata, HookCallback, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { version } from './constants';
-import { registerFunction } from './coreApi/registerFunction';
 import { Disposable } from './Disposable';
 import { WorkerChannel } from './WorkerChannel';
+import { version } from './constants';
+import { registerFunction } from './coreApi/registerFunction';
 import Module = require('module');
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -25,17 +25,19 @@ export function setupCoreModule(channel: WorkerChannel): void {
         registerHook: (hookName: string, callback: HookCallback) => channel.registerHook(hookName, callback),
         setProgrammingModel: (programmingModel: ProgrammingModel) => {
             // Log when setting the programming model, except for the initial default one (partially because the grpc channels aren't fully setup at that time)
-            if (channel.programmingModel) {
+            if (channel.app.programmingModel) {
                 channel.log({
                     message: `Setting Node.js programming model to "${programmingModel.name}" version "${programmingModel.version}"`,
                     level: LogLevel.Information,
                     logCategory: LogCategory.System,
                 });
+            } else {
+                channel.defaultProgrammingModel = programmingModel;
             }
-            channel.programmingModel = programmingModel;
+            channel.app.programmingModel = programmingModel;
         },
         getProgrammingModel: () => {
-            return channel.programmingModel;
+            return channel.app.programmingModel;
         },
         registerFunction: (metadata: FunctionMetadata, callback: FunctionCallback) => {
             return registerFunction(channel, metadata, callback);

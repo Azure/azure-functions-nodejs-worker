@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { AzFuncSystemError, ensureErrorType } from './errors';
 import { CreateGrpcEventStream } from './GrpcClient';
-import { LegacyFunctionLoader } from './LegacyFunctionLoader';
+import { WorkerChannel } from './WorkerChannel';
+import { AzFuncSystemError, ensureErrorType } from './errors';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
-import { startBlockedMonitor } from './utils/blockedMonitor';
 import { systemError, systemLog } from './utils/Logger';
+import { startBlockedMonitor } from './utils/blockedMonitor';
 import { isEnvironmentVariableSet } from './utils/util';
-import { WorkerChannel } from './WorkerChannel';
 
 export function startNodeWorker(args) {
     const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
@@ -42,7 +41,7 @@ export function startNodeWorker(args) {
         throw error;
     }
 
-    const channel = new WorkerChannel(workerId, eventStream, new LegacyFunctionLoader());
+    const channel = new WorkerChannel(workerId, eventStream);
     setupEventStream(channel);
     setupCoreModule(channel);
 

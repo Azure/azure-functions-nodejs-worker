@@ -24,13 +24,13 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
     await loadEntryPointFile(functionAppDirectory, channel);
     const appStartContext: AppStartContext = {
         get hookData() {
-            return channel.appLevelOnlyHookData;
+            return channel.app.appLevelOnlyHookData;
         },
         set hookData(_obj) {
             throw new ReadOnlyError('hookData');
         },
         get appHookData() {
-            return channel.appHookData;
+            return channel.app.appHookData;
         },
         set appHookData(_obj) {
             throw new ReadOnlyError('appHookData');
@@ -41,7 +41,7 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
 }
 
 async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
-    const entryPointPattern = channel.packageJson.main;
+    const entryPointPattern = channel.app.packageJson.main;
     if (entryPointPattern) {
         try {
             const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
@@ -57,10 +57,10 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
                 });
                 try {
                     const entryPointFilePath = path.join(functionAppDirectory, file);
-                    channel.currentEntryPoint = entryPointFilePath;
-                    await loadScriptFile(channel, entryPointFilePath, channel.packageJson);
+                    channel.app.currentEntryPoint = entryPointFilePath;
+                    await loadScriptFile(channel, entryPointFilePath, channel.app.packageJson);
                 } finally {
-                    channel.currentEntryPoint = undefined;
+                    channel.app.currentEntryPoint = undefined;
                 }
                 channel.log({
                     message: `Loaded entry point file "${file}"`,

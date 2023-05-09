@@ -13,10 +13,10 @@ export function getWorkerMetadata(channel: WorkerChannel): rpc.IWorkerMetadata {
         workerBitness: process.arch === 'ia32' ? 'x86' : process.arch,
         workerVersion,
     };
-    if (channel.programmingModel) {
+    if (channel.app.programmingModel) {
         result.customProperties = {
-            modelName: channel.programmingModel.name,
-            modelVersion: channel.programmingModel.version,
+            modelName: channel.app.programmingModel.name,
+            modelVersion: channel.app.programmingModel.version,
         };
     }
     return result;
