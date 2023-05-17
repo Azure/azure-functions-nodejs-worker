@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
 import 'mocha';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -12,14 +12,13 @@ import { setTestAppMainField, testAppPath, testAppSrcPath, testPackageJsonPath }
 
 describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;
-    let channel: WorkerChannel;
 
     before(() => {
-        ({ stream, channel } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
     });
 
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     async function mockPlaceholderInit(): Promise<void> {

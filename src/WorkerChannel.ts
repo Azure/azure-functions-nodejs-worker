@@ -12,8 +12,6 @@ import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 
 export class WorkerChannel {
-    workerId: string;
-    eventStream: IEventStream;
     app = new AppContext();
     defaultProgrammingModel?: ProgrammingModel;
 
@@ -22,17 +20,40 @@ export class WorkerChannel {
      */
     _hostVersion?: string;
 
+    #workerId?: string;
+    #eventStream?: IEventStream;
+    #notInitializedMsg = 'WorkerChannel has not been initialized yet.';
+
+    get workerId(): string {
+        if (!this.#workerId) {
+            throw new AzFuncSystemError(this.#notInitializedMsg);
+        } else {
+            return this.#workerId;
+        }
+    }
+
+    set workerId(value: string) {
+        this.#workerId = value;
+    }
+
+    get eventStream(): IEventStream {
+        if (!this.#eventStream) {
+            throw new AzFuncSystemError(this.#notInitializedMsg);
+        } else {
+            return this.#eventStream;
+        }
+    }
+
+    set eventStream(value: IEventStream) {
+        this.#eventStream = value;
+    }
+
     get hostVersion(): string {
         if (!this._hostVersion) {
             throw new AzFuncSystemError('Cannot access hostVersion before worker init');
         } else {
             return this._hostVersion;
         }
-    }
-
-    constructor(workerId: string, eventStream: IEventStream) {
-        this.workerId = workerId;
-        this.eventStream = eventStream;
     }
 
     resetApp(): void {
@@ -119,3 +140,5 @@ export class WorkerChannel {
         }
     }
 }
+
+export const channel: WorkerChannel = new WorkerChannel();

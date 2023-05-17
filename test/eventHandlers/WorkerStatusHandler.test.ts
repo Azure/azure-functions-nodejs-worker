@@ -2,20 +2,18 @@
 // Licensed under the MIT License.
 
 import 'mocha';
-import { WorkerChannel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 
 describe('WorkerStatusHandler', () => {
     let stream: TestEventStream;
-    let channel: WorkerChannel;
 
     before(() => {
-        ({ stream, channel } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
     });
 
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     it('responds to worker status', async () => {

@@ -3,7 +3,7 @@
 
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -11,13 +11,12 @@ import sinon = require('sinon');
 
 describe('terminateWorker', () => {
     let stream: TestEventStream;
-    let channel: WorkerChannel;
     let processExitStub: sinon.SinonStub;
     let streamEndStub: sinon.SinonStub;
     let coreApi: typeof coreTypes;
 
     before(async () => {
-        ({ channel, stream } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
         processExitStub = sinon.stub(process, 'exit');
         streamEndStub = sinon.stub(channel.eventStream, 'end');
         coreApi = await import('@azure/functions-core');
@@ -26,7 +25,7 @@ describe('terminateWorker', () => {
     afterEach(async () => {
         processExitStub.resetHistory();
         streamEndStub.resetHistory();
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     after(() => {

@@ -3,12 +3,12 @@
 
 import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { WorkerChannel } from '../WorkerChannel';
+import { channel } from '../WorkerChannel';
 import { ReadOnlyError } from '../errors';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-export async function terminateWorker(channel: WorkerChannel, _msg: rpc.IWorkerTerminate) {
+export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
     channel.log({
         message: 'Received workerTerminate message; gracefully shutting down worker',
         level: LogLevel.Debug,

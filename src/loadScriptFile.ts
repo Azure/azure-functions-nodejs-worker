@@ -4,17 +4,13 @@
 import * as path from 'path';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { WorkerChannel } from './WorkerChannel';
+import { channel } from './WorkerChannel';
 import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
-export async function loadScriptFile(
-    channel: WorkerChannel,
-    filePath: string,
-    packageJson: PackageJson
-): Promise<unknown> {
+export async function loadScriptFile(filePath: string, packageJson: PackageJson): Promise<unknown> {
     const start = Date.now();
     try {
         let script: unknown;
@@ -31,11 +27,11 @@ export async function loadScriptFile(
         }
         return script;
     } finally {
-        warnIfLongLoadTime(channel, filePath, start);
+        warnIfLongLoadTime(filePath, start);
     }
 }
 
-function warnIfLongLoadTime(channel: WorkerChannel, filePath: string, start: number): void {
+function warnIfLongLoadTime(filePath: string, start: number): void {
     const timeElapsed = Date.now() - start;
     const rfpName = 'WEBSITE_RUN_FROM_PACKAGE';
     const rfpValue = process.env[rfpName];

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { channel } from '../WorkerChannel';
 import { version as workerVersion } from '../constants';
-import { WorkerChannel } from '../WorkerChannel';
 
-export function getWorkerMetadata(channel: WorkerChannel): rpc.IWorkerMetadata {
+export function getWorkerMetadata(): rpc.IWorkerMetadata {
     const result: rpc.IWorkerMetadata = {
         runtimeName: 'node',
         runtimeVersion: process.versions.node,

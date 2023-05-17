@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { getLegacyFunction } from '../../src/LegacyFunctionLoader';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { nonNullValue } from '../../src/utils/nonNull';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
@@ -12,14 +12,13 @@ import { msg } from './msg';
 
 describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;
-    let channel: WorkerChannel;
 
     before(() => {
-        ({ stream, channel } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
     });
 
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     it('responds to function load', async () => {
@@ -92,10 +91,10 @@ describe('FunctionLoadHandler', () => {
 
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
 
-        const userFunction = nonNullValue(getLegacyFunction(channel, 'testFuncId')).callback;
+        const userFunction = nonNullValue(getLegacyFunction('testFuncId')).callback;
         Object.assign(userFunction, { hello: 'world' });
 
-        const userFunction2 = nonNullValue(getLegacyFunction(channel, 'testFuncId')).callback;
+        const userFunction2 = nonNullValue(getLegacyFunction('testFuncId')).callback;
 
         expect(userFunction).to.not.equal(userFunction2);
         expect(userFunction['hello']).to.equal('world');

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { channel } from '../WorkerChannel';
 import { startApp } from '../startApp';
-import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -18,22 +18,16 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
 > {
     readonly responseName = 'functionEnvironmentReloadResponse';
 
-    getDefaultResponse(
-        channel: WorkerChannel,
-        _msg: rpc.IFunctionEnvironmentReloadRequest
-    ): rpc.IFunctionEnvironmentReloadResponse {
+    getDefaultResponse(_msg: rpc.IFunctionEnvironmentReloadRequest): rpc.IFunctionEnvironmentReloadResponse {
         return {
-            workerMetadata: getWorkerMetadata(channel),
+            workerMetadata: getWorkerMetadata(),
         };
     }
 
-    async handleEvent(
-        channel: WorkerChannel,
-        msg: rpc.IFunctionEnvironmentReloadRequest
-    ): Promise<rpc.IFunctionEnvironmentReloadResponse> {
+    async handleEvent(msg: rpc.IFunctionEnvironmentReloadRequest): Promise<rpc.IFunctionEnvironmentReloadResponse> {
         channel.resetApp();
 
-        const response = this.getDefaultResponse(channel, msg);
+        const response = this.getDefaultResponse(msg);
 
         // Add environment variables from incoming
         const numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
@@ -56,9 +50,9 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: LogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await startApp(msg.functionAppDirectory, channel);
+            await startApp(msg.functionAppDirectory);
             // model info may have changed, so we need to update this
-            response.workerMetadata = getWorkerMetadata(channel);
+            response.workerMetadata = getWorkerMetadata();
         }
 
         return response;
