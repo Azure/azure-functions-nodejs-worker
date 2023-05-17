@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { testAppSrcPath, testPackageJsonPath } from './testAppUtils';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
@@ -79,7 +79,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Verifies the test didn't send any extraneous messages
      */
-    async afterEachEventHandlerTest(channel: WorkerChannel): Promise<void> {
+    async afterEachEventHandlerTest(): Promise<void> {
         // Reset `process.env` and process.cwd() after each test so it doesn't affect other tests
         process.chdir(this.originalCwd);
         for (const key of Object.keys(process.env)) {

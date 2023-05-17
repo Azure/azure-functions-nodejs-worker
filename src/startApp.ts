@@ -5,7 +5,7 @@ import { AppStartContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { AzFuncSystemError, ensureErrorType, ReadOnlyError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
-import { WorkerChannel } from './WorkerChannel';
+import { channel } from './WorkerChannel';
 import globby = require('globby');
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
@@ -19,9 +19,9 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
  *    The dummy app should never have actual startup code, so it should be safe to call `startApp` twice in this case
  *    Worker specialization happens only once, so we don't need to worry about cleaning up resources from previous `functionEnvironmentReloadRequest`s.
  */
-export async function startApp(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
+export async function startApp(functionAppDirectory: string): Promise<void> {
     await channel.updatePackageJson(functionAppDirectory);
-    await loadEntryPointFile(functionAppDirectory, channel);
+    await loadEntryPointFile(functionAppDirectory);
     const appStartContext: AppStartContext = {
         get hookData() {
             return channel.app.appLevelOnlyHookData;
@@ -40,7 +40,7 @@ export async function startApp(functionAppDirectory: string, channel: WorkerChan
     await channel.executeHooks('appStart', appStartContext);
 }
 
-async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerChannel): Promise<void> {
+async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
     const entryPointPattern = channel.app.packageJson.main;
     if (entryPointPattern) {
         let currentFile: string | undefined = undefined;
@@ -60,7 +60,7 @@ async function loadEntryPointFile(functionAppDirectory: string, channel: WorkerC
                 try {
                     const entryPointFilePath = path.join(functionAppDirectory, file);
                     channel.app.currentEntryPoint = entryPointFilePath;
-                    await loadScriptFile(channel, entryPointFilePath, channel.app.packageJson);
+                    await loadScriptFile(entryPointFilePath, channel.app.packageJson);
                 } finally {
                     channel.app.currentEntryPoint = undefined;
                 }

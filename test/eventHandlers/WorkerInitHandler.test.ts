@@ -7,7 +7,7 @@ import * as fs from 'fs/promises';
 import 'mocha';
 import { ITestCallbackContext } from 'mocha';
 import * as semver from 'semver';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
@@ -15,17 +15,16 @@ import { msg } from './msg';
 import { setTestAppMainField, testAppPath, testPackageJsonPath } from './testAppUtils';
 
 describe('WorkerInitHandler', () => {
-    let channel: WorkerChannel;
     let stream: TestEventStream;
     let coreApi: typeof coreTypes;
 
     before(async () => {
-        ({ stream, channel } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
         coreApi = await import('@azure/functions-core');
     });
 
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     it('responds to init', async () => {
@@ -47,7 +46,7 @@ describe('WorkerInitHandler', () => {
         process.env.WEBSITE_CONTENTSHARE = 'test';
         process.env.AzureWebJobsScriptRoot = 'test';
 
-        logColdStartWarning(channel, 10);
+        logColdStartWarning(10);
 
         await stream.assertCalledWith(msg.init.coldStartWarning);
     });

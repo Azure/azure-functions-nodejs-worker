@@ -3,7 +3,7 @@
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { loadLegacyFunction } from '../LegacyFunctionLoader';
-import { WorkerChannel } from '../WorkerChannel';
+import { channel } from '../WorkerChannel';
 import { ensureErrorType } from '../errors';
 import { nonNullProp } from '../utils/nonNull';
 import { EventHandler } from './EventHandler';
@@ -16,14 +16,14 @@ import LogLevel = rpc.RpcLog.Level;
 export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'functionLoadResponse'> {
     readonly responseName = 'functionLoadResponse';
 
-    getDefaultResponse(_channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): rpc.IFunctionLoadResponse {
+    getDefaultResponse(msg: rpc.IFunctionLoadRequest): rpc.IFunctionLoadResponse {
         return { functionId: msg.functionId };
     }
 
-    async handleEvent(channel: WorkerChannel, msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
+    async handleEvent(msg: rpc.IFunctionLoadRequest): Promise<rpc.IFunctionLoadResponse> {
         channel.app.workerIndexingLocked = true;
 
-        const response = this.getDefaultResponse(channel, msg);
+        const response = this.getDefaultResponse(msg);
 
         channel.log({
             message: `Worker ${channel.workerId} received FunctionLoadRequest`,
@@ -35,7 +35,7 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
             const functionId = nonNullProp(msg, 'functionId');
             const metadata = nonNullProp(msg, 'metadata');
             try {
-                await loadLegacyFunction(channel, functionId, metadata, channel.app.packageJson);
+                await loadLegacyFunction(functionId, metadata, channel.app.packageJson);
             } catch (err) {
                 const error = ensureErrorType(err);
                 error.isAzureFunctionsSystemError = true;

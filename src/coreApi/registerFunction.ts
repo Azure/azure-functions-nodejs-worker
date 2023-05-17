@@ -5,15 +5,11 @@ import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
-import { WorkerChannel } from '../WorkerChannel';
+import { channel } from '../WorkerChannel';
 import { AzFuncSystemError } from '../errors';
 import { fromCoreFunctionMetadata } from './converters/fromCoreFunctionMetadata';
 
-export function registerFunction(
-    channel: WorkerChannel,
-    metadata: FunctionMetadata,
-    callback: FunctionCallback
-): Disposable {
+export function registerFunction(metadata: FunctionMetadata, callback: FunctionCallback): Disposable {
     if (channel.app.workerIndexingLocked) {
         throw new AzFuncSystemError('A function can only be registered during app startup.');
     }

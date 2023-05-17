@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { WorkerChannel } from '../WorkerChannel';
 
 export type SupportedRequestName =
     | 'functionEnvironmentReloadRequest'
@@ -31,11 +30,11 @@ export abstract class EventHandler<
     /**
      * The default response with any properties unique to this request that should be set for both success & failure scenarios
      */
-    abstract getDefaultResponse(channel: WorkerChannel, request: TRequest): TResponse;
+    abstract getDefaultResponse(request: TRequest): TResponse;
 
     /**
      * Handles the event and returns the response
      * NOTE: This method does not need to set the result/status. That will be handled in code common to all event handlers
      */
-    abstract handleEvent(channel: WorkerChannel, request: TRequest): Promise<TResponse>;
+    abstract handleEvent(request: TRequest): Promise<TResponse>;
 }

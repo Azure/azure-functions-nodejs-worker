@@ -16,7 +16,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from '../AppContext';
 import { getLegacyFunction } from '../LegacyFunctionLoader';
-import { WorkerChannel } from '../WorkerChannel';
+import { channel } from '../WorkerChannel';
 import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvocationResponse';
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
@@ -31,17 +31,17 @@ import { EventHandler } from './EventHandler';
 export class InvocationHandler extends EventHandler<'invocationRequest', 'invocationResponse'> {
     readonly responseName = 'invocationResponse';
 
-    getDefaultResponse(_channel: WorkerChannel, msg: rpc.IInvocationRequest): rpc.IInvocationResponse {
+    getDefaultResponse(msg: rpc.IInvocationRequest): rpc.IInvocationResponse {
         return { invocationId: msg.invocationId };
     }
 
-    async handleEvent(channel: WorkerChannel, msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
+    async handleEvent(msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
         const functionId = nonNullProp(msg, 'functionId');
         let registeredFunc: RegisteredFunction | undefined;
         if (channel.app.isUsingWorkerIndexing) {
             registeredFunc = channel.app.functions[functionId];
         } else {
-            registeredFunc = getLegacyFunction(channel, functionId);
+            registeredFunc = getLegacyFunction(functionId);
         }
 
         if (!registeredFunc) {
@@ -52,7 +52,6 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         const msgCategory = `${nonNullProp(metadata, 'name')}.Invocation`;
         const coreCtx = new CoreInvocationContext(
-            channel,
             toCoreInvocationRequest(msg),
             toCoreFunctionMetadata(metadata),
             msgCategory
@@ -153,24 +152,17 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
     request: RpcInvocationRequest;
     metadata: RpcFunctionMetadata;
     state?: InvocationState;
-    #channel: WorkerChannel;
     #msgCategory: string;
 
-    constructor(
-        channel: WorkerChannel,
-        request: RpcInvocationRequest,
-        metadata: RpcFunctionMetadata,
-        msgCategory: string
-    ) {
+    constructor(request: RpcInvocationRequest, metadata: RpcFunctionMetadata, msgCategory: string) {
         this.invocationId = nonNullProp(request, 'invocationId');
-        this.#channel = channel;
         this.request = request;
         this.metadata = metadata;
         this.#msgCategory = msgCategory;
     }
 
     log(level: RpcLogLevel, logCategory: RpcLogCategory, message: string): void {
-        this.#channel.log({
+        channel.log({
             invocationId: this.request.invocationId,
             category: this.#msgCategory,
             message,

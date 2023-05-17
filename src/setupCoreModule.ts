@@ -4,7 +4,7 @@
 import { FunctionCallback, FunctionMetadata, HookCallback, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from './Disposable';
-import { WorkerChannel } from './WorkerChannel';
+import { channel } from './WorkerChannel';
 import { version } from './constants';
 import { registerFunction } from './coreApi/registerFunction';
 import Module = require('module');
@@ -16,7 +16,7 @@ import LogLevel = rpc.RpcLog.Level;
  * This module is essentially the publicly accessible API for our worker
  * This module is available to users only at runtime, not as an installable npm package
  */
-export function setupCoreModule(channel: WorkerChannel): void {
+export function setupCoreModule(): void {
     const coreApi = {
         version: version,
         get hostVersion() {
@@ -40,7 +40,7 @@ export function setupCoreModule(channel: WorkerChannel): void {
             return channel.app.programmingModel;
         },
         registerFunction: (metadata: FunctionMetadata, callback: FunctionCallback) => {
-            return registerFunction(channel, metadata, callback);
+            return registerFunction(metadata, callback);
         },
         Disposable,
     };

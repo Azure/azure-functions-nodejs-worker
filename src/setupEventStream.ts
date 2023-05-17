@@ -12,7 +12,7 @@ import { terminateWorker } from './eventHandlers/terminateWorker';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
-import { WorkerChannel } from './WorkerChannel';
+import { channel } from './WorkerChannel';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -22,9 +22,9 @@ import LogLevel = rpc.RpcLog.Level;
  * This should have a way to handle all incoming gRPC messages.
  * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
  */
-export function setupEventStream(channel: WorkerChannel): void {
+export function setupEventStream(): void {
     channel.eventStream.on('data', (msg) => {
-        void handleMessage(channel, msg);
+        void handleMessage(msg);
     });
 
     channel.eventStream.on('error', function (err) {
@@ -44,7 +44,7 @@ export function setupEventStream(channel: WorkerChannel): void {
     };
 }
 
-async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage): Promise<void> {
+async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
     const outMsg: rpc.IStreamingMessage = {
         requestId: inMsg.requestId,
     };
@@ -69,7 +69,7 @@ async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage
             case 'workerTerminate':
                 // Worker terminate request is a special request which gracefully shuts down worker
                 // It doesn't have a response so we don't have an EventHandler class for it
-                await terminateWorker(channel, nonNullProp(inMsg, eventName));
+                await terminateWorker(nonNullProp(inMsg, eventName));
                 return;
             case 'workerStatusRequest':
                 // Worker sends the host empty response to evaluate the worker's latency
@@ -93,7 +93,7 @@ async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage
         }
 
         request = nonNullProp(inMsg, eventName);
-        const response = await eventHandler.handleEvent(channel, request);
+        const response = await eventHandler.handleEvent(request);
         response.result = { status: rpc.StatusResult.Status.Success };
         outMsg[eventHandler.responseName] = response;
     } catch (err) {
@@ -107,7 +107,7 @@ async function handleMessage(channel: WorkerChannel, inMsg: rpc.StreamingMessage
         }
 
         if (eventHandler && request) {
-            const response = eventHandler.getDefaultResponse(channel, request);
+            const response = eventHandler.getDefaultResponse(request);
             response.result = {
                 status: rpc.StatusResult.Status.Failure,
                 exception: {

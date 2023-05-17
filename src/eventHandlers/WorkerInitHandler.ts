@@ -4,10 +4,10 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { channel } from '../WorkerChannel';
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
-import { WorkerChannel } from '../WorkerChannel';
 import { EventHandler } from './EventHandler';
 import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -19,14 +19,14 @@ import LogLevel = rpc.RpcLog.Level;
 export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'workerInitResponse'> {
     readonly responseName = 'workerInitResponse';
 
-    getDefaultResponse(channel: WorkerChannel, _msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
+    getDefaultResponse(_msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
         return {
-            workerMetadata: getWorkerMetadata(channel),
+            workerMetadata: getWorkerMetadata(),
         };
     }
 
-    async handleEvent(channel: WorkerChannel, msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
-        const response = this.getDefaultResponse(channel, msg);
+    async handleEvent(msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
+        const response = this.getDefaultResponse(msg);
 
         channel.log({
             message: `Worker ${channel.workerId} received WorkerInitRequest`,
@@ -34,14 +34,14 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             logCategory: LogCategory.System,
         });
 
-        logColdStartWarning(channel);
+        logColdStartWarning();
 
         channel._hostVersion = nonNullProp(msg, 'hostVersion');
 
         if (msg.functionAppDirectory) {
-            await startApp(msg.functionAppDirectory, channel);
+            await startApp(msg.functionAppDirectory);
             // model info may have changed, so we need to update this
-            response.workerMetadata = getWorkerMetadata(channel);
+            response.workerMetadata = getWorkerMetadata();
         }
 
         response.capabilities = {
@@ -59,7 +59,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
     }
 }
 
-export function logColdStartWarning(channel: WorkerChannel, delayInMs?: number): void {
+export function logColdStartWarning(delayInMs?: number): void {
     // On reading a js file with function code('require') NodeJs tries to find 'package.json' all the way up to the file system root.
     // In Azure files it causes a delay during cold start as connection to Azure Files is an expensive operation.
     const scriptRoot = process.env.AzureWebJobsScriptRoot;

@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { WorkerChannel } from '../../src/WorkerChannel';
+import { channel } from '../../src/WorkerChannel';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -213,12 +213,11 @@ namespace InputData {
 
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
-    let channel: WorkerChannel;
     let coreApi: typeof coreTypes;
     let processExitStub: sinon.SinonStub;
 
     before(async () => {
-        ({ stream, channel } = beforeEventHandlerSuite());
+        stream = beforeEventHandlerSuite();
         coreApi = await import('@azure/functions-core');
         processExitStub = sinon.stub(process, 'exit');
     });
@@ -228,7 +227,7 @@ describe('InvocationHandler', () => {
     });
 
     afterEach(async () => {
-        await stream.afterEachEventHandlerTest(channel);
+        await stream.afterEachEventHandlerTest();
     });
 
     after(() => {

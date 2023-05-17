@@ -4,14 +4,13 @@
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from './AppContext';
-import { WorkerChannel } from './WorkerChannel';
+import { channel } from './WorkerChannel';
 import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { nonNullProp } from './utils/nonNull';
 
 export async function loadLegacyFunction(
-    channel: WorkerChannel,
     functionId: string,
     metadata: rpc.IRpcFunctionMetadata,
     packageJson: PackageJson
@@ -19,13 +18,13 @@ export async function loadLegacyFunction(
     if (metadata.isProxy === true) {
         return;
     }
-    const script: any = await loadScriptFile(channel, nonNullProp(metadata, 'scriptFile'), packageJson);
+    const script: any = await loadScriptFile(nonNullProp(metadata, 'scriptFile'), packageJson);
     const entryPoint = <string>(metadata && metadata.entryPoint);
     const [callback, thisArg] = getEntryPoint(script, entryPoint);
     channel.app.legacyFunctions[functionId] = { metadata, callback, thisArg };
 }
 
-export function getLegacyFunction(channel: WorkerChannel, functionId: string): RegisteredFunction | undefined {
+export function getLegacyFunction(functionId: string): RegisteredFunction | undefined {
     const loadedFunction = channel.app.legacyFunctions[functionId];
     if (loadedFunction) {
         return {
