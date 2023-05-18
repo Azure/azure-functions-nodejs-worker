@@ -10,7 +10,7 @@ import * as semver from 'semver';
 const repoRoot = path.join(__dirname, '..');
 const packageJsonPath = path.join(repoRoot, 'package.json');
 const nuspecPath = path.join(repoRoot, 'Worker.nuspec');
-const nuspecVersionRegex = /<version>(.*)\$prereleaseSuffix\$<\/version>/i;
+const nuspecVersionRegex = /<version>(.*)<\/version>/i;
 const constantsPath = path.join(repoRoot, 'src', 'constants.ts');
 const constantsVersionRegex = /version = '(.*)'/i;
 
@@ -19,18 +19,21 @@ if (args.validate) {
     validateVersion();
 } else if (args.version) {
     updateVersion(args.version);
+} else if (args.buildNumber) {
+    const currentVersion = validateVersion();
+    updateVersion(`${currentVersion}-alpha.${args.buildNumber}`);
 } else {
     console.log(`This script can be used to either update the version of the worker or validate that the repo is in a valid state with regards to versioning.
 
 Example usage:
 
 npm run updateVersion -- --version 3.3.0
-
+npm run updateVersion -- --buildNumber 20230517.1
 npm run updateVersion -- --validate`);
     throw new Error('Invalid arguments');
 }
 
-function validateVersion() {
+function validateVersion(): string {
     const packageJson = readJSONSync(packageJsonPath);
     const packageJsonVersion = packageJson.version;
 
@@ -51,6 +54,7 @@ function validateVersion() {
         throw new Error(`Worker versions do not match.`);
     } else {
         console.log('Versions match! 🎉');
+        return packageJsonVersion;
     }
 }
 
