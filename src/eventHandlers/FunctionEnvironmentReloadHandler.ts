@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { startApp } from '../startApp';
 import { EventHandler } from './EventHandler';
 import { getWorkerMetadata } from './getWorkerMetadata';
@@ -25,13 +25,13 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
     }
 
     async handleEvent(msg: rpc.IFunctionEnvironmentReloadRequest): Promise<rpc.IFunctionEnvironmentReloadResponse> {
-        channel.resetApp();
+        worker.resetApp();
 
         const response = this.getDefaultResponse(msg);
 
         // Add environment variables from incoming
         const numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
-        channel.log({
+        worker.log({
             message: `Reloading environment variables. Found ${numVariables} variables to reload.`,
             level: LogLevel.Information,
             logCategory: LogCategory.System,
@@ -44,7 +44,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
 
         // Change current working directory
         if (msg.functionAppDirectory) {
-            channel.log({
+            worker.log({
                 message: `Changing current working directory to ${msg.functionAppDirectory}`,
                 level: LogLevel.Information,
                 logCategory: LogCategory.System,

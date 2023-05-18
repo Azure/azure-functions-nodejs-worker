@@ -7,12 +7,12 @@ import LogLevel = rpc.RpcLog.Level;
 import blockedAt = require('blocked-at');
 
 export function startBlockedMonitor(
-    channel: { log: (log: rpc.IRpcLog) => void },
+    worker: { log: (log: rpc.IRpcLog) => void },
     threshold = 500,
     intreval = 10000
 ): NodeJS.Timer {
     function logBlockedWarning(message: string) {
-        channel.log({
+        worker.log({
             message,
             level: LogLevel.Warning,
             logCategory: LogCategory.System,

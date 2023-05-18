@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { version as workerVersion } from '../constants';
 
 export function getWorkerMetadata(): rpc.IWorkerMetadata {
@@ -13,10 +13,10 @@ export function getWorkerMetadata(): rpc.IWorkerMetadata {
         workerBitness: process.arch === 'ia32' ? 'x86' : process.arch,
         workerVersion,
     };
-    if (channel.app.programmingModel) {
+    if (worker.app.programmingModel) {
         result.customProperties = {
-            modelName: channel.app.programmingModel.name,
-            modelVersion: channel.app.programmingModel.version,
+            modelName: worker.app.programmingModel.name,
+            modelVersion: worker.app.programmingModel.version,
         };
     }
     return result;

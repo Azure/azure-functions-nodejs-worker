@@ -3,14 +3,14 @@
 
 import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
-    channel.log({
+    worker.log({
         message: 'Received workerTerminate message; gracefully shutting down worker',
         level: LogLevel.Debug,
         logCategory: LogCategory.System,
@@ -18,13 +18,13 @@ export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
 
     const appTerminateContext: AppTerminateContext = {
         get hookData() {
-            return channel.app.appLevelOnlyHookData;
+            return worker.app.appLevelOnlyHookData;
         },
         set hookData(_obj) {
             throw new ReadOnlyError('hookData');
         },
         get appHookData() {
-            return channel.app.appHookData;
+            return worker.app.appHookData;
         },
         set appHookData(_obj) {
             throw new ReadOnlyError('appHookData');
@@ -33,6 +33,6 @@ export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
 
     await executeHooks('appTerminate', appTerminateContext);
 
-    channel.eventStream.end();
+    worker.eventStream.end();
     process.exit(0);
 }

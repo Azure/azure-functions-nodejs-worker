@@ -7,7 +7,7 @@ import { AzFuncSystemError, ensureErrorType, ReadOnlyError } from './errors';
 import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
 import { parsePackageJson } from './parsers/parsePackageJson';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import globby = require('globby');
 import path = require('path');
 import LogLevel = rpc.RpcLog.Level;
@@ -26,13 +26,13 @@ export async function startApp(functionAppDirectory: string): Promise<void> {
     await loadEntryPointFile(functionAppDirectory);
     const appStartContext: AppStartContext = {
         get hookData() {
-            return channel.app.appLevelOnlyHookData;
+            return worker.app.appLevelOnlyHookData;
         },
         set hookData(_obj) {
             throw new ReadOnlyError('hookData');
         },
         get appHookData() {
-            return channel.app.appHookData;
+            return worker.app.appHookData;
         },
         set appHookData(_obj) {
             throw new ReadOnlyError('appHookData');
@@ -44,20 +44,20 @@ export async function startApp(functionAppDirectory: string): Promise<void> {
 
 async function updatePackageJson(functionAppDirectory: string): Promise<void> {
     try {
-        channel.app.packageJson = await parsePackageJson(functionAppDirectory);
+        worker.app.packageJson = await parsePackageJson(functionAppDirectory);
     } catch (err) {
         const error = ensureErrorType(err);
-        channel.log({
+        worker.log({
             message: `Worker failed to load package.json: ${error.message}`,
             level: LogLevel.Warning,
             logCategory: LogCategory.System,
         });
-        channel.app.packageJson = {};
+        worker.app.packageJson = {};
     }
 }
 
 async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
-    const entryPointPattern = channel.app.packageJson.main;
+    const entryPointPattern = worker.app.packageJson.main;
     if (entryPointPattern) {
         let currentFile: string | undefined = undefined;
         try {
@@ -68,19 +68,19 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
 
             for (const file of files) {
                 currentFile = file;
-                channel.log({
+                worker.log({
                     message: `Loading entry point file "${file}"`,
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
                 });
                 try {
                     const entryPointFilePath = path.join(functionAppDirectory, file);
-                    channel.app.currentEntryPoint = entryPointFilePath;
-                    await loadScriptFile(entryPointFilePath, channel.app.packageJson);
+                    worker.app.currentEntryPoint = entryPointFilePath;
+                    await loadScriptFile(entryPointFilePath, worker.app.packageJson);
                 } finally {
-                    channel.app.currentEntryPoint = undefined;
+                    worker.app.currentEntryPoint = undefined;
                 }
-                channel.log({
+                worker.log({
                     message: `Loaded entry point file "${file}"`,
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
@@ -88,7 +88,7 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
             }
         } catch (err) {
             const error = ensureErrorType(err);
-            channel.log({
+            worker.log({
                 message: `Worker was unable to load entry point "${currentFile ? currentFile : entryPointPattern}": ${
                     error.message
                 }`,

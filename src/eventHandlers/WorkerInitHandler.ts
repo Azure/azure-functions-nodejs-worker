@@ -4,7 +4,7 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
@@ -28,15 +28,15 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
     async handleEvent(msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
         const response = this.getDefaultResponse(msg);
 
-        channel.log({
-            message: `Worker ${channel.workerId} received WorkerInitRequest`,
+        worker.log({
+            message: `Worker ${worker.id} received WorkerInitRequest`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });
 
         logColdStartWarning();
 
-        channel._hostVersion = nonNullProp(msg, 'hostVersion');
+        worker._hostVersion = nonNullProp(msg, 'hostVersion');
 
         if (msg.functionAppDirectory) {
             await startApp(msg.functionAppDirectory);
@@ -71,7 +71,7 @@ export function logColdStartWarning(delayInMs?: number): void {
         setTimeout(() => {
             access(path.join(scriptRoot, 'package.json'), constants.F_OK, (err) => {
                 if (isError(err)) {
-                    channel.log({
+                    worker.log({
                         message:
                             'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
                         level: LogLevel.Debug,
