@@ -28,6 +28,15 @@
 - Back in the worker repository, press <kbd>F5</kbd> and select the process for your running function app
 - Before you submit a PR, run `npm run lint` and `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
 
+## Repositories
+
+These are the most important GitHub repositories that make up the Node.js experience on Azure Functions:
+
+- [azure-functions-nodejs-library](https://github.com/Azure/azure-functions-nodejs-library): The `@azure/functions` [npm package](https://www.npmjs.com/package/@azure/functions) that you include in your app.
+- [azure-functions-nodejs-worker](https://github.com/Azure/azure-functions-nodejs-worker): The other half of the Node.js experience that ships directly in Azure.
+- [azure-functions-nodejs-e2e-tests](https://github.com/Azure/azure-functions-e2e-tests): A set of automated end-to-end tests designed to run against prerelease versions of all Node.js components.
+- [azure-functions-host](https://github.com/Azure/azure-functions-host): The runtime shared by all languages in Azure Functions.
+- [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools): The CLI used to test Azure Functions locally.
 
 ### Code of Conduct
 
