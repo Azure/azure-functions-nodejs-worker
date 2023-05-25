@@ -5,6 +5,7 @@ import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { channel } from '../WorkerChannel';
 import { ReadOnlyError } from '../errors';
+import { executeHooks } from '../hooks/executeHooks';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -30,7 +31,7 @@ export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
         },
     };
 
-    await channel.executeHooks('appTerminate', appTerminateContext);
+    await executeHooks('appTerminate', appTerminateContext);
 
     channel.eventStream.end();
     process.exit(0);

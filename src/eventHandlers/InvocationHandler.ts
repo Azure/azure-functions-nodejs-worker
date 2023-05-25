@@ -22,6 +22,7 @@ import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fro
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
 import { AzFuncSystemError, ReadOnlyError, isError } from '../errors';
+import { executeHooks } from '../hooks/executeHooks';
 import { nonNullProp } from '../utils/nonNull';
 import { EventHandler } from './EventHandler';
 
@@ -91,7 +92,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         coreCtx.state = 'preInvocationHooks';
         try {
-            await channel.executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
+            await executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
         } finally {
             coreCtx.state = undefined;
         }
@@ -134,7 +135,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         coreCtx.state = 'postInvocationHooks';
         try {
-            await channel.executeHooks('postInvocation', postInvocContext, msg.invocationId, msgCategory);
+            await executeHooks('postInvocation', postInvocContext, msg.invocationId, msgCategory);
         } finally {
             coreCtx.state = undefined;
         }

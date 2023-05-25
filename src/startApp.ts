@@ -4,7 +4,9 @@
 import { AppStartContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { AzFuncSystemError, ensureErrorType, ReadOnlyError } from './errors';
+import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
+import { parsePackageJson } from './parsers/parsePackageJson';
 import { channel } from './WorkerChannel';
 import globby = require('globby');
 import path = require('path');
@@ -20,7 +22,7 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
  *    Worker specialization happens only once, so we don't need to worry about cleaning up resources from previous `functionEnvironmentReloadRequest`s.
  */
 export async function startApp(functionAppDirectory: string): Promise<void> {
-    await channel.updatePackageJson(functionAppDirectory);
+    await updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory);
     const appStartContext: AppStartContext = {
         get hookData() {
@@ -37,7 +39,21 @@ export async function startApp(functionAppDirectory: string): Promise<void> {
         },
         functionAppDirectory,
     };
-    await channel.executeHooks('appStart', appStartContext);
+    await executeHooks('appStart', appStartContext);
+}
+
+async function updatePackageJson(functionAppDirectory: string): Promise<void> {
+    try {
+        channel.app.packageJson = await parsePackageJson(functionAppDirectory);
+    } catch (err) {
+        const error = ensureErrorType(err);
+        channel.log({
+            message: `Worker failed to load package.json: ${error.message}`,
+            level: LogLevel.Warning,
+            logCategory: LogCategory.System,
+        });
+        channel.app.packageJson = {};
+    }
 }
 
 async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
