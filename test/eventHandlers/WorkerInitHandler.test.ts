@@ -5,7 +5,6 @@ import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
 import 'mocha';
-import { ITestCallbackContext } from 'mocha';
 import * as semver from 'semver';
 import { worker } from '../../src/WorkerContext';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
@@ -117,25 +116,65 @@ describe('WorkerInitHandler', () => {
         );
     });
 
-    it('Fails for missing entry point', async function (this: ITestCallbackContext) {
+    it('Logs error for missing entry point file', async () => {
         const fileSubpath = await setTestAppMainField('missing.js');
 
         stream.addTestMessage(msg.init.request(testAppPath));
-        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.warningLog(warningMessage), msg.init.response);
+        const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
     });
 
-    it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
-        const fileSubpath = await setTestAppMainField('throwError.js');
+    it('Logs error for missing entry point glob pattern', async () => {
+        const fileSubpath = await setTestAppMainField('missing/*.js');
 
         stream.addTestMessage(msg.init.request(testAppPath));
-        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
-        await stream.assertCalledWith(
-            msg.init.receivedRequestLog,
-            msg.loadingEntryPoint(fileSubpath),
-            msg.warningLog(warningMessage),
-            msg.init.response
-        );
+        const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
+    });
+
+    describe('entry point error', () => {
+        async function verifyInitSucceedsAndLogsError(): Promise<void> {
+            const fileSubpath = await setTestAppMainField('throwError.js');
+            stream.addTestMessage(msg.init.request(testAppPath));
+            const errorMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.loadingEntryPoint(fileSubpath),
+                msg.errorLog(errorMessage),
+                msg.init.response
+            );
+        }
+
+        it('init succeeds but still logs error (v3)', async () => {
+            await verifyInitSucceedsAndLogsError();
+        });
+
+        it('init succeeds but still logs error (v4) (app setting=0)', async () => {
+            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
+            await verifyInitSucceedsAndLogsError();
+        });
+
+        async function verifyInitFails(): Promise<void> {
+            const fileSubpath = await setTestAppMainField('throwError.js');
+            stream.addTestMessage(msg.init.request(testAppPath));
+            const errorMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.loadingEntryPoint(fileSubpath),
+                msg.init.failedResponse(errorMessage)
+            );
+        }
+
+        it('init fails (v4)', async () => {
+            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            await verifyInitFails();
+        });
+
+        it('init fails (v3) (app setting=1)', async () => {
+            process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
+            await verifyInitFails();
+        });
     });
 
     for (const rfpValue of ['1', 'https://url']) {

@@ -28,3 +28,7 @@ export function nonNullValue<T>(value: T | undefined, propertyNameOrMessage?: st
 
     return value;
 }
+
+export function isDefined<T>(data: T | undefined | null): data is T {
+    return data !== null && data !== undefined;
+}

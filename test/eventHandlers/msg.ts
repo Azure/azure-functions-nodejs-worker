@@ -22,8 +22,8 @@ function workerMetadataRegExps(responseName: string) {
     return {
         [`${responseName}.workerMetadata.runtimeVersion`]: /^[0-9]+\.[0-9]+\.[0-9]+$/,
         [`${responseName}.workerMetadata.workerBitness`]: /^(x64|x86|arm64)$/,
-        [`${responseName}.workerMetadata.workerVersion`]: /^3\.[0-9]+\.[0-9]+$/,
-        [`${responseName}.workerMetadata.customProperties.modelVersion`]: /^3\.[0-9]+\.[0-9]+$/,
+        [`${responseName}.workerMetadata.workerVersion`]: /^(3|4)\.[0-9]+\.[0-9]+$/,
+        [`${responseName}.workerMetadata.customProperties.modelVersion`]: /^(3|4)\.[0-9]+\.[0-9]+$/,
     };
 }
 
@@ -157,7 +157,7 @@ export namespace msg {
             workerMetadataRegExps('workerInitResponse')
         );
 
-        export function failedResponse(fileName: string, errorMessage: string): RegExpStreamingMessage {
+        export function failedResponse(errorMessage: string): RegExpStreamingMessage {
             const expectedMsg: rpc.IStreamingMessage = {
                 requestId: 'testReqId',
                 workerInitResponse: {
@@ -169,6 +169,9 @@ export namespace msg {
                     },
                     workerMetadata: {
                         runtimeName: 'node',
+                        customProperties: {
+                            modelName: '@azure/functions',
+                        },
                     },
                 },
             };
