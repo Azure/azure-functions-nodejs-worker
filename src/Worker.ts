@@ -3,7 +3,7 @@
 
 import * as parseArgs from 'minimist';
 import { CreateGrpcEventStream } from './GrpcClient';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import { AzFuncSystemError, ensureErrorType } from './errors';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
@@ -27,13 +27,13 @@ export function startNodeWorker(args) {
 
         throw new AzFuncSystemError(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
     }
-    channel.workerId = workerId;
+    worker.id = workerId;
 
     const connection = `${host}:${port}`;
     systemLog(`Worker ${workerId} connecting on ${connection}`);
 
     try {
-        channel.eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
+        worker.eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
     } catch (err) {
         const error = ensureErrorType(err);
         error.isAzureFunctionsSystemError = true;
@@ -44,7 +44,7 @@ export function startNodeWorker(args) {
     setupEventStream();
     setupCoreModule();
 
-    channel.eventStream.write({
+    worker.eventStream.write({
         requestId: requestId,
         startStream: {
             workerId: workerId,
@@ -70,6 +70,6 @@ export function startNodeWorker(args) {
     });
 
     if (isEnvironmentVariableSet(process.env.AZURE_FUNCTIONS_NODE_BLOCK_LOG)) {
-        startBlockedMonitor(channel);
+        startBlockedMonitor(worker);
     }
 }

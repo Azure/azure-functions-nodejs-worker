@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -40,12 +40,12 @@ function warnIfLongLoadTime(filePath: string, start: number): void {
         (rfpValue === undefined || rfpValue === '0') &&
         process.env.AZURE_FUNCTIONS_ENVIRONMENT !== 'Development' // don't show in core tools
     ) {
-        channel.log({
+        worker.log({
             message: `Loading "${path.basename(filePath)}" took ${timeElapsed}ms`,
             level: LogLevel.Warning,
             logCategory: LogCategory.System,
         });
-        channel.log({
+        worker.log({
             message: `Set "${rfpName}" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54`,
             level: LogLevel.Warning,
             logCategory: LogCategory.System,

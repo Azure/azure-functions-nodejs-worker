@@ -16,7 +16,7 @@ import {
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from '../AppContext';
 import { getLegacyFunction } from '../LegacyFunctionLoader';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvocationResponse';
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
@@ -39,8 +39,8 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
     async handleEvent(msg: rpc.IInvocationRequest): Promise<rpc.IInvocationResponse> {
         const functionId = nonNullProp(msg, 'functionId');
         let registeredFunc: RegisteredFunction | undefined;
-        if (channel.app.isUsingWorkerIndexing) {
-            registeredFunc = channel.app.functions[functionId];
+        if (worker.app.isUsingWorkerIndexing) {
+            registeredFunc = worker.app.functions[functionId];
         } else {
             registeredFunc = getLegacyFunction(functionId);
         }
@@ -59,9 +59,9 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         );
 
         // Log invocation details to ensure the invocation received by node worker
-        coreCtx.log('debug', 'system', `Worker ${channel.workerId} received FunctionInvocationRequest`);
+        coreCtx.log('debug', 'system', `Worker ${worker.id} received FunctionInvocationRequest`);
 
-        const programmingModel: ProgrammingModel = nonNullProp(channel.app, 'programmingModel');
+        const programmingModel: ProgrammingModel = nonNullProp(worker.app, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);
 
         const hookData: HookData = {};
@@ -75,7 +75,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 throw new ReadOnlyError('hookData');
             },
             get appHookData() {
-                return channel.app.appHookData;
+                return worker.app.appHookData;
             },
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');
@@ -108,7 +108,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
                 throw new ReadOnlyError('hookData');
             },
             get appHookData() {
-                return channel.app.appHookData;
+                return worker.app.appHookData;
             },
             set appHookData(_obj) {
                 throw new ReadOnlyError('appHookData');
@@ -163,7 +163,7 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
     }
 
     log(level: RpcLogLevel, logCategory: RpcLogCategory, message: string): void {
-        channel.log({
+        worker.log({
             invocationId: this.request.invocationId,
             category: this.#msgCategory,
             message,

@@ -7,7 +7,7 @@ import * as fs from 'fs/promises';
 import 'mocha';
 import { ITestCallbackContext } from 'mocha';
 import * as semver from 'semver';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
@@ -59,13 +59,13 @@ describe('WorkerInitHandler', () => {
 
         stream.addTestMessage(msg.init.request(testAppPath));
         await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
-        expect(channel.app.packageJson).to.deep.equal(expectedPackageJson);
+        expect(worker.app.packageJson).to.deep.equal(expectedPackageJson);
     });
 
     it('loads empty package.json', async () => {
         stream.addTestMessage(msg.init.request('folderWithoutPackageJson'));
         await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
-        expect(channel.app.packageJson).to.be.empty;
+        expect(worker.app.packageJson).to.be.empty;
     });
 
     it('ignores malformed package.json', async () => {
@@ -83,7 +83,7 @@ describe('WorkerInitHandler', () => {
             ),
             msg.init.response
         );
-        expect(channel.app.packageJson).to.be.empty;
+        expect(worker.app.packageJson).to.be.empty;
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {

@@ -3,7 +3,7 @@
 
 import { HookContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { getHooks } from './getHooks';
 import LogLevel = rpc.RpcLog.Level;
 import LogCategory = rpc.RpcLog.RpcLogCategory;
@@ -16,7 +16,7 @@ export async function executeHooks(
 ): Promise<void> {
     const callbacks = getHooks(hookName);
     if (callbacks.length > 0) {
-        channel.log({
+        worker.log({
             message: `Executing ${callbacks.length} "${hookName}" hooks`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
@@ -26,7 +26,7 @@ export async function executeHooks(
         for (const callback of callbacks) {
             await callback(context);
         }
-        channel.log({
+        worker.log({
             message: `Executed "${hookName}" hooks`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,

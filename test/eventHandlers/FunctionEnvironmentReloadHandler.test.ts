@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
 import 'mocha';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -170,7 +170,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.changingCwdLog(testAppPath),
             msg.envReload.response
         );
-        expect(channel.app.packageJson).to.deep.equal(oldPackageJson);
+        expect(worker.app.packageJson).to.deep.equal(oldPackageJson);
 
         const newPackageJson = { type: 'commonjs', notHello: 'notWorld' };
         await fs.writeFile(testPackageJsonPath, JSON.stringify(newPackageJson));
@@ -185,7 +185,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.changingCwdLog(testAppPath),
             msg.envReload.response
         );
-        expect(channel.app.packageJson).to.deep.equal(newPackageJson);
+        expect(worker.app.packageJson).to.deep.equal(newPackageJson);
     });
 
     it('loads package.json (placeholder scenario)', async () => {
@@ -193,7 +193,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await fs.writeFile(testPackageJsonPath, JSON.stringify(packageJson));
 
         await mockPlaceholderInit();
-        expect(channel.app.packageJson).to.be.empty;
+        expect(worker.app.packageJson).to.be.empty;
 
         stream.addTestMessage({
             requestId: 'testReqId',
@@ -206,7 +206,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.changingCwdLog(testAppPath),
             msg.envReload.response
         );
-        expect(channel.app.packageJson).to.deep.equal(packageJson);
+        expect(worker.app.packageJson).to.deep.equal(packageJson);
     });
 
     for (const extension of ['.js', '.mjs', '.cjs']) {

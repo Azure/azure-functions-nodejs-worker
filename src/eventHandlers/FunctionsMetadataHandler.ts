@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../WorkerChannel';
+import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -17,17 +17,17 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
     }
 
     async handleEvent(msg: rpc.IFunctionsMetadataRequest): Promise<rpc.IFunctionMetadataResponse> {
-        channel.app.workerIndexingLocked = true;
+        worker.app.workerIndexingLocked = true;
 
         const response = this.getDefaultResponse(msg);
 
-        channel.log({
-            message: `Worker ${channel.workerId} received FunctionsMetadataRequest`,
+        worker.log({
+            message: `Worker ${worker.id} received FunctionsMetadataRequest`,
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });
 
-        const functions = Object.values(channel.app.functions);
+        const functions = Object.values(worker.app.functions);
         if (functions.length > 0) {
             response.useDefaultMetadataIndexing = false;
             response.functionMetadataResults = functions.map((f) => f.metadata);

@@ -7,7 +7,7 @@ import { AppContext } from './AppContext';
 import { IEventStream } from './GrpcClient';
 import { AzFuncSystemError } from './errors';
 
-export class WorkerChannel {
+class WorkerContext {
     app = new AppContext();
     defaultProgrammingModel?: ProgrammingModel;
 
@@ -16,20 +16,20 @@ export class WorkerChannel {
      */
     _hostVersion?: string;
 
-    #workerId?: string;
+    #id?: string;
     #eventStream?: IEventStream;
-    #notInitializedMsg = 'WorkerChannel has not been initialized yet.';
+    #notInitializedMsg = 'WorkerContext has not been initialized yet.';
 
-    get workerId(): string {
-        if (!this.#workerId) {
+    get id(): string {
+        if (!this.#id) {
             throw new AzFuncSystemError(this.#notInitializedMsg);
         } else {
-            return this.#workerId;
+            return this.#id;
         }
     }
 
-    set workerId(value: string) {
-        this.#workerId = value;
+    set id(value: string) {
+        this.#id = value;
     }
 
     get eventStream(): IEventStream {
@@ -69,4 +69,4 @@ export class WorkerChannel {
     }
 }
 
-export const channel: WorkerChannel = new WorkerChannel();
+export const worker = new WorkerContext();

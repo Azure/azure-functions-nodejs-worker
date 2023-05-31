@@ -3,7 +3,7 @@
 
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -18,7 +18,7 @@ describe('terminateWorker', () => {
     before(async () => {
         stream = beforeEventHandlerSuite();
         processExitStub = sinon.stub(process, 'exit');
-        streamEndStub = sinon.stub(channel.eventStream, 'end');
+        streamEndStub = sinon.stub(worker.eventStream, 'end');
         coreApi = await import('@azure/functions-core');
     });
 

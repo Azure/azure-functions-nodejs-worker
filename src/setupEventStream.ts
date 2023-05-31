@@ -12,7 +12,7 @@ import { terminateWorker } from './eventHandlers/terminateWorker';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
@@ -23,24 +23,24 @@ import LogLevel = rpc.RpcLog.Level;
  * This includes all incoming StreamingMessage types (exclude *Response types and RpcLog type)
  */
 export function setupEventStream(): void {
-    channel.eventStream.on('data', (msg) => {
+    worker.eventStream.on('data', (msg) => {
         void handleMessage(msg);
     });
 
-    channel.eventStream.on('error', function (err) {
+    worker.eventStream.on('error', function (err) {
         systemError(`Worker encountered event stream error: `, err);
         throw new AzFuncSystemError(err);
     });
 
     // wrap event stream write to validate message correctness
-    const oldWrite = channel.eventStream.write;
-    channel.eventStream.write = function checkWrite(msg) {
+    const oldWrite = worker.eventStream.write;
+    worker.eventStream.write = function checkWrite(msg) {
         const msgError = rpc.StreamingMessage.verify(msg);
         if (msgError) {
             systemError(`Worker malformed message`, msgError);
             throw new AzFuncSystemError(msgError);
         }
-        oldWrite.apply(channel.eventStream, [msg]);
+        oldWrite.apply(worker.eventStream, [msg]);
     };
 }
 
@@ -75,7 +75,7 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
                 // Worker sends the host empty response to evaluate the worker's latency
                 // The response doesn't even allow a `result` property, which is why we don't implement an EventHandler class
                 outMsg.workerStatusResponse = {};
-                channel.eventStream.write(outMsg);
+                worker.eventStream.write(outMsg);
                 return;
             case 'functionsMetadataRequest':
                 eventHandler = new FunctionsMetadataHandler();
@@ -99,7 +99,7 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
     } catch (err) {
         const error = ensureErrorType(err);
         if (error.isAzureFunctionsSystemError) {
-            channel.log({
+            worker.log({
                 message: error.message,
                 level: LogLevel.Error,
                 logCategory: LogCategory.System,
@@ -120,6 +120,6 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
     }
 
     if (eventHandler) {
-        channel.eventStream.write(outMsg);
+        worker.eventStream.write(outMsg);
     }
 }

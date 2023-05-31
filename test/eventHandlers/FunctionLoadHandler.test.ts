@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import { getLegacyFunction } from '../../src/LegacyFunctionLoader';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { nonNullValue } from '../../src/utils/nonNull';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
@@ -24,7 +24,7 @@ describe('FunctionLoadHandler', () => {
     it('responds to function load', async () => {
         stream.addTestMessage(msg.funcLoad.request('helloWorld.js'));
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
-        expect(Object.keys(channel.app.legacyFunctions).length).to.equal(1);
+        expect(Object.keys(worker.app.legacyFunctions).length).to.equal(1);
     });
 
     it('handles function load exception', async () => {
@@ -70,7 +70,7 @@ describe('FunctionLoadHandler', () => {
 
         await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
 
-        expect(Object.keys(channel.app.legacyFunctions).length).to.equal(0);
+        expect(Object.keys(worker.app.legacyFunctions).length).to.equal(0);
     });
 
     it('throws the resolved entry point is not a function', async () => {

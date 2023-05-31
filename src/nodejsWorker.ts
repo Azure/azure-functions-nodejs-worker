@@ -6,7 +6,7 @@ const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
 const supportedVersions: string[] = ['v14', 'v16', 'v18', 'v20'];
 const devOnlyVersions: string[] = ['v15', 'v17', 'v19'];
-let worker;
+let workerModule;
 
 // Try validating node version
 // NOTE: This method should be manually tested if changed as it is in a sensitive code path
@@ -55,11 +55,11 @@ validateNodeVersion(process.version);
 
 // Try requiring bundle
 try {
-    worker = require('./worker-bundle.js');
-    worker = worker.worker;
+    workerModule = require('./worker-bundle.js');
+    workerModule = workerModule.worker;
 } catch (err) {
     console.log(logPrefix + "Couldn't require bundle, falling back to Worker.js. " + err);
-    worker = require('./Worker.js');
+    workerModule = require('./Worker.js');
 }
 
-worker.startNodeWorker(process.argv);
+workerModule.startNodeWorker(process.argv);

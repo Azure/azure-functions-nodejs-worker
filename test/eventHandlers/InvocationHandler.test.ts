@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -258,7 +258,7 @@ describe('InvocationHandler', () => {
     }
 
     function registerV3Func(metadata: rpc.IRpcFunctionMetadata, callback: AzureFunction): void {
-        channel.app.legacyFunctions.testFuncId = {
+        worker.app.legacyFunctions.testFuncId = {
             metadata,
             callback: <coreTypes.FunctionCallback>callback,
             thisArg: undefined,

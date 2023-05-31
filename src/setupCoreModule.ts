@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable } from './Disposable';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import { version } from './constants';
 import { registerFunction } from './coreApi/registerFunction';
 import { setProgrammingModel } from './coreApi/setProgrammingModel';
@@ -18,12 +18,12 @@ export function setupCoreModule(): void {
     const coreApi = {
         version: version,
         get hostVersion() {
-            return channel.hostVersion;
+            return worker.hostVersion;
         },
         registerHook,
         setProgrammingModel,
         getProgrammingModel: () => {
-            return channel.app.programmingModel;
+            return worker.app.programmingModel;
         },
         registerFunction,
         Disposable,

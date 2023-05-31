@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { IEventStream } from '../../src/GrpcClient';
-import { channel } from '../../src/WorkerChannel';
+import { worker } from '../../src/WorkerContext';
 import { testAppSrcPath, testPackageJsonPath } from './testAppUtils';
 
 export class TestEventStream extends EventEmitter implements IEventStream {
@@ -97,8 +97,8 @@ export class TestEventStream extends EventEmitter implements IEventStream {
 
         await fs.writeFile(testPackageJsonPath, '{}');
 
-        channel._hostVersion = undefined;
-        channel.resetApp();
+        worker._hostVersion = undefined;
+        worker.resetApp();
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
         await new Promise((resolve) => setTimeout(resolve, 20));

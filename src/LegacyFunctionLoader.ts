@@ -4,7 +4,7 @@
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from './AppContext';
-import { channel } from './WorkerChannel';
+import { worker } from './WorkerContext';
 import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
@@ -21,11 +21,11 @@ export async function loadLegacyFunction(
     const script: any = await loadScriptFile(nonNullProp(metadata, 'scriptFile'), packageJson);
     const entryPoint = <string>(metadata && metadata.entryPoint);
     const [callback, thisArg] = getEntryPoint(script, entryPoint);
-    channel.app.legacyFunctions[functionId] = { metadata, callback, thisArg };
+    worker.app.legacyFunctions[functionId] = { metadata, callback, thisArg };
 }
 
 export function getLegacyFunction(functionId: string): RegisteredFunction | undefined {
-    const loadedFunction = channel.app.legacyFunctions[functionId];
+    const loadedFunction = worker.app.legacyFunctions[functionId];
     if (loadedFunction) {
         return {
             metadata: loadedFunction.metadata,
