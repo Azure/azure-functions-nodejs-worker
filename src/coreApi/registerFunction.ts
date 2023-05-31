@@ -16,7 +16,7 @@ export function registerFunction(metadata: FunctionMetadata, callback: FunctionC
     worker.app.isUsingWorkerIndexing = true;
 
     const functionId = metadata.functionId || metadata.name;
-    if (functionId in channel.app.functions) {
+    if (functionId in worker.app.functions) {
         throw new AzFuncSystemError(`A function with id "${functionId}" has already been registered.`);
     }
 
