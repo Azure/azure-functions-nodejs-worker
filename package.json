@@ -11,7 +11,8 @@
         "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
         "globby": "^11.0.0",
-        "minimist": "^1.2.5"
+        "minimist": "^1.2.5",
+        "p-retry": "^4.0.0"
     },
     "devDependencies": {
         "@types/blocked-at": "^1.0.1",

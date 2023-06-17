@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as retry from 'p-retry';
 import * as path from 'path';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
@@ -11,6 +12,40 @@ import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
 export async function loadScriptFile(filePath: string, packageJson: PackageJson): Promise<unknown> {
+    // See the following issue for more details on why we want to retry
+    // https://github.com/Azure/azure-functions-nodejs-worker/issues/693
+    const fileName = path.basename(filePath);
+    return await retry(
+        async (currentAttempt: number) => {
+            if (currentAttempt > 1) {
+                worker.log({
+                    message: `Retrying load of file "${fileName}". Attempt ${currentAttempt}/${10}`,
+                    level: LogLevel.Debug,
+                    logCategory: LogCategory.System,
+                });
+            }
+            return loadScriptFileInternal(filePath, packageJson);
+        },
+        {
+            retries: 9,
+            minTimeout: 50,
+            onFailedAttempt: (error) => {
+                if (!/lstat.*home/.test(error?.message || '')) {
+                    // this will abort the retries if it's an error we don't recognize
+                    throw error;
+                } else if (error.retriesLeft > 0) {
+                    worker.log({
+                        message: `Warning: Failed to load file "${fileName}" with error "${error.message}"`,
+                        level: LogLevel.Warning,
+                        logCategory: LogCategory.System,
+                    });
+                }
+            },
+        }
+    );
+}
+
+async function loadScriptFileInternal(filePath: string, packageJson: PackageJson): Promise<unknown> {
     const start = Date.now();
     try {
         let script: unknown;
