@@ -30,7 +30,7 @@ export async function loadScriptFile(filePath: string, packageJson: PackageJson)
             retries: 9,
             minTimeout: 50,
             onFailedAttempt: (error) => {
-                if (!/lstat.*home/.test(error?.message || '')) {
+                if (!/lstat.*home/i.test(error?.message || '')) {
                     // this will abort the retries if it's an error we don't recognize
                     throw error;
                 } else if (error.retriesLeft > 0) {
