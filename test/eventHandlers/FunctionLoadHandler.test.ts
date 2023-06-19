@@ -3,10 +3,12 @@
 
 import { expect } from 'chai';
 import 'mocha';
+import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { getLegacyFunction } from '../../src/LegacyFunctionLoader';
 import { worker } from '../../src/WorkerContext';
+import { delay } from '../../src/utils/delay';
 import { nonNullValue } from '../../src/utils/nonNull';
-import { TestEventStream } from './TestEventStream';
+import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 
@@ -37,6 +39,29 @@ describe('FunctionLoadHandler', () => {
             msg.errorLog(message),
             msg.funcLoad.failedResponse(message)
         );
+    });
+
+    it('handles transient lstat function load exception', async function (this: Mocha.ITestCallbackContext): Promise<void> {
+        // https://github.com/Azure/azure-functions-nodejs-worker/issues/693
+
+        this.timeout(40 * 1000);
+
+        stream.addTestMessage(msg.funcLoad.request('throwLstatError.js'));
+
+        const errorMessage = "UNKNOWN: unknown error, lstat 'D:\\home'";
+        const msgs: (rpc.IStreamingMessage | RegExpStreamingMessage)[] = [msg.funcLoad.receivedRequestLog];
+        for (let i = 2; i <= 10; i++) {
+            msgs.push(
+                msg.warningLog(`Warning: Failed to load file "throwLstatError.js" with error "${errorMessage}"`),
+                msg.debugLog(`Retrying load of file "throwLstatError.js". Attempt ${i}/10`)
+            );
+        }
+        const message = `Worker was unable to load function testFuncName: '${errorMessage}'`;
+        msgs.push(msg.errorLog(message), msg.funcLoad.failedResponse(message));
+
+        await delay(30 * 1000);
+
+        await stream.assertCalledWith(...msgs);
     });
 
     it('throws unable to determine function entry point', async () => {
