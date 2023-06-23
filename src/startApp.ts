@@ -8,7 +8,7 @@ import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
 import { parsePackageJson } from './parsers/parsePackageJson';
 import { isDefined, nonNullProp } from './utils/nonNull';
-import { isEnvironmentVariableSet } from './utils/util';
+import { isEnvironmentVariableSet, isNode20Plus } from './utils/util';
 import { worker } from './WorkerContext';
 import globby = require('globby');
 import path = require('path');
@@ -65,9 +65,15 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
         try {
             const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
             if (files.length === 0) {
-                const message: string = globby.hasMagic(entryPointPattern, { cwd: functionAppDirectory })
+                let message: string = globby.hasMagic(entryPointPattern, { cwd: functionAppDirectory })
                     ? 'Found zero files matching the supplied pattern'
                     : 'File does not exist';
+
+                if (entryPointPattern === 'index.js') {
+                    // This is by far the most common error and typically happens by accident, so we'll give these folks a little more help
+                    message += '. Learn more here: https://aka.ms/AAla7et';
+                }
+
                 throw new AzFuncSystemError(message);
             }
 
@@ -114,13 +120,19 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
 }
 
 function shouldBlockOnEntryPointError(): boolean {
-    const key = 'FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR';
-    if (isDefined(process.env[key])) {
-        return isEnvironmentVariableSet(process.env[key]);
+    if (isNode20Plus()) {
+        // Starting with Node 20, this will always be blocking
+        // https://github.com/Azure/azure-functions-nodejs-worker/issues/697
+        return true;
     } else {
-        // We think this should be a blocking error by default, but v3 can't do that for backwards compatibility reasons
-        // https://github.com/Azure/azure-functions-nodejs-worker/issues/630
-        const model = nonNullProp(worker.app, 'programmingModel');
-        return !(model.name === '@azure/functions' && model.version.startsWith('3.'));
+        const key = 'FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR';
+        if (isDefined(process.env[key])) {
+            return isEnvironmentVariableSet(process.env[key]);
+        } else {
+            // We think this should be a blocking error by default, but v3 can't do that for backwards compatibility reasons
+            // https://github.com/Azure/azure-functions-nodejs-worker/issues/630
+            const model = nonNullProp(worker.app, 'programmingModel');
+            return !(model.name === '@azure/functions' && model.version.startsWith('3.'));
+        }
     }
 }

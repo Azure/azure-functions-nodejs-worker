@@ -5,9 +5,10 @@ import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
 import 'mocha';
-import * as semver from 'semver';
+import { IHookCallbackContext, ITestCallbackContext } from 'mocha';
 import { worker } from '../../src/WorkerContext';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
+import { isNode20Plus } from '../../src/utils/util';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -70,7 +71,7 @@ describe('WorkerInitHandler', () => {
     it('ignores malformed package.json', async () => {
         await fs.writeFile(testPackageJsonPath, 'gArB@g3 dAtA');
 
-        const jsonError = semver.gte(process.versions.node, '19.0.0')
+        const jsonError = isNode20Plus()
             ? 'Unexpected token \'g\', "gArB@g3 dAtA" is not valid JSON'
             : 'Unexpected token g in JSON at position 0';
 
@@ -116,22 +117,6 @@ describe('WorkerInitHandler', () => {
         );
     });
 
-    it('Logs error for missing entry point file', async () => {
-        const fileSubpath = await setTestAppMainField('missing.js');
-
-        stream.addTestMessage(msg.init.request(testAppPath));
-        const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
-    });
-
-    it('Logs error for missing entry point glob pattern', async () => {
-        const fileSubpath = await setTestAppMainField('missing/*.js');
-
-        stream.addTestMessage(msg.init.request(testAppPath));
-        const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
-    });
-
     describe('entry point error', () => {
         async function verifyInitSucceedsAndLogsError(): Promise<void> {
             const fileSubpath = await setTestAppMainField('throwError.js');
@@ -145,16 +130,6 @@ describe('WorkerInitHandler', () => {
             );
         }
 
-        it('init succeeds but still logs error (v3)', async () => {
-            await verifyInitSucceedsAndLogsError();
-        });
-
-        it('init succeeds but still logs error (v4) (app setting=0)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
-            process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
-            await verifyInitSucceedsAndLogsError();
-        });
-
         async function verifyInitFails(): Promise<void> {
             const fileSubpath = await setTestAppMainField('throwError.js');
             stream.addTestMessage(msg.init.request(testAppPath));
@@ -166,14 +141,100 @@ describe('WorkerInitHandler', () => {
             );
         }
 
-        it('init fails (v4)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
-            await verifyInitFails();
+        describe('Node >=v20', () => {
+            before(function (this: IHookCallbackContext) {
+                if (!isNode20Plus()) {
+                    this.skip();
+                }
+            });
+
+            it('Fails for missing entry point file', async () => {
+                const fileSubpath = await setTestAppMainField('missing.js');
+
+                stream.addTestMessage(msg.init.request(testAppPath));
+                const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
+                await stream.assertCalledWith(
+                    msg.init.receivedRequestLog,
+                    msg.errorLog(message),
+                    msg.init.failedResponse(message)
+                );
+            });
+
+            it('Fails for missing entry point glob pattern', async () => {
+                const fileSubpath = await setTestAppMainField('missing/*.js');
+
+                stream.addTestMessage(msg.init.request(testAppPath));
+                const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
+                await stream.assertCalledWith(
+                    msg.init.receivedRequestLog,
+                    msg.errorLog(message),
+                    msg.init.failedResponse(message)
+                );
+            });
+
+            it('init fails (v3)', async function (this: ITestCallbackContext) {
+                await verifyInitFails();
+            });
+
+            it('init fails (v4) (app setting=0)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
+                await verifyInitFails();
+            });
+
+            it('init fails (v4)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                await verifyInitFails();
+            });
+
+            it('init fails (v3) (app setting=1)', async () => {
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
+                await verifyInitFails();
+            });
         });
 
-        it('init fails (v3) (app setting=1)', async () => {
-            process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
-            await verifyInitFails();
+        describe('Node <v20', () => {
+            before(function (this: IHookCallbackContext) {
+                if (isNode20Plus()) {
+                    this.skip();
+                }
+            });
+
+            it('Logs error for missing entry point file', async () => {
+                const fileSubpath = await setTestAppMainField('missing.js');
+
+                stream.addTestMessage(msg.init.request(testAppPath));
+                const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
+                await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
+            });
+
+            it('Logs error for missing entry point glob pattern', async () => {
+                const fileSubpath = await setTestAppMainField('missing/*.js');
+
+                stream.addTestMessage(msg.init.request(testAppPath));
+                const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
+                await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
+            });
+
+            it('init succeeds but still logs error (v3)', async function (this: ITestCallbackContext) {
+                await verifyInitSucceedsAndLogsError();
+            });
+
+            it('init succeeds but still logs error (v4) (app setting=0)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
+                await verifyInitSucceedsAndLogsError();
+            });
+
+            it('init fails (v4)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                await verifyInitFails();
+            });
+
+            it('init fails (v3) (app setting=1)', async () => {
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
+                await verifyInitFails();
+            });
         });
     });
 
