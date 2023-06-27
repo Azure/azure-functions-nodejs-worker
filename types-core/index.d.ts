@@ -22,7 +22,7 @@ declare module '@azure/functions-core' {
     function registerFunction(metadata: FunctionMetadata, callback: FunctionCallback): Disposable;
 
     /**
-     * A slimmed down version of `RpcFunctionMetadata` that includes the minimum amount of information needed to register a function
+     * A slimmed down version of `RpcFunctionMetadata` that includes only the properties respected as a part of the `registerFunction` api
      * NOTE: All properties on this object need to be deterministic to support the multiple worker scenario. More info here: https://github.com/Azure/azure-functions-nodejs-worker/issues/638
      */
     interface FunctionMetadata {
