@@ -12,6 +12,7 @@ export function fromCoreFunctionMetadata(data: coreTypes.RpcFunctionMetadata): r
         ...data,
         bindings: fromCoreBindings(data.bindings),
         status: fromCoreStatusResult(data.status),
+        retryOptions: fromCoreRetryOptions(data.retryOptions),
     };
     return ensureKeysMatch(data, result);
 }
@@ -72,5 +73,32 @@ function fromCoreBindingDirection(
             return rpc.BindingInfo.Direction.out;
         default:
             return handleDefaultEnumCase(data, 'CoreRpcBindingDirection');
+    }
+}
+
+function fromCoreRetryOptions(
+    data: coreTypes.RpcRetryOptions | null | undefined
+): rpc.IRpcRetryOptions | null | undefined {
+    if (data) {
+        const result = {
+            ...data,
+            retryStrategy: fromCoreRetryStrategy(data.retryStrategy),
+        };
+        return ensureKeysMatch(data, result);
+    } else {
+        return data;
+    }
+}
+
+function fromCoreRetryStrategy(
+    data: coreTypes.RpcRetryStrategy | null | undefined
+): rpc.RpcRetryOptions.RetryStrategy | null | undefined {
+    switch (data) {
+        case 'exponentialBackoff':
+            return rpc.RpcRetryOptions.RetryStrategy.exponential_backoff;
+        case 'fixedDelay':
+            return rpc.RpcRetryOptions.RetryStrategy.fixed_delay;
+        default:
+            return handleDefaultEnumCase(data, 'CoreRpcRetryStrategy');
     }
 }

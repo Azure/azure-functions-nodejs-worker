@@ -22,7 +22,7 @@ declare module '@azure/functions-core' {
     function registerFunction(metadata: FunctionMetadata, callback: FunctionCallback): Disposable;
 
     /**
-     * A slimmed down version of `RpcFunctionMetadata` that includes the minimum amount of information needed to register a function
+     * A slimmed down version of `RpcFunctionMetadata` that includes only the properties respected as a part of the `registerFunction` api
      * NOTE: All properties on this object need to be deterministic to support the multiple worker scenario. More info here: https://github.com/Azure/azure-functions-nodejs-worker/issues/638
      */
     interface FunctionMetadata {
@@ -43,6 +43,11 @@ declare module '@azure/functions-core' {
          * A dictionary of binding name to binding info
          */
         bindings: { [name: string]: RpcBindingInfo };
+
+        /**
+         * The retry policy options
+         */
+        retryOptions?: RpcRetryOptions;
     }
 
     /**
@@ -298,6 +303,8 @@ declare module '@azure/functions-core' {
         functionId?: string | null;
 
         managedDependencyEnabled?: boolean | null;
+
+        retryOptions?: RpcRetryOptions | null;
     }
 
     interface RpcStatusResult {
@@ -351,6 +358,20 @@ declare module '@azure/functions-core' {
     type RpcBindingDirection = 'in' | 'out' | 'inout';
 
     type RpcBindingDataType = 'undefined' | 'string' | 'binary' | 'stream';
+
+    interface RpcRetryOptions {
+        maxRetryCount?: number | null;
+
+        delayInterval?: RpcDuration | null;
+
+        minimumInterval?: RpcDuration | null;
+
+        maximumInterval?: RpcDuration | null;
+
+        retryStrategy?: RpcRetryStrategy | null;
+    }
+
+    type RpcRetryStrategy = 'exponentialBackoff' | 'fixedDelay';
 
     interface RpcTypedData {
         string?: string | null;
@@ -503,6 +524,12 @@ declare module '@azure/functions-core' {
     }
 
     interface RpcTimestamp {
+        seconds?: number | Long | null;
+
+        nanos?: number | null;
+    }
+
+    interface RpcDuration {
         seconds?: number | Long | null;
 
         nanos?: number | null;
