@@ -4,7 +4,7 @@
 import 'mocha';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
-import { testAppSrcPath } from './testAppUtils';
+import { testAppPath, testAppSrcPath } from './testAppUtils';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 import escapeStringRegexp = require('escape-string-regexp');
@@ -211,22 +211,53 @@ export namespace msg {
     }
 
     export namespace indexing {
+        export const request = {
+            requestId: 'testReqId',
+            functionsMetadataRequest: {
+                functionAppDirectory: testAppPath,
+            },
+        };
+
         export const receivedRequestLog = msg.receivedRequestLog('FunctionsMetadataRequest');
 
-        export function response(functions: rpc.IRpcFunctionMetadata[] = []): TestMessage {
+        export function response(
+            functions: rpc.IRpcFunctionMetadata[],
+            useDefaultMetadataIndexing: boolean
+        ): TestMessage {
             const response: rpc.IStreamingMessage = {
                 requestId: 'testReqId',
                 functionMetadataResponse: {
-                    useDefaultMetadataIndexing: functions.length === 0,
+                    useDefaultMetadataIndexing: useDefaultMetadataIndexing,
                     result: {
                         status: rpc.StatusResult.Status.Success,
                     },
                 },
             };
-            if (functions.length > 0) {
+            if (!useDefaultMetadataIndexing) {
                 response.functionMetadataResponse!.functionMetadataResults = functions;
             }
             return response;
+        }
+
+        export function failedResponse(
+            errorMessage: string,
+            useDefaultMetadataIndexing: boolean
+        ): RegExpStreamingMessage {
+            const expectedMsg: rpc.IStreamingMessage = {
+                requestId: 'testReqId',
+                functionMetadataResponse: {
+                    useDefaultMetadataIndexing: useDefaultMetadataIndexing,
+                    result: {
+                        status: rpc.StatusResult.Status.Failure,
+                        exception: {
+                            message: errorMessage,
+                        },
+                    },
+                },
+            };
+            return new RegExpStreamingMessage(expectedMsg, {
+                ...stackTraceRegExpProps('functionMetadataResponse', errorMessage),
+            });
         }
     }
 

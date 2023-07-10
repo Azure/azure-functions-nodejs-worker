@@ -118,26 +118,72 @@ describe('WorkerInitHandler', () => {
     });
 
     describe('entry point error', () => {
-        async function verifyInitSucceedsAndLogsError(): Promise<void> {
-            const fileSubpath = await setTestAppMainField('throwError.js');
+        async function verifyAppStartSucceedsAndLogsError(
+            isModelV4: boolean,
+            fileSubpath?: string,
+            errorMessage?: string
+        ): Promise<void> {
+            fileSubpath ||= await setTestAppMainField('throwError.js');
+            errorMessage ||= `Worker was unable to load entry point "${fileSubpath}": test`;
+
             stream.addTestMessage(msg.init.request(testAppPath));
-            const errorMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
-            await stream.assertCalledWith(
-                msg.init.receivedRequestLog,
-                msg.loadingEntryPoint(fileSubpath),
-                msg.errorLog(errorMessage),
-                msg.init.response
-            );
+            if (fileSubpath.includes('missing')) {
+                await stream.assertCalledWith(
+                    msg.init.receivedRequestLog,
+                    msg.errorLog(errorMessage),
+                    msg.init.response
+                );
+            } else {
+                await stream.assertCalledWith(
+                    msg.init.receivedRequestLog,
+                    msg.loadingEntryPoint(fileSubpath),
+                    msg.errorLog(errorMessage),
+                    msg.init.response
+                );
+            }
+
+            stream.addTestMessage(msg.indexing.request);
+            await stream.assertCalledWith(msg.indexing.receivedRequestLog, msg.indexing.response([], !isModelV4));
+
+            stream.addTestMessage(msg.funcLoad.request('helloWorld.js'));
+            await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.response);
         }
 
-        async function verifyInitFails(): Promise<void> {
-            const fileSubpath = await setTestAppMainField('throwError.js');
+        async function verifyAppStartFails(
+            isModelV4: boolean,
+            fileSubpath?: string,
+            errorMessage?: string
+        ): Promise<void> {
+            fileSubpath ||= await setTestAppMainField('throwError.js');
+            errorMessage ||= `Worker was unable to load entry point "${fileSubpath}": test`;
+
             stream.addTestMessage(msg.init.request(testAppPath));
-            const errorMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
+            if (fileSubpath.includes('missing')) {
+                await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
+            } else {
+                await stream.assertCalledWith(
+                    msg.init.receivedRequestLog,
+                    msg.loadingEntryPoint(fileSubpath),
+                    msg.init.response
+                );
+            }
+
+            stream.addTestMessage(msg.indexing.request);
+            if (isModelV4) {
+                await stream.assertCalledWith(
+                    msg.indexing.receivedRequestLog,
+                    msg.errorLog(errorMessage),
+                    msg.indexing.failedResponse(errorMessage, false)
+                );
+            } else {
+                await stream.assertCalledWith(msg.indexing.receivedRequestLog, msg.indexing.response([], true));
+            }
+
+            stream.addTestMessage(msg.funcLoad.request('helloWorld.js'));
             await stream.assertCalledWith(
-                msg.init.receivedRequestLog,
-                msg.loadingEntryPoint(fileSubpath),
-                msg.init.failedResponse(errorMessage)
+                msg.funcLoad.receivedRequestLog,
+                msg.errorLog(errorMessage),
+                msg.funcLoad.failedResponse(errorMessage)
             );
         }
 
@@ -150,46 +196,48 @@ describe('WorkerInitHandler', () => {
 
             it('Fails for missing entry point file', async () => {
                 const fileSubpath = await setTestAppMainField('missing.js');
-
-                stream.addTestMessage(msg.init.request(testAppPath));
                 const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
-                await stream.assertCalledWith(
-                    msg.init.receivedRequestLog,
-                    msg.errorLog(message),
-                    msg.init.failedResponse(message)
-                );
+                await verifyAppStartFails(false, fileSubpath, message);
             });
 
             it('Fails for missing entry point glob pattern', async () => {
                 const fileSubpath = await setTestAppMainField('missing/*.js');
-
-                stream.addTestMessage(msg.init.request(testAppPath));
                 const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
-                await stream.assertCalledWith(
-                    msg.init.receivedRequestLog,
-                    msg.errorLog(message),
-                    msg.init.failedResponse(message)
-                );
+                await verifyAppStartFails(false, fileSubpath, message);
             });
 
-            it('init fails (v3)', async function (this: ITestCallbackContext) {
-                await verifyInitFails();
+            it('fails (v3)', async function (this: ITestCallbackContext) {
+                await verifyAppStartFails(false);
             });
 
-            it('init fails (v4) (app setting=0)', async () => {
-                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            it('fails (v3) (app setting=0)', async function (this: ITestCallbackContext) {
                 process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
-                await verifyInitFails();
+                await verifyAppStartFails(false);
             });
 
-            it('init fails (v4)', async () => {
+            it('fails (v4) (app setting=0)', async () => {
                 worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
-                await verifyInitFails();
+                worker.app.isUsingWorkerIndexing = true;
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
+                await verifyAppStartFails(true);
             });
 
-            it('init fails (v3) (app setting=1)', async () => {
+            it('fails (v4)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                worker.app.isUsingWorkerIndexing = true;
+                await verifyAppStartFails(true);
+            });
+
+            it('fails (v4) (app setting=1)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                worker.app.isUsingWorkerIndexing = true;
                 process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
-                await verifyInitFails();
+                await verifyAppStartFails(true);
+            });
+
+            it('fails (v3) (app setting=1)', async () => {
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
+                await verifyAppStartFails(false);
             });
         });
 
@@ -202,38 +250,52 @@ describe('WorkerInitHandler', () => {
 
             it('Logs error for missing entry point file', async () => {
                 const fileSubpath = await setTestAppMainField('missing.js');
-
-                stream.addTestMessage(msg.init.request(testAppPath));
                 const message = `Worker was unable to load entry point "${fileSubpath}": File does not exist`;
-                await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
+                await verifyAppStartSucceedsAndLogsError(false, fileSubpath, message);
             });
 
             it('Logs error for missing entry point glob pattern', async () => {
                 const fileSubpath = await setTestAppMainField('missing/*.js');
-
-                stream.addTestMessage(msg.init.request(testAppPath));
                 const message = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
-                await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(message), msg.init.response);
+                await verifyAppStartSucceedsAndLogsError(false, fileSubpath, message);
             });
 
-            it('init succeeds but still logs error (v3)', async function (this: ITestCallbackContext) {
-                await verifyInitSucceedsAndLogsError();
+            it('succeeds but still logs error (v3)', async function (this: ITestCallbackContext) {
+                await verifyAppStartSucceedsAndLogsError(false);
             });
 
-            it('init succeeds but still logs error (v4) (app setting=0)', async () => {
-                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            it('succeeds but still logs error (v3) (app setting=0)', async function (this: ITestCallbackContext) {
                 process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
-                await verifyInitSucceedsAndLogsError();
+                await verifyAppStartSucceedsAndLogsError(false);
             });
 
-            it('init fails (v4)', async () => {
+            it('succeeds but still logs error (v4) (app setting=0)', async () => {
                 worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
-                await verifyInitFails();
+                worker.app.isUsingWorkerIndexing = true;
+
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
+                await verifyAppStartSucceedsAndLogsError(true);
             });
 
-            it('init fails (v3) (app setting=1)', async () => {
+            it('fails (v4)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                worker.app.isUsingWorkerIndexing = true;
+
+                await verifyAppStartFails(true);
+            });
+
+            it('fails (v4) (app setting=1)', async () => {
+                worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+                worker.app.isUsingWorkerIndexing = true;
                 process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
-                await verifyInitFails();
+
+                await verifyAppStartFails(true);
+            });
+
+            it('fails (v3) (app setting=1)', async () => {
+                process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
+
+                await verifyAppStartFails(false);
             });
         });
     });

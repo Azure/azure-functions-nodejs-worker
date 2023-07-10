@@ -104,11 +104,16 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
             }`;
 
             if (shouldBlockOnEntryPointError()) {
-                // This is blocking. The event handler will respond saying it failed
                 error.message = newMessage;
-                throw error;
+                error.isAzureFunctionsSystemError = true;
+                // We don't want to throw this error now (during workerInit or funcEnvReload) because technically the worker is fine
+                // Instead, it will be thrown during functionMetadata or functionLoad response which better indicates that the user's app is the problem
+                worker.app.blockingAppStartError = error;
+                // This will ensure the error makes it to the user's app insights
+                console.log(error.stack);
             } else {
-                // This is not blocking. We directly log the error, but the event handler will respond saying it succeeded
+                // In this case, the error will never block the app
+                // The most we can do without breaking backwards compatibility is log it as a system log
                 worker.log({
                     message: newMessage,
                     level: LogLevel.Error,

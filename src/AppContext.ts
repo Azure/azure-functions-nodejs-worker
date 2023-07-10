@@ -34,4 +34,5 @@ export class AppContext {
     workerIndexingLocked = false;
     isUsingWorkerIndexing = false;
     currentEntryPoint?: string;
+    blockingAppStartError?: Error;
 }
