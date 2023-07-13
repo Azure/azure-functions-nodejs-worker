@@ -5,5 +5,10 @@
         "defaultExecutablePath":"node",
         "defaultWorkerPath":"dist/src/nodejsWorker.js",
         "workerIndexing": "true"
+    },
+    "processOptions": {
+        "initializationTimeout": "00:05:00",
+        "environmentReloadTimeout": "00:05:00",
+        "processShutdownTimeout": "00:05:00"
     }
 }
