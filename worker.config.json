@@ -7,8 +7,7 @@
         "workerIndexing": "true"
     },
     "processOptions": {
-        "initializationTimeout": "00:05:00",
-        "environmentReloadTimeout": "00:05:00",
-        "processShutdownTimeout": "00:01:00"
+        "initializationTimeout": "00:02:00",
+        "environmentReloadTimeout": "00:02:00"    
     }
 }
