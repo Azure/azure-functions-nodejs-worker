@@ -110,7 +110,7 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
                 // Instead, it will be thrown during functionMetadata or functionLoad response which better indicates that the user's app is the problem
                 worker.app.blockingAppStartError = error;
                 // This will ensure the error makes it to the user's app insights
-                console.log(error.stack);
+                console.error(error.stack);
             } else {
                 // In this case, the error will never block the app
                 // The most we can do without breaking backwards compatibility is log it as a system log
