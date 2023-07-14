@@ -3,6 +3,7 @@
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { worker } from '../WorkerContext';
+import { isDefined } from '../utils/nonNull';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -12,7 +13,7 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
 
     getDefaultResponse(_msg: rpc.IFunctionsMetadataRequest): rpc.IFunctionMetadataResponse {
         return {
-            useDefaultMetadataIndexing: true,
+            useDefaultMetadataIndexing: !worker.app.isUsingWorkerIndexing,
         };
     }
 
@@ -27,10 +28,12 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
             logCategory: LogCategory.System,
         });
 
-        const functions = Object.values(worker.app.functions);
-        if (functions.length > 0) {
-            response.useDefaultMetadataIndexing = false;
-            response.functionMetadataResults = functions.map((f) => f.metadata);
+        if (worker.app.isUsingWorkerIndexing) {
+            if (isDefined(worker.app.blockingAppStartError)) {
+                throw worker.app.blockingAppStartError;
+            }
+
+            response.functionMetadataResults = Object.values(worker.app.functions).map((f) => f.metadata);
         }
 
         return response;

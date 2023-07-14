@@ -5,10 +5,9 @@ import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
 import 'mocha';
-import { ITestCallbackContext } from 'mocha';
-import * as semver from 'semver';
 import { worker } from '../../src/WorkerContext';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
+import { isNode20Plus } from '../../src/utils/util';
 import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -71,7 +70,7 @@ describe('WorkerInitHandler', () => {
     it('ignores malformed package.json', async () => {
         await fs.writeFile(testPackageJsonPath, 'gArB@g3 dAtA');
 
-        const jsonError = semver.gte(process.versions.node, '19.0.0')
+        const jsonError = isNode20Plus()
             ? 'Unexpected token \'g\', "gArB@g3 dAtA" is not valid JSON'
             : 'Unexpected token g in JSON at position 0';
 
@@ -113,27 +112,6 @@ describe('WorkerInitHandler', () => {
             msg.loadedEntryPoint(file1),
             msg.loadingEntryPoint(file2),
             msg.loadedEntryPoint(file2),
-            msg.init.response
-        );
-    });
-
-    it('Fails for missing entry point', async function (this: ITestCallbackContext) {
-        const fileSubpath = await setTestAppMainField('missing.js');
-
-        stream.addTestMessage(msg.init.request(testAppPath));
-        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": Found zero files matching the supplied pattern`;
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.warningLog(warningMessage), msg.init.response);
-    });
-
-    it('Fails for invalid entry point', async function (this: ITestCallbackContext) {
-        const fileSubpath = await setTestAppMainField('throwError.js');
-
-        stream.addTestMessage(msg.init.request(testAppPath));
-        const warningMessage = `Worker was unable to load entry point "${fileSubpath}": test`;
-        await stream.assertCalledWith(
-            msg.init.receivedRequestLog,
-            msg.loadingEntryPoint(fileSubpath),
-            msg.warningLog(warningMessage),
             msg.init.response
         );
     });

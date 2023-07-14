@@ -7,6 +7,8 @@ import { AzFuncSystemError, ensureErrorType, ReadOnlyError } from './errors';
 import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
 import { parsePackageJson } from './parsers/parsePackageJson';
+import { isDefined, nonNullProp } from './utils/nonNull';
+import { isEnvironmentVariableSet, isNode20Plus } from './utils/util';
 import { worker } from './WorkerContext';
 import globby = require('globby');
 import path = require('path');
@@ -63,7 +65,16 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
         try {
             const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
             if (files.length === 0) {
-                throw new AzFuncSystemError(`Found zero files matching the supplied pattern`);
+                let message: string = globby.hasMagic(entryPointPattern, { cwd: functionAppDirectory })
+                    ? 'Found zero files matching the supplied pattern'
+                    : 'File does not exist';
+
+                if (entryPointPattern === 'index.js') {
+                    // This is by far the most common error and typically happens by accident, so we'll give these folks a little more help
+                    message += '. Learn more here: https://aka.ms/AAla7et';
+                }
+
+                throw new AzFuncSystemError(message);
             }
 
             for (const file of files) {
@@ -88,13 +99,45 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
             }
         } catch (err) {
             const error = ensureErrorType(err);
-            worker.log({
-                message: `Worker was unable to load entry point "${currentFile ? currentFile : entryPointPattern}": ${
-                    error.message
-                }`,
-                level: LogLevel.Warning,
-                logCategory: LogCategory.System,
-            });
+            const newMessage = `Worker was unable to load entry point "${currentFile || entryPointPattern}": ${
+                error.message
+            }`;
+
+            if (shouldBlockOnEntryPointError()) {
+                error.message = newMessage;
+                error.isAzureFunctionsSystemError = true;
+                // We don't want to throw this error now (during workerInit or funcEnvReload) because technically the worker is fine
+                // Instead, it will be thrown during functionMetadata or functionLoad response which better indicates that the user's app is the problem
+                worker.app.blockingAppStartError = error;
+                // This will ensure the error makes it to the user's app insights
+                console.error(error.stack);
+            } else {
+                // In this case, the error will never block the app
+                // The most we can do without breaking backwards compatibility is log it as a system log
+                worker.log({
+                    message: newMessage,
+                    level: LogLevel.Error,
+                    logCategory: LogCategory.System,
+                });
+            }
+        }
+    }
+}
+
+function shouldBlockOnEntryPointError(): boolean {
+    if (isNode20Plus()) {
+        // Starting with Node 20, this will always be blocking
+        // https://github.com/Azure/azure-functions-nodejs-worker/issues/697
+        return true;
+    } else {
+        const key = 'FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR';
+        if (isDefined(process.env[key])) {
+            return isEnvironmentVariableSet(process.env[key]);
+        } else {
+            // We think this should be a blocking error by default, but v3 can't do that for backwards compatibility reasons
+            // https://github.com/Azure/azure-functions-nodejs-worker/issues/630
+            const model = nonNullProp(worker.app, 'programmingModel');
+            return !(model.name === '@azure/functions' && model.version.startsWith('3.'));
         }
     }
 }

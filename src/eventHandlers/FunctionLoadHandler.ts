@@ -5,7 +5,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { loadLegacyFunction } from '../LegacyFunctionLoader';
 import { worker } from '../WorkerContext';
 import { ensureErrorType } from '../errors';
-import { nonNullProp } from '../utils/nonNull';
+import { isDefined, nonNullProp } from '../utils/nonNull';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -30,6 +30,10 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
             level: LogLevel.Debug,
             logCategory: LogCategory.System,
         });
+
+        if (isDefined(worker.app.blockingAppStartError)) {
+            throw worker.app.blockingAppStartError;
+        }
 
         if (!worker.app.isUsingWorkerIndexing) {
             const functionId = nonNullProp(msg, 'functionId');

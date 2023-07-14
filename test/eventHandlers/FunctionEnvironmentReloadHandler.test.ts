@@ -244,7 +244,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                         functionAppDirectory: 'pathWithoutPackageJson',
                     },
                 });
-                await stream.assertCalledWith(msg.indexing.receivedRequestLog, msg.indexing.response());
+                await stream.assertCalledWith(msg.indexing.receivedRequestLog, msg.indexing.response([], true));
             }
 
             stream.addTestMessage({
@@ -261,24 +261,22 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 msg.envReload.response
             );
 
-            stream.addTestMessage({
-                requestId: 'testReqId',
-                functionsMetadataRequest: {
-                    functionAppDirectory: testAppPath,
-                },
-            });
+            stream.addTestMessage(msg.indexing.request);
             await stream.assertCalledWith(
                 msg.indexing.receivedRequestLog,
-                msg.indexing.response([
-                    {
-                        bindings: {},
-                        directory: testAppSrcPath,
-                        functionId: 'testFunc',
-                        name: 'testFunc',
-                        rawBindings: [],
-                        scriptFile: fileName,
-                    },
-                ])
+                msg.indexing.response(
+                    [
+                        {
+                            bindings: {},
+                            directory: testAppSrcPath,
+                            functionId: 'testFunc',
+                            name: 'testFunc',
+                            rawBindings: [],
+                            scriptFile: fileName,
+                        },
+                    ],
+                    false
+                )
             );
         });
     }
