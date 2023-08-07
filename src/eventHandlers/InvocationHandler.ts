@@ -59,7 +59,11 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         );
 
         // Log invocation details to ensure the invocation received by node worker
-        coreCtx.log('debug', 'system', `Worker ${worker.id} received FunctionInvocationRequest`);
+        coreCtx.log(
+            'debug',
+            'system',
+            `Worker ${worker.id} received FunctionInvocationRequest for ${msg.invocationId}`
+        );
 
         const programmingModel: ProgrammingModel = nonNullProp(worker.app, 'programmingModel');
         const invocModel = programmingModel.getInvocationModel(coreCtx);
