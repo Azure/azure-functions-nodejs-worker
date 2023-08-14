@@ -45,8 +45,12 @@ export class TestEventStream extends EventEmitter implements IEventStream {
             const calls = this.written.getCalls();
 
             // First, validate the "shortened" form of the messages. This will result in a more readable error for most test failures
-            if (!expectedMsgs.find((m) => m instanceof RegExpStreamingMessage)) {
+            if (
+                !expectedMsgs.find((m) => m instanceof RegExpStreamingMessage) ||
+                calls.length !== expectedMsgs.length
+            ) {
                 // shortened message won't work if it's a regexp
+                // but if the call count doesn't match, this error will be better than the one below
                 const shortExpectedMsgs = expectedMsgs.map(getShortenedMsg);
                 const shortActualMsgs = calls.map((c) => getShortenedMsg(c.args[0]));
                 expect(shortActualMsgs).to.deep.equal(shortExpectedMsgs);

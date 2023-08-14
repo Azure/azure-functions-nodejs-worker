@@ -4,6 +4,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+export const tempFile = 'temp.js';
 export const testAppPath = path.join(__dirname, 'testApp');
 export const testAppSrcPath = path.join(testAppPath, 'src');
 export const testPackageJsonPath = path.join(testAppPath, 'package.json');
