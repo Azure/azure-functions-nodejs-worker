@@ -11,34 +11,39 @@ import { PackageJson } from './parsers/parsePackageJson';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 
+let hasLoggedAttempt = 0;
+let hasLoggedWarning = false;
+
 export async function loadScriptFile(filePath: string, packageJson: PackageJson): Promise<unknown> {
     // See the following issue for more details on why we want to retry
     // https://github.com/Azure/azure-functions-nodejs-worker/issues/693
-    const fileName = path.basename(filePath);
+    const retries = 9;
     return await retry(
         async (currentAttempt: number) => {
-            if (currentAttempt > 1) {
+            if (currentAttempt > 1 && currentAttempt > hasLoggedAttempt) {
                 worker.log({
-                    message: `Retrying load of file "${fileName}". Attempt ${currentAttempt}/${10}`,
+                    message: `Retrying file load. Attempt ${currentAttempt}/${retries + 1}`,
                     level: LogLevel.Debug,
                     logCategory: LogCategory.System,
                 });
+                hasLoggedAttempt = currentAttempt;
             }
             return loadScriptFileInternal(filePath, packageJson);
         },
         {
-            retries: 9,
-            minTimeout: 50,
+            retries: retries,
+            minTimeout: 500,
             onFailedAttempt: (error) => {
                 if (!/lstat.*home/i.test(error?.message || '')) {
                     // this will abort the retries if it's an error we don't recognize
                     throw error;
-                } else if (error.retriesLeft > 0) {
+                } else if (error.retriesLeft > 0 && !hasLoggedWarning) {
                     worker.log({
-                        message: `Warning: Failed to load file "${fileName}" with error "${error.message}"`,
+                        message: `Warning: Failed to load file with error "${error.message}"`,
                         level: LogLevel.Warning,
                         logCategory: LogCategory.System,
                     });
+                    hasLoggedWarning = true;
                 }
             },
         }
