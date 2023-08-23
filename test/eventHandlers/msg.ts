@@ -353,7 +353,7 @@ export namespace msg {
         }
 
         export const receivedRequestLog = msg.invocation.debugLog(
-            'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest for 1'
+            'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest with invocationId 1'
         );
 
         export function executingHooksLog(count: number, hookName: string): TestMessage {

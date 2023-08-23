@@ -62,7 +62,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         coreCtx.log(
             'debug',
             'system',
-            `Worker ${worker.id} received FunctionInvocationRequest for ${msg.invocationId}`
+            `Worker ${worker.id} received FunctionInvocationRequest with invocationId ${msg.invocationId}`
         );
 
         const programmingModel: ProgrammingModel = nonNullProp(worker.app, 'programmingModel');
