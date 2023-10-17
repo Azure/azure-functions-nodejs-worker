@@ -12,24 +12,27 @@ import { startBlockedMonitor } from './utils/blockedMonitor';
 import { isEnvironmentVariableSet } from './utils/util';
 
 export function startNodeWorker(args) {
-    const { host, port, workerId, requestId, grpcMaxMessageLength } = parseArgs(args.slice(2));
-    if (!host || !port || !workerId || !requestId || !grpcMaxMessageLength) {
+    const parsedArgs = parseArgs(args.slice(2));
+    const uri = parsedArgs['functions-uri'];
+    const workerId = parsedArgs['functions-worker-id'];
+    const requestId = parsedArgs['functions-request-id'];
+    const grpcMaxMessageLength = parsedArgs['functions-grpc-max-message-length'];
+    if (!uri || !workerId || !requestId || !grpcMaxMessageLength) {
         systemLog(
-            'usage --host hostName --port portNumber --workerId workerId --requestId requestId --grpcMaxMessageLength grpcMaxMessageLength'
+            'usage --functions-uri uri --functions-worker-id workerId --functions-request-id requestId --functions-grpc-max-message-length grpcMaxMessageLength'
         );
         // Find which arguments are in error
         const debugInfo: string[] = [];
-        if (!host) debugInfo.push(`'hostName' is ${host}`);
-        if (!port) debugInfo.push(`'port' is ${port}`);
-        if (!workerId) debugInfo.push(`'workerId' is ${workerId}`);
-        if (!requestId) debugInfo.push(`'requestId' is ${requestId}`);
-        if (!grpcMaxMessageLength) debugInfo.push(`'grpcMaxMessageLength' is ${grpcMaxMessageLength}`);
+        if (!uri) debugInfo.push(`'functions-uri' is ${uri}`);
+        if (!workerId) debugInfo.push(`'functions-worker-id' is ${workerId}`);
+        if (!requestId) debugInfo.push(`'functions-request-id' is ${requestId}`);
+        if (!grpcMaxMessageLength) debugInfo.push(`'functions-grpc-max-message-length' is ${grpcMaxMessageLength}`);
 
         throw new AzFuncSystemError(`gRPC client connection info is missing or incorrect (${debugInfo.join(', ')}).`);
     }
     worker.id = workerId;
 
-    const connection = `${host}:${port}`;
+    const connection = new URL(uri).host;
     systemLog(`Worker ${workerId} connecting on ${connection}`);
 
     try {

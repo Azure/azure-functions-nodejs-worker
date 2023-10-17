@@ -10,39 +10,35 @@ describe('Worker', () => {
         const args = [
             '/node',
             'nodejsWorker.js',
-            '--host',
-            '120.0.0.0',
-            '--port',
-            '8000',
-            '--workerId',
+            '--functions-uri',
+            'http://127.0.0.1:58870/',
+            '--functions-worker-id',
             'bd2e3e80-46ba',
-            '--requestId',
+            '--functions-request-id',
             'bd2e3e80-46ba',
-            '--grpcMaxMessageLength',
+            '--functions-grpc-max-message-length',
             '0',
         ];
         expect(() => {
             startNodeWorker(args);
-        }).to.throw("gRPC client connection info is missing or incorrect ('grpcMaxMessageLength' is 0).");
+        }).to.throw("gRPC client connection info is missing or incorrect ('functions-grpc-max-message-length' is 0).");
     });
 
     it('throws error on incorrect args: grpcMaxMessageLength 0 and null requestId', () => {
         const args = [
             '/node',
             'nodejsWorker.js',
-            '--host',
-            '120.0.0.0',
-            '--port',
-            '8000',
-            '--workerId',
+            '--functions-uri',
+            'http://127.0.0.1:58870/',
+            '--functions-worker-id',
             'bd2e3e80-46ba',
-            '--grpcMaxMessageLength',
+            '--functions-grpc-max-message-length',
             '0',
         ];
         expect(() => {
             startNodeWorker(args);
         }).to.throw(
-            "gRPC client connection info is missing or incorrect ('requestId' is undefined, 'grpcMaxMessageLength' is 0)."
+            "gRPC client connection info is missing or incorrect ('functions-request-id' is undefined, 'functions-grpc-max-message-length' is 0)."
         );
     });
 });
