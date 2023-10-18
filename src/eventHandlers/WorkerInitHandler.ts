@@ -9,6 +9,7 @@ import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
 import { EventHandler } from './EventHandler';
+import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
@@ -44,16 +45,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             response.workerMetadata = getWorkerMetadata();
         }
 
-        response.capabilities = {
-            RawHttpBodyBytes: 'true',
-            RpcHttpTriggerMetadataRemoved: 'true',
-            RpcHttpBodyOnly: 'true',
-            IgnoreEmptyValuedRpcHttpHeaders: 'true',
-            UseNullableValueDictionaryForHttp: 'true',
-            WorkerStatus: 'true',
-            TypedDataCollection: 'true',
-            HandlesWorkerTerminateMessage: 'true',
-        };
+        response.capabilities = await getWorkerCapabilities();
 
         return response;
     }

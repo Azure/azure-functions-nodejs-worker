@@ -186,6 +186,12 @@ declare module '@azure/functions-core' {
     function getProgrammingModel(): ProgrammingModel;
 
     /**
+     * The recommended way to log information outside the context of an invocation
+     * During an invocation, use `CoreInvocationContext.log` instead
+     */
+    function log(level: RpcLogLevel, category: RpcLogCategory, message: string): void;
+
+    /**
      * A set of information and methods that describe the model for handling a Node.js function app
      * Currently, this is mainly focused on invocation
      */
@@ -203,8 +209,15 @@ declare module '@azure/functions-core' {
         /**
          * Returns a new instance of the invocation model for each invocation
          */
-        getInvocationModel(coreContext: CoreInvocationContext): InvocationModel;
+        getInvocationModel(coreContext: CoreInvocationContext): InvocationModel | Promise<InvocationModel>;
+
+        /**
+         * Optional method to modify worker capabilities
+         */
+        getCapabilities?(defaultCapabilities: WorkerCapabilities): WorkerCapabilities | Promise<WorkerCapabilities>;
     }
+
+    type WorkerCapabilities = Record<string, string>;
 
     /**
      * Basic information and helper methods about an invocation provided from the core worker to the programming model

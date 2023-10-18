@@ -66,7 +66,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         );
 
         const programmingModel: ProgrammingModel = nonNullProp(worker.app, 'programmingModel');
-        const invocModel = programmingModel.getInvocationModel(coreCtx);
+        const invocModel = await programmingModel.getInvocationModel(coreCtx);
 
         const hookData: HookData = {};
         let { context, inputs } = await invocModel.getArguments();

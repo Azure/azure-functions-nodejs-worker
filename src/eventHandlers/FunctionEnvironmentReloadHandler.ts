@@ -5,9 +5,11 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { worker } from '../WorkerContext';
 import { startApp } from '../startApp';
 import { EventHandler } from './EventHandler';
+import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
+import CapabilitiesUpdateStrategy = rpc.FunctionEnvironmentReloadResponse.CapabilitiesUpdateStrategy;
 
 /**
  * Environment variables from the current process
@@ -54,6 +56,9 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             // model info may have changed, so we need to update this
             response.workerMetadata = getWorkerMetadata();
         }
+
+        response.capabilities = await getWorkerCapabilities();
+        response.capabilitiesUpdateStrategy = CapabilitiesUpdateStrategy.replace;
 
         return response;
     }
