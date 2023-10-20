@@ -108,6 +108,17 @@ export namespace msg {
         };
     }
 
+    const capabilities = {
+        RawHttpBodyBytes: 'true',
+        RpcHttpBodyOnly: 'true',
+        RpcHttpTriggerMetadataRemoved: 'true',
+        IgnoreEmptyValuedRpcHttpHeaders: 'true',
+        UseNullableValueDictionaryForHttp: 'true',
+        WorkerStatus: 'true',
+        TypedDataCollection: 'true',
+        HandlesWorkerTerminateMessage: 'true',
+    };
+
     export namespace init {
         export const receivedRequestLog = msg.receivedRequestLog('WorkerInitRequest');
 
@@ -133,16 +144,7 @@ export namespace msg {
             {
                 requestId: 'testReqId',
                 workerInitResponse: {
-                    capabilities: {
-                        RawHttpBodyBytes: 'true',
-                        RpcHttpBodyOnly: 'true',
-                        RpcHttpTriggerMetadataRemoved: 'true',
-                        IgnoreEmptyValuedRpcHttpHeaders: 'true',
-                        UseNullableValueDictionaryForHttp: 'true',
-                        WorkerStatus: 'true',
-                        TypedDataCollection: 'true',
-                        HandlesWorkerTerminateMessage: 'true',
-                    },
+                    capabilities,
                     result: {
                         status: rpc.StatusResult.Status.Success,
                     },
@@ -198,6 +200,9 @@ export namespace msg {
                     result: {
                         status: rpc.StatusResult.Status.Success,
                     },
+                    capabilities,
+                    capabilitiesUpdateStrategy:
+                        rpc.FunctionEnvironmentReloadResponse.CapabilitiesUpdateStrategy.replace,
                     workerMetadata: {
                         runtimeName: 'node',
                         customProperties: {

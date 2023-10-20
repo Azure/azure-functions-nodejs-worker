@@ -4,6 +4,7 @@
 import { Disposable } from './Disposable';
 import { worker } from './WorkerContext';
 import { version } from './constants';
+import { coreApiLog } from './coreApi/coreApiLog';
 import { registerFunction } from './coreApi/registerFunction';
 import { setProgrammingModel } from './coreApi/setProgrammingModel';
 import { registerHook } from './hooks/registerHook';
@@ -25,6 +26,7 @@ export function setupCoreModule(): void {
         getProgrammingModel: () => {
             return worker.app.programmingModel;
         },
+        log: coreApiLog,
         registerFunction,
         Disposable,
     };
