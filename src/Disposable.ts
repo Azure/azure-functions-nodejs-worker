@@ -3,7 +3,7 @@
 
 /**
  * Based off of VS Code
- * https://github.com/microsoft/vscode/blob/a64e8e5673a44e5b9c2d493666bde684bd5a135c/src/vs/workbench/api/common/extHostTypes.ts#L32
+ * https://github.com/microsoft/vscode/blob/7bed4ce3e9f5059b5fc638c348f064edabcce5d2/src/vs/workbench/api/common/extHostTypes.ts#L65
  */
 export class Disposable {
     static from(...inDisposables: { dispose(): any }[]): Disposable {
@@ -27,7 +27,7 @@ export class Disposable {
     }
 
     dispose(): any {
-        if (this.#callOnDispose instanceof Function) {
+        if (typeof this.#callOnDispose === 'function') {
             this.#callOnDispose();
             this.#callOnDispose = undefined;
         }
