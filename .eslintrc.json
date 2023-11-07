@@ -3,7 +3,9 @@
     "plugins": [
         "@typescript-eslint",
         "header",
-        "deprecation"
+        "deprecation",
+        "simple-import-sort",
+        "import"
     ],
     "parserOptions": {
         "project": "tsconfig.json",
@@ -50,7 +52,17 @@
             "error", {
                 "accessibility": "no-public"
             }
-        ]
+        ],
+        "simple-import-sort/imports": [
+            "error",
+            {
+                "groups": [["^\\u0000", "^node:", "^@?\\w", "^", "^\\."]]
+            }
+        ],
+        "simple-import-sort/exports": "error",
+        "import/first": "error",
+        "import/newline-after-import": "error",
+        "import/no-duplicates": "error"
     },
     "ignorePatterns": [
         "**/*.js",
