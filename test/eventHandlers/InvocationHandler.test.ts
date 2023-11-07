@@ -3,16 +3,16 @@
 
 /* eslint-disable deprecation/deprecation */
 
+import 'mocha';
 import { AzureFunction, Context } from '@azure/functions';
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
-import 'mocha';
 import * as sinon from 'sinon';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { worker } from '../../src/WorkerContext';
-import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
+import { TestEventStream } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 

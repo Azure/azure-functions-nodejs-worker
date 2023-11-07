@@ -1,14 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import 'mocha';
 import { IHookCallbackContext, ITestCallbackContext } from 'mocha';
-import { worker } from '../src/WorkerContext';
 import { isNode20Plus } from '../src/utils/util';
-import { TestEventStream } from './eventHandlers/TestEventStream';
+import { worker } from '../src/WorkerContext';
 import { beforeEventHandlerSuite } from './eventHandlers/beforeEventHandlerSuite';
 import { msg } from './eventHandlers/msg';
 import { setTestAppMainField, testAppPath } from './eventHandlers/testAppUtils';
+import { TestEventStream } from './eventHandlers/TestEventStream';
 
 describe('startApp', () => {
     let stream: TestEventStream;

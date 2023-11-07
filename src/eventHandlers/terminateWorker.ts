@@ -3,9 +3,9 @@
 
 import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { worker } from '../WorkerContext';
 import { ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
+import { worker } from '../WorkerContext';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 

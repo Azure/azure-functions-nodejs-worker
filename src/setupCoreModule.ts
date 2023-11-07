@@ -1,13 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable } from './Disposable';
-import { worker } from './WorkerContext';
 import { version } from './constants';
 import { coreApiLog } from './coreApi/coreApiLog';
 import { registerFunction } from './coreApi/registerFunction';
 import { setProgrammingModel } from './coreApi/setProgrammingModel';
+import { Disposable } from './Disposable';
 import { registerHook } from './hooks/registerHook';
+import { worker } from './WorkerContext';
 import Module = require('module');
 
 /**

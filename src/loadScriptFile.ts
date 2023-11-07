@@ -5,9 +5,9 @@ import * as retry from 'p-retry';
 import * as path from 'path';
 import * as url from 'url';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { worker } from './WorkerContext';
 import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
+import { worker } from './WorkerContext';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 

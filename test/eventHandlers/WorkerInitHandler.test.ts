@@ -1,17 +1,17 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import 'mocha';
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
-import 'mocha';
-import { worker } from '../../src/WorkerContext';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { isNode20Plus } from '../../src/utils/util';
-import { TestEventStream } from './TestEventStream';
+import { worker } from '../../src/WorkerContext';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 import { setTestAppMainField, testAppPath, testPackageJsonPath } from './testAppUtils';
+import { TestEventStream } from './TestEventStream';
 
 describe('WorkerInitHandler', () => {
     let stream: TestEventStream;

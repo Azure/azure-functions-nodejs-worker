@@ -4,9 +4,9 @@
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import { worker } from '../../src/WorkerContext';
-import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
+import { TestEventStream } from './TestEventStream';
 import sinon = require('sinon');
 
 describe('terminateWorker', () => {

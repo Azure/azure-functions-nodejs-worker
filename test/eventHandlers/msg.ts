@@ -3,8 +3,8 @@
 
 import 'mocha';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
+import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 import escapeStringRegexp = require('escape-string-regexp');

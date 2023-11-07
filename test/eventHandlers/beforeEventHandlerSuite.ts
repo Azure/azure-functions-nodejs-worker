@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { worker } from '../../src/WorkerContext';
 import { setupCoreModule } from '../../src/setupCoreModule';
 import { setupEventStream } from '../../src/setupEventStream';
+import { worker } from '../../src/WorkerContext';
 import { TestEventStream } from './TestEventStream';
 
 let testEventStream: TestEventStream | undefined;

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { CreateGrpcEventStream } from './GrpcClient';
-import { worker } from './WorkerContext';
 import { AzFuncSystemError, ensureErrorType } from './errors';
+import { CreateGrpcEventStream } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
-import { systemError, systemLog } from './utils/Logger';
 import { startBlockedMonitor } from './utils/blockedMonitor';
+import { systemError, systemLog } from './utils/Logger';
 import { isEnvironmentVariableSet } from './utils/util';
+import { worker } from './WorkerContext';
 
 export function startNodeWorker(args) {
     const parsedArgs = parseArgs(args.slice(2));

@@ -4,11 +4,11 @@
 import { FunctionCallback } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from './AppContext';
-import { worker } from './WorkerContext';
 import { AzFuncSystemError } from './errors';
 import { loadScriptFile } from './loadScriptFile';
 import { PackageJson } from './parsers/parsePackageJson';
 import { nonNullProp } from './utils/nonNull';
+import { worker } from './WorkerContext';
 
 export async function loadLegacyFunction(
     functionId: string,

@@ -4,8 +4,8 @@
 import { ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { AppContext } from './AppContext';
-import { IEventStream } from './GrpcClient';
 import { AzFuncSystemError } from './errors';
+import { IEventStream } from './GrpcClient';
 
 class WorkerContext {
     app = new AppContext();
