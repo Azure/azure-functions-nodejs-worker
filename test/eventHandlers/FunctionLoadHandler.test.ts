@@ -1,19 +1,19 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import 'mocha';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
-import 'mocha';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { getLegacyFunction } from '../../src/LegacyFunctionLoader';
-import { worker } from '../../src/WorkerContext';
 import { delay } from '../../src/utils/delay';
 import { nonNullValue } from '../../src/utils/nonNull';
-import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
+import { worker } from '../../src/WorkerContext';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 import { tempFile, testAppSrcPath } from './testAppUtils';
+import { RegExpStreamingMessage, TestEventStream } from './TestEventStream';
 
 describe('FunctionLoadHandler', () => {
     let stream: TestEventStream;

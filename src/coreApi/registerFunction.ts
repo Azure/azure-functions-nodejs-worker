@@ -5,8 +5,8 @@ import { FunctionCallback, FunctionMetadata } from '@azure/functions-core';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { Disposable } from '../Disposable';
-import { worker } from '../WorkerContext';
 import { AzFuncSystemError } from '../errors';
+import { worker } from '../WorkerContext';
 import { fromCoreFunctionMetadata } from './converters/fromCoreFunctionMetadata';
 
 export function registerFunction(metadata: FunctionMetadata, callback: FunctionCallback): Disposable {

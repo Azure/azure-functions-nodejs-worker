@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { worker } from '../WorkerContext';
 import { version as workerVersion } from '../constants';
+import { worker } from '../WorkerContext';
 
 export function getWorkerMetadata(): rpc.IWorkerMetadata {
     const result: rpc.IWorkerMetadata = {

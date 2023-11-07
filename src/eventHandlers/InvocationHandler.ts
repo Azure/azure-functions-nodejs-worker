@@ -15,15 +15,15 @@ import {
 } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { RegisteredFunction } from '../AppContext';
-import { getLegacyFunction } from '../LegacyFunctionLoader';
-import { worker } from '../WorkerContext';
 import { fromCoreInvocationResponse } from '../coreApi/converters/fromCoreInvocationResponse';
 import { fromCoreLogCategory, fromCoreLogLevel } from '../coreApi/converters/fromCoreStatusResult';
 import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMetadata';
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
-import { AzFuncSystemError, ReadOnlyError, isError } from '../errors';
+import { AzFuncSystemError, isError, ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
+import { getLegacyFunction } from '../LegacyFunctionLoader';
 import { nonNullProp } from '../utils/nonNull';
+import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 
 /**

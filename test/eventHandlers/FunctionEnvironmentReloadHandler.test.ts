@@ -1,14 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import 'mocha';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
-import 'mocha';
 import { worker } from '../../src/WorkerContext';
-import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 import { setTestAppMainField, testAppPath, testAppSrcPath, testPackageJsonPath } from './testAppUtils';
+import { TestEventStream } from './TestEventStream';
 
 describe('FunctionEnvironmentReloadHandler', () => {
     let stream: TestEventStream;

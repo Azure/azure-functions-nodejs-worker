@@ -1,12 +1,13 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import 'mocha';
 import * as chai from 'chai';
 import { expect } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import 'mocha';
 import * as mockFs from 'mock-fs';
 import { parsePackageJson } from '../../src/parsers/parsePackageJson';
+
 chai.use(chaiAsPromised);
 
 describe('parsePackageJson', () => {

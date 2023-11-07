@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { HookCallback } from '@azure/functions-core';
-import { worker } from '../WorkerContext';
 import { AzFuncRangeError } from '../errors';
+import { worker } from '../WorkerContext';
 
 export function getHooks(hookName: string): HookCallback[] {
     switch (hookName) {

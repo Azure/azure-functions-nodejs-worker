@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import 'mocha';
-import { TestEventStream } from './TestEventStream';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
+import { TestEventStream } from './TestEventStream';
 
 describe('WorkerStatusHandler', () => {
     let stream: TestEventStream;

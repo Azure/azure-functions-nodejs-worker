@@ -1,10 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as chai from 'chai';
 import 'mocha';
+import { expect } from 'chai';
 import { isESModule } from '../src/loadScriptFile';
-const expect = chai.expect;
 
 describe('loadScriptFile', () => {
     it('respects .cjs extension', () => {

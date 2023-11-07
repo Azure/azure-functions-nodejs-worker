@@ -1,8 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
 import 'mocha';
+import { expect } from 'chai';
 import { ensureErrorType } from '../src/errors';
 
 describe('errors', () => {

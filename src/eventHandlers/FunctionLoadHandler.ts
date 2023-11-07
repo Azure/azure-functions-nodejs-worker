@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { loadLegacyFunction } from '../LegacyFunctionLoader';
-import { worker } from '../WorkerContext';
 import { ensureErrorType } from '../errors';
+import { loadLegacyFunction } from '../LegacyFunctionLoader';
 import { isDefined, nonNullProp } from '../utils/nonNull';
+import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;

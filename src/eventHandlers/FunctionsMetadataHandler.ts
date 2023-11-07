@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { worker } from '../WorkerContext';
 import { isDefined } from '../utils/nonNull';
+import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
