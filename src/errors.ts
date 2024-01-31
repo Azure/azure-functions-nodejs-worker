@@ -31,9 +31,9 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
     if (err instanceof Error) {
         if (Object.getOwnPropertyDescriptor(err, 'message')?.writable) {
             return err;
+        } else {
+            return new Error(JSON.stringify(err));
         }
-
-        return new Error(JSON.stringify(err));
     } else {
         let message: string;
         if (err === undefined || err === null) {
