@@ -28,9 +28,12 @@ export class ReadOnlyError extends AzFuncTypeError {
 }
 
 export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
-    const writable = Object.getOwnPropertyDescriptor(err, 'message')?.writable;
-    if (err instanceof Error && writable) {
-        return err;
+    if (err instanceof Error) {
+        if (Object.getOwnPropertyDescriptor(err, 'message')?.writable) {
+            return err;
+        }
+
+        return new Error(JSON.stringify(err));
     } else {
         let message: string;
         if (err === undefined || err === null) {
