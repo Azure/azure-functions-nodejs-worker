@@ -42,6 +42,13 @@ describe('errors', () => {
         expect(ensureErrorType(actualError)).to.equal(actualError);
     });
 
+    it('readonly error', () => {
+        const actualError = new Error('readonly');
+        Object.defineProperty(actualError, 'message', { writable: false });
+        // JSON.stringify only includes enumerable properties, so we should expect an empty object
+        validateError(ensureErrorType(actualError), '{}');
+    })
+
     function validateError(actual: Error, expectedMessage: string): void {
         expect(actual).to.be.instanceof(Error);
         expect(actual.message).to.equal(expectedMessage);
