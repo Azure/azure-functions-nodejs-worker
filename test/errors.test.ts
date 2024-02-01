@@ -44,13 +44,13 @@ describe('errors', () => {
 
     it('readonly error', () => {
         class ReadOnlyError extends Error {
-            public readonly message = 'a readonly message';
+            readonly message = 'a readonly message';
         }
 
         const actualError = new ReadOnlyError();
         Object.defineProperty(actualError, 'message', { writable: false });
-        // @ts-expect-error
-        const attemptToChangeMessage = () => actualError.message = 'exception';
+        // @ts-expect-error: create a function to test that writing throws an exception
+        const attemptToChangeMessage = () => (actualError.message = 'exception');
 
         expect(attemptToChangeMessage).to.throw();
         validateError(ensureErrorType(actualError), '{"message":"a readonly message"}');
