@@ -43,11 +43,18 @@ describe('errors', () => {
     });
 
     it('readonly error', () => {
-        const actualError = new Error('readonly');
+        class ReadOnlyError extends Error {
+            public readonly message = 'a readonly message';
+        }
+
+        const actualError = new ReadOnlyError();
         Object.defineProperty(actualError, 'message', { writable: false });
-        // JSON.stringify only includes enumerable properties, so we should expect an empty object
-        validateError(ensureErrorType(actualError), '{}');
-    })
+        // @ts-expect-error
+        const attemptToChangeMessage = () => actualError.message = 'exception';
+
+        expect(attemptToChangeMessage).to.throw();
+        validateError(ensureErrorType(actualError), '{"message":"a readonly message"}');
+    });
 
     function validateError(actual: Error, expectedMessage: string): void {
         expect(actual).to.be.instanceof(Error);
