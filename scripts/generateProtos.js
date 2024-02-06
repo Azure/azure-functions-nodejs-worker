@@ -1,6 +1,6 @@
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
-const path = require("path");
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const path = require('path');
 
 async function generateProtos() {
     try {
@@ -10,10 +10,10 @@ async function generateProtos() {
         const protoFiles = [
             path.join(protoRoot, 'shared', 'NullableTypes.proto'),
             path.join(protoRoot, 'identity', 'ClaimsIdentityRpc.proto'),
-            path.join(protoRoot, 'FunctionRpc.proto')
+            path.join(protoRoot, 'FunctionRpc.proto'),
         ].join(' ');
 
-        console.log("Compiling protobuf definitions...");
+        console.log('Compiling protobuf definitions...');
 
         console.log('Compiling to JavaScript...');
         const jsOut = path.join(protoSrc, 'rpc.js');
@@ -34,7 +34,7 @@ async function generateProtos() {
         console.error(error.message);
         process.exit(-1);
     }
-};
+}
 
 async function run(command) {
     const { stdout, stderr } = await exec(command);

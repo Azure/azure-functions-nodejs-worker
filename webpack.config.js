@@ -1,24 +1,24 @@
 module.exports = {
-    entry: "./dist/src/Worker.js",
+    entry: './dist/src/Worker.js',
     output: {
         path: `${__dirname}/dist/src`,
-        filename: "worker-bundle.js",
-        library: "worker",
-        libraryTarget: "commonjs2"
+        filename: 'worker-bundle.js',
+        library: 'worker',
+        libraryTarget: 'commonjs2',
     },
     target: 'node',
     node: {
-        __dirname: false
+        __dirname: false,
     },
     externals: {
-        '@azure/functions-core': 'commonjs2 @azure/functions-core'
+        '@azure/functions-core': 'commonjs2 @azure/functions-core',
     },
     module: {
         parser: {
             javascript: {
-                commonjsMagicComments: true
-            }
-        }
+                commonjsMagicComments: true,
+            },
+        },
     },
-    plugins: []
+    plugins: [],
 };

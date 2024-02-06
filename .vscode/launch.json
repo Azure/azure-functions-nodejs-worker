@@ -10,14 +10,10 @@
         {
             "name": "Launch Unit Tests",
             "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "test"
-            ],
+            "runtimeArgs": ["test"],
             "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "type": "pwa-node"
-        },
+        }
     ]
 }
