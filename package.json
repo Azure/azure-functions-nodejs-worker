@@ -70,6 +70,7 @@
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
+        "format": "prettier . --write",
         "updateVersion": "ts-node ./scripts/updateVersion.ts",
         "watch": "tsc --watch",
         "webpack": "webpack --mode production"
