@@ -9,9 +9,7 @@
         "sourceMap": true,
         "baseUrl": "./",
         "paths": {
-            "@azure/functions-core": [
-                "types-core"
-            ]
+            "@azure/functions-core": ["types-core"]
         }
     }
 }

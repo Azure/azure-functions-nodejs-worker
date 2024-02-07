@@ -1,6 +1,6 @@
 class FuncObject {
     prop = 'testThisProp';
-    constructor() { }
+    constructor() {}
     async test(context) {
         context.log(`This value: "${this.prop}"`);
     }

@@ -1,0 +1,8 @@
+out
+dist
+node_modules
+azure-functions-language-worker-protobuf
+NOTICE.html
+
+# Exclude markdown until this bug is fixed: https://github.com/prettier/prettier/issues/5019
+*.md

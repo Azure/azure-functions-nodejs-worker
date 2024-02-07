@@ -1,8 +1,8 @@
 {
     "azureFunctions.showProjectWarning": false,
-    "editor.codeActionsOnSave": [
-        "source.fixAll"
-    ],
+    "editor.codeActionsOnSave": ["source.fixAll"],
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "typescript.tsdk": "node_modules/typescript/lib",
-    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.preferences.importModuleSpecifier": "relative"
 }
