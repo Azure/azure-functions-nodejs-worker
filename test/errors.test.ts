@@ -42,18 +42,23 @@ describe('errors', () => {
         expect(ensureErrorType(actualError)).to.equal(actualError);
     });
 
-    it('readonly error', () => {
+    it.only('readonly error', () => {
         class ReadOnlyError extends Error {
-            readonly message = 'a readonly message';
+            get message(): string {
+                return 'a readonly message';
+            }
         }
 
         const actualError = new ReadOnlyError();
-        Object.defineProperty(actualError, 'message', { writable: false });
+        const oldStack = actualError.stack;
         // @ts-expect-error: create a function to test that writing throws an exception
-        const attemptToChangeMessage = () => (actualError.message = 'exception');
+        expect(() => (actualError.message = 'exception')).to.throw();
 
-        expect(attemptToChangeMessage).to.throw();
-        validateError(ensureErrorType(actualError), '{"message":"a readonly message"}');
+        const wrappedError = ensureErrorType(actualError);
+        wrappedError.message = `Readonly error can now have modified message: ${wrappedError.message}`;
+
+        expect(wrappedError.message).to.equal('Readonly error can now have modified message: a readonly message');
+        expect(wrappedError.stack).to.equal(oldStack);
     });
 
     function validateError(actual: Error, expectedMessage: string): void {

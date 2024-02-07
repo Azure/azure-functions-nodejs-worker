@@ -33,7 +33,12 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
         if (writable) {
             return err;
         } else {
-            return new Error(JSON.stringify(err));
+            const oldStack = err.stack;
+            const oldName = err.name;
+            const newError = 'message' in err ? new Error(err.message) : new Error(JSON.stringify(err));
+            newError.stack = oldStack;
+            newError.name = oldName;
+            return newError;
         }
     } else {
         let message: string;
