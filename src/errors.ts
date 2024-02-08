@@ -33,9 +33,12 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
         if (writable) {
             return err;
         } else {
+            // If we cannot modify the message, we want to wrap the original error
+            // The motivation for this branch can be found in the below issue:
+            // https://github.com/Azure/azure-functions-nodejs-library/issues/205
             const oldStack = err.stack;
             const oldName = err.name;
-            const newError = 'message' in err ? new Error(err.message) : new Error(JSON.stringify(err));
+            const newError = new Error(err.message);
             newError.stack = oldStack;
             newError.name = oldName;
             return newError;
