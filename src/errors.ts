@@ -30,19 +30,20 @@ export class ReadOnlyError extends AzFuncTypeError {
 export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
     if (err instanceof Error) {
         const writable = Object.getOwnPropertyDescriptor(err, 'message')?.writable;
-        if (writable) {
-            return err;
-        } else {
-            // If we cannot modify the message, we want to wrap the original error
+        if (!writable) {
             // The motivation for this branch can be found in the below issue:
             // https://github.com/Azure/azure-functions-nodejs-library/issues/205
-            const oldStack = err.stack;
-            const oldName = err.name;
-            const newError = new Error(err.message);
-            newError.stack = oldStack;
-            newError.name = oldName;
-            return newError;
+            let readableMessage = err.message;
+            Object.defineProperty(err, 'message', {
+                get() {
+                    return readableMessage;
+                },
+                set(val) {
+                    readableMessage = val;
+                },
+            });
         }
+        return err;
     } else {
         let message: string;
         if (err === undefined || err === null) {
