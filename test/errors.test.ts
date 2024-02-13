@@ -42,7 +42,7 @@ describe('errors', () => {
         expect(ensureErrorType(actualError)).to.equal(actualError);
     });
 
-    it.only('readonly error', () => {
+    it('readonly error', () => {
         class ReadOnlyError extends Error {
             get message(): string {
                 return 'a readonly message';
