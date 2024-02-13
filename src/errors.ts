@@ -38,7 +38,7 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
                 get() {
                     return readableMessage;
                 },
-                set(val) {
+                set(val: string) {
                     readableMessage = val;
                 },
             });
