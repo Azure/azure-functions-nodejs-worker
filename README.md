@@ -2,7 +2,7 @@
 
 |Branch|Status|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
 |---|---|---|---|---|
-|v3.x (default)|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/Azure%2520Functions/10/v3.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v3.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/Azure%2520Functions/99/v3.x?compact_message)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=99&branchName=v3.x)|4|GA (Recommended)|20 (Preview), 18, 16, 14|
+|v3.x (default)|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/Azure%2520Functions/10/v3.x)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=10&branchName=v3.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/Azure%2520Functions/99/v3.x?compact_message)](https://azfunc.visualstudio.com/Azure%20Functions/_build/latest?definitionId=99&branchName=v3.x)|4|GA|20, 18, 16, 14|
 
 > NOTE: The branch corresponds to the _worker_ version, which is intentionally decoupled from the _runtime_ version.
 
@@ -34,7 +34,7 @@ These are the most important GitHub repositories that make up the Node.js experi
 
 - [azure-functions-nodejs-library](https://github.com/Azure/azure-functions-nodejs-library): The `@azure/functions` [npm package](https://www.npmjs.com/package/@azure/functions) that you include in your app.
 - [azure-functions-nodejs-worker](https://github.com/Azure/azure-functions-nodejs-worker): The other half of the Node.js experience that ships directly in Azure.
-- [azure-functions-nodejs-e2e-tests](https://github.com/Azure/azure-functions-e2e-tests): A set of automated end-to-end tests designed to run against prerelease versions of all Node.js components.
+- [azure-functions-nodejs-e2e-tests](https://github.com/Azure/azure-functions-nodejs-e2e-tests): A set of automated end-to-end tests designed to run against prerelease versions of all Node.js components.
 - [azure-functions-host](https://github.com/Azure/azure-functions-host): The runtime shared by all languages in Azure Functions.
 - [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools): The CLI used to test Azure Functions locally.
 
