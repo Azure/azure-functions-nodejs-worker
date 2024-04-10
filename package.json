@@ -44,7 +44,7 @@
         "mocha-multi-reporters": "^1.5.1",
         "mock-fs": "^5.1.2",
         "prettier": "^2.4.1",
-        "protobufjs": "^7.2.4",
+        "protobufjs": "^7.2.5",
         "protobufjs-cli": "^1.1.1",
         "rimraf": "^2.6.3",
         "semver": "^7.3.5",
