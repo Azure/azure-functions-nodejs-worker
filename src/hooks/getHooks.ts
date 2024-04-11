@@ -15,6 +15,8 @@ export function getHooks(hookName: string): HookCallback[] {
             return worker.app.appStartHooks;
         case 'appTerminate':
             return worker.app.appTerminateHooks;
+        case 'log':
+            return worker.app.logHooks;
         default:
             throw new AzFuncRangeError(`Unrecognized hook "${hookName}"`);
     }

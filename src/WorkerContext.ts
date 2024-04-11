@@ -4,8 +4,10 @@
 import { ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { AppContext } from './AppContext';
+import { fromCoreLogLevel } from './coreApi/converters/fromCoreStatusResult';
 import { AzFuncSystemError } from './errors';
 import { IEventStream } from './GrpcClient';
+import { InvocationLogContext, LogHookContext } from './hooks/LogHookContext';
 
 class WorkerContext {
     app = new AppContext();
@@ -62,7 +64,23 @@ class WorkerContext {
      * @param requestId gRPC message request id
      * @param msg gRPC message content
      */
-    log(log: rpc.IRpcLog) {
+    log(log: rpc.IRpcLog, invocationLogCtx?: InvocationLogContext): void {
+        try {
+            const logContext = new LogHookContext(log, invocationLogCtx);
+            for (const callback of worker.app.logHooks) {
+                callback(logContext);
+            }
+
+            if (log.logCategory === rpc.RpcLog.RpcLogCategory.User) {
+                // let hooks change and filter these values, but only for user-generated logs
+                // system logs should always be sent as-is
+                log.message = logContext.message;
+                log.level = fromCoreLogLevel(logContext.level);
+            }
+        } catch {
+            // ignore so that user hooks can't prevent system logs
+        }
+
         this.eventStream.write({
             rpcLog: log,
         });

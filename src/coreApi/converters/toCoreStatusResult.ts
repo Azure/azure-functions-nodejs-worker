@@ -29,7 +29,7 @@ function toCoreLogs(data: rpc.IRpcLog[] | null | undefined): coreTypes.RpcLog[] 
     }
 }
 
-function toCoreLog(data: rpc.IRpcLog): coreTypes.RpcLog {
+export function toCoreLog(data: rpc.IRpcLog): coreTypes.RpcLog {
     const result = {
         ...data,
         level: toCoreLogLevel(data.level),

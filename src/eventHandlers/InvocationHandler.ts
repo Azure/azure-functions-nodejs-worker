@@ -21,6 +21,7 @@ import { toCoreFunctionMetadata } from '../coreApi/converters/toCoreFunctionMeta
 import { toCoreInvocationRequest } from '../coreApi/converters/toCoreInvocationRequest';
 import { AzFuncSystemError, isError, ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
+import { InvocationLogContext } from '../hooks/LogHookContext';
 import { getLegacyFunction } from '../LegacyFunctionLoader';
 import { nonNullProp } from '../utils/nonNull';
 import { worker } from '../WorkerContext';
@@ -70,6 +71,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         const hookData: HookData = {};
         let { context, inputs } = await invocModel.getArguments();
+        coreCtx.logContext = { hookData, invocationContext: context };
 
         const preInvocContext: PreInvocationContext = {
             get hookData() {
@@ -157,6 +159,7 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
     request: RpcInvocationRequest;
     metadata: RpcFunctionMetadata;
     state?: InvocationState;
+    logContext?: InvocationLogContext;
     #msgCategory: string;
 
     constructor(request: RpcInvocationRequest, metadata: RpcFunctionMetadata, msgCategory: string) {
@@ -167,12 +170,15 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
     }
 
     log(level: RpcLogLevel, logCategory: RpcLogCategory, message: string): void {
-        worker.log({
-            invocationId: this.request.invocationId,
-            category: this.#msgCategory,
-            message,
-            level: fromCoreLogLevel(level),
-            logCategory: fromCoreLogCategory(logCategory),
-        });
+        worker.log(
+            {
+                invocationId: this.request.invocationId,
+                category: this.#msgCategory,
+                message,
+                level: fromCoreLogLevel(level),
+                logCategory: fromCoreLogCategory(logCategory),
+            },
+            this.logContext
+        );
     }
 }

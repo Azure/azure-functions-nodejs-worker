@@ -1063,4 +1063,37 @@ describe('InvocationHandler', () => {
             msg.invocation.response([])
         );
     });
+
+    it('log hook respects changes to value, only for user log', async () => {
+        coreApi.registerHook('log', (ctx) => {
+            ctx.message += 'UpdatedFromHook';
+            ctx.level = 'error';
+        });
+
+        registerV3Func(Binding.queue, async (invocContext: Context) => {
+            invocContext.log('testUserLog');
+        });
+        stream.addTestMessage(msg.invocation.request([InputData.http]));
+        await stream.assertCalledWith(
+            msg.invocation.receivedRequestLog,
+            msg.invocation.userLog('testUserLogUpdatedFromHook', LogLevel.Error),
+            msg.invocation.response([])
+        );
+    });
+
+    it('ignores log hook error', async () => {
+        coreApi.registerHook('log', (_ctx) => {
+            throw new Error('failed log hook');
+        });
+
+        registerV3Func(Binding.queue, async (invocContext: Context) => {
+            invocContext.log('testUserLog');
+        });
+        stream.addTestMessage(msg.invocation.request([InputData.http]));
+        await stream.assertCalledWith(
+            msg.invocation.receivedRequestLog,
+            msg.invocation.userLog(),
+            msg.invocation.response([])
+        );
+    });
 });

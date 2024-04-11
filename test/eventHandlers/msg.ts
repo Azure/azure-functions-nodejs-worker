@@ -381,13 +381,13 @@ export namespace msg {
             "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909"
         );
 
-        export function userLog(data = 'testUserLog'): TestMessage {
+        export function userLog(data = 'testUserLog', level = LogLevel.Information): TestMessage {
             return {
                 rpcLog: {
                     category: 'testFuncName.Invocation',
                     invocationId: '1',
                     message: data,
-                    level: LogLevel.Information,
+                    level,
                     logCategory: LogCategory.User,
                 },
             };
