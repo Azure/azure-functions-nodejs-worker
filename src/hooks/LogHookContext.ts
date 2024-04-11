@@ -17,17 +17,17 @@ export interface InvocationLogContext {
 export class LogHookContext implements coreTypes.LogHookContext {
     level: RpcLogLevel;
     message: string;
-    #hookData: HookData;
     #category: RpcLogCategory;
+    #hookData: HookData;
     #invocationContext: unknown;
 
     constructor(log: rpc.IRpcLog, invocLogCtx: InvocationLogContext | undefined) {
-        this.#hookData = invocLogCtx?.hookData ?? {};
-        this.#invocationContext = invocLogCtx?.invocationContext;
         const coreLog = toCoreLog(log);
         this.level = nonNullProp(coreLog, 'level');
         this.message = nonNullProp(coreLog, 'message');
         this.#category = nonNullProp(coreLog, 'logCategory');
+        this.#hookData = invocLogCtx?.hookData ?? {};
+        this.#invocationContext = invocLogCtx?.invocationContext;
     }
 
     get hookData(): HookData {
