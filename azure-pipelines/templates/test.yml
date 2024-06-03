@@ -1,0 +1,35 @@
+jobs:
+    - job: UnitTests
+
+      strategy:
+          matrix:
+              Node14:
+                  NODE_VERSION: '14.x'
+              Node16:
+                  NODE_VERSION: '16.x'
+              Node18:
+                  NODE_VERSION: '18.x'
+              Node20:
+                  NODE_VERSION: '20.x'
+
+      steps:
+          - task: NodeTool@0
+            inputs:
+                versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+          - script: npm ci
+            displayName: 'npm ci'
+          - script: npm run build
+            displayName: 'npm run build'
+          - script: npm run lint
+            displayName: 'npm run lint'
+          - script: npm run updateVersion -- --validate
+            displayName: 'validate version'
+          - script: npm test
+            displayName: 'Run unit tests'
+          - task: PublishTestResults@2
+            displayName: 'Publish Unit Test Results'
+            inputs:
+                testResultsFiles: 'test/unit-test-results.xml'
+                testRunTitle: '$(Agent.JobName)'
+            condition: succeededOrFailed()
