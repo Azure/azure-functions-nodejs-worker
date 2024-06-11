@@ -6,7 +6,7 @@
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
         "@azure/functions": "^3.5.0",
-        "@grpc/grpc-js": "^1.8.18",
+        "@grpc/grpc-js": "^1.8.22",
         "@grpc/proto-loader": "^0.7.8",
         "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
