@@ -29,20 +29,6 @@ export class ReadOnlyError extends AzFuncTypeError {
 
 export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
     if (err instanceof Error) {
-        const writable = Object.getOwnPropertyDescriptor(err, 'message')?.writable;
-        if (!writable) {
-            // The motivation for this branch can be found in the below issue:
-            // https://github.com/Azure/azure-functions-nodejs-library/issues/205
-            let readableMessage = err.message;
-            Object.defineProperty(err, 'message', {
-                get() {
-                    return readableMessage;
-                },
-                set(val: string) {
-                    readableMessage = val;
-                },
-            });
-        }
         return err;
     } else {
         let message: string;
@@ -56,6 +42,16 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
             message = String(err);
         }
         return new Error(message);
+    }
+}
+
+export function setErrorMessage(err: Error, message: string): Error & Partial<AzFuncError> {
+    try {
+        err.message = message;
+        return err;
+    } catch {
+        // Return original error if we can't set the message
+        return err;
     }
 }
 
