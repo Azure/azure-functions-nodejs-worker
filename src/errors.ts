@@ -49,9 +49,13 @@ export function setErrorMessage(err: Error, message: string): Error & Partial<Az
     try {
         err.message = message;
         return err;
-    } catch {
-        // Return original error if we can't set the message
-        return err;
+    } catch (e) {
+        if (e instanceof TypeError) {
+            // Return original error if we can't set the message
+            return err;
+        } else {
+            throw e;
+        }
     }
 }
 
