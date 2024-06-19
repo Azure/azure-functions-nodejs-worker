@@ -9,7 +9,7 @@ export interface AzFuncError {
     isAzureFunctionsSystemError: boolean;
 }
 
-export interface TodoError extends Error, Partial<AzFuncError> {
+export interface ValidatedError extends Error, Partial<AzFuncError> {
     /**
      * Use `trySetErrorMessage` to set the error message
      */
@@ -34,7 +34,7 @@ export class ReadOnlyError extends AzFuncTypeError {
     }
 }
 
-export function ensureErrorType(err: unknown): TodoError {
+export function ensureErrorType(err: unknown): ValidatedError {
     if (err instanceof Error) {
         return err;
     } else {
