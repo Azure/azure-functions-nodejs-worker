@@ -38,7 +38,6 @@ export async function parsePackageJson(dir: string): Promise<PackageJson> {
         if (error.name === 'SyntaxError') {
             const message = `file content is not valid JSON: ${error.message}`;
             trySetErrorMessage(error, message);
-            throw error;
         }
         throw error;
     }
