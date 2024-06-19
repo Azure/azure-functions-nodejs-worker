@@ -3,7 +3,7 @@
 
 import { AppStartContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { AzFuncSystemError, ensureErrorType, ReadOnlyError, setErrorMessage } from './errors';
+import { AzFuncSystemError, ensureErrorType, ReadOnlyError, trySetErrorMessage } from './errors';
 import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
 import { parsePackageJson } from './parsers/parsePackageJson';
@@ -104,13 +104,13 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
             }`;
 
             if (shouldBlockOnEntryPointError()) {
-                const modifiedError = setErrorMessage(error, newMessage);
-                modifiedError.isAzureFunctionsSystemError = true;
+                trySetErrorMessage(error, newMessage);
+                error.isAzureFunctionsSystemError = true;
                 // We don't want to throw this error now (during workerInit or funcEnvReload) because technically the worker is fine
                 // Instead, it will be thrown during functionMetadata or functionLoad response which better indicates that the user's app is the problem
-                worker.app.blockingAppStartError = modifiedError;
+                worker.app.blockingAppStartError = error;
                 // This will ensure the error makes it to the user's app insights
-                console.error(modifiedError.stack);
+                console.error(error.stack);
             } else {
                 // In this case, the error will never block the app
                 // The most we can do without breaking backwards compatibility is log it as a system log

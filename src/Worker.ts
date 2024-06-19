@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as parseArgs from 'minimist';
-import { AzFuncSystemError, ensureErrorType, setErrorMessage } from './errors';
+import { AzFuncSystemError, ensureErrorType, trySetErrorMessage } from './errors';
 import { CreateGrpcEventStream } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
@@ -41,8 +41,8 @@ export function startNodeWorker(args) {
         const error = ensureErrorType(err);
         error.isAzureFunctionsSystemError = true;
         const message = 'Error creating GRPC event stream: ' + error.message;
-        const modifiedError = setErrorMessage(error, message);
-        throw modifiedError;
+        trySetErrorMessage(error, message);
+        throw error;
     }
 
     setupEventStream();

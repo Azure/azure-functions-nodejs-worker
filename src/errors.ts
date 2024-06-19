@@ -9,6 +9,13 @@ export interface AzFuncError {
     isAzureFunctionsSystemError: boolean;
 }
 
+export interface TodoError extends Error, Partial<AzFuncError> {
+    /**
+     * Use `trySetErrorMessage` to set the error message
+     */
+    readonly message: string;
+}
+
 export class AzFuncSystemError extends Error {
     isAzureFunctionsSystemError = true;
 }
@@ -27,7 +34,7 @@ export class ReadOnlyError extends AzFuncTypeError {
     }
 }
 
-export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
+export function ensureErrorType(err: unknown): TodoError {
     if (err instanceof Error) {
         return err;
     } else {
@@ -45,17 +52,11 @@ export function ensureErrorType(err: unknown): Error & Partial<AzFuncError> {
     }
 }
 
-export function setErrorMessage(err: Error, message: string): Error & Partial<AzFuncError> {
+export function trySetErrorMessage(err: Error, message: string): void {
     try {
         err.message = message;
-        return err;
-    } catch (e) {
-        if (e instanceof TypeError) {
-            // Return original error if we can't set the message
-            return err;
-        } else {
-            throw e;
-        }
+    } catch {
+        // If we can't set the message, we'll keep the error as is
     }
 }
 

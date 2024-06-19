@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { ensureErrorType, setErrorMessage } from '../errors';
+import { ensureErrorType, trySetErrorMessage } from '../errors';
 import { loadLegacyFunction } from '../LegacyFunctionLoader';
 import { isDefined, nonNullProp } from '../utils/nonNull';
 import { worker } from '../WorkerContext';
@@ -44,8 +44,8 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
                 const error = ensureErrorType(err);
                 error.isAzureFunctionsSystemError = true;
                 const message = `Worker was unable to load function ${metadata.name}: '${error.message}'`;
-                const modifiedError = setErrorMessage(error, message);
-                throw modifiedError;
+                trySetErrorMessage(error, message);
+                throw error;
             }
         }
 
