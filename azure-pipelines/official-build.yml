@@ -12,6 +12,14 @@ trigger:
 # CI only, does not trigger on PRs.
 pr: none
 
+schedules:
+    - cron: '30 10 * * *'
+      displayName: Nightly at 3:30 AM PT
+      always: true
+      branches:
+          include:
+              - v3.x
+
 resources:
     repositories:
         - repository: 1es
