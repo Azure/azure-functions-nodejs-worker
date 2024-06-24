@@ -53,11 +53,12 @@ describe('startApp', () => {
 
         stream.addTestMessage(msg.init.request(testAppPath));
         if (fileSubpath.includes('missing')) {
-            await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
+            await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(errorMessage), msg.init.response);
         } else {
             await stream.assertCalledWith(
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
+                msg.errorLog(errorMessage),
                 msg.init.response
             );
         }
@@ -66,7 +67,6 @@ describe('startApp', () => {
         if (isModelV4) {
             await stream.assertCalledWith(
                 msg.indexing.receivedRequestLog,
-                msg.errorLog(errorMessage),
                 msg.indexing.failedResponse(errorMessage, false)
             );
         } else {
@@ -74,11 +74,7 @@ describe('startApp', () => {
         }
 
         stream.addTestMessage(msg.funcLoad.request('helloWorld.js'));
-        await stream.assertCalledWith(
-            msg.funcLoad.receivedRequestLog,
-            msg.errorLog(errorMessage),
-            msg.funcLoad.failedResponse(errorMessage)
-        );
+        await stream.assertCalledWith(msg.funcLoad.receivedRequestLog, msg.funcLoad.failedResponse(errorMessage));
     }
 
     describe('Node >=v20', () => {

@@ -7,6 +7,8 @@ export interface AzFuncError {
      * User errors cannot be tracked in our telemetry because they could have user information (users can still track it themselves in their app insights resource)
      */
     isAzureFunctionsSystemError: boolean;
+
+    alreadyLoggedOverRpc?: boolean;
 }
 
 export interface ValidatedError extends Error, Partial<AzFuncError> {

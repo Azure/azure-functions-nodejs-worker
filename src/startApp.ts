@@ -113,13 +113,16 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
                 console.error(error.stack);
             } else {
                 // In this case, the error will never block the app
-                // The most we can do without breaking backwards compatibility is log it as a system log
-                worker.log({
-                    message: newMessage,
-                    level: LogLevel.Error,
-                    logCategory: LogCategory.System,
-                });
+                // The most we can do without breaking backwards compatibility is log it as an rpc system log below
             }
+
+            // Always log as rpc system log, which goes to our internal telemetry
+            worker.log({
+                message: newMessage,
+                level: LogLevel.Error,
+                logCategory: LogCategory.System,
+            });
+            error.alreadyLoggedOverRpc = true;
         }
     }
 }
