@@ -2,7 +2,7 @@
 
 |Branch|Status|[Runtime Version](https://docs.microsoft.com/azure/azure-functions/functions-versions)|Support level|Node.js Versions|
 |---|---|---|---|---|
-|v3.x (default)|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/public/527/v3.x)](https://azfunc.visualstudio.com/public/_build/latest?definitionId=527&branchName=v3.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/public/527/v3.x?compact_message)](https://azfunc.visualstudio.com/public/_build/latest?definitionId=527&branchName=v3.x)|4|GA|20, 18, 16, 14|
+|v3.x (default)|[![Build Status](https://img.shields.io/azure-devops/build/azfunc/public/527/v3.x)](https://azfunc.visualstudio.com/public/_build/latest?definitionId=527&branchName=v3.x) [![Test Status](https://img.shields.io/azure-devops/tests/azfunc/public/527/v3.x?compact_message)](https://azfunc.visualstudio.com/public/_build/latest?definitionId=527&branchName=v3.x)|4|GA|20, 18|
 
 > NOTE: The branch corresponds to the _worker_ version, which is intentionally decoupled from the _runtime_ version.
 

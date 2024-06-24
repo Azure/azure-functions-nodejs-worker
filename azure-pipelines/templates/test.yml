@@ -11,6 +11,8 @@ jobs:
                   NODE_VERSION: '18.x'
               Node20:
                   NODE_VERSION: '20.x'
+              Node22:
+                  NODE_VERSION: '22.x'
 
       steps:
           - task: NodeTool@0
