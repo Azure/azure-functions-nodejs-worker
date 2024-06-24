@@ -14,7 +14,7 @@ pr: none
 
 schedules:
     - cron: '30 10 * * *'
-      displayName: Nightly at 3:30 AM PT
+      displayName: Nightly build
       always: true
       branches:
           include:
