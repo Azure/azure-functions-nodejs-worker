@@ -122,7 +122,7 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
                 level: LogLevel.Error,
                 logCategory: LogCategory.System,
             });
-            error.alreadyLoggedOverRpc = true;
+            error.loggedOverRpc = true;
         }
     }
 }

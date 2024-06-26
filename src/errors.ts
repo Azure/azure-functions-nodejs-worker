@@ -8,7 +8,7 @@ export interface AzFuncError {
      */
     isAzureFunctionsSystemError: boolean;
 
-    alreadyLoggedOverRpc?: boolean;
+    loggedOverRpc?: boolean;
 }
 
 export interface ValidatedError extends Error, Partial<AzFuncError> {

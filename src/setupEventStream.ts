@@ -98,7 +98,7 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
         outMsg[eventHandler.responseName] = response;
     } catch (err) {
         const error = ensureErrorType(err);
-        if (error.isAzureFunctionsSystemError && !error.alreadyLoggedOverRpc) {
+        if (error.isAzureFunctionsSystemError && !error.loggedOverRpc) {
             worker.log({
                 message: error.message,
                 level: LogLevel.Error,
