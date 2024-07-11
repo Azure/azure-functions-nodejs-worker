@@ -35,6 +35,10 @@ extends:
             image: 1es-windows-2022
             os: windows
 
+        sdl:
+            codeql:
+                runSourceLanguagesInSourceAnalysis: true
+
         stages:
             - stage: WindowsUnitTests
               dependsOn: []
