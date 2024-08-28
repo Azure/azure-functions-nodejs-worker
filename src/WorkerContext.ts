@@ -10,7 +10,7 @@ import { IEventStream } from './GrpcClient';
 import { InvocationLogContext, LogHookContext } from './hooks/LogHookContext';
 
 class WorkerContext {
-    app = new AppContext();
+    app = new AppContext(undefined);
     defaultProgrammingModel?: ProgrammingModel;
 
     /**
@@ -54,8 +54,8 @@ class WorkerContext {
         }
     }
 
-    resetApp(): void {
-        this.app = new AppContext();
+    resetApp(functionAppDirectory: string | null | undefined): void {
+        this.app = new AppContext(functionAppDirectory);
         this.app.programmingModel = this.defaultProgrammingModel;
     }
 

@@ -193,6 +193,14 @@ export namespace msg {
             return msg.infoLog(`Changing current working directory to ${dir}`);
         }
 
+        export const funcAppDirNotDefined = msg.debugLog(
+            'FunctionEnvironmentReload functionAppDirectory is not defined'
+        );
+
+        export const funcAppDirNotChanged = msg.debugLog(
+            'FunctionEnvironmentReload functionAppDirectory has not changed'
+        );
+
         export const response = new RegExpStreamingMessage(
             {
                 requestId: 'testReqId',

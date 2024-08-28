@@ -10,6 +10,7 @@ import { getWorkerMetadata } from './getWorkerMetadata';
 import LogCategory = rpc.RpcLog.RpcLogCategory;
 import LogLevel = rpc.RpcLog.Level;
 import CapabilitiesUpdateStrategy = rpc.FunctionEnvironmentReloadResponse.CapabilitiesUpdateStrategy;
+import * as path from 'path';
 
 /**
  * Environment variables from the current process
@@ -27,7 +28,27 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
     }
 
     async handleEvent(msg: rpc.IFunctionEnvironmentReloadRequest): Promise<rpc.IFunctionEnvironmentReloadResponse> {
-        worker.resetApp();
+        if (!msg.functionAppDirectory) {
+            worker.log({
+                message: `FunctionEnvironmentReload functionAppDirectory is not defined`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            });
+        }
+
+        if (
+            worker.app.functionAppDirectory &&
+            msg.functionAppDirectory &&
+            isPathEqual(worker.app.functionAppDirectory, msg.functionAppDirectory)
+        ) {
+            worker.log({
+                message: `FunctionEnvironmentReload functionAppDirectory has not changed`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            });
+        }
+
+        worker.resetApp(msg.functionAppDirectory);
 
         const response = this.getDefaultResponse(msg);
 
@@ -62,4 +83,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
 
         return response;
     }
+}
+
+function isPathEqual(path1: string, path2: string): boolean {
+    return path.relative(path1, path2) === '';
 }

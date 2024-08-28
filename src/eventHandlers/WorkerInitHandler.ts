@@ -27,6 +27,15 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
     }
 
     async handleEvent(msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
+        if (!msg.functionAppDirectory) {
+            worker.log({
+                message: `WorkerInit functionAppDirectory is not defined`,
+                level: LogLevel.Debug,
+                logCategory: LogCategory.System,
+            });
+        }
+        worker.app.functionAppDirectory = msg.functionAppDirectory;
+
         const response = this.getDefaultResponse(msg);
 
         worker.log({

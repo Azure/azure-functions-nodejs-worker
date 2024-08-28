@@ -38,7 +38,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.response
+        );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
@@ -56,7 +60,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.response
+        );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.env.PlaceholderVariable).to.be.undefined;
@@ -80,7 +88,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.response
+        );
         expect(process.env).to.be.empty;
     });
 
@@ -92,7 +104,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.response
+        );
 
         stream.addTestMessage({
             requestId: 'testReqId',
@@ -108,7 +124,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(0), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.response
+        );
     });
 
     it('reloads environment variable and keeps cwd without functionAppDirectory', async () => {
@@ -123,7 +143,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 functionAppDirectory: null,
             },
         });
-        await stream.assertCalledWith(msg.envReload.reloadEnvVarsLog(2), msg.envReload.response);
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.response
+        );
         expect(process.env.hello).to.equal('world');
         expect(process.env.SystemDrive).to.equal('Q:');
         expect(process.cwd() == cwd);
@@ -181,6 +205,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             },
         });
         await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotChanged,
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
             msg.envReload.response

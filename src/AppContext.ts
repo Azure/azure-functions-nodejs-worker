@@ -15,6 +15,10 @@ export interface LegacyRegisteredFunction extends RegisteredFunction {
 }
 
 export class AppContext {
+    functionAppDirectory: string | null | undefined;
+    constructor(functionAppDirectory: string | null | undefined) {
+        this.functionAppDirectory = functionAppDirectory;
+    }
     packageJson: PackageJson = {};
     /**
      * this hook data will be passed to (and set by) all hooks in all scopes
