@@ -1,5 +1,5 @@
 jobs:
-    - job: CreateWorkerRelease12
+    - job: CreateWorkerRelease
       displayName: 'Publish NodeJs Worker to Nuget'
       templateContext:
           outputParentDirectory: $(Build.ArtifactStagingDirectory)
