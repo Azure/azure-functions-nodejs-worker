@@ -8,8 +8,6 @@ import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-wo
 import { AzFuncSystemError } from './errors';
 import { PackageJson } from './parsers/parsePackageJson';
 import { worker } from './WorkerContext';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 let hasLoggedAttempt = 0;
 let hasLoggedWarning = false;
@@ -23,8 +21,8 @@ export async function loadScriptFile(filePath: string, packageJson: PackageJson)
             if (currentAttempt > 1 && currentAttempt > hasLoggedAttempt) {
                 worker.log({
                     message: `Retrying file load. Attempt ${currentAttempt}/${retries + 1}`,
-                    level: LogLevel.Debug,
-                    logCategory: LogCategory.System,
+                    level: rpc.RpcLog.Level.Debug,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
                 });
                 hasLoggedAttempt = currentAttempt;
             }
@@ -40,8 +38,8 @@ export async function loadScriptFile(filePath: string, packageJson: PackageJson)
                 } else if (error.retriesLeft > 0 && !hasLoggedWarning) {
                     worker.log({
                         message: `Warning: Failed to load file with error "${error.message}"`,
-                        level: LogLevel.Warning,
-                        logCategory: LogCategory.System,
+                        level: rpc.RpcLog.Level.Warning,
+                        logCategory: rpc.RpcLog.RpcLogCategory.System,
                     });
                     hasLoggedWarning = true;
                 }
@@ -82,13 +80,13 @@ function warnIfLongLoadTime(filePath: string, start: number): void {
     ) {
         worker.log({
             message: `Loading "${path.basename(filePath)}" took ${timeElapsed}ms`,
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Warning,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
         worker.log({
             message: `Set "${rfpName}" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54`,
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Warning,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
     }
 }

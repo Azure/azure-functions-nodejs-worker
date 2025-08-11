@@ -7,8 +7,6 @@ import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 import CapabilitiesUpdateStrategy = rpc.FunctionEnvironmentReloadResponse.CapabilitiesUpdateStrategy;
 import * as path from 'path';
 
@@ -31,8 +29,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         if (!msg.functionAppDirectory) {
             worker.log({
                 message: `FunctionEnvironmentReload functionAppDirectory is not defined`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Debug,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
         }
 
@@ -43,8 +41,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         ) {
             worker.log({
                 message: `FunctionEnvironmentReload functionAppDirectory has not changed`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Debug,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
         }
 
@@ -56,8 +54,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         const numVariables = (msg.environmentVariables && Object.keys(msg.environmentVariables).length) || 0;
         worker.log({
             message: `Reloading environment variables. Found ${numVariables} variables to reload.`,
-            level: LogLevel.Information,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Information,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
 
         // reset existing env vars
@@ -69,8 +67,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         if (msg.functionAppDirectory) {
             worker.log({
                 message: `Changing current working directory to ${msg.functionAppDirectory}`,
-                level: LogLevel.Information,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Information,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
             await startApp(msg.functionAppDirectory);

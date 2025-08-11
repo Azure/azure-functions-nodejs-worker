@@ -13,8 +13,6 @@ import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
 import { worker } from './WorkerContext';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 /**
  * Configures handlers for incoming gRPC messages on the client
@@ -101,8 +99,8 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
         if (error.isAzureFunctionsSystemError && !error.loggedOverRpc) {
             worker.log({
                 message: error.message,
-                level: LogLevel.Error,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Error,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
         }
 

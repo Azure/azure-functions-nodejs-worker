@@ -5,7 +5,6 @@ import 'mocha';
 import { expect } from 'chai';
 import { AzureFunctionsRpcMessages as rpc } from './../azure-functions-language-worker-protobuf/src/rpc';
 import { startBlockedMonitor } from './../src/utils/blockedMonitor';
-import LogLevel = rpc.RpcLog.Level;
 
 describe('Event loop blocking operation monitor', () => {
     it('startBlockMonitor logs warning', async () => {
@@ -13,7 +12,7 @@ describe('Event loop blocking operation monitor', () => {
         let timer: NodeJS.Timer | null = null;
         let isTimerDestroyed = false;
         const logFun = function (log: rpc.IRpcLog): void {
-            expect(log.level).to.equal(LogLevel.Warning);
+            expect(log.level).to.equal(rpc.RpcLog.Level.Warning);
             if (log.message && log.message.startsWith('Blocking code monitoring history')) {
                 if (timer) {
                     clearInterval(timer);

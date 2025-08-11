@@ -5,8 +5,6 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { isDefined } from '../utils/nonNull';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataRequest', 'functionMetadataResponse'> {
     readonly responseName = 'functionMetadataResponse';
@@ -24,8 +22,8 @@ export class FunctionsMetadataHandler extends EventHandler<'functionsMetadataReq
 
         worker.log({
             message: `Worker ${worker.id} received FunctionsMetadataRequest`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Debug,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
 
         if (worker.app.isUsingWorkerIndexing) {

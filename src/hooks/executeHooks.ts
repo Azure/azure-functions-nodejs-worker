@@ -5,8 +5,6 @@ import { HookContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { worker } from '../WorkerContext';
 import { getHooks } from './getHooks';
-import LogLevel = rpc.RpcLog.Level;
-import LogCategory = rpc.RpcLog.RpcLogCategory;
 
 export async function executeHooks(
     hookName: string,
@@ -18,8 +16,8 @@ export async function executeHooks(
     if (callbacks.length > 0) {
         worker.log({
             message: `Executing ${callbacks.length} "${hookName}" hooks`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Debug,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
             invocationId,
             category: msgCategory,
         });
@@ -28,8 +26,8 @@ export async function executeHooks(
         }
         worker.log({
             message: `Executed "${hookName}" hooks`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Debug,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
             invocationId,
             category: msgCategory,
         });

@@ -11,8 +11,6 @@ import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 /**
  * Host sends capabilities/init data to worker and requests the worker to initialize itself
@@ -30,8 +28,8 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         if (!msg.functionAppDirectory) {
             worker.log({
                 message: `WorkerInit functionAppDirectory is not defined`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Debug,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
         }
         worker.app.functionAppDirectory = msg.functionAppDirectory;
@@ -40,8 +38,8 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
 
         worker.log({
             message: `Worker ${worker.id} received WorkerInitRequest`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Debug,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
 
         logColdStartWarning();
@@ -75,8 +73,8 @@ export function logColdStartWarning(delayInMs?: number): void {
                     worker.log({
                         message:
                             'package.json is not found at the root of the Function App in Azure Files - cold start for NodeJs can be affected.',
-                        level: LogLevel.Debug,
-                        logCategory: LogCategory.System,
+                        level: rpc.RpcLog.Level.Debug,
+                        logCategory: rpc.RpcLog.RpcLogCategory.System,
                     });
                 }
             });

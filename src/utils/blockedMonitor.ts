@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from './../../azure-functions-language-worker-protobuf/src/rpc';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 import blockedAt = require('blocked-at');
 
 export function startBlockedMonitor(
@@ -14,8 +12,8 @@ export function startBlockedMonitor(
     function logBlockedWarning(message: string) {
         worker.log({
             message,
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Warning,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
     }
 

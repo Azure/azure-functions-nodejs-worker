@@ -7,8 +7,6 @@ import { loadLegacyFunction } from '../LegacyFunctionLoader';
 import { isDefined, nonNullProp } from '../utils/nonNull';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 /**
  * Worker responds after loading required metadata to load function with the load result
@@ -27,8 +25,8 @@ export class FunctionLoadHandler extends EventHandler<'functionLoadRequest', 'fu
 
         worker.log({
             message: `Worker ${worker.id} received FunctionLoadRequest`,
-            level: LogLevel.Debug,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Debug,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
 
         if (isDefined(worker.app.blockingAppStartError)) {

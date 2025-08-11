@@ -12,8 +12,6 @@ import { isEnvironmentVariableSet, isNode20Plus } from './utils/util';
 import { worker } from './WorkerContext';
 import globby = require('globby');
 import path = require('path');
-import LogLevel = rpc.RpcLog.Level;
-import LogCategory = rpc.RpcLog.RpcLogCategory;
 
 /**
  * Starting an app can happen in two places, depending on if the worker was specialized or not
@@ -51,8 +49,8 @@ async function updatePackageJson(functionAppDirectory: string): Promise<void> {
         const error = ensureErrorType(err);
         worker.log({
             message: `Worker failed to load package.json: ${error.message}`,
-            level: LogLevel.Warning,
-            logCategory: LogCategory.System,
+            level: rpc.RpcLog.Level.Warning,
+            logCategory: rpc.RpcLog.RpcLogCategory.System,
         });
         worker.app.packageJson = {};
     }
@@ -81,8 +79,8 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
                 currentFile = file;
                 worker.log({
                     message: `Loading entry point file "${file}"`,
-                    level: LogLevel.Debug,
-                    logCategory: LogCategory.System,
+                    level: rpc.RpcLog.Level.Debug,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
                 });
                 try {
                     const entryPointFilePath = path.join(functionAppDirectory, file);
@@ -93,8 +91,8 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
                 }
                 worker.log({
                     message: `Loaded entry point file "${file}"`,
-                    level: LogLevel.Debug,
-                    logCategory: LogCategory.System,
+                    level: rpc.RpcLog.Level.Debug,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
                 });
             }
         } catch (err) {
@@ -119,8 +117,8 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
             // Always log as rpc system log, which goes to our internal telemetry
             worker.log({
                 message: newMessage,
-                level: LogLevel.Error,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Error,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
             error.loggedOverRpc = true;
         }

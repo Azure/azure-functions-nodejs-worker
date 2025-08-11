@@ -6,14 +6,12 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
 import { worker } from '../WorkerContext';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
     worker.log({
         message: 'Received workerTerminate message; gracefully shutting down worker',
-        level: LogLevel.Debug,
-        logCategory: LogCategory.System,
+        level: rpc.RpcLog.Level.Debug,
+        logCategory: rpc.RpcLog.RpcLogCategory.System,
     });
 
     const appTerminateContext: AppTerminateContext = {

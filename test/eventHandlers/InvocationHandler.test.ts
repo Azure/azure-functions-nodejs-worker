@@ -13,8 +13,6 @@ import { worker } from '../../src/WorkerContext';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 import { TestEventStream } from './TestEventStream';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 
 namespace Binding {
     export const httpInput = {
@@ -382,7 +380,13 @@ describe('InvocationHandler', () => {
         const errorMessage = "Function code for 'testFuncId' is not loaded and cannot be invoked.";
         stream.addTestMessage(msg.invocation.request());
         await stream.assertCalledWith(
-            { rpcLog: { level: LogLevel.Error, logCategory: LogCategory.System, message: errorMessage } },
+            {
+                rpcLog: {
+                    level: rpc.RpcLog.Level.Error,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
+                    message: errorMessage,
+                },
+            },
             msg.invocation.failedResponse(errorMessage)
         );
     });
@@ -1076,7 +1080,7 @@ describe('InvocationHandler', () => {
         stream.addTestMessage(msg.invocation.request([InputData.http]));
         await stream.assertCalledWith(
             msg.invocation.receivedRequestLog,
-            msg.invocation.userLog('testUserLogUpdatedFromHook', LogLevel.Error),
+            msg.invocation.userLog('testUserLogUpdatedFromHook', rpc.RpcLog.Level.Error),
             msg.invocation.response([])
         );
     });

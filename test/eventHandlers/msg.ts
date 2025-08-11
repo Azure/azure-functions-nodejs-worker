@@ -5,8 +5,6 @@ import 'mocha';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
-import LogCategory = rpc.RpcLog.RpcLogCategory;
-import LogLevel = rpc.RpcLog.Level;
 import escapeStringRegexp = require('escape-string-regexp');
 import path = require('path');
 
@@ -29,28 +27,28 @@ function workerMetadataRegExps(responseName: string) {
 
 export namespace msg {
     export function errorLog(message: string | RegExp): TestMessage {
-        return log(message, LogLevel.Error);
+        return log(message, rpc.RpcLog.Level.Error);
     }
 
     export function warningLog(message: string | RegExp): TestMessage {
-        return log(message, LogLevel.Warning);
+        return log(message, rpc.RpcLog.Level.Warning);
     }
 
     export function debugLog(message: string | RegExp): TestMessage {
-        return log(message, LogLevel.Debug);
+        return log(message, rpc.RpcLog.Level.Debug);
     }
 
     export function infoLog(message: string | RegExp): TestMessage {
-        return log(message, LogLevel.Information);
+        return log(message, rpc.RpcLog.Level.Information);
     }
 
-    export function log(message: string | RegExp, level: LogLevel): TestMessage {
+    export function log(message: string | RegExp, level: rpc.RpcLog.Level): TestMessage {
         if (typeof message === 'string') {
             return {
                 rpcLog: {
                     message,
                     level,
-                    logCategory: LogCategory.System,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
                 },
             };
         } else {
@@ -58,7 +56,7 @@ export namespace msg {
                 {
                     rpcLog: {
                         level,
-                        logCategory: LogCategory.System,
+                        logCategory: rpc.RpcLog.RpcLogCategory.System,
                     },
                 },
                 {
@@ -90,8 +88,8 @@ export namespace msg {
                 category: undefined,
                 invocationId: undefined,
                 message: `Executing ${count} "${hookName}" hooks`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Debug,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             },
         };
     }
@@ -102,8 +100,8 @@ export namespace msg {
                 category: undefined,
                 invocationId: undefined,
                 message: `Executed "${hookName}" hooks`,
-                level: LogLevel.Debug,
-                logCategory: LogCategory.System,
+                level: rpc.RpcLog.Level.Debug,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
             },
         };
     }
@@ -322,22 +320,22 @@ export namespace msg {
 
     export namespace invocation {
         export function errorLog(message: string | RegExp): TestMessage {
-            return log(message, LogLevel.Error);
+            return log(message, rpc.RpcLog.Level.Error);
         }
 
         export function warningLog(message: string | RegExp): TestMessage {
-            return log(message, LogLevel.Warning);
+            return log(message, rpc.RpcLog.Level.Warning);
         }
 
         export function debugLog(message: string | RegExp): TestMessage {
-            return log(message, LogLevel.Debug);
+            return log(message, rpc.RpcLog.Level.Debug);
         }
 
         export function infoLog(message: string | RegExp): TestMessage {
-            return log(message, LogLevel.Information);
+            return log(message, rpc.RpcLog.Level.Information);
         }
 
-        export function log(message: string | RegExp, level: LogLevel): TestMessage {
+        export function log(message: string | RegExp, level: rpc.RpcLog.Level): TestMessage {
             if (typeof message === 'string') {
                 return {
                     rpcLog: {
@@ -345,7 +343,7 @@ export namespace msg {
                         invocationId: '1',
                         message,
                         level,
-                        logCategory: LogCategory.System,
+                        logCategory: rpc.RpcLog.RpcLogCategory.System,
                     },
                 };
             } else {
@@ -355,7 +353,7 @@ export namespace msg {
                             category: 'testFuncName.Invocation',
                             invocationId: '1',
                             level,
-                            logCategory: LogCategory.System,
+                            logCategory: rpc.RpcLog.RpcLogCategory.System,
                         },
                     },
                     {
@@ -389,14 +387,14 @@ export namespace msg {
             "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909"
         );
 
-        export function userLog(data = 'testUserLog', level = LogLevel.Information): TestMessage {
+        export function userLog(data = 'testUserLog', level = rpc.RpcLog.Level.Information): TestMessage {
             return {
                 rpcLog: {
                     category: 'testFuncName.Invocation',
                     invocationId: '1',
                     message: data,
                     level,
-                    logCategory: LogCategory.User,
+                    logCategory: rpc.RpcLog.RpcLogCategory.User,
                 },
             };
         }
