@@ -80,137 +80,151 @@ function addSuffix(asyncFunc: AzureFunction, callbackFunc: AzureFunction): [Azur
 
 let hookData: string;
 
-namespace TestFunc {
-    const basicAsync = async (context: Context) => {
-        context.log('testUserLog');
-    };
-    const basicCallback = (context: Context) => {
-        context.log('testUserLog');
-        context.done();
-    };
-    export const basic = addSuffix(basicAsync, basicCallback);
+const basicAsync = async (context: Context) => {
+    context.log('testUserLog');
+};
+const basicCallback = (context: Context) => {
+    context.log('testUserLog');
+    context.done();
+};
+export const basic = addSuffix(basicAsync, basicCallback);
 
-    const returnHttpAsync = async (_context: Context) => {
-        return { body: { hello: 'world' } };
-    };
-    const returnHttpCallback = (context: Context) => {
-        context.done(null, { body: { hello: 'world' } });
-    };
-    export const returnHttp = addSuffix(returnHttpAsync, returnHttpCallback);
+const returnHttpAsync = async (_context: Context) => {
+    return { body: { hello: 'world' } };
+};
+const returnHttpCallback = (context: Context) => {
+    context.done(null, { body: { hello: 'world' } });
+};
+export const returnHttp = addSuffix(returnHttpAsync, returnHttpCallback);
 
-    const returnArrayAsync = async (_context: Context) => {
-        return ['hello, seattle!', 'hello, tokyo!'];
-    };
-    const returnArrayCallback = (context: Context) => {
-        context.done(null, ['hello, seattle!', 'hello, tokyo!']);
-    };
-    export const returnArray = addSuffix(returnArrayAsync, returnArrayCallback);
+const returnArrayAsync = async (_context: Context) => {
+    return ['hello, seattle!', 'hello, tokyo!'];
+};
+const returnArrayCallback = (context: Context) => {
+    context.done(null, ['hello, seattle!', 'hello, tokyo!']);
+};
+export const returnArray = addSuffix(returnArrayAsync, returnArrayCallback);
 
-    const resHttpAsync = async (_context: Context) => {
-        return { res: { body: { hello: 'world' } } };
-    };
-    const resHttpCallback = (context: Context) => {
-        context.done(null, { res: { body: { hello: 'world' } } });
-    };
-    export const resHttp = addSuffix(resHttpAsync, resHttpCallback);
+const resHttpAsync = async (_context: Context) => {
+    return { res: { body: { hello: 'world' } } };
+};
+const resHttpCallback = (context: Context) => {
+    context.done(null, { res: { body: { hello: 'world' } } });
+};
+export const resHttp = addSuffix(resHttpAsync, resHttpCallback);
 
-    const logHookDataAsync = async (context: Context) => {
-        hookData += 'invoc';
-        context.log(hookData);
-        return 'hello';
-    };
-    const logHookDataCallback = (context: Context) => {
-        hookData += 'invoc';
-        context.log(hookData);
-        context.done(null, 'hello');
-    };
-    export const logHookData = addSuffix(logHookDataAsync, logHookDataCallback);
+const logHookDataAsync = async (context: Context) => {
+    hookData += 'invoc';
+    context.log(hookData);
+    return 'hello';
+};
+const logHookDataCallback = (context: Context) => {
+    hookData += 'invoc';
+    context.log(hookData);
+    context.done(null, 'hello');
+};
+export const logHookData = addSuffix(logHookDataAsync, logHookDataCallback);
 
-    const logInputAsync = async (context: Context, input: any) => {
-        context.log(input);
-    };
-    const logInputCallback = (context: Context, input: any) => {
-        context.log(input);
-        context.done();
-    };
-    export const logInput = addSuffix(logInputAsync, logInputCallback);
+const logInputAsync = async (context: Context, input: any) => {
+    context.log(input);
+};
+const logInputCallback = (context: Context, input: any) => {
+    context.log(input);
+    context.done();
+};
+export const logInput = addSuffix(logInputAsync, logInputCallback);
 
-    const multipleBindingsAsync = async (context: Context) => {
-        context.bindings.queueOutput = 'queue message';
-        context.bindings.overriddenQueueOutput = 'start message';
-        return {
-            res: { body: { hello: 'world' } },
-            overriddenQueueOutput: 'override',
-        };
+const multipleBindingsAsync = async (context: Context) => {
+    context.bindings.queueOutput = 'queue message';
+    context.bindings.overriddenQueueOutput = 'start message';
+    return {
+        res: { body: { hello: 'world' } },
+        overriddenQueueOutput: 'override',
     };
-    const multipleBindingsCallback = (context: Context) => {
-        context.bindings.queueOutput = 'queue message';
-        context.bindings.overriddenQueueOutput = 'start message';
-        context.done(null, {
-            res: { body: { hello: 'world' } },
-            overriddenQueueOutput: 'override',
-        });
-    };
-    export const multipleBindings = addSuffix(multipleBindingsAsync, multipleBindingsCallback);
+};
+const multipleBindingsCallback = (context: Context) => {
+    context.bindings.queueOutput = 'queue message';
+    context.bindings.overriddenQueueOutput = 'start message';
+    context.done(null, {
+        res: { body: { hello: 'world' } },
+        overriddenQueueOutput: 'override',
+    });
+};
+export const multipleBindings = addSuffix(multipleBindingsAsync, multipleBindingsCallback);
 
-    const errorAsync = async (_context: Context) => {
-        throw testError;
-    };
-    const errorCallback = (context: Context) => {
-        context.done(testError);
-    };
-    export const error = addSuffix(errorAsync, errorCallback);
+const errorAsync = async (_context: Context) => {
+    throw testError;
+};
+const errorCallback = (context: Context) => {
+    context.done(testError);
+};
+export const error = addSuffix(errorAsync, errorCallback);
 
-    const returnEmptyStringAsync = async (_context: Context) => {
-        return '';
-    };
-    const returnEmptyStringCallback = (context: Context) => {
-        context.done(null, '');
-    };
-    export const returnEmptyString = addSuffix(returnEmptyStringAsync, returnEmptyStringCallback);
+const returnEmptyStringAsync = async (_context: Context) => {
+    return '';
+};
+const returnEmptyStringCallback = (context: Context) => {
+    context.done(null, '');
+};
+export const returnEmptyString = addSuffix(returnEmptyStringAsync, returnEmptyStringCallback);
 
-    const returnZeroAsync = async (_context: Context) => {
-        return 0;
-    };
-    const returnZeroCallback = (context: Context) => {
-        context.done(null, 0);
-    };
-    export const returnZero = addSuffix(returnZeroAsync, returnZeroCallback);
+const returnZeroAsync = async (_context: Context) => {
+    return 0;
+};
+const returnZeroCallback = (context: Context) => {
+    context.done(null, 0);
+};
+export const returnZero = addSuffix(returnZeroAsync, returnZeroCallback);
 
-    const returnFalseAsync = async (_context: Context) => {
-        return false;
-    };
-    const returnFalseCallback = (context: Context) => {
-        context.done(null, false);
-    };
-    export const returnFalse = addSuffix(returnFalseAsync, returnFalseCallback);
-}
+const returnFalseAsync = async (_context: Context) => {
+    return false;
+};
+const returnFalseCallback = (context: Context) => {
+    context.done(null, false);
+};
+export const returnFalse = addSuffix(returnFalseAsync, returnFalseCallback);
 
-namespace InputData {
-    export const http = {
-        name: 'req',
-        data: {
-            data: 'http',
-            http: {
-                body: {
-                    string: 'blahh',
-                },
-                rawBody: {
-                    string: 'blahh',
-                },
+export const TestFunc = {
+    basic,
+    returnHttp,
+    returnArray,
+    resHttp,
+    logHookData,
+    logInput,
+    multipleBindings,
+    error,
+    returnEmptyString,
+    returnZero,
+    returnFalse,
+};
+
+export const http = {
+    name: 'req',
+    data: {
+        data: 'http',
+        http: {
+            body: {
+                string: 'blahh',
+            },
+            rawBody: {
+                string: 'blahh',
             },
         },
-    };
+    },
+};
 
-    export const string = {
-        name: 'testInput',
-        data: {
-            data: 'string',
-            string: 'testStringData',
-        },
-    };
-}
+export const string = {
+    name: 'testInput',
+    data: {
+        data: 'string',
+        string: 'testStringData',
+    },
+};
 
+export const InputData = {
+    http,
+    string,
+};
 describe('InvocationHandler', () => {
     let stream: TestEventStream;
     let coreApi: typeof coreTypes;
@@ -260,7 +274,7 @@ describe('InvocationHandler', () => {
     function registerV3Func(metadata: rpc.IRpcFunctionMetadata, callback: AzureFunction): void {
         worker.app.legacyFunctions.testFuncId = {
             metadata,
-            callback: <coreTypes.FunctionCallback>callback,
+            callback: callback as coreTypes.FunctionCallback,
             thisArg: undefined,
         };
     }
@@ -372,9 +386,9 @@ describe('InvocationHandler', () => {
 
     it('throws for malformed messages', () => {
         expect(() => {
-            stream.write(<any>{
+            stream.write({
                 functionLoadResponse: 1,
-            });
+            } as any);
         }).to.throw('functionLoadResponse.object expected');
     });
 
@@ -500,9 +514,9 @@ describe('InvocationHandler', () => {
 
         coreApi.registerHook('preInvocation', (context: coreTypes.PreInvocationContext) => {
             expect(context.functionCallback).to.be.a('function');
-            context.functionCallback = <coreTypes.FunctionCallback>(async (invocContext: Context) => {
+            context.functionCallback = (async (invocContext: Context) => {
                 invocContext.log('new function');
-            });
+            }) as coreTypes.FunctionCallback;
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.string]));
@@ -523,7 +537,7 @@ describe('InvocationHandler', () => {
                 hookData += 'post';
                 expect(context.result).to.equal('hello');
                 expect(context.error).to.be.null;
-                (<Context>context.invocationContext).log('hello from post');
+                (context.invocationContext as Context).log('hello from post');
             });
 
             stream.addTestMessage(msg.invocation.request([InputData.http]));

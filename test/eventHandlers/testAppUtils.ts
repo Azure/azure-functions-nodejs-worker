@@ -4,8 +4,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+const directory: string = path.resolve();
+
 export const tempFile = 'temp.js';
-export const testAppPath = path.join(__dirname, 'testApp');
+export const testAppPath = path.join(directory, 'test/eventHandlers/testApp');
 export const testAppSrcPath = path.join(testAppPath, 'src');
 export const testPackageJsonPath = path.join(testAppPath, 'package.json');
 

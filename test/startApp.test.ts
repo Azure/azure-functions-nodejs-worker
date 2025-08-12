@@ -111,20 +111,20 @@ describe('startApp', () => {
         });
 
         it('fails (v4)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
             await verifyAppStartFails(true);
         });
 
         it('fails (v4) (app setting=0)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
             process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
             await verifyAppStartFails(true);
         });
 
         it('fails (v4) (app setting=1)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
             process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
             await verifyAppStartFails(true);
@@ -166,14 +166,14 @@ describe('startApp', () => {
         });
 
         it('fails (v4)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
 
             await verifyAppStartFails(true);
         });
 
         it('succeeds but still logs error (v4) (app setting=0)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
 
             process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '0';
@@ -181,7 +181,7 @@ describe('startApp', () => {
         });
 
         it('fails (v4) (app setting=1)', async () => {
-            worker.app.programmingModel = <any>{ name: '@azure/functions', version: '4.0.0' };
+            worker.app.programmingModel = { name: '@azure/functions', version: '4.0.0' } as any;
             worker.app.isUsingWorkerIndexing = true;
             process.env.FUNCTIONS_NODE_BLOCK_ON_ENTRY_POINT_ERROR = '1';
 
