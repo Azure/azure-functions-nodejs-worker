@@ -13,7 +13,7 @@ jobs:
                   NODE_VERSION: '20.x'
               Node22:
                   NODE_VERSION: '22.x'
-              Node22:
+              Node24:
                   NODE_VERSION: '24.x'
 
       steps:
