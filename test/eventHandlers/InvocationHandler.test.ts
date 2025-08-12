@@ -14,38 +14,23 @@ import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
 import { TestEventStream } from './TestEventStream';
 
-namespace Binding {
-    export const httpInput = {
+export const Binding = {
+    httpInput: {
         type: 'httpTrigger',
         direction: 0,
         dataType: 1,
-    };
-    export const httpOutput = {
+    },
+    httpOutput: {
         type: 'http',
         direction: 1,
         dataType: 1,
-    };
-    export const queueOutput = {
+    },
+    queueOutput: {
         type: 'queue',
         direction: 1,
         dataType: 1,
-    };
-
-    export const httpReturn = {
-        bindings: {
-            req: httpInput,
-            $return: httpOutput,
-        },
-        name: 'testFuncName',
-    };
-    export const httpRes = {
-        bindings: {
-            req: httpInput,
-            res: httpOutput,
-        },
-        name: 'testFuncName',
-    };
-    export const activity = {
+    },
+    activity: {
         bindings: {
             name: {
                 type: 'activityTrigger',
@@ -54,8 +39,8 @@ namespace Binding {
             },
         },
         name: 'testFuncName',
-    };
-    export const queue = {
+    },
+    queue: {
         bindings: {
             testOutput: {
                 type: 'queue',
@@ -64,8 +49,25 @@ namespace Binding {
             },
         },
         name: 'testFuncName',
-    };
-}
+    },
+};
+
+export const BindingObj = {
+    httpReturn: {
+        bindings: {
+            req: Binding.httpInput,
+            $return: Binding.httpOutput,
+        },
+        name: 'testFuncName',
+    },
+    httpRes: {
+        bindings: {
+            req: Binding.httpInput,
+            res: Binding.httpOutput,
+        },
+        name: 'testFuncName',
+    },
+};
 
 const testError = new Error('testErrorMessage');
 
@@ -265,7 +267,7 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.basic) {
         it('invokes function' + suffix, async () => {
-            registerV3Func(Binding.httpRes, func);
+            registerV3Func(BindingObj.httpRes, func);
             stream.addTestMessage(msg.invocation.request([InputData.http]));
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
@@ -277,7 +279,7 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnHttp) {
         it('returns correct data with $return binding' + suffix, async () => {
-            registerV3Func(Binding.httpReturn, func);
+            registerV3Func(BindingObj.httpReturn, func);
             stream.addTestMessage(msg.invocation.request([InputData.http]));
             const expectedOutput = getHttpResponse(undefined, '$return');
             const expectedReturnValue = {
@@ -311,7 +313,7 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.returnArray) {
         it('returned output is ignored if http' + suffix, async () => {
-            registerV3Func(Binding.httpRes, func);
+            registerV3Func(BindingObj.httpRes, func);
             stream.addTestMessage(msg.invocation.request([]));
             await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([], undefined));
         });
@@ -319,7 +321,7 @@ describe('InvocationHandler', () => {
 
     for (const [func, suffix] of TestFunc.resHttp) {
         it('serializes output binding data through context.done' + suffix, async () => {
-            registerV3Func(Binding.httpRes, func);
+            registerV3Func(BindingObj.httpRes, func);
             stream.addTestMessage(msg.invocation.request([InputData.http]));
             const expectedOutput = [getHttpResponse({ hello: 'world' })];
             await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response(expectedOutput));
@@ -392,13 +394,13 @@ describe('InvocationHandler', () => {
     });
 
     it('empty function does not return invocation response', async () => {
-        registerV3Func(Binding.httpRes, () => {});
+        registerV3Func(BindingObj.httpRes, () => {});
         stream.addTestMessage(msg.invocation.request([InputData.http]));
         await stream.assertCalledWith(msg.invocation.receivedRequestLog);
     });
 
     it('logs error on calling context.done in async function', async () => {
-        registerV3Func(Binding.httpRes, async (context: Context) => {
+        registerV3Func(BindingObj.httpRes, async (context: Context) => {
             context.done();
         });
         stream.addTestMessage(msg.invocation.request([InputData.http]));
@@ -410,7 +412,7 @@ describe('InvocationHandler', () => {
     });
 
     it('logs error on calling context.done more than once', async () => {
-        registerV3Func(Binding.httpRes, (context: Context) => {
+        registerV3Func(BindingObj.httpRes, (context: Context) => {
             context.done();
             context.done();
         });
@@ -423,7 +425,7 @@ describe('InvocationHandler', () => {
     });
 
     it('logs error on calling context.log after context.done', async () => {
-        registerV3Func(Binding.httpRes, (context: Context) => {
+        registerV3Func(BindingObj.httpRes, (context: Context) => {
             context.done();
             context.log('testUserLog');
         });
@@ -438,7 +440,7 @@ describe('InvocationHandler', () => {
 
     it('logs error on calling context.log after async function', async () => {
         let _context: Context;
-        registerV3Func(Binding.httpRes, async (context: Context) => {
+        registerV3Func(BindingObj.httpRes, async (context: Context) => {
             _context = context;
             return 'hello';
         });
