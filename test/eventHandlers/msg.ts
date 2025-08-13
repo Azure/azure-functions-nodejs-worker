@@ -186,6 +186,34 @@ export const funcAppDirNotDefined = debugLog('FunctionEnvironmentReload function
 
 export const funcAppDirNotChanged = debugLog('FunctionEnvironmentReload functionAppDirectory has not changed');
 
+export function logWithInvocation(message: string | RegExp, level: rpc.RpcLog.Level): TestMessage {
+    if (typeof message === 'string') {
+        return {
+            rpcLog: {
+                category: 'testFuncName.Invocation',
+                invocationId: '1',
+                message,
+                level,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
+            },
+        };
+    } else {
+        return new RegExpStreamingMessage(
+            {
+                rpcLog: {
+                    category: 'testFuncName.Invocation',
+                    invocationId: '1',
+                    level,
+                    logCategory: rpc.RpcLog.RpcLogCategory.System,
+                },
+            },
+            {
+                'rpcLog.message': message,
+            }
+        );
+    }
+}
+
 export const msg = {
     errorLog,
     warningLog,
@@ -324,16 +352,16 @@ export const msg = {
     },
     invocation: {
         errorLog(message: string | RegExp): TestMessage {
-            return log(message, rpc.RpcLog.Level.Error);
+            return logWithInvocation(message, rpc.RpcLog.Level.Error);
         },
         warningLog(message: string | RegExp): TestMessage {
-            return log(message, rpc.RpcLog.Level.Warning);
+            return logWithInvocation(message, rpc.RpcLog.Level.Warning);
         },
         debugLog(message: string | RegExp): TestMessage {
-            return log(message, rpc.RpcLog.Level.Debug);
+            return logWithInvocation(message, rpc.RpcLog.Level.Debug);
         },
         infoLog(message: string | RegExp): TestMessage {
-            return log(message, rpc.RpcLog.Level.Information);
+            return logWithInvocation(message, rpc.RpcLog.Level.Information);
         },
         log(message: string | RegExp, level: rpc.RpcLog.Level): TestMessage {
             if (typeof message === 'string') {
@@ -362,8 +390,9 @@ export const msg = {
                 );
             }
         },
-        receivedRequestLog: debugLog(
-            'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest with invocationId 1'
+        receivedRequestLog: logWithInvocation(
+            'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest with invocationId 1',
+            rpc.RpcLog.Level.Debug
         ),
         executingHooksLog(count: number, hookName: string): TestMessage {
             return msg.invocation.debugLog(`Executing ${count} "${hookName}" hooks`);
@@ -371,14 +400,17 @@ export const msg = {
         executedHooksLog(hookName: string): TestMessage {
             return msg.invocation.debugLog(`Executed "${hookName}" hooks`);
         },
-        asyncAndDoneError: errorLog(
-            "Error: Choose either to return a promise or call 'done'. Do not use both in your script. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909"
+        asyncAndDoneError: logWithInvocation(
+            "Error: Choose either to return a promise or call 'done'. Do not use both in your script. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909",
+            rpc.RpcLog.Level.Error
         ),
-        duplicateDoneError: errorLog(
-            "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'."
+        duplicateDoneError: logWithInvocation(
+            "Error: 'done' has already been called. Please check your script for extraneous calls to 'done'.",
+            rpc.RpcLog.Level.Error
         ),
-        unexpectedLogAfterDoneLog: warningLog(
-            "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909"
+        unexpectedLogAfterDoneLog: logWithInvocation(
+            "Warning: Unexpected call to 'log' on the context object after function execution has completed. Please check for asynchronous calls that are not awaited or calls to 'done' made before function execution completes. Function name: testFuncName. Invocation Id: 1. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909",
+            rpc.RpcLog.Level.Warning
         ),
         userLog(data = 'testUserLog', level = rpc.RpcLog.Level.Information): TestMessage {
             return {
