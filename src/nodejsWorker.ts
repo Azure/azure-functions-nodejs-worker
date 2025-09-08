@@ -25,7 +25,7 @@ function validateNodeVersion(version: string) {
         const eolDateStr = NODE_EOL_DATES[major];
 
         if (!warningDateStr || !eolDateStr) {
-            const msg = `Unknown Node.js version: ${version}. Please change to a supported version: https://aka.ms/functions-node-versions`;
+            const msg = `Node.js version is not officially supported: ${version}. Please change to a supported version: https://aka.ms/functions-node-versions`;
             console.warn(warnPrefix + msg);
             return;
         }
