@@ -19,14 +19,13 @@ function currentYearMonth(): string {
 function validateNodeVersion(version: string) {
     try {
         const major = version.split('.')[0]; // e.g. "v18"
-        console.warn('Major: ' + major);
         const today = currentYearMonth();
 
         const warningDateStr = NODE_EOL_WARNING_DATES[major];
         const eolDateStr = NODE_EOL_DATES[major];
 
         if (!warningDateStr || !eolDateStr) {
-            const msg = `Unknown Node.js version: ${version}`;
+            const msg = `Unknown Node.js version: ${version}. Please change to a supported version: https://aka.ms/functions-node-versions`;
             console.warn(warnPrefix + msg);
             return;
         }
