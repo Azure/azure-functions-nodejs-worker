@@ -6,6 +6,7 @@ import { NODE_EOL_DATES, NODE_EOL_WARNING_DATES } from './constants';
 const logPrefix = 'LanguageWorkerConsoleLog';
 const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
+const upgradeUrl = 'https://aka.ms/functions-node-versions';
 let workerModule;
 
 function currentYearMonth(): string {
@@ -25,16 +26,13 @@ function validateNodeVersion(version: string) {
         const eolDateStr = NODE_EOL_DATES[major];
 
         if (!warningDateStr || !eolDateStr) {
-            const msg = `Node.js version is not officially supported: ${version}. Please change to a supported version: https://aka.ms/functions-node-versions`;
+            const msg = `Node.js ${major} version is not officially supported. Please change to a supported version: ${upgradeUrl}`;
             console.warn(warnPrefix + msg);
-            return;
-        }
-
-        if (today >= eolDateStr) {
-            const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: https://aka.ms/functions-node-versions`;
+        } else if (today >= eolDateStr) {
+            const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: ${upgradeUrl}`;
             console.error(errorPrefix + msg);
         } else if (today >= warningDateStr) {
-            const msg = `Node.js ${major} will reach EOL on ${eolDateStr}. Consider upgrading: https://aka.ms/functions-node-versions`;
+            const msg = `Node.js ${major} will reach EOL on ${eolDateStr}. Consider upgrading: ${upgradeUrl}`;
             console.warn(warnPrefix + msg);
         }
     } catch (err) {
