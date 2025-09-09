@@ -6,7 +6,7 @@ import { NODE_EOL_DATES, NODE_EOL_WARNING_DATES } from './constants';
 const logPrefix = 'LanguageWorkerConsoleLog';
 const errorPrefix = logPrefix + '[error] ';
 const warnPrefix = logPrefix + '[warn] ';
-const upgradeUrl = 'https://aka.ms/functions-node-versions';
+const upgradeUrl = 'https://aka.ms/functions-nodejs-supported-versions';
 let workerModule;
 
 function currentYearMonth(): string {
@@ -19,14 +19,17 @@ function currentYearMonth(): string {
 //       and is JavaScript that runs on at least node version 0.10.28
 function validateNodeVersion(version: string) {
     try {
-        const major = version.split('.')[0]; // e.g. "v18"
-        const today = currentYearMonth();
+        const versionSplit = version.split('.');
+        if (versionSplit.length != 3) {
+            throw new Error("Could not parse Node.js version: '" + version + "'");
+        }
 
+        const major = versionSplit[0]; // e.g. "v18"
         const warningDateStr = NODE_EOL_WARNING_DATES[major];
         const eolDateStr = NODE_EOL_DATES[major];
-
+        const today = currentYearMonth();
         if (!warningDateStr || !eolDateStr) {
-            const msg = `Node.js ${major} is not officially supported. Please change to a supported version: ${upgradeUrl}`;
+            const msg = `Incompatible Node.js version ${major}. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: ${upgradeUrl}`;
             console.warn(warnPrefix + msg);
         } else if (today >= eolDateStr) {
             const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: ${upgradeUrl}`;
