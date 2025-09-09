@@ -26,7 +26,7 @@ function validateNodeVersion(version: string) {
         const eolDateStr = NODE_EOL_DATES[major];
 
         if (!warningDateStr || !eolDateStr) {
-            const msg = `Node.js ${major} version is not officially supported. Please change to a supported version: ${upgradeUrl}`;
+            const msg = `Node.js ${major} is not officially supported. Please change to a supported version: ${upgradeUrl}`;
             console.warn(warnPrefix + msg);
         } else if (today >= eolDateStr) {
             const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: ${upgradeUrl}`;
