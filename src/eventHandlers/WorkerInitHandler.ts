@@ -44,7 +44,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning();
-        validateNodeVersion(process.version);
+        // validateNodeVersion(process.version);
 
         worker._hostVersion = nonNullProp(msg, 'hostVersion');
 
