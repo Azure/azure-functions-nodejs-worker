@@ -19,43 +19,56 @@ function currentYearMonth(): string {
     return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+export interface NodeVersionLog {
+    message: string;
+    level: rpc.RpcLog.Level;
+}
+
+export function getNodeVersionLog(version: string) {
+    const versionSplit = version.split('.');
+    if (versionSplit.length != 3) {
+        throw new Error("Could not parse Node.js version: '" + version + "'");
+    }
+
+    const major = versionSplit[0]; // e.g. "v18"
+    const warningDateStr = NODE_EOL_WARNING_DATES[major];
+    const eolDateStr = NODE_EOL_DATES[major];
+    const today = currentYearMonth();
+    if (!warningDateStr || !eolDateStr) {
+        const msg = `Incompatible Node.js version ${major}. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: ${upgradeUrl}`;
+        return {
+            message: msg,
+            level: rpc.RpcLog.Level.Warning,
+        };
+    } else if (today >= eolDateStr) {
+        const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: ${upgradeUrl}`;
+        return {
+            message: msg,
+            level: rpc.RpcLog.Level.Error,
+        };
+    } else if (today >= warningDateStr) {
+        const msg = `Node.js ${major} will reach EOL on ${eolDateStr}. Consider upgrading: ${upgradeUrl}`;
+        return {
+            message: msg,
+            level: rpc.RpcLog.Level.Warning,
+        };
+    }
+    return undefined;
+}
+
 export function validateNodeVersion(version: string) {
     try {
-        const versionSplit = version.split('.');
-        if (versionSplit.length != 3) {
-            throw new Error("Could not parse Node.js version: '" + version + "'");
-        }
-
-        const major = versionSplit[0]; // e.g. "v18"
-        const warningDateStr = NODE_EOL_WARNING_DATES[major];
-        const eolDateStr = NODE_EOL_DATES[major];
-        const today = currentYearMonth();
-        if (!warningDateStr || !eolDateStr) {
-            const msg = `Incompatible Node.js version ${major}. Refer to our documentation to see the Node.js versions supported by each version of Azure Functions: ${upgradeUrl}`;
+        const logEntry = getNodeVersionLog(version);
+        if (logEntry) {
             worker.log({
-                message: msg,
-                level: rpc.RpcLog.Level.Warning,
-                logCategory: rpc.RpcLog.RpcLogCategory.System,
-            });
-        } else if (today >= eolDateStr) {
-            const msg = `Node.js ${major} reached EOL on ${eolDateStr}. Please upgrade to a supported version: ${upgradeUrl}`;
-            worker.log({
-                message: msg,
-                level: rpc.RpcLog.Level.Error,
-                logCategory: rpc.RpcLog.RpcLogCategory.System,
-            });
-        } else if (today >= warningDateStr) {
-            const msg = `Node.js ${major} will reach EOL on ${eolDateStr}. Consider upgrading: ${upgradeUrl}`;
-            worker.log({
-                message: msg,
-                level: rpc.RpcLog.Level.Warning,
+                message: logEntry.message,
+                level: logEntry.level,
                 logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
         }
     } catch (err) {
-        const unknownError = 'Error validating Node.js version. ';
         worker.log({
-            message: unknownError + err,
+            message: 'Error validating Node.js version. ' + err,
             level: rpc.RpcLog.Level.Error,
             logCategory: rpc.RpcLog.RpcLogCategory.System,
         });

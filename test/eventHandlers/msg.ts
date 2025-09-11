@@ -7,6 +7,8 @@ import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
+import { NODE_EOL_DATES, upgradeUrl } from '../../src/constants';
+import { getNodeVersionLog } from '../../src/utils/util';
 
 type TestMessage = rpc.IStreamingMessage | RegExpStreamingMessage;
 
@@ -182,6 +184,16 @@ export function changingCwdLog(dir = '/'): TestMessage {
     return msg.infoLog(`Changing current working directory to ${dir}`);
 }
 
+export function nodeVersionLog(): TestMessage {
+    const result = getNodeVersionLog(process.version);
+    if (result?.level == rpc.RpcLog.Level.Error) {
+        return msg.errorLog(result.message);
+    } else if (result?.level == rpc.RpcLog.Level.Warning) {
+        return msg.warningLog(result.message);
+    }
+    return msg.debugLog('');
+}
+
 export const funcAppDirNotDefined = debugLog('FunctionEnvironmentReload functionAppDirectory is not defined');
 
 export const funcAppDirNotChanged = debugLog('FunctionEnvironmentReload functionAppDirectory has not changed');
@@ -238,6 +250,7 @@ export const msg = {
     envReload: {
         reloadEnvVarsLog,
         changingCwdLog,
+        nodeVersionLog,
         funcAppDirNotDefined,
         funcAppDirNotChanged,
         response: new RegExpStreamingMessage(
