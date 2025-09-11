@@ -11,6 +11,7 @@ import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
+import { validateNodeVersion } from '../utils/util';
 
 /**
  * Host sends capabilities/init data to worker and requests the worker to initialize itself
@@ -43,6 +44,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning();
+        validateNodeVersion(process.version);
 
         worker._hostVersion = nonNullProp(msg, 'hostVersion');
 

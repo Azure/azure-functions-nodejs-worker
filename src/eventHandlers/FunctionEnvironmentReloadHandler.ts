@@ -9,6 +9,7 @@ import { getWorkerCapabilities } from './getWorkerCapabilities';
 import { getWorkerMetadata } from './getWorkerMetadata';
 import CapabilitiesUpdateStrategy = rpc.FunctionEnvironmentReloadResponse.CapabilitiesUpdateStrategy;
 import * as path from 'path';
+import { validateNodeVersion } from '../utils/util';
 
 /**
  * Environment variables from the current process
@@ -75,6 +76,8 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             // model info may have changed, so we need to update this
             response.workerMetadata = getWorkerMetadata();
         }
+
+        validateNodeVersion(process.version);
 
         response.capabilities = await getWorkerCapabilities();
         response.capabilitiesUpdateStrategy = CapabilitiesUpdateStrategy.replace;
