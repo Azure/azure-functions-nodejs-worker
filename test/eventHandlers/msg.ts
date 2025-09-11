@@ -7,7 +7,6 @@ import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
-import { NODE_EOL_DATES, upgradeUrl } from '../../src/constants';
 import { getNodeVersionLog } from '../../src/utils/util';
 
 type TestMessage = rpc.IStreamingMessage | RegExpStreamingMessage;
