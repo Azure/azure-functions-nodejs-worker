@@ -8,7 +8,7 @@ import { executeHooks } from './hooks/executeHooks';
 import { loadScriptFile } from './loadScriptFile';
 import { parsePackageJson } from './parsers/parsePackageJson';
 import { isDefined, nonNullProp } from './utils/nonNull';
-import { isEnvironmentVariableSet, isNode20Plus, validateNodeVersion } from './utils/util';
+import { isEnvironmentVariableSet, isNode20Plus } from './utils/util';
 import { worker } from './WorkerContext';
 import globby = require('globby');
 import path = require('path');
