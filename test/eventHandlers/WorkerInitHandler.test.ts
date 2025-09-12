@@ -234,6 +234,7 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });
