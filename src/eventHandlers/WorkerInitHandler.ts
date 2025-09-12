@@ -7,7 +7,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
-// import { validateNodeVersion } from '../utils/util';
+import { validateNodeVersion } from '../utils/util';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import { getWorkerCapabilities } from './getWorkerCapabilities';
@@ -44,7 +44,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning();
-        // validateNodeVersion(process.version);
+        validateNodeVersion(process.version);
 
         worker._hostVersion = nonNullProp(msg, 'hostVersion');
 
