@@ -94,7 +94,6 @@ describe('WorkerInitHandler', () => {
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.loadedEntryPoint(fileSubpath),
-                msg.envReload.nodeVersionLog(),
                 msg.init.response
             );
         });
@@ -113,7 +112,6 @@ describe('WorkerInitHandler', () => {
             msg.loadedEntryPoint(file1),
             msg.loadingEntryPoint(file2),
             msg.loadedEntryPoint(file2),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -145,7 +143,6 @@ describe('WorkerInitHandler', () => {
                 'Set "WEBSITE_RUN_FROM_PACKAGE" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54'
             ),
             msg.loadedEntryPoint(fileSubpath),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -161,7 +158,6 @@ describe('WorkerInitHandler', () => {
             msg.loadedEntryPoint(fileSubpath),
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -187,7 +183,6 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(2, 'appStart'),
             msg.executedAppHooksLog('appStart'),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
 
@@ -219,7 +214,6 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -240,7 +234,6 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
-            msg.envReload.nodeVersionLog(),
             msg.init.response
         );
     });

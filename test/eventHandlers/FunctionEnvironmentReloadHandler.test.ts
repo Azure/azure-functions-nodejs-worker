@@ -238,6 +238,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(worker.app.packageJson).to.deep.equal(packageJson);
