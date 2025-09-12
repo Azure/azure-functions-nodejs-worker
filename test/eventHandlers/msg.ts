@@ -5,9 +5,9 @@ import 'mocha';
 import * as escapeStringRegexp from 'escape-string-regexp';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { getNodeVersionLog } from '../../src/utils/util';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
-import { getNodeVersionLog } from '../../src/utils/util';
 
 type TestMessage = rpc.IStreamingMessage | RegExpStreamingMessage;
 
