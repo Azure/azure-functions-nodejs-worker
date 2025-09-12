@@ -5,7 +5,7 @@ import 'mocha';
 import * as escapeStringRegexp from 'escape-string-regexp';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-// import { getNodeVersionLog } from '../../src/utils/util';
+import { getNodeVersionLog } from '../../src/utils/util';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
 
@@ -183,15 +183,15 @@ export function changingCwdLog(dir = '/'): TestMessage {
     return msg.infoLog(`Changing current working directory to ${dir}`);
 }
 
-// export function nodeVersionLog(): TestMessage {
-//     const result = getNodeVersionLog(process.version);
-//     if (result?.level == rpc.RpcLog.Level.Error) {
-//         return msg.errorLog(result.message);
-//     } else if (result?.level == rpc.RpcLog.Level.Warning) {
-//         return msg.warningLog(result.message);
-//     }
-//     return msg.infoLog(result.message);
-// }
+export function nodeVersionLog(): TestMessage {
+    const result = getNodeVersionLog(process.version);
+    if (result?.level == rpc.RpcLog.Level.Error) {
+        return msg.errorLog(result.message);
+    } else if (result?.level == rpc.RpcLog.Level.Warning) {
+        return msg.warningLog(result.message);
+    }
+    return msg.infoLog(result.message);
+}
 
 export const funcAppDirNotDefined = debugLog('FunctionEnvironmentReload functionAppDirectory is not defined');
 
@@ -231,6 +231,7 @@ export const msg = {
     debugLog,
     infoLog,
     log,
+    nodeVersionLog,
     noHandlerError,
     noPackageJsonWarning,
     receivedRequestLog,
