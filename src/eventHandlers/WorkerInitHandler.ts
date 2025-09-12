@@ -44,7 +44,6 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
         });
 
         logColdStartWarning();
-        validateNodeVersion(process.version);
 
         worker._hostVersion = nonNullProp(msg, 'hostVersion');
 
@@ -53,6 +52,8 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             // model info may have changed, so we need to update this
             response.workerMetadata = getWorkerMetadata();
         }
+
+        validateNodeVersion(process.version);
 
         response.capabilities = await getWorkerCapabilities();
 
