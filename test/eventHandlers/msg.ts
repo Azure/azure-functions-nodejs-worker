@@ -183,15 +183,15 @@ export function changingCwdLog(dir = '/'): TestMessage {
     return msg.infoLog(`Changing current working directory to ${dir}`);
 }
 
-export function nodeVersionLog(): TestMessage {
-    const result = getNodeVersionLog(process.version);
-    if (result?.level == rpc.RpcLog.Level.Error) {
-        return msg.errorLog(result.message);
-    } else if (result?.level == rpc.RpcLog.Level.Warning) {
-        return msg.warningLog(result.message);
-    }
-    return msg.infoLog(result.message);
-}
+// export function nodeVersionLog(): TestMessage {
+//     const result = getNodeVersionLog(process.version);
+//     if (result?.level == rpc.RpcLog.Level.Error) {
+//         return msg.errorLog(result.message);
+//     } else if (result?.level == rpc.RpcLog.Level.Warning) {
+//         return msg.warningLog(result.message);
+//     }
+//     return msg.infoLog(result.message);
+// }
 
 export const funcAppDirNotDefined = debugLog('FunctionEnvironmentReload functionAppDirectory is not defined');
 
@@ -249,7 +249,6 @@ export const msg = {
     envReload: {
         reloadEnvVarsLog,
         changingCwdLog,
-        nodeVersionLog,
         funcAppDirNotDefined,
         funcAppDirNotChanged,
         response: new RegExpStreamingMessage(
