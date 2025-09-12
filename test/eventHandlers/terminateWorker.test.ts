@@ -84,7 +84,8 @@ describe('terminateWorker', () => {
         await stream.assertCalledWith(
             msg.terminate.receivedWorkerTerminateLog,
             msg.executingAppHooksLog(2, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
+            msg.executedAppHooksLog('appTerminate'),
+            msg.init.nodeVersionLog()
         );
         expect(hookData).to.equal('term1term2');
     });
