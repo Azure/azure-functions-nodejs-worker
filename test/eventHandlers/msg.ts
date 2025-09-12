@@ -231,7 +231,6 @@ export const msg = {
     debugLog,
     infoLog,
     log,
-    nodeVersionLog,
     noHandlerError,
     noPackageJsonWarning,
     receivedRequestLog,
@@ -243,6 +242,7 @@ export const msg = {
     init: {
         receivedRequestLog: receivedRequestLog('WorkerInitRequest'),
         coldStartWarning,
+        nodeVersionLog,
         request,
         response,
         failedResponse,
@@ -250,6 +250,7 @@ export const msg = {
     envReload: {
         reloadEnvVarsLog,
         changingCwdLog,
+        nodeVersionLog,
         funcAppDirNotDefined,
         funcAppDirNotChanged,
         response: new RegExpStreamingMessage(

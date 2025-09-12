@@ -24,7 +24,6 @@ import path = require('path');
 export async function startApp(functionAppDirectory: string): Promise<void> {
     await updatePackageJson(functionAppDirectory);
     await loadEntryPointFile(functionAppDirectory);
-    validateNodeVersion(process.version);
     const appStartContext: AppStartContext = {
         get hookData() {
             return worker.app.appLevelOnlyHookData;

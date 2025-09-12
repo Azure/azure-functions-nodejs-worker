@@ -36,7 +36,6 @@ describe('startApp', () => {
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.errorLog(errorMessage),
-                msg.nodeVersionLog(),
                 msg.init.response
             );
         }
@@ -60,7 +59,6 @@ describe('startApp', () => {
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.errorLog(errorMessage),
-                msg.nodeVersionLog(),
                 msg.init.response
             );
         }

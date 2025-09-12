@@ -41,6 +41,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');
@@ -63,6 +64,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');
@@ -91,6 +93,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env).to.be.empty;
@@ -107,6 +110,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
 
@@ -127,6 +131,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
     });
@@ -146,6 +151,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');
@@ -171,6 +177,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.reloadEnvVarsLog(2),
             msg.envReload.changingCwdLog(),
             msg.noPackageJsonWarning,
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');
@@ -192,6 +199,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(worker.app.packageJson).to.deep.equal(oldPackageJson);
@@ -208,6 +216,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.funcAppDirNotChanged,
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(worker.app.packageJson).to.deep.equal(newPackageJson);
@@ -229,6 +238,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(worker.app.packageJson).to.deep.equal(packageJson);
@@ -251,6 +261,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 msg.envReload.changingCwdLog(testAppPath),
                 msg.loadingEntryPoint(fileSubpath),
                 msg.loadedEntryPoint(fileSubpath),
+                msg.envReload.nodeVersionLog(),
                 msg.envReload.response
             );
         });
@@ -283,6 +294,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                 msg.envReload.changingCwdLog(testAppPath),
                 msg.loadingEntryPoint(fileSubpath),
                 msg.loadedEntryPoint(fileSubpath),
+                msg.envReload.nodeVersionLog(),
                 msg.envReload.response
             );
 
@@ -323,6 +335,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.loadedEntryPoint(fileSubpath),
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
     });
