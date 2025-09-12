@@ -53,7 +53,10 @@ export function getNodeVersionLog(version: string) {
             level: rpc.RpcLog.Level.Warning,
         };
     }
-    return undefined;
+    return {
+        message: `Node.js ${major} detected`,
+        level: rpc.RpcLog.Level.Information,
+    };
 }
 
 export function validateNodeVersion(version: string) {

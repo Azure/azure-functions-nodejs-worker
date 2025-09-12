@@ -64,6 +64,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
             msg.envReload.reloadEnvVarsLog(2),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(process.env.hello).to.equal('world');

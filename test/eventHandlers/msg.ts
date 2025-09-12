@@ -190,7 +190,7 @@ export function nodeVersionLog(): TestMessage {
     } else if (result?.level == rpc.RpcLog.Level.Warning) {
         return msg.warningLog(result.message);
     }
-    return msg.debugLog('');
+    return msg.infoLog(result.message);
 }
 
 export const funcAppDirNotDefined = debugLog('FunctionEnvironmentReload functionAppDirectory is not defined');
