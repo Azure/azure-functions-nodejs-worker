@@ -36,14 +36,15 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     async assertCalledWith(
         ...expectedMsgs: (rpc.IStreamingMessage | RegExpStreamingMessage | undefined)[]
     ): Promise<void> {
-        if (!expectedMsgs) {
-            return;
-        }
         try {
+            const filteredExpectedMsgs: (rpc.IStreamingMessage | RegExpStreamingMessage)[] = expectedMsgs.filter(
+                (m): m is rpc.IStreamingMessage | RegExpStreamingMessage => m !== undefined
+            );
+
             // Wait for up to a second for the expected number of messages to come in
             const maxTime = Date.now() + 1000;
             const interval = 10;
-            while (this.written.getCalls().length < expectedMsgs.length && Date.now() < maxTime) {
+            while (this.written.getCalls().length < filteredExpectedMsgs.length && Date.now() < maxTime) {
                 await new Promise((resolve) => setTimeout(resolve, interval));
             }
 
@@ -51,32 +52,32 @@ export class TestEventStream extends EventEmitter implements IEventStream {
 
             // First, validate the "shortened" form of the messages. This will result in a more readable error for most test failures
             if (
-                !expectedMsgs.find((m) => m instanceof RegExpStreamingMessage) ||
-                calls.length !== expectedMsgs.length
+                !filteredExpectedMsgs.find((m) => m instanceof RegExpStreamingMessage) ||
+                calls.length !== filteredExpectedMsgs.length
             ) {
                 // shortened message won't work if it's a regexp
                 // but if the call count doesn't match, this error will be better than the one below
-                const shortExpectedMsgs = expectedMsgs.map(getShortenedMsg);
+                const shortExpectedMsgs = filteredExpectedMsgs.map(getShortenedMsg);
                 const shortActualMsgs = calls.map((c) => getShortenedMsg(c.args[0]));
                 expect(shortActualMsgs).to.deep.equal(shortExpectedMsgs);
             }
 
             // Next, do a more comprehensive check on the messages
             expect(calls.length).to.equal(
-                expectedMsgs.length,
+                filteredExpectedMsgs.length,
                 'Message count does not match. This may be caused by the previous test writing extraneous messages.'
             );
-            for (let i = 0; i < expectedMsgs.length; i++) {
+            for (let i = 0; i < filteredExpectedMsgs.length; i++) {
                 const call = calls[i];
                 expect(call.args).to.have.length(1);
                 const actualMsg = convertHttpResponse(call.args[0]);
 
-                let expectedMsg = expectedMsgs[i];
+                let expectedMsg = filteredExpectedMsgs[i];
                 if (expectedMsg instanceof RegExpStreamingMessage) {
                     expectedMsg.validateRegExpProps(actualMsg);
                     expectedMsg = expectedMsg.expectedMsg;
                 }
-                expectedMsg = convertHttpResponse(expectedMsg!);
+                expectedMsg = convertHttpResponse(expectedMsg);
 
                 expect(actualMsg).to.deep.equal(expectedMsg);
             }
@@ -115,10 +116,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     }
 }
 
-function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage | undefined): string {
-    if (!msg) {
-        return '';
-    }
+function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage): string {
     msg = msg instanceof RegExpStreamingMessage ? msg.expectedMsg : msg;
     if (msg.rpcLog?.message) {
         return msg.rpcLog.message;
