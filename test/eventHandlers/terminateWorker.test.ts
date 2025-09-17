@@ -84,8 +84,7 @@ describe('terminateWorker', () => {
         await stream.assertCalledWith(
             msg.terminate.receivedWorkerTerminateLog,
             msg.executingAppHooksLog(2, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate'),
-            msg.init.nodeVersionLog()
+            msg.executedAppHooksLog('appTerminate')
         );
         expect(hookData).to.equal('term1term2');
     });
@@ -109,6 +108,7 @@ describe('terminateWorker', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
 

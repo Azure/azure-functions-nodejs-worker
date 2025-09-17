@@ -33,7 +33,12 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     /**
      * Waits up to a second for the expected number of messages to be written and then validates those messages
      */
-    async assertCalledWith(...expectedMsgs: (rpc.IStreamingMessage | RegExpStreamingMessage)[]): Promise<void> {
+    async assertCalledWith(
+        ...expectedMsgs: (rpc.IStreamingMessage | RegExpStreamingMessage | undefined)[]
+    ): Promise<void> {
+        if (!expectedMsgs) {
+            return;
+        }
         try {
             // Wait for up to a second for the expected number of messages to come in
             const maxTime = Date.now() + 1000;
@@ -71,7 +76,7 @@ export class TestEventStream extends EventEmitter implements IEventStream {
                     expectedMsg.validateRegExpProps(actualMsg);
                     expectedMsg = expectedMsg.expectedMsg;
                 }
-                expectedMsg = convertHttpResponse(expectedMsg);
+                expectedMsg = convertHttpResponse(expectedMsg!);
 
                 expect(actualMsg).to.deep.equal(expectedMsg);
             }
@@ -110,7 +115,10 @@ export class TestEventStream extends EventEmitter implements IEventStream {
     }
 }
 
-function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage): string {
+function getShortenedMsg(msg: rpc.IStreamingMessage | RegExpStreamingMessage | undefined): string {
+    if (!msg) {
+        return '';
+    }
     msg = msg instanceof RegExpStreamingMessage ? msg.expectedMsg : msg;
     if (msg.rpcLog?.message) {
         return msg.rpcLog.message;

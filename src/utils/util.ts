@@ -24,7 +24,7 @@ export interface NodeVersionLog {
     level: rpc.RpcLog.Level;
 }
 
-export function getNodeVersionLog(version: string) {
+export function getNodeVersionLog(version: string): NodeVersionLog | undefined {
     const versionSplit = version.split('.');
     if (versionSplit.length != 3) {
         throw new Error("Could not parse Node.js version: '" + version + "'");
@@ -53,10 +53,7 @@ export function getNodeVersionLog(version: string) {
             level: rpc.RpcLog.Level.Warning,
         };
     }
-    return {
-        message: `Node.js ${major} detected`,
-        level: rpc.RpcLog.Level.Information,
-    };
+    return undefined;
 }
 
 export function validateNodeVersion(version: string) {

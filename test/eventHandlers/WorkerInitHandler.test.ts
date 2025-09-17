@@ -57,7 +57,7 @@ describe('WorkerInitHandler', () => {
         await fs.writeFile(testPackageJsonPath, JSON.stringify(expectedPackageJson));
 
         stream.addTestMessage(msg.init.request(testAppPath));
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response, msg.init.nodeVersionLog());
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
         expect(worker.app.packageJson).to.deep.equal(expectedPackageJson);
     });
 

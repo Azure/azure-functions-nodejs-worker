@@ -23,7 +23,12 @@ describe('FunctionEnvironmentReloadHandler', () => {
 
     async function mockPlaceholderInit(): Promise<void> {
         stream.addTestMessage(msg.init.request('pathWithoutPackageJson'));
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.init.nodeVersionLog(),
+            msg.init.response
+        );
     }
 
     it('reloads environment variables', async () => {
@@ -238,6 +243,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
         await stream.assertCalledWith(
             msg.envReload.reloadEnvVarsLog(0),
             msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
         expect(worker.app.packageJson).to.deep.equal(packageJson);

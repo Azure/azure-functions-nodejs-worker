@@ -30,12 +30,18 @@ describe('startApp', () => {
 
         stream.addTestMessage(msg.init.request(testAppPath));
         if (fileSubpath.includes('missing')) {
-            await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(errorMessage), msg.init.response);
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.errorLog(errorMessage),
+                msg.init.nodeVersionLog(),
+                msg.init.response
+            );
         } else {
             await stream.assertCalledWith(
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.errorLog(errorMessage),
+                msg.init.nodeVersionLog(),
                 msg.init.response
             );
         }
@@ -53,12 +59,18 @@ describe('startApp', () => {
 
         stream.addTestMessage(msg.init.request(testAppPath));
         if (fileSubpath.includes('missing')) {
-            await stream.assertCalledWith(msg.init.receivedRequestLog, msg.errorLog(errorMessage), msg.init.response);
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.errorLog(errorMessage),
+                msg.init.nodeVersionLog(),
+                msg.init.response
+            );
         } else {
             await stream.assertCalledWith(
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.errorLog(errorMessage),
+                msg.init.nodeVersionLog(),
                 msg.init.response
             );
         }
