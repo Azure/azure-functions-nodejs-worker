@@ -19,7 +19,7 @@ function currentYearMonth(): string {
     return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-export interface NodeVersionLog {
+interface NodeVersionLog {
     message: string;
     level: rpc.RpcLog.Level;
 }
