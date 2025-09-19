@@ -1,7 +1,7 @@
 {
     "name": "azure-functions-nodejs-worker",
     "author": "Microsoft Corporation",
-    "version": "3.11.1",
+    "version": "3.11.2",
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
