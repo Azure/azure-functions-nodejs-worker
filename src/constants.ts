@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 export const version = '3.11.2';
-export const logPrefix = 'LanguageWorkerConsoleLog';
 export const upgradeUrl = 'https://aka.ms/functions-nodejs-supported-versions';
 
 // https://github.com/nodejs/Release

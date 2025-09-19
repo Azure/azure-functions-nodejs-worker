@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { logPrefix } from './constants';
+const logPrefix = 'LanguageWorkerConsoleLog';
 
 let workerModule;
 
