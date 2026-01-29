@@ -7,6 +7,7 @@ import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
+import { validateNodeVersion } from '../utils/util';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
 import { getWorkerCapabilities } from './getWorkerCapabilities';
@@ -52,6 +53,7 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
             response.workerMetadata = getWorkerMetadata();
         }
 
+        validateNodeVersion(process.version);
         response.capabilities = await getWorkerCapabilities();
 
         return response;

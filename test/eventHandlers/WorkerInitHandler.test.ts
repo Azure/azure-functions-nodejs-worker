@@ -28,7 +28,7 @@ describe('WorkerInitHandler', () => {
 
     it('responds to init', async () => {
         stream.addTestMessage(msg.init.request(testAppPath));
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
     });
 
     it('does not init for Node.js v8.x and v2 compatability = false', () => {
@@ -57,13 +57,18 @@ describe('WorkerInitHandler', () => {
         await fs.writeFile(testPackageJsonPath, JSON.stringify(expectedPackageJson));
 
         stream.addTestMessage(msg.init.request(testAppPath));
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.response);
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
         expect(worker.app.packageJson).to.deep.equal(expectedPackageJson);
     });
 
     it('loads empty package.json', async () => {
         stream.addTestMessage(msg.init.request('folderWithoutPackageJson'));
-        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.noPackageJsonWarning, msg.init.response);
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.noPackageJsonWarning,
+            msg.init.nodeVersionLog(),
+            msg.init.response
+        );
         expect(worker.app.packageJson).to.be.empty;
     });
 
@@ -80,6 +85,7 @@ describe('WorkerInitHandler', () => {
             msg.warningLog(
                 `Worker failed to load package.json: file content is not valid JSON: ${testPackageJsonPath}: ${jsonError}`
             ),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
         expect(worker.app.packageJson).to.be.empty;
@@ -94,6 +100,7 @@ describe('WorkerInitHandler', () => {
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.loadedEntryPoint(fileSubpath),
+                msg.init.nodeVersionLog(),
                 msg.init.response
             );
         });
@@ -112,6 +119,7 @@ describe('WorkerInitHandler', () => {
             msg.loadedEntryPoint(file1),
             msg.loadingEntryPoint(file2),
             msg.loadedEntryPoint(file2),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -126,6 +134,7 @@ describe('WorkerInitHandler', () => {
                 msg.init.receivedRequestLog,
                 msg.loadingEntryPoint(fileSubpath),
                 msg.loadedEntryPoint(fileSubpath),
+                msg.init.nodeVersionLog(),
                 msg.init.response
             );
         });
@@ -143,6 +152,7 @@ describe('WorkerInitHandler', () => {
                 'Set "WEBSITE_RUN_FROM_PACKAGE" to "1" to significantly improve load times. Learn more here: https://aka.ms/AAjon54'
             ),
             msg.loadedEntryPoint(fileSubpath),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -158,6 +168,7 @@ describe('WorkerInitHandler', () => {
             msg.loadedEntryPoint(fileSubpath),
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -183,6 +194,7 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(2, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
 
@@ -214,6 +226,7 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });
@@ -234,6 +247,7 @@ describe('WorkerInitHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
     });

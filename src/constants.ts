@@ -1,7 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-export const version = '3.11.1';
+export const version = '3.12.0';
+export const upgradeUrl = 'https://aka.ms/functions-nodejs-supported-versions';
 
 // https://github.com/nodejs/Release
 export const NODE_EOL_DATES: Record<string, string> = {

@@ -727,6 +727,7 @@ describe('InvocationHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
         expect(startFunc.callCount).to.be.equal(1);
@@ -821,6 +822,7 @@ describe('InvocationHandler', () => {
             msg.noPackageJsonWarning,
             msg.executingAppHooksLog(1, 'appStart'),
             msg.executedAppHooksLog('appStart'),
+            msg.init.nodeVersionLog(),
             msg.init.response
         );
         expect(startFunc.callCount).to.be.equal(1);
