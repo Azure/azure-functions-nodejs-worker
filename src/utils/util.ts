@@ -3,12 +3,10 @@
 
 import * as semver from 'semver';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { NODE_EOL_DATES, NODE_EOL_WARNING_DATES, upgradeUrl } from '../constants';
+import { isEnvironmentVariableSet, NODE_EOL_DATES, NODE_EOL_WARNING_DATES, upgradeUrl } from '../constants';
 import { worker } from '../WorkerContext';
 
-export function isEnvironmentVariableSet(val: string | boolean | number | undefined | null): boolean {
-    return !/^(false|0)?$/i.test(val === undefined || val === null ? '' : String(val));
-}
+export { isEnvironmentVariableSet };
 
 export function isNode20Plus(): boolean {
     return semver.gte(process.versions.node, '20.0.0');

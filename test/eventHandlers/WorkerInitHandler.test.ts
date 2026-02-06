@@ -5,6 +5,7 @@ import 'mocha';
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
+import { verboseLoggingKey } from '../../src/constants';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { isNode20Plus } from '../../src/utils/util';
 import { worker } from '../../src/WorkerContext';
@@ -250,5 +251,57 @@ describe('WorkerInitHandler', () => {
             msg.init.nodeVersionLog(),
             msg.init.response
         );
+    });
+
+    it('suppresses system logs at Warning level and below when verbose logging is disabled', async () => {
+        // Set the disable flag to suppress system logs at Warning level and below
+        process.env[verboseLoggingKey] = 'true';
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+
+        // Only Error/Critical system logs and the response should appear
+        // receivedRequestLog (Debug) and nodeVersionLog (Warning or undefined) are suppressed
+        await stream.assertCalledWith(msg.init.response);
+
+        // Verify the cached flag was set
+        expect(worker.verboseLoggingDisabled).to.be.true;
+
+        // Clean up
+        delete process.env[verboseLoggingKey];
+    });
+
+    it('emits debug-level system logs when verbose logging is enabled', async () => {
+        // Ensure the disable flag is not set (default = verbose ON)
+        delete process.env[verboseLoggingKey];
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+
+        // Debug-level logs should appear when verbose logging is not disabled
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
+
+        // Verify the cached flag was not set
+        expect(worker.verboseLoggingDisabled).to.be.false;
+    });
+
+    it('caches verboseLoggingDisabled as false when env var is set to "false"', async () => {
+        process.env[verboseLoggingKey] = 'false';
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
+        expect(worker.verboseLoggingDisabled).to.be.false;
+
+        delete process.env[verboseLoggingKey];
+    });
+
+    it('caches verboseLoggingDisabled as false when env var is set to "0"', async () => {
+        process.env[verboseLoggingKey] = '0';
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
+        expect(worker.verboseLoggingDisabled).to.be.false;
+
+        delete process.env[verboseLoggingKey];
     });
 });

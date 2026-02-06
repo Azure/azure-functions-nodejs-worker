@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { isEnvironmentVariableSet, verboseLoggingKey } from '../constants';
 import { startApp } from '../startApp';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
@@ -63,6 +64,9 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
         Object.keys(process.env).map((key) => delete process.env[key]);
         // set new env vars
         Object.assign(process.env, msg.environmentVariables);
+
+        // Cache the verbose logging flag so we don't read process.env on every log call
+        worker.verboseLoggingDisabled = isEnvironmentVariableSet(process.env[verboseLoggingKey]);
 
         // Change current working directory
         if (msg.functionAppDirectory) {
