@@ -14,15 +14,6 @@ export const NODE_EOL_DATES: Record<string, string> = {
     v24: '2028-04',
 };
 
-/**
- * When set to "true", disables verbose system logging from the worker.
- * By default, all system logs are emitted (backward compatible).
- * Setting this to "true" suppresses system logs at Warning level and below
- * (Trace, Debug, Information, Warning), only allowing Error and Critical through.
- * This reduces latency by minimizing gRPC messages to the host.
- */
-export const verboseLoggingKey = 'AZURE_FUNCTIONS_NODE_DISABLE_VERBOSE_LOGGING';
-
 export function isEnvironmentVariableSet(val: string | boolean | number | undefined | null): boolean {
     return !/^(false|0)?$/i.test(val === undefined || val === null ? '' : String(val));
 }

@@ -14,13 +14,6 @@ class WorkerContext {
     defaultProgrammingModel?: ProgrammingModel;
 
     /**
-     * Cached flag indicating whether verbose system logging is disabled.
-     * When true, system logs at Warning level and below are suppressed.
-     * Updated during worker init and environment reload to avoid reading process.env on every log call.
-     */
-    verboseLoggingDisabled = false;
-
-    /**
      * This will only be set after worker init request is received
      */
     _hostVersion?: string;
@@ -72,17 +65,6 @@ class WorkerContext {
      * @param msg gRPC message content
      */
     log(log: rpc.IRpcLog, invocationLogCtx?: InvocationLogContext): void {
-        // When verbose logging is disabled, suppress system logs at Warning level and below
-        // (Trace=0, Debug=1, Information=2, Warning=3). Only Error and Critical system logs are emitted.
-        // This reduces latency by avoiding unnecessary gRPC messages to the host.
-        if (
-            log.logCategory === rpc.RpcLog.RpcLogCategory.System &&
-            (log.level ?? 0) <= rpc.RpcLog.Level.Warning &&
-            this.verboseLoggingDisabled
-        ) {
-            return;
-        }
-
         try {
             const logContext = new LogHookContext(log, invocationLogCtx);
             for (const callback of worker.app.logHooks) {

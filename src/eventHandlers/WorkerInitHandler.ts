@@ -4,7 +4,6 @@
 import { access, constants } from 'fs';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
-import { isEnvironmentVariableSet, verboseLoggingKey } from '../constants';
 import { isError } from '../errors';
 import { startApp } from '../startApp';
 import { nonNullProp } from '../utils/nonNull';
@@ -27,9 +26,6 @@ export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'worker
     }
 
     async handleEvent(msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
-        // Cache the verbose logging flag so we don't read process.env on every log call
-        worker.verboseLoggingDisabled = isEnvironmentVariableSet(process.env[verboseLoggingKey]);
-
         if (!msg.functionAppDirectory) {
             worker.log({
                 message: `WorkerInit functionAppDirectory is not defined`,

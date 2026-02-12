@@ -108,7 +108,6 @@ export class TestEventStream extends EventEmitter implements IEventStream {
         await fs.writeFile(testPackageJsonPath, '{}');
 
         worker._hostVersion = undefined;
-        worker.verboseLoggingDisabled = false;
         worker.resetApp(this.originalCwd);
 
         // minor delay so that it's more likely extraneous messages are associated with this test as opposed to leaking into the next test
