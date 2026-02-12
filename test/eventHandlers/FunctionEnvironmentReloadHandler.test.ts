@@ -4,6 +4,7 @@
 import 'mocha';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
+import { verboseLoggingKey } from '../../src/constants';
 import { worker } from '../../src/WorkerContext';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
@@ -341,5 +342,115 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
+    });
+
+    it('caches verboseLoggingDisabled when reload sets the disable flag', async () => {
+        expect(worker.verboseLoggingDisabled).to.be.false;
+
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    [verboseLoggingKey]: 'true',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(
+            // funcAppDirNotDefined (Debug) and reloadEnvVarsLog (Info) are still emitted
+            // because the old cached flag is false at the time they run.
+            // After env vars are set, the flag is recalculated to true, so
+            // nodeVersionLog (Warning) is suppressed.
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(1),
+            msg.envReload.response
+        );
+
+        // Verify the cached flag was set during reload
+        expect(worker.verboseLoggingDisabled).to.be.true;
+    });
+
+    it('caches verboseLoggingDisabled as false when reload does not include the disable flag', async () => {
+        // First, set it to true
+        worker.verboseLoggingDisabled = true;
+
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    hello: 'world',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        // funcAppDirNotDefined (Debug) and reloadEnvVarsLog (Info) are suppressed
+        // because the old cached flag is true at the time they are emitted.
+        // After env vars are set, the flag is recalculated to false.
+        // nodeVersionLog (Warning) and changingCwd (Info) are NOT suppressed because
+        // they run after the flag is recalculated to false.
+        await stream.assertCalledWith(msg.envReload.nodeVersionLog(), msg.envReload.response);
+
+        // Verify the cached flag was reset
+        expect(worker.verboseLoggingDisabled).to.be.false;
+    });
+
+    it('caches verboseLoggingDisabled as false when reload sets the flag to "false"', async () => {
+        worker.verboseLoggingDisabled = true;
+
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    [verboseLoggingKey]: 'false',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        // funcAppDirNotDefined (Debug) and reloadEnvVarsLog (Info) are suppressed
+        // because the old cached flag is true at the time they are emitted.
+        // After env vars are set, the flag is recalculated to false ("false" = not disabled).
+        await stream.assertCalledWith(msg.envReload.nodeVersionLog(), msg.envReload.response);
+
+        // "false" means verbose logging is NOT disabled
+        expect(worker.verboseLoggingDisabled).to.be.false;
+    });
+
+    it('suppresses system logs at Warning level and below after reload sets the disable flag', async () => {
+        // Initially verbose logging is on, all logs are emitted
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {},
+                functionAppDirectory: null,
+            },
+        });
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.nodeVersionLog(),
+            msg.envReload.response
+        );
+
+        // Now reload with the disable flag set
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                environmentVariables: {
+                    [verboseLoggingKey]: '1',
+                },
+                functionAppDirectory: null,
+            },
+        });
+        // funcAppDirNotDefined (Debug) and reloadEnvVarsLog (Info) are still emitted
+        // because the old cached flag is false at the time they run.
+        // After env vars are set, the flag is recalculated to true, so
+        // nodeVersionLog (Warning) is suppressed.
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotDefined,
+            msg.envReload.reloadEnvVarsLog(1),
+            msg.envReload.response
+        );
+
+        expect(worker.verboseLoggingDisabled).to.be.true;
     });
 });
