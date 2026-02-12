@@ -338,8 +338,6 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.changingCwdLog(testAppPath),
             msg.loadingEntryPoint(fileSubpath),
             msg.loadedEntryPoint(fileSubpath),
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );

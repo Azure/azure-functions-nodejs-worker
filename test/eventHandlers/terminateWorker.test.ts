@@ -58,11 +58,7 @@ describe('terminateWorker', () => {
         coreApi.registerHook('appTerminate', hookFunc);
 
         stream.addTestMessage(msg.terminate.request());
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(1, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
         expect(hookFunc.callCount).to.be.equal(1);
         expect(hookFunc.args[0][0]).to.deep.equal(expectedContext);
     });
@@ -81,11 +77,7 @@ describe('terminateWorker', () => {
         });
 
         stream.addTestMessage(msg.terminate.request());
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(2, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
         expect(hookData).to.equal('term1term2');
     });
 
@@ -106,18 +98,12 @@ describe('terminateWorker', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
 
         stream.addTestMessage(msg.terminate.request());
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(1, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
 
         expect(hookData).to.equal('startterm');
     });
@@ -140,10 +126,6 @@ describe('terminateWorker', () => {
 
         stream.addTestMessage(msg.terminate.request());
 
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(1, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
     });
 });

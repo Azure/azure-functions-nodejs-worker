@@ -166,8 +166,6 @@ describe('WorkerInitHandler', () => {
             msg.init.receivedRequestLog,
             msg.loadingEntryPoint(fileSubpath),
             msg.loadedEntryPoint(fileSubpath),
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
@@ -192,8 +190,6 @@ describe('WorkerInitHandler', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(2, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
@@ -224,8 +220,6 @@ describe('WorkerInitHandler', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
@@ -245,8 +239,6 @@ describe('WorkerInitHandler', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );

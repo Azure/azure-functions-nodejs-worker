@@ -82,30 +82,6 @@ export function loadedEntryPoint(fileName: string): TestMessage {
     return msg.debugLog(`Loaded entry point file "${fileName}"`);
 }
 
-export function executingAppHooksLog(count: number, hookName: string): TestMessage {
-    return {
-        rpcLog: {
-            category: undefined,
-            invocationId: undefined,
-            message: `Executing ${count} "${hookName}" hooks`,
-            level: rpc.RpcLog.Level.Debug,
-            logCategory: rpc.RpcLog.RpcLogCategory.System,
-        },
-    };
-}
-
-export function executedAppHooksLog(hookName: string): TestMessage {
-    return {
-        rpcLog: {
-            category: undefined,
-            invocationId: undefined,
-            message: `Executed "${hookName}" hooks`,
-            level: rpc.RpcLog.Level.Debug,
-            logCategory: rpc.RpcLog.RpcLogCategory.System,
-        },
-    };
-}
-
 const capabilities = {
     RawHttpBodyBytes: 'true',
     RpcHttpBodyOnly: 'true',
@@ -236,8 +212,6 @@ export const msg = {
     receivedRequestLog,
     loadingEntryPoint,
     loadedEntryPoint,
-    executingAppHooksLog,
-    executedAppHooksLog,
     capabilities,
     init: {
         receivedRequestLog: receivedRequestLog('WorkerInitRequest'),
@@ -407,12 +381,6 @@ export const msg = {
             'Worker 00000000-0000-0000-0000-000000000000 received FunctionInvocationRequest with invocationId 1',
             rpc.RpcLog.Level.Debug
         ),
-        executingHooksLog(count: number, hookName: string): TestMessage {
-            return msg.invocation.debugLog(`Executing ${count} "${hookName}" hooks`);
-        },
-        executedHooksLog(hookName: string): TestMessage {
-            return msg.invocation.debugLog(`Executed "${hookName}" hooks`);
-        },
         asyncAndDoneError: logWithInvocation(
             "Error: Choose either to return a promise or call 'done'. Do not use both in your script. Learn more: https://go.microsoft.com/fwlink/?linkid=2097909",
             rpc.RpcLog.Level.Error
