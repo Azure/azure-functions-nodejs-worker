@@ -3,7 +3,7 @@
 
 import 'mocha';
 import { expect } from 'chai';
-import { isEnvironmentVariableSet } from '../src/constants';
+import { isEnvironmentVariableSet } from '../src/utils/util';
 
 describe('isEnvironmentVariableSet', () => {
     // Truthy values - should return true

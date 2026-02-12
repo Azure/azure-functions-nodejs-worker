@@ -14,10 +14,6 @@ export const NODE_EOL_DATES: Record<string, string> = {
     v24: '2028-04',
 };
 
-export function isEnvironmentVariableSet(val: string | boolean | number | undefined | null): boolean {
-    return !/^(false|0)?$/i.test(val === undefined || val === null ? '' : String(val));
-}
-
 export const NODE_EOL_WARNING_DATES: Record<string, string> = {
     v14: '2022-10',
     v16: '2023-03',
