@@ -98,7 +98,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         coreCtx.state = 'preInvocationHooks';
         try {
-            await executeHooks('preInvocation', preInvocContext, msg.invocationId, msgCategory);
+            await executeHooks('preInvocation', preInvocContext);
         } finally {
             coreCtx.state = undefined;
         }
@@ -141,7 +141,7 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
 
         coreCtx.state = 'postInvocationHooks';
         try {
-            await executeHooks('postInvocation', postInvocContext, msg.invocationId, msgCategory);
+            await executeHooks('postInvocation', postInvocContext);
         } finally {
             coreCtx.state = undefined;
         }

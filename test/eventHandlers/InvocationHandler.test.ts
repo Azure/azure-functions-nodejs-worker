@@ -477,8 +477,6 @@ describe('InvocationHandler', () => {
             stream.addTestMessage(msg.invocation.request([InputData.http]));
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
-                msg.invocation.executingHooksLog(1, 'preInvocation'),
-                msg.invocation.executedHooksLog('preInvocation'),
                 msg.invocation.userLog('preinvoc'),
                 msg.invocation.response([], { string: 'hello' })
             );
@@ -499,8 +497,6 @@ describe('InvocationHandler', () => {
             stream.addTestMessage(msg.invocation.request([InputData.string]));
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
-                msg.invocation.executingHooksLog(1, 'preInvocation'),
-                msg.invocation.executedHooksLog('preInvocation'),
                 msg.invocation.userLog('changedStringData'),
                 msg.invocation.response([])
             );
@@ -522,8 +518,6 @@ describe('InvocationHandler', () => {
         stream.addTestMessage(msg.invocation.request([InputData.string]));
         await stream.assertCalledWith(
             msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
             msg.invocation.userLog('new function'),
             msg.invocation.response([])
         );
@@ -544,9 +538,7 @@ describe('InvocationHandler', () => {
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
                 msg.invocation.userLog('invoc'),
-                msg.invocation.executingHooksLog(1, 'postInvocation'),
                 msg.invocation.userLog('hello from post'),
-                msg.invocation.executedHooksLog('postInvocation'),
                 msg.invocation.response([], { string: 'hello' })
             );
             expect(hookData).to.equal('invocpost');
@@ -568,8 +560,6 @@ describe('InvocationHandler', () => {
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
                 msg.invocation.userLog('invoc'),
-                msg.invocation.executingHooksLog(1, 'postInvocation'),
-                msg.invocation.executedHooksLog('postInvocation'),
                 msg.invocation.response([], { string: 'world' })
             );
             expect(hookData).to.equal('invocpost');
@@ -587,12 +577,7 @@ describe('InvocationHandler', () => {
             });
 
             stream.addTestMessage(msg.invocation.request([InputData.http]));
-            await stream.assertCalledWith(
-                msg.invocation.receivedRequestLog,
-                msg.invocation.executingHooksLog(1, 'postInvocation'),
-                msg.invocation.executedHooksLog('postInvocation'),
-                msg.invocation.failedResponse()
-            );
+            await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.failedResponse());
             expect(hookData).to.equal('post');
         });
     }
@@ -612,8 +597,6 @@ describe('InvocationHandler', () => {
             stream.addTestMessage(msg.invocation.request([InputData.http]));
             await stream.assertCalledWith(
                 msg.invocation.receivedRequestLog,
-                msg.invocation.executingHooksLog(1, 'postInvocation'),
-                msg.invocation.executedHooksLog('postInvocation'),
                 msg.invocation.response([], { string: 'hello' })
             );
             expect(hookData).to.equal('post');
@@ -634,14 +617,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('prepost');
     });
 
@@ -695,14 +671,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('prepost');
     });
 
@@ -725,8 +694,6 @@ describe('InvocationHandler', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
@@ -745,14 +712,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('appStartpreInvocpostInvoc');
     });
 
@@ -776,14 +736,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
 
         const terminateFunc = sinon.spy((context: coreTypes.AppTerminateContext) => {
             expect(context.appHookData).to.deep.equal(expectedAppHookData);
@@ -793,11 +746,7 @@ describe('InvocationHandler', () => {
 
         stream.addTestMessage(msg.terminate.request());
 
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(1, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
         expect(terminateFunc.callCount).to.be.equal(1);
         expect(hookData).to.equal('preInvocpostInvocappTerminate');
     });
@@ -820,8 +769,6 @@ describe('InvocationHandler', () => {
         await stream.assertCalledWith(
             msg.init.receivedRequestLog,
             msg.noPackageJsonWarning,
-            msg.executingAppHooksLog(1, 'appStart'),
-            msg.executedAppHooksLog('appStart'),
             msg.init.nodeVersionLog(),
             msg.init.response
         );
@@ -842,14 +789,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
 
         expect(hookData).to.equal('appStartpreInvocpostInvoc');
     });
@@ -876,14 +816,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
 
         const terminateFunc = sinon.spy((context: coreTypes.AppTerminateContext) => {
             expect(context.appHookData).to.be.empty;
@@ -894,11 +827,7 @@ describe('InvocationHandler', () => {
 
         stream.addTestMessage(msg.terminate.request());
 
-        await stream.assertCalledWith(
-            msg.terminate.receivedWorkerTerminateLog,
-            msg.executingAppHooksLog(1, 'appTerminate'),
-            msg.executedAppHooksLog('appTerminate')
-        );
+        await stream.assertCalledWith(msg.terminate.receivedWorkerTerminateLog);
 
         expect(terminateFunc.callCount).to.be.equal(1);
         expect(hookData).to.equal('preInvocpostInvocappTerminate');
@@ -925,14 +854,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
 
         expect(hookData).to.equal('prepost');
     });
@@ -966,14 +888,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('pre1post1');
 
         pre1.dispose();
@@ -992,14 +907,7 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.executingHooksLog(1, 'postInvocation'),
-            msg.invocation.executedHooksLog('postInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
 
         expect(hookData).to.equal('pre1post1pre2post2');
     });
@@ -1015,22 +923,12 @@ describe('InvocationHandler', () => {
         });
 
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(2, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('ab');
 
         disposableA.dispose();
         stream.addTestMessage(msg.invocation.request([InputData.http]));
-        await stream.assertCalledWith(
-            msg.invocation.receivedRequestLog,
-            msg.invocation.executingHooksLog(1, 'preInvocation'),
-            msg.invocation.executedHooksLog('preInvocation'),
-            msg.invocation.response([])
-        );
+        await stream.assertCalledWith(msg.invocation.receivedRequestLog, msg.invocation.response([]));
         expect(hookData).to.equal('abb');
 
         disposableB.dispose();
