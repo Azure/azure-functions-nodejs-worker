@@ -23,6 +23,7 @@ import { AzFuncSystemError, isError, ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
 import { InvocationLogContext } from '../hooks/LogHookContext';
 import { getLegacyFunction } from '../LegacyFunctionLoader';
+import { getMetricsPipeline } from '../pipeline';
 import { nonNullProp } from '../utils/nonNull';
 import { worker } from '../WorkerContext';
 import { EventHandler } from './EventHandler';
@@ -51,6 +52,13 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         }
 
         let { metadata, callback } = registeredFunc;
+
+        // Start metrics pipeline tracking for this invocation
+        const pipeline = getMetricsPipeline();
+        const invocationId = msg.invocationId || '';
+        const functionName = metadata.name || functionId;
+        const traceId = msg.traceContext?.traceParent || invocationId;
+        pipeline.startInvocation(invocationId, functionName, traceId);
 
         const msgCategory = `${nonNullProp(metadata, 'name')}.Invocation`;
         const coreCtx = new CoreInvocationContext(
@@ -145,6 +153,14 @@ export class InvocationHandler extends EventHandler<'invocationRequest', 'invoca
         } finally {
             coreCtx.state = undefined;
         }
+
+        // Complete metrics pipeline tracking
+        const invocationSucceeded = !isError(postInvocContext.error);
+        pipeline.completeInvocation(
+            invocationId,
+            invocationSucceeded,
+            isError(postInvocContext.error) ? postInvocContext.error : undefined
+        );
 
         if (isError(postInvocContext.error)) {
             throw postInvocContext.error;

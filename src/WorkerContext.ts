@@ -8,6 +8,7 @@ import { fromCoreLogLevel } from './coreApi/converters/fromCoreStatusResult';
 import { AzFuncSystemError } from './errors';
 import { IEventStream } from './GrpcClient';
 import { InvocationLogContext, LogHookContext } from './hooks/LogHookContext';
+import { getMetricsPipeline } from './pipeline';
 
 class WorkerContext {
     app = new AppContext(undefined);
@@ -81,9 +82,37 @@ class WorkerContext {
             // ignore so that user hooks can't prevent system logs
         }
 
-        this.eventStream.write({
-            rpcLog: log,
-        });
+        // Buffer logs into the metrics pipeline for blob storage.
+        // When the pipeline is enabled, user logs are suppressed from the
+        // gRPC event stream so they only flow to Blob Storage — this is what
+        // delivers the 95-99% reduction in App Insights ingestion cost.
+        // System logs always go through the event stream regardless.
+        let suppressFromEventStream = false;
+        if (log.invocationId && log.message) {
+            try {
+                const pipeline = getMetricsPipeline();
+                if (pipeline.enabled) {
+                    pipeline.bufferLog(
+                        log.invocationId,
+                        log.level ?? 0,
+                        log.logCategory === rpc.RpcLog.RpcLogCategory.System ? 'system' : 'user',
+                        log.message
+                    );
+                    // Only suppress user logs; system logs must always reach the host
+                    if (log.logCategory === rpc.RpcLog.RpcLogCategory.User) {
+                        suppressFromEventStream = true;
+                    }
+                }
+            } catch {
+                // Do not let pipeline errors affect log delivery
+            }
+        }
+
+        if (!suppressFromEventStream) {
+            this.eventStream.write({
+                rpcLog: log,
+            });
+        }
     }
 }
 

@@ -5,6 +5,7 @@ import { AppTerminateContext } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { ReadOnlyError } from '../errors';
 import { executeHooks } from '../hooks/executeHooks';
+import { isMetricsPipelineInitialized, resetMetricsPipeline } from '../pipeline';
 import { worker } from '../WorkerContext';
 
 export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
@@ -30,6 +31,13 @@ export async function terminateWorker(_msg: rpc.IWorkerTerminate) {
     };
 
     await executeHooks('appTerminate', appTerminateContext);
+
+    // Flush pending pipeline data before exiting. Only await when the pipeline
+    // was actually initialised to avoid introducing a microtask that delays
+    // eventStream.end() / process.exit().
+    if (isMetricsPipelineInitialized()) {
+        await resetMetricsPipeline();
+    }
 
     worker.eventStream.end();
     process.exit(0);

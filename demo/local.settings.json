@@ -1,0 +1,16 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "FUNCTIONS_WORKER_RUNTIME": "node",
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+
+        "languageWorkers__node__workerDirectory": "c:\\Users\\swapnilnagar\\workplace\\nodejs\\azure-functions-nodejs-worker",
+
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_ENABLED": "true",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_BLOB_CONNECTION_STRING": "UseDevelopmentStorage=true",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_BLOB_CONTAINER": "function-logs",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_COMPRESS_LOGS": "false",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_MAX_LOGS_PER_INVOCATION": "10000",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_APPINSIGHTS_CONNECTION_STRING": "InstrumentationKey=3d1a7096-d8dc-41a9-b292-3c8c755f71c2;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=c321796b-a2c3-4c7b-b0ea-679a8ba32b1b"
+    }
+}
