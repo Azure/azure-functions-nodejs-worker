@@ -34,6 +34,8 @@ export interface InvocationMetric {
     alertType?: AlertType;
     /** URI to the raw logs in Blob Storage for drill-down */
     blobUri?: string;
+    /** AI-generated summary for this invocation (if customer prompt provided) */
+    aiSummary?: AISummary;
     /** ISO 8601 timestamp */
     timestamp: string;
     /** Worker version */
@@ -115,6 +117,8 @@ export interface AggregatedHealthMetric {
     windowStart: string;
     /** Window end (ISO 8601) */
     windowEnd: string;
+    /** AI-generated summary for this aggregation window (if prompt configured) */
+    aiSummary?: AISummary;
 }
 
 /**
@@ -154,6 +158,35 @@ export interface PipelineConfig {
 
     /** Whether to enable periodic aggregated health metrics */
     enableHealthMetrics: boolean;
+
+    /** Azure OpenAI Foundry endpoint for AI-powered summaries */
+    aiEndpoint?: string;
+    /** API key for the Azure OpenAI Foundry endpoint */
+    aiApiKey?: string;
+    /** Model deployment name (default: 'gpt-4o') */
+    aiModel: string;
+    /** Max output tokens for AI summaries (default: 1024) */
+    aiMaxTokens: number;
+    /** Whether to enable AI-powered summaries */
+    enableAISummaries: boolean;
+    /** Default prompts for per-invocation summaries (customer-overridable list) */
+    defaultInvocationPrompts: string[];
+    /** Default prompts for per-aggregation-window summaries (customer-overridable list) */
+    defaultAggregationPrompts: string[];
+    /** Max error/warning logs to sample per window for AI summary */
+    aiWindowLogSampleSize: number;
+    /**
+     * Per-function AI prompt lists. Keys are function names, values are prompt arrays.
+     * When a function has configured prompts, every invocation of that function
+     * will automatically get an AI summary using those prompts.
+     *
+     * Configurable via:
+     * - JSON: `AZURE_FUNCTIONS_METRICS_PIPELINE_FUNCTION_PROMPTS` = '{"MyFunc": ["Analyze...", "Check..."]}'
+     * - Individual: `AZURE_FUNCTIONS_METRICS_PIPELINE_PER_INVOCATION_PROMPTS_MyFunc` = '["Analyze...", "Check..."]'
+     * - Individual (single): `AZURE_FUNCTIONS_METRICS_PIPELINE_PER_INVOCATION_PROMPTS_MyFunc` = 'Analyze...'
+     * - local.settings.json Values section (same keys)
+     */
+    functionPrompts: Map<string, string[]>;
 }
 
 /**
@@ -176,4 +209,16 @@ export interface InvocationTracker {
     errorCount: number;
     /** First error encountered */
     firstError?: { message: string; stack?: string };
+}
+
+/**
+ * AI summary result attached to invocation metrics or aggregation windows.
+ */
+export interface AISummary {
+    /** The generated summary text */
+    summary: string;
+    /** The prompts that produced this summary */
+    prompts: string[];
+    /** ISO 8601 timestamp of when the summary was generated */
+    generatedAt: string;
 }

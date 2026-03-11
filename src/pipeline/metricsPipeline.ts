@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { systemError, systemLog, systemWarn } from '../utils/Logger';
+import { AISummaryClient } from './aiSummaryClient';
 import { AlertDetector } from './alertDetector';
 import { BlobLogWriter, NoOpBlobLogWriter, RestBlobStorageClient } from './blobLogWriter';
-import { HealthMetricsAggregator } from './healthMetricsAggregator';
+import { AggregatorAIConfig, HealthMetricsAggregator } from './healthMetricsAggregator';
 import { InvocationMetricsCollector } from './invocationMetricsCollector';
 import { AppInsightsMetricsEmitter, IMetricsEmitter, NoOpMetricsEmitter } from './metricsEmitter';
 import { loadPipelineConfig, validatePipelineConfig } from './pipelineConfig';
@@ -25,6 +26,7 @@ export class MetricsPipeline {
     #metricsEmitter: IMetricsEmitter;
     #alertDetector: AlertDetector;
     #healthAggregator: HealthMetricsAggregator | null = null;
+    #aiClient: AISummaryClient | null = null;
     #enabled: boolean;
 
     constructor() {
@@ -80,10 +82,32 @@ export class MetricsPipeline {
             this.#config.cascadeThreshold
         );
 
+        // Initialize AI summary client if configured
+        if (this.#config.enableAISummaries && this.#config.aiEndpoint && this.#config.aiApiKey) {
+            this.#aiClient = new AISummaryClient(
+                this.#config.aiEndpoint,
+                this.#config.aiApiKey,
+                this.#config.aiModel,
+                this.#config.aiMaxTokens
+            );
+        }
+
         if (this.#config.enableHealthMetrics) {
+            // Build AI config for aggregator if AI client is available
+            let aggregatorAI: AggregatorAIConfig | null = null;
+            if (this.#aiClient) {
+                aggregatorAI = {
+                    client: this.#aiClient,
+                    aggregationPrompts: this.#config.defaultAggregationPrompts,
+                    invocationPrompts: this.#config.defaultInvocationPrompts,
+                    windowLogSampleSize: this.#config.aiWindowLogSampleSize,
+                };
+            }
+
             this.#healthAggregator = new HealthMetricsAggregator(
                 this.#metricsEmitter,
-                this.#config.aggregationIntervalMs
+                this.#config.aggregationIntervalMs,
+                aggregatorAI
             );
             this.#healthAggregator.start();
         }
@@ -107,6 +131,17 @@ export class MetricsPipeline {
             return;
         }
         this.#collector.bufferLog(invocationId, level, category, message);
+
+        // Also buffer error/warning logs for the AI window summary
+        const levelName = typeof level === 'number' ? levelToName(level) : level;
+        if (this.#healthAggregator && (levelName === 'error' || levelName === 'critical' || levelName === 'warning')) {
+            this.#healthAggregator.bufferWindowLog({
+                timestamp: new Date().toISOString(),
+                level: levelName,
+                category: category || 'user',
+                message,
+            });
+        }
     }
 
     completeInvocation(invocationId: string, succeeded: boolean, error?: Error): void {
@@ -130,10 +165,78 @@ export class MetricsPipeline {
             metric.alertType = alertType;
         }
 
+        // Check for per-invocation AI prompts (explicit or per-function config)
+        const invocationPrompts =
+            this.#healthAggregator?.consumeInvocationPrompt(invocationId) ||
+            this.#config.functionPrompts.get(metric.functionName);
+        if (invocationPrompts && invocationPrompts.length > 0 && this.#aiClient) {
+            void this.#generateInvocationSummary(invocationPrompts, rawPayload, metric);
+        }
+
         void this.#writeToBlobAndEmit(rawPayload, metric);
 
         if (this.#healthAggregator) {
             this.#healthAggregator.record(metric);
+        }
+    }
+
+    /**
+     * Set customer prompts for a specific invocation.
+     * The prompts will be applied to that invocation's logs when it completes.
+     */
+    setInvocationPrompt(invocationId: string, prompts: string[]): void {
+        if (this.#healthAggregator) {
+            this.#healthAggregator.setInvocationPrompt(invocationId, prompts);
+        }
+    }
+
+    /**
+     * Set customer prompts for the current 1-minute aggregation window.
+     * This overrides the default window prompts for the next flush.
+     */
+    setWindowPrompt(prompts: string[]): void {
+        if (this.#healthAggregator) {
+            this.#healthAggregator.setWindowPrompt(prompts);
+        }
+    }
+
+    async #generateInvocationSummary(
+        prompts: string[],
+        rawPayload: RawLogPayload,
+        metric: InvocationMetric
+    ): Promise<void> {
+        if (!this.#aiClient) {
+            return;
+        }
+        try {
+            const aiResult = await this.#aiClient.summarizeInvocation(
+                prompts,
+                metric.functionName,
+                metric.invocationId,
+                rawPayload.logs,
+                metric.outcome === 0,
+                metric.durationMs,
+                rawPayload.error
+            );
+            if (aiResult) {
+                metric.aiSummary = {
+                    summary: aiResult.summary,
+                    prompts: aiResult.prompts,
+                    generatedAt: aiResult.generatedAt,
+                };
+                systemLog(
+                    `[MetricsPipeline] AI invocation summary for ${metric.invocationId} (${aiResult.summary.length} chars)`
+                );
+                // Emit AI summary as a custom event to Application Insights
+                this.#metricsEmitter.emitAISummary(metric.aiSummary, {
+                    type: 'invocation',
+                    functionName: metric.functionName,
+                    invocationId: metric.invocationId,
+                    traceId: metric.traceId,
+                });
+            }
+        } catch (err) {
+            systemError(`[MetricsPipeline] AI invocation summary failed for ${metric.invocationId}:`, err);
         }
     }
 
@@ -162,7 +265,7 @@ export class MetricsPipeline {
         systemLog('[MetricsPipeline] Shutting down...');
 
         if (this.#healthAggregator) {
-            this.#healthAggregator.stop();
+            await this.#healthAggregator.stop();
         }
 
         await this.#metricsEmitter.flush();
@@ -207,4 +310,18 @@ export async function resetMetricsPipeline(): Promise<void> {
 
 export function isMetricsPipelineInitialized(): boolean {
     return _pipeline !== undefined;
+}
+
+const LOG_LEVEL_NAMES: Record<number, string> = {
+    0: 'trace',
+    1: 'debug',
+    2: 'information',
+    3: 'warning',
+    4: 'error',
+    5: 'critical',
+    6: 'none',
+};
+
+function levelToName(level: number): string {
+    return LOG_LEVEL_NAMES[level] || 'unknown';
 }

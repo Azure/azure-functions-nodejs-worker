@@ -2,7 +2,25 @@
 // Licensed under the MIT License.
 
 import { systemError } from '../utils/Logger';
-import { AggregatedHealthMetric, InvocationMetric } from './types';
+import { AggregatedHealthMetric, AISummary, InvocationMetric } from './types';
+
+/**
+ * Describes the scope of an AI summary custom event.
+ */
+export interface AISummaryEventContext {
+    /** 'invocation' for per-invocation summaries, 'window' for aggregation-window summaries */
+    type: 'invocation' | 'window';
+    /** Function name the summary relates to */
+    functionName: string;
+    /** Invocation ID (only for per-invocation summaries) */
+    invocationId?: string;
+    /** Trace/operation ID for App Insights correlation (only for per-invocation summaries) */
+    traceId?: string;
+    /** Aggregation window start (only for window summaries) */
+    windowStart?: string;
+    /** Aggregation window end (only for window summaries) */
+    windowEnd?: string;
+}
 
 /**
  * Interface for metrics emission — enables test mocking and alternative backends.
@@ -10,6 +28,7 @@ import { AggregatedHealthMetric, InvocationMetric } from './types';
 export interface IMetricsEmitter {
     emitInvocationMetric(metric: InvocationMetric): void;
     emitHealthMetric(metric: AggregatedHealthMetric): void;
+    emitAISummary(summary: AISummary, context: AISummaryEventContext): void;
     flush(): Promise<void>;
 }
 
@@ -164,6 +183,49 @@ export class AppInsightsMetricsEmitter implements IMetricsEmitter {
         this.#buffer.push(envelope);
     }
 
+    emitAISummary(summary: AISummary, context: AISummaryEventContext): void {
+        const eventName = context.type === 'invocation' ? 'FunctionInvocationAISummary' : 'FunctionWindowAISummary';
+
+        const tags: Record<string, string> = {};
+        if (context.traceId) {
+            tags['ai.operation.id'] = context.traceId;
+        }
+        tags['ai.operation.name'] = context.functionName;
+
+        const properties: Record<string, unknown> = {
+            functionName: context.functionName,
+            summary: summary.summary,
+            prompts: JSON.stringify(summary.prompts),
+            generatedAt: summary.generatedAt,
+        };
+
+        if (context.invocationId) {
+            properties.invocationId = context.invocationId;
+        }
+        if (context.windowStart) {
+            properties.windowStart = context.windowStart;
+        }
+        if (context.windowEnd) {
+            properties.windowEnd = context.windowEnd;
+        }
+
+        const envelope: TelemetryEnvelope = {
+            name: 'Microsoft.ApplicationInsights.Event',
+            time: summary.generatedAt,
+            iKey: this.#instrumentationKey,
+            tags,
+            data: {
+                baseType: 'EventData',
+                baseData: {
+                    name: eventName,
+                    properties,
+                },
+            },
+        };
+
+        this.#buffer.push(envelope);
+    }
+
     async flush(): Promise<void> {
         if (this.#buffer.length === 0) {
             return;
@@ -235,6 +297,10 @@ export class NoOpMetricsEmitter implements IMetricsEmitter {
     }
 
     emitHealthMetric(_metric: AggregatedHealthMetric): void {
+        // no-op
+    }
+
+    emitAISummary(_summary: AISummary, _context: AISummaryEventContext): void {
         // no-op
     }
 

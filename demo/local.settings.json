@@ -11,6 +11,19 @@
         "AZURE_FUNCTIONS_METRICS_PIPELINE_BLOB_CONTAINER": "function-logs",
         "AZURE_FUNCTIONS_METRICS_PIPELINE_COMPRESS_LOGS": "false",
         "AZURE_FUNCTIONS_METRICS_PIPELINE_MAX_LOGS_PER_INVOCATION": "10000",
-        "AZURE_FUNCTIONS_METRICS_PIPELINE_APPINSIGHTS_CONNECTION_STRING": "InstrumentationKey=3d1a7096-d8dc-41a9-b292-3c8c755f71c2;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=c321796b-a2c3-4c7b-b0ea-679a8ba32b1b"
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_APPINSIGHTS_CONNECTION_STRING": "InstrumentationKey=0a2bcf67-3abc-47ff-a721-1e6ea46eb438;IngestionEndpoint=https://eastasia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://eastasia.livediagnostics.monitor.azure.com/;ApplicationId=a957faa7-4083-46c2-9009-fceba8882ef2",
+
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_ENABLE_AI_SUMMARIES": "true",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_AI_ENDPOINT": "https://swapmsftazureopenai.openai.azure.com/openai/responses?api-version=2025-04-01-preview",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_AI_API_KEY": "<KEY>",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_AI_MODEL": "gpt-5.1-codex-mini",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_AI_MAX_TOKENS": "1024",
+
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_AGGREGATION_PROMPTS": "[\"Summarize the health of these Azure Functions over the last minute.\", \"Flag any error spikes, latency regressions, or concerning patterns.\", \"Include actionable recommendations.\"]",
+        "AZURE_FUNCTIONS_METRICS_PIPELINE_PER_INVOCATION_PROMPTS_PipelineDemo": "[\"Analyze this PipelineDemo invocation for external call failures to microsoft.com.\", \"Check for Key Vault access errors or authentication issues.\", \"Flag slow response times over 2 seconds.\", \"Identify any simulated failures and provide a concise diagnostic summary.\"]",
+
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=0a2bcf67-3abc-47ff-a721-1e6ea46eb438;IngestionEndpoint=https://eastasia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://eastasia.livediagnostics.monitor.azure.com/;ApplicationId=a957faa7-4083-46c2-9009-fceba8882ef2",
+        "KEY_VAULT_URL": "https://swapkv.vault.azure.net/",
+        "KEY_VAULT_SECRET_NAME": "my-secret"
     }
 }

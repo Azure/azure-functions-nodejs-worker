@@ -85,6 +85,13 @@ describe('pipelineConfig', () => {
                 maxLogsPerInvocation: 10000,
                 blobUploadMaxRetries: 3,
                 enableHealthMetrics: true,
+                aiModel: 'gpt-4o',
+                aiMaxTokens: 1024,
+                enableAISummaries: false,
+                defaultInvocationPrompts: ['test'],
+                defaultAggregationPrompts: ['test'],
+                aiWindowLogSampleSize: 50,
+                functionPrompts: new Map(),
             };
             const warnings = validatePipelineConfig(config);
             expect(warnings).to.have.lengthOf(0);
@@ -102,6 +109,13 @@ describe('pipelineConfig', () => {
                 maxLogsPerInvocation: 10000,
                 blobUploadMaxRetries: 3,
                 enableHealthMetrics: true,
+                aiModel: 'gpt-4o',
+                aiMaxTokens: 1024,
+                enableAISummaries: false,
+                defaultInvocationPrompts: ['test'],
+                defaultAggregationPrompts: ['test'],
+                aiWindowLogSampleSize: 50,
+                functionPrompts: new Map(),
             };
             const warnings = validatePipelineConfig(config);
             expect(warnings.length).to.be.greaterThan(0);
@@ -121,6 +135,13 @@ describe('pipelineConfig', () => {
                 maxLogsPerInvocation: 10000,
                 blobUploadMaxRetries: 3,
                 enableHealthMetrics: true,
+                aiModel: 'gpt-4o',
+                aiMaxTokens: 1024,
+                enableAISummaries: false,
+                defaultInvocationPrompts: ['test'],
+                defaultAggregationPrompts: ['test'],
+                aiWindowLogSampleSize: 50,
+                functionPrompts: new Map(),
             };
             const warnings = validatePipelineConfig(config);
             expect(warnings.some((w) => w.includes('spike threshold'))).to.be.true;

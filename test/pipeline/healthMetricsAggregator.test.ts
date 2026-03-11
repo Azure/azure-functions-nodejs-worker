@@ -20,6 +20,9 @@ describe('HealthMetricsAggregator', () => {
             emitHealthMetric(metric: AggregatedHealthMetric): void {
                 emittedHealthMetrics.push(metric);
             },
+            emitAISummary(): void {
+                // no-op
+            },
             async flush(): Promise<void> {
                 // no-op
             },
