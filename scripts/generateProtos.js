@@ -17,12 +17,12 @@ async function generateProtos() {
 
         console.log('Compiling to JavaScript...');
         const jsOut = path.join(protoSrc, 'rpc.js');
-        await run(`pbjs -t json-module -w commonjs -o ${jsOut} ${protoFiles}`);
+        await run(`pbjs -t json-module -w commonjs -p ${protoRoot} -o ${jsOut} ${protoFiles}`);
         console.log(`Compiled to JavaScript: "${jsOut}"`);
 
         console.log('Compiling to JavaScript static module...');
         const jsStaticOut = path.join(protoSrc, 'rpc_static.js');
-        await run(`pbjs -t static-module -o ${jsStaticOut} ${protoFiles}`);
+        await run(`pbjs -t static-module -p ${protoRoot} -o ${jsStaticOut} ${protoFiles}`);
         console.log(`Compiled to JavaScript static module: "${jsStaticOut}"`);
 
         console.log('Compiling to TypeScript...');
