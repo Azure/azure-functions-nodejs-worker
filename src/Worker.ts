@@ -3,7 +3,7 @@
 
 import * as parseArgs from 'minimist';
 import { AzFuncSystemError, ensureErrorType, trySetErrorMessage } from './errors';
-import { CreateGrpcEventStream } from './GrpcClient';
+import { CreateGrpcEventStream, getConnectionUri } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
@@ -32,12 +32,11 @@ export function startNodeWorker(args) {
     }
     worker.id = workerId;
 
-    const functionsUri = new URL(uri);
-    // v3.x hosts still advertise a trusted localhost http:// endpoint, so keep honoring the
-    // supplied scheme instead of forcing TLS before the host switches to https://.
-    systemLog(`Worker ${workerId} connecting to ${functionsUri.host} via ${functionsUri.protocol}`);
-
     try {
+        const functionsUri = getConnectionUri(uri);
+        // v3.x hosts still advertise a trusted localhost http:// endpoint, so keep honoring the
+        // supplied scheme instead of forcing TLS before the host switches to https://.
+        systemLog(`Worker ${workerId} connecting to ${functionsUri.host} via ${functionsUri.protocol}`);
         worker.eventStream = CreateGrpcEventStream(functionsUri, parseInt(grpcMaxMessageLength));
     } catch (err) {
         const error = ensureErrorType(err);

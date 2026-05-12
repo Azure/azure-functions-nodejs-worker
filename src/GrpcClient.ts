@@ -28,8 +28,18 @@ export interface IEventStream {
     end(): void;
 }
 
-function getConnectionUri(connection: string | URL): URL {
-    return typeof connection === 'string' ? new URL(connection) : connection;
+export function getConnectionUri(connection: string | URL): URL {
+    if (typeof connection !== 'string') {
+        return connection;
+    }
+
+    if (/^[A-Za-z][A-Za-z\d+\-.]*:\/\//.test(connection)) {
+        return new URL(connection);
+    }
+
+    // Older callers may still pass host:port instead of a full URI. Treat that as insecure
+    // localhost-compatible http:// to avoid breaking the existing host contract.
+    return new URL(`http://${connection}`);
 }
 
 function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {

@@ -126,6 +126,47 @@ describe('GrpcClient', () => {
         ]);
     });
 
+    it('defaults bare host:port connections to insecure http', () => {
+        const insecureCredentials = { insecure: true };
+        const eventStream = new FakeEventStream();
+        const createdClients: Array<{ address: string; credentials: unknown; options: unknown }> = [];
+        const grpcStub = {
+            closeClient: sinon.stub(),
+            credentials: {
+                createInsecure: sinon.stub().returns(insecureCredentials),
+                createSsl: sinon.stub(),
+            },
+            makeClientConstructor: sinon.stub().returns(function TestClient(address, credentials, options) {
+                createdClients.push({ address, credentials, options });
+                return {
+                    eventStream: () => eventStream,
+                };
+            }),
+        };
+        const protoLoaderStub = {
+            fromJSON: sinon.stub().returns({
+                'AzureFunctionsRpcMessages.FunctionRpc': {},
+            }),
+        };
+
+        const { CreateGrpcEventStream } = loadGrpcClient(grpcStub, protoLoaderStub);
+        const actualEventStream = CreateGrpcEventStream('127.0.0.1:5003', 1024);
+
+        expect(actualEventStream).to.equal(eventStream);
+        expect(grpcStub.credentials.createInsecure.calledOnce).to.be.true;
+        expect(grpcStub.credentials.createSsl.notCalled).to.be.true;
+        expect(createdClients).to.deep.equal([
+            {
+                address: '127.0.0.1:5003',
+                credentials: insecureCredentials,
+                options: {
+                    'grpc.max_send_message_length': 1024,
+                    'grpc.max_receive_message_length': 1024,
+                },
+            },
+        ]);
+    });
+
     it('throws a clear error for unsupported URI schemes', () => {
         const grpcStub = {
             closeClient: sinon.stub(),
@@ -145,7 +186,7 @@ describe('GrpcClient', () => {
 
         let error: unknown;
         try {
-            CreateGrpcEventStream('ftp://127.0.0.1:5003/', 1024);
+            CreateGrpcEventStream('ftp://127.0.0.1:5004/', 1024);
         } catch (err) {
             error = err;
         }

@@ -110,9 +110,11 @@ describe('Worker', () => {
         const setupCoreModuleStub = sinon.stub();
         const setupEventStreamStub = sinon.stub();
         const systemLogStub = sinon.stub();
+        const getConnectionUri = module.require('../src/GrpcClient').getConnectionUri;
         const { startNodeWorker } = loadWorker({
             [grpcClientModulePath]: {
                 CreateGrpcEventStream: createGrpcEventStreamStub,
+                getConnectionUri,
             },
             [setupCoreModulePath]: {
                 setupCoreModule: setupCoreModuleStub,
@@ -159,6 +161,56 @@ describe('Worker', () => {
             },
         });
         expect(systemLogStub.firstCall.args[0]).to.equal('Worker worker-id connecting to 127.0.0.1:58870 via https:');
+    });
+
+    it('defaults bare host:port functions URIs to http before starting the grpc client', () => {
+        const writeSpy = sinon.spy();
+        const eventStream: IEventStream = {
+            write: writeSpy,
+            on: sinon.stub(),
+            end: sinon.stub(),
+        };
+        const createGrpcEventStreamStub = sinon.stub().returns(eventStream);
+        const systemLogStub = sinon.stub();
+        const getConnectionUri = module.require('../src/GrpcClient').getConnectionUri;
+        const { startNodeWorker } = loadWorker({
+            [grpcClientModulePath]: {
+                CreateGrpcEventStream: createGrpcEventStreamStub,
+                getConnectionUri,
+            },
+            [setupCoreModulePath]: {
+                setupCoreModule: sinon.stub(),
+            },
+            [setupEventStreamPath]: {
+                setupEventStream: sinon.stub(),
+            },
+            [utilModulePath]: {
+                isEnvironmentVariableSet: sinon.stub().returns(false),
+            },
+            [loggerModulePath]: {
+                systemLog: systemLogStub,
+                systemError: sinon.stub(),
+            },
+        });
+
+        startNodeWorker([
+            '/node',
+            'nodejsWorker.js',
+            '--functions-uri',
+            '127.0.0.1:58870',
+            '--functions-worker-id',
+            'worker-id',
+            '--functions-request-id',
+            'request-id',
+            '--functions-grpc-max-message-length',
+            '65536',
+        ]);
+
+        expect(createGrpcEventStreamStub.calledOnce).to.be.true;
+        expect(createGrpcEventStreamStub.firstCall.args[0]).to.be.instanceOf(URL);
+        expect(createGrpcEventStreamStub.firstCall.args[0].toString()).to.equal('http://127.0.0.1:58870/');
+        expect(systemLogStub.firstCall.args[0]).to.equal('Worker worker-id connecting to 127.0.0.1:58870 via http:');
+        expect(writeSpy.calledOnce).to.be.true;
     });
 
     function loadWorker(overrides: Record<string, unknown> = {}): typeof import('../src/Worker') {
