@@ -6,6 +6,7 @@ import { ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client';
 import * as grpcloader from '@grpc/proto-loader';
 // import protobufjs json descriptor
 import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
+import { AzFuncSystemError } from './errors';
 
 import rpc = jsonModule.AzureFunctionsRpcMessages;
 
@@ -27,13 +28,33 @@ export interface IEventStream {
     end(): void;
 }
 
-export function CreateGrpcEventStream(connection: string, grpcMaxMessageLength: number): IEventStream {
+function getConnectionUri(connection: string | URL): URL {
+    return typeof connection === 'string' ? new URL(connection) : connection;
+}
+
+function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {
+    switch (connectionUri.protocol) {
+        case 'http:':
+            // Current hosts still treat host<->worker gRPC as trusted localhost IPC, so keep the
+            // insecure fallback until they start advertising an https:// functions-uri.
+            return grpc.credentials.createInsecure();
+        case 'https:':
+            return grpc.credentials.createSsl();
+        default:
+            throw new AzFuncSystemError(
+                `Unsupported gRPC connection URI scheme '${connectionUri.protocol}' in functions URI '${connectionUri.toString()}'. Expected 'http:' or 'https:'.`
+            );
+    }
+}
+
+export function CreateGrpcEventStream(connection: string | URL, grpcMaxMessageLength: number): IEventStream {
+    const connectionUri = getConnectionUri(connection);
     const constructor: ServiceClientConstructor = GetGrpcClientConstructor();
     const clientOptions = {
         'grpc.max_send_message_length': grpcMaxMessageLength,
         'grpc.max_receive_message_length': grpcMaxMessageLength,
     };
-    const client = new constructor(connection, grpc.credentials.createInsecure(), clientOptions);
+    const client = new constructor(connectionUri.host, getChannelCredentials(connectionUri), clientOptions);
     process.on('exit', () => {
         grpc.closeClient(client);
     });
