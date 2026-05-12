@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as grpc from '@grpc/grpc-js';
-import { ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client';
+import type { ServiceClientConstructor } from '@grpc/grpc-js/build/src/make-client';
 import * as grpcloader from '@grpc/proto-loader';
 // import protobufjs json descriptor
 import * as jsonModule from '../azure-functions-language-worker-protobuf/src/rpc';
@@ -42,7 +42,9 @@ function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {
             return grpc.credentials.createSsl();
         default:
             throw new AzFuncSystemError(
-                `Unsupported gRPC connection URI scheme '${connectionUri.protocol}' in functions URI '${connectionUri.toString()}'. Expected 'http:' or 'https:'.`
+                `Unsupported gRPC connection URI scheme '${
+                    connectionUri.protocol
+                }' in functions URI '${connectionUri.toString()}'. Expected 'http:' or 'https:'.`
             );
     }
 }
