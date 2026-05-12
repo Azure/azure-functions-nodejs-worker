@@ -1,7 +1,0 @@
-{
-  "roundNumber": 1,
-  "taskIds": [
-    "protocol-aware-grpc-transport",
-    "grpc-transport-regression-tests"
-  ]
-}
