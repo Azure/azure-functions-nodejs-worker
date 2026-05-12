@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-export const version = '3.13.0';
+export const version = '3.14.0';
 export const upgradeUrl = 'https://aka.ms/functions-nodejs-supported-versions';
 
 // https://github.com/nodejs/Release
@@ -12,6 +12,7 @@ export const NODE_EOL_DATES: Record<string, string> = {
     v20: '2026-04',
     v22: '2027-04',
     v24: '2028-04',
+    v26: '2029-04',
 };
 
 export const NODE_EOL_WARNING_DATES: Record<string, string> = {
@@ -21,4 +22,5 @@ export const NODE_EOL_WARNING_DATES: Record<string, string> = {
     v20: '2025-10',
     v22: '2026-10',
     v24: '2027-10',
+    v26: '2028-10',
 };
