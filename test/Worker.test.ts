@@ -167,7 +167,7 @@ describe('Worker', () => {
         }
 
         delete require.cache[workerModulePath];
-        return require('../src/Worker') as typeof import('../src/Worker');
+        return module.require('../src/Worker') as typeof import('../src/Worker');
     }
 
     function restoreModule(modulePath: string, originalModule: NodeModule | undefined): void {

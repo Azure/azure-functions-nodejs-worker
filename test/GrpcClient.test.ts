@@ -162,7 +162,7 @@ describe('GrpcClient', () => {
         require.cache[grpcModulePath] = { exports: grpcStub } as NodeModule;
         require.cache[protoLoaderModulePath] = { exports: protoLoaderStub } as NodeModule;
         delete require.cache[grpcClientModulePath];
-        return require('../src/GrpcClient') as GrpcClientModule;
+        return module.require('../src/GrpcClient') as GrpcClientModule;
     }
 
     function restoreModule(modulePath: string, originalModule: NodeModule | undefined): void {
