@@ -32,11 +32,13 @@ export function startNodeWorker(args) {
     }
     worker.id = workerId;
 
-    const connection = new URL(uri).host;
-    systemLog(`Worker ${workerId} connecting on ${connection}`);
+    const functionsUri = new URL(uri);
+    // v3.x hosts still advertise a trusted localhost http:// endpoint, so keep honoring the
+    // supplied scheme instead of forcing TLS before the host switches to https://.
+    systemLog(`Worker ${workerId} connecting to ${functionsUri.host} via ${functionsUri.protocol}`);
 
     try {
-        worker.eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
+        worker.eventStream = CreateGrpcEventStream(functionsUri, parseInt(grpcMaxMessageLength));
     } catch (err) {
         const error = ensureErrorType(err);
         error.isAzureFunctionsSystemError = true;
