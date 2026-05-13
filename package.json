@@ -67,6 +67,7 @@
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
         "gen": "node scripts/generateProtos.js",
+        "host-sanity": "node scripts/hostSanityTest.js",
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
@@ -78,5 +79,8 @@
     "files": [
         "dist"
     ],
-    "main": "dist/src/nodejsWorker.js"
+    "main": "dist/src/nodejsWorker.js",
+    "overrides": {
+        "@protobufjs/inquire": "1.1.0"
+    }
 }
