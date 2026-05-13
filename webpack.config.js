@@ -6,6 +6,11 @@ module.exports = {
         library: 'worker',
         libraryTarget: 'commonjs2',
     },
+    resolve: {
+        alias: {
+            '@protobufjs/inquire': `${__dirname}/scripts/webpack-protobufjs-inquire.js`,
+        },
+    },
     target: 'node',
     node: {
         __dirname: false,
