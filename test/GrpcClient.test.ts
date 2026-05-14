@@ -196,7 +196,36 @@ describe('GrpcClient', () => {
         expect((error as Error).message).to.contain("Expected 'http:' or 'https:'");
         expect(grpcStub.credentials.createInsecure.notCalled).to.be.true;
         expect(grpcStub.credentials.createSsl.notCalled).to.be.true;
-        expect(grpcStub.makeClientConstructor.calledOnce).to.be.true;
+        expect(grpcStub.makeClientConstructor.notCalled).to.be.true;
+    });
+
+    it('rejects unsupported special URI schemes such as ws', () => {
+        const grpcStub = {
+            closeClient: sinon.stub(),
+            credentials: {
+                createInsecure: sinon.stub(),
+                createSsl: sinon.stub(),
+            },
+            makeClientConstructor: sinon.stub(),
+        };
+        const protoLoaderStub = {
+            fromJSON: sinon.stub().returns({
+                'AzureFunctionsRpcMessages.FunctionRpc': {},
+            }),
+        };
+
+        const { CreateGrpcEventStream } = loadGrpcClient(grpcStub, protoLoaderStub);
+
+        let error: unknown;
+        try {
+            CreateGrpcEventStream('ws://127.0.0.1:5005/', 1024);
+        } catch (err) {
+            error = err;
+        }
+
+        expect(error).to.be.instanceOf(AzFuncSystemError);
+        expect((error as Error).message).to.contain("Unsupported gRPC connection URI scheme 'ws:'");
+        expect((error as Error).message).to.contain("Expected 'http:' or 'https:'");
     });
 
     function loadGrpcClient(grpcStub: unknown, protoLoaderStub: unknown): GrpcClientModule {

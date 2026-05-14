@@ -213,6 +213,46 @@ describe('Worker', () => {
         expect(writeSpy.calledOnce).to.be.true;
     });
 
+    it('fails worker startup for unsupported functions URI schemes', () => {
+        const createGrpcEventStreamStub = sinon.stub();
+        const getConnectionUri = module.require('../src/GrpcClient').getConnectionUri;
+        const { startNodeWorker } = loadWorker({
+            [grpcClientModulePath]: {
+                CreateGrpcEventStream: createGrpcEventStreamStub,
+                getConnectionUri,
+            },
+            [setupCoreModulePath]: {
+                setupCoreModule: sinon.stub(),
+            },
+            [setupEventStreamPath]: {
+                setupEventStream: sinon.stub(),
+            },
+            [utilModulePath]: {
+                isEnvironmentVariableSet: sinon.stub().returns(false),
+            },
+            [loggerModulePath]: {
+                systemLog: sinon.stub(),
+                systemError: sinon.stub(),
+            },
+        });
+
+        expect(() =>
+            startNodeWorker([
+                '/node',
+                'nodejsWorker.js',
+                '--functions-uri',
+                'ws://127.0.0.1:58870/',
+                '--functions-worker-id',
+                'worker-id',
+                '--functions-request-id',
+                'request-id',
+                '--functions-grpc-max-message-length',
+                '65536',
+            ])
+        ).to.throw("Error creating GRPC event stream: Unsupported gRPC connection URI scheme 'ws:'");
+        expect(createGrpcEventStreamStub.notCalled).to.be.true;
+    });
+
     function loadWorker(overrides: Record<string, unknown> = {}): typeof import('../src/Worker') {
         for (const [modulePath, moduleExports] of Object.entries(overrides)) {
             require.cache[modulePath] = { exports: moduleExports } as NodeModule;

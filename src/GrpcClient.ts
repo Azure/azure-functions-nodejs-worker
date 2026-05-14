@@ -28,18 +28,32 @@ export interface IEventStream {
     end(): void;
 }
 
+function validateConnectionUri(connectionUri: URL): URL {
+    switch (connectionUri.protocol) {
+        case 'http:':
+        case 'https:':
+            return connectionUri;
+        default:
+            throw new AzFuncSystemError(
+                `Unsupported gRPC connection URI scheme '${
+                    connectionUri.protocol
+                }' in functions URI '${connectionUri.toString()}'. Expected 'http:' or 'https:'.`
+            );
+    }
+}
+
 export function getConnectionUri(connection: string | URL): URL {
     if (typeof connection !== 'string') {
-        return connection;
+        return validateConnectionUri(connection);
     }
 
     if (/^[A-Za-z][A-Za-z\d+\-.]*:\/\//.test(connection)) {
-        return new URL(connection);
+        return validateConnectionUri(new URL(connection));
     }
 
     // Older callers may still pass host:port instead of a full URI. Treat that as insecure
     // localhost-compatible http:// to avoid breaking the existing host contract.
-    return new URL(`http://${connection}`);
+    return validateConnectionUri(new URL(`http://${connection}`));
 }
 
 function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {
@@ -50,13 +64,10 @@ function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {
             return grpc.credentials.createInsecure();
         case 'https:':
             return grpc.credentials.createSsl();
-        default:
-            throw new AzFuncSystemError(
-                `Unsupported gRPC connection URI scheme '${
-                    connectionUri.protocol
-                }' in functions URI '${connectionUri.toString()}'. Expected 'http:' or 'https:'.`
-            );
     }
+
+    validateConnectionUri(connectionUri);
+    return grpc.credentials.createInsecure();
 }
 
 export function CreateGrpcEventStream(connection: string | URL, grpcMaxMessageLength: number): IEventStream {
