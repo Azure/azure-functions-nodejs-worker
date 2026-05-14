@@ -226,6 +226,9 @@ describe('GrpcClient', () => {
         expect(error).to.be.instanceOf(AzFuncSystemError);
         expect((error as Error).message).to.contain("Unsupported gRPC connection URI scheme 'ws:'");
         expect((error as Error).message).to.contain("Expected 'http:' or 'https:'");
+        expect(grpcStub.credentials.createInsecure.notCalled).to.be.true;
+        expect(grpcStub.credentials.createSsl.notCalled).to.be.true;
+        expect(grpcStub.makeClientConstructor.notCalled).to.be.true;
     });
 
     function loadGrpcClient(grpcStub: unknown, protoLoaderStub: unknown): GrpcClientModule {

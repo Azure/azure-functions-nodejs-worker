@@ -57,17 +57,11 @@ export function getConnectionUri(connection: string | URL): URL {
 }
 
 function getChannelCredentials(connectionUri: URL): grpc.ChannelCredentials {
-    switch (connectionUri.protocol) {
-        case 'http:':
-            // Current hosts still treat host<->worker gRPC as trusted localhost IPC, so keep the
-            // insecure fallback until they start advertising an https:// functions-uri.
-            return grpc.credentials.createInsecure();
-        case 'https:':
-            return grpc.credentials.createSsl();
-    }
-
-    validateConnectionUri(connectionUri);
-    return grpc.credentials.createInsecure();
+    return connectionUri.protocol === 'https:'
+        ? grpc.credentials.createSsl()
+        : // Current hosts still treat host<->worker gRPC as trusted localhost IPC, so keep the
+          // insecure fallback until they start advertising an https:// functions-uri.
+          grpc.credentials.createInsecure();
 }
 
 export function CreateGrpcEventStream(connection: string | URL, grpcMaxMessageLength: number): IEventStream {
