@@ -215,7 +215,9 @@ async function main() {
         }
 
         const status = lastResult && lastResult.statusCode ? lastResult.statusCode : 'no response';
-        const error = lastResult && lastResult.error ? ` (${lastResult.error.message})` : '';
+        const errorMessage =
+            (lastResult && lastResult.error && lastResult.error.message) || (lastResult && lastResult.error) || '';
+        const error = errorMessage ? ` (${errorMessage})` : '';
         throw new Error(`Host sanity test failed. Last HTTP status: ${status}${error}\n${hostOutput.join('').slice(-8000)}`);
     } finally {
         if (hostProcess) {
