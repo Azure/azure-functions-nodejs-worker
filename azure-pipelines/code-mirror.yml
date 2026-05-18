@@ -2,6 +2,9 @@ trigger:
     branches:
         include:
             - v*.x
+    tags:
+        include:
+            - v*.*.*
 
 resources:
     repositories:
