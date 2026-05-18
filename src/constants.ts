@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-export const version = '3.14.1';
+export const version = '3.15.0';
 export const upgradeUrl = 'https://aka.ms/functions-nodejs-supported-versions';
 
 // https://github.com/nodejs/Release
