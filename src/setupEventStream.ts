@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { AzFuncSystemError, ensureErrorType } from './errors';
+import { AzFuncSystemError, ensureErrorType, sanitizeErrorString } from './errors';
 import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
 import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnvironmentReloadHandler';
 import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
@@ -98,7 +98,7 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
         const error = ensureErrorType(err);
         if (error.isAzureFunctionsSystemError && !error.loggedOverRpc) {
             worker.log({
-                message: error.message,
+                message: sanitizeErrorString(error.message),
                 level: rpc.RpcLog.Level.Error,
                 logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
@@ -109,8 +109,8 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
             response.result = {
                 status: rpc.StatusResult.Status.Failure,
                 exception: {
-                    message: error.message,
-                    stackTrace: error.stack,
+                    message: sanitizeErrorString(error.message),
+                    stackTrace: error.stack ? sanitizeErrorString(error.stack) : error.stack,
                 },
             };
             outMsg[eventHandler.responseName] = response;
