@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
-import { AzFuncSystemError, ensureErrorType, sanitizeErrorString } from './errors';
+import { AzFuncSystemError, ensureErrorType } from './errors';
 import { EventHandler, SupportedRequest } from './eventHandlers/EventHandler';
 import { FunctionEnvironmentReloadHandler } from './eventHandlers/FunctionEnvironmentReloadHandler';
 import { FunctionLoadHandler } from './eventHandlers/FunctionLoadHandler';
@@ -10,6 +10,7 @@ import { FunctionsMetadataHandler } from './eventHandlers/FunctionsMetadataHandl
 import { InvocationHandler } from './eventHandlers/InvocationHandler';
 import { terminateWorker } from './eventHandlers/terminateWorker';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
+import { sanitizeErrorString } from './utils/errorSanitizer';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
 import { worker } from './WorkerContext';

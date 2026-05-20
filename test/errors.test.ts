@@ -3,7 +3,8 @@
 
 import 'mocha';
 import { expect } from 'chai';
-import { ensureErrorType, sanitizeErrorString, trySetErrorMessage } from '../src/errors';
+import { ensureErrorType, trySetErrorMessage } from '../src/errors';
+import { sanitizeErrorString } from '../src/utils/errorSanitizer';
 
 describe('errors', () => {
     it('null', () => {
@@ -88,6 +89,13 @@ describe('errors', () => {
         trySetErrorMessage(actualError, 'modified message');
 
         expect(actualError.message).to.equal('modified message');
+    });
+
+    it('sanitizes modified error message', () => {
+        const actualError = new Error('test2');
+        trySetErrorMessage(actualError, 'AccountKey=abc123');
+
+        expect(actualError.message).to.equal('[Hidden Credential]');
     });
 
     it('readonly error', () => {
