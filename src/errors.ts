@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
+import { sanitizeErrorString, stringifySanitizedErrorObject } from './utils/errorSanitizer';
+
 export interface AzFuncError {
     /**
      * System errors can be tracked in our telemetry
@@ -44,11 +46,11 @@ export function ensureErrorType(err: unknown): ValidatedError {
         if (err === undefined || err === null) {
             message = 'Unknown error';
         } else if (typeof err === 'string') {
-            message = err;
+            message = sanitizeErrorString(err);
         } else if (typeof err === 'object') {
-            message = JSON.stringify(err);
+            message = stringifySanitizedErrorObject(err);
         } else {
-            message = String(err);
+            message = sanitizeErrorString(String(err));
         }
         return new Error(message);
     }
@@ -56,7 +58,7 @@ export function ensureErrorType(err: unknown): ValidatedError {
 
 export function trySetErrorMessage(err: Error, message: string): void {
     try {
-        err.message = message;
+        err.message = sanitizeErrorString(message);
     } catch {
         // If we can't set the message, we'll keep the error as is
     }
