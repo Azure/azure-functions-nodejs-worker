@@ -10,6 +10,7 @@ import { FunctionsMetadataHandler } from './eventHandlers/FunctionsMetadataHandl
 import { InvocationHandler } from './eventHandlers/InvocationHandler';
 import { terminateWorker } from './eventHandlers/terminateWorker';
 import { WorkerInitHandler } from './eventHandlers/WorkerInitHandler';
+import { sanitizeErrorString } from './utils/errorSanitizer';
 import { systemError } from './utils/Logger';
 import { nonNullProp } from './utils/nonNull';
 import { worker } from './WorkerContext';
@@ -98,7 +99,7 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
         const error = ensureErrorType(err);
         if (error.isAzureFunctionsSystemError && !error.loggedOverRpc) {
             worker.log({
-                message: error.message,
+                message: sanitizeErrorString(error.message),
                 level: rpc.RpcLog.Level.Error,
                 logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
@@ -109,8 +110,8 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
             response.result = {
                 status: rpc.StatusResult.Status.Failure,
                 exception: {
-                    message: error.message,
-                    stackTrace: error.stack,
+                    message: sanitizeErrorString(error.message),
+                    stackTrace: error.stack ? sanitizeErrorString(error.stack) : error.stack,
                 },
             };
             outMsg[eventHandler.responseName] = response;
