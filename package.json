@@ -6,7 +6,7 @@
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
         "@azure/functions": "^3.5.0",
-        "@grpc/grpc-js": "^1.8.22",
+        "@grpc/grpc-js": "^1.9.16",
         "@grpc/proto-loader": "^0.7.8",
         "blocked-at": "^1.2.0",
         "fs-extra": "^10.0.1",
@@ -81,6 +81,7 @@
     ],
     "main": "dist/src/nodejsWorker.js",
     "overrides": {
-        "@protobufjs/inquire": "1.1.0"
+        "@protobufjs/inquire": "1.1.0",
+        "uuid": "^11.1.1"
     }
 }
