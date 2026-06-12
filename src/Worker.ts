@@ -7,6 +7,7 @@ import { CreateGrpcEventStream, getConnectionUri } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
+import { sanitizeErrorString } from './utils/errorSanitizer';
 import { systemError, systemLog } from './utils/Logger';
 import { isEnvironmentVariableSet } from './utils/util';
 import { worker } from './WorkerContext';
@@ -41,7 +42,7 @@ export function startNodeWorker(args) {
     } catch (err) {
         const error = ensureErrorType(err);
         error.isAzureFunctionsSystemError = true;
-        const message = 'Error creating GRPC event stream: ' + error.message;
+        const message = 'Error creating GRPC event stream: ' + sanitizeErrorString(error.message);
         trySetErrorMessage(error, message);
         throw error;
     }
@@ -60,11 +61,11 @@ export function startNodeWorker(args) {
         const error = ensureErrorType(err);
         let errorMessage: string;
         if (error.isAzureFunctionsSystemError) {
-            errorMessage = `Worker uncaught exception: ${error.stack || err}`;
+            errorMessage = `Worker uncaught exception: ${sanitizeErrorString(error.stack || String(err))}`;
         } else {
-            errorMessage = `Worker uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${
-                error.stack || err
-            }`;
+            errorMessage = `Worker uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${sanitizeErrorString(
+                error.stack || String(err)
+            )}`;
         }
 
         systemError(errorMessage);

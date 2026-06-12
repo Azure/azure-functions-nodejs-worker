@@ -4,6 +4,7 @@
 import 'mocha';
 import { expect } from 'chai';
 import { ensureErrorType, trySetErrorMessage } from '../src/errors';
+import { sanitizeErrorString } from '../src/utils/errorSanitizer';
 
 describe('errors', () => {
     it('null', () => {
@@ -29,8 +30,49 @@ describe('errors', () => {
         validateError(ensureErrorType(''), '');
     });
 
+    it('string with credential token', () => {
+        validateError(ensureErrorType('AccountKey=abc123;EndpointSuffix=core.windows.net'), '[Hidden Credential]');
+    });
+
+    it('sanitizes url credentials', () => {
+        expect(sanitizeErrorString('failed to connect to https://user:pass@example.com:443')).to.equal(
+            'failed to connect to [Hidden Credential]'
+        );
+    });
+
+    it('preserves stack text after credential tokens', () => {
+        expect(sanitizeErrorString('failed AccountKey=abc123\n    at invokeFunction')).to.equal(
+            'failed [Hidden Credential]\n    at invokeFunction'
+        );
+    });
+
     it('object', () => {
         validateError(ensureErrorType({ test: '2' }), '{"test":"2"}');
+    });
+
+    it('object with credential properties', () => {
+        validateError(
+            ensureErrorType({
+                message: 'Auth failed',
+                secretKey: 'secret-value',
+                nested: { password: 'password-value', visible: 'safe' },
+            }),
+            '{"message":"Auth failed","secretKey":"[Hidden Credential]","nested":{"password":"[Hidden Credential]","visible":"safe"}}'
+        );
+    });
+
+    it('object with credential tokens in string values', () => {
+        validateError(
+            ensureErrorType({ connectionString: 'AccountKey=abc123;EndpointSuffix=core.windows.net' }),
+            '{"connectionString":"[Hidden Credential]"}'
+        );
+    });
+
+    it('object with circular reference', () => {
+        const err: Record<string, unknown> = { message: 'failed' };
+        err.self = err;
+
+        validateError(ensureErrorType(err), '{"message":"failed","self":"[Circular]"}');
     });
 
     it('array', () => {
@@ -47,6 +89,13 @@ describe('errors', () => {
         trySetErrorMessage(actualError, 'modified message');
 
         expect(actualError.message).to.equal('modified message');
+    });
+
+    it('sanitizes modified error message', () => {
+        const actualError = new Error('test2');
+        trySetErrorMessage(actualError, 'AccountKey=abc123');
+
+        expect(actualError.message).to.equal('[Hidden Credential]');
     });
 
     it('readonly error', () => {
