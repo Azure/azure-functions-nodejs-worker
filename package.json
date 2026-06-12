@@ -1,7 +1,7 @@
 {
     "name": "azure-functions-nodejs-worker",
     "author": "Microsoft Corporation",
-    "version": "3.13.0",
+    "version": "3.15.0",
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
@@ -44,8 +44,8 @@
         "mocha-multi-reporters": "^1.5.1",
         "mock-fs": "^5.1.2",
         "prettier": "^2.4.1",
-        "protobufjs": "^7.5.5",
-        "protobufjs-cli": "^1.1.1",
+        "protobufjs": "^7.6.0",
+        "protobufjs-cli": "^1.2.1",
         "rimraf": "^2.6.3",
         "semver": "^7.3.5",
         "shx": "^0.3.3",
@@ -67,6 +67,7 @@
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
         "gen": "node scripts/generateProtos.js",
+        "host-sanity": "node scripts/hostSanityTest.js",
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
@@ -78,5 +79,8 @@
     "files": [
         "dist"
     ],
-    "main": "dist/src/nodejsWorker.js"
+    "main": "dist/src/nodejsWorker.js",
+    "overrides": {
+        "@protobufjs/inquire": "1.1.0"
+    }
 }

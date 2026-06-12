@@ -3,10 +3,11 @@
 
 import * as parseArgs from 'minimist';
 import { AzFuncSystemError, ensureErrorType, trySetErrorMessage } from './errors';
-import { CreateGrpcEventStream } from './GrpcClient';
+import { CreateGrpcEventStream, getConnectionUri } from './GrpcClient';
 import { setupCoreModule } from './setupCoreModule';
 import { setupEventStream } from './setupEventStream';
 import { startBlockedMonitor } from './utils/blockedMonitor';
+import { sanitizeErrorString } from './utils/errorSanitizer';
 import { systemError, systemLog } from './utils/Logger';
 import { isEnvironmentVariableSet } from './utils/util';
 import { worker } from './WorkerContext';
@@ -32,15 +33,16 @@ export function startNodeWorker(args) {
     }
     worker.id = workerId;
 
-    const connection = new URL(uri).host;
-    systemLog(`Worker ${workerId} connecting on ${connection}`);
-
     try {
-        worker.eventStream = CreateGrpcEventStream(connection, parseInt(grpcMaxMessageLength));
+        const functionsUri = getConnectionUri(uri);
+        // v3.x hosts still advertise a trusted localhost http:// endpoint, so keep honoring the
+        // supplied scheme instead of forcing TLS before the host switches to https://.
+        systemLog(`Worker ${workerId} connecting to ${functionsUri.host} via ${functionsUri.protocol}`);
+        worker.eventStream = CreateGrpcEventStream(functionsUri, parseInt(grpcMaxMessageLength));
     } catch (err) {
         const error = ensureErrorType(err);
         error.isAzureFunctionsSystemError = true;
-        const message = 'Error creating GRPC event stream: ' + error.message;
+        const message = 'Error creating GRPC event stream: ' + sanitizeErrorString(error.message);
         trySetErrorMessage(error, message);
         throw error;
     }
@@ -59,11 +61,11 @@ export function startNodeWorker(args) {
         const error = ensureErrorType(err);
         let errorMessage: string;
         if (error.isAzureFunctionsSystemError) {
-            errorMessage = `Worker uncaught exception: ${error.stack || err}`;
+            errorMessage = `Worker uncaught exception: ${sanitizeErrorString(error.stack || String(err))}`;
         } else {
-            errorMessage = `Worker uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${
-                error.stack || err
-            }`;
+            errorMessage = `Worker uncaught exception (learn more: https://go.microsoft.com/fwlink/?linkid=2097909 ): ${sanitizeErrorString(
+                error.stack || String(err)
+            )}`;
         }
 
         systemError(errorMessage);
