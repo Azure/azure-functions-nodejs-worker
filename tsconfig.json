@@ -5,6 +5,7 @@
         "noImplicitAny": false,
         "strict": true,
         "noUnusedLocals": true,
+        "skipLibCheck": true,
         "outDir": "dist",
         "sourceMap": true,
         "baseUrl": "./",
