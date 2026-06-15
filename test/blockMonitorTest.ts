@@ -9,7 +9,7 @@ import { startBlockedMonitor } from './../src/utils/blockedMonitor';
 describe('Event loop blocking operation monitor', () => {
     it('startBlockMonitor logs warning', async () => {
         console.log('start ' + new Date().getSeconds() + ':' + new Date().getMilliseconds());
-        let timer: NodeJS.Timer | null = null;
+        let timer: NodeJS.Timeout | null = null;
         let isTimerDestroyed = false;
         const logFun = function (log: rpc.IRpcLog): void {
             expect(log.level).to.equal(rpc.RpcLog.Level.Warning);
