@@ -8,7 +8,7 @@ export function startBlockedMonitor(
     worker: { log: (log: rpc.IRpcLog) => void },
     threshold = 500,
     intreval = 10000
-): NodeJS.Timer {
+): NodeJS.Timeout {
     function logBlockedWarning(message: string) {
         worker.log({
             message,

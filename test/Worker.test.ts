@@ -17,12 +17,12 @@ describe('Worker', () => {
 
     let originalExitListeners: Function[];
     let originalUncaughtExceptionListeners: Function[];
-    let originalWorkerModule: NodeModule | undefined;
-    let originalGrpcClientModule: NodeModule | undefined;
-    let originalSetupCoreModule: NodeModule | undefined;
-    let originalSetupEventStreamModule: NodeModule | undefined;
-    let originalUtilModule: NodeModule | undefined;
-    let originalLoggerModule: NodeModule | undefined;
+    let originalWorkerModule: NodeJS.Module | undefined;
+    let originalGrpcClientModule: NodeJS.Module | undefined;
+    let originalSetupCoreModule: NodeJS.Module | undefined;
+    let originalSetupEventStreamModule: NodeJS.Module | undefined;
+    let originalUtilModule: NodeJS.Module | undefined;
+    let originalLoggerModule: NodeJS.Module | undefined;
 
     beforeEach(() => {
         originalExitListeners = process.listeners('exit');
@@ -255,14 +255,14 @@ describe('Worker', () => {
 
     function loadWorker(overrides: Record<string, unknown> = {}): typeof import('../src/Worker') {
         for (const [modulePath, moduleExports] of Object.entries(overrides)) {
-            require.cache[modulePath] = { exports: moduleExports } as NodeModule;
+            require.cache[modulePath] = { exports: moduleExports } as NodeJS.Module;
         }
 
         delete require.cache[workerModulePath];
         return module.require('../src/Worker') as typeof import('../src/Worker');
     }
 
-    function restoreModule(modulePath: string, originalModule: NodeModule | undefined): void {
+    function restoreModule(modulePath: string, originalModule: NodeJS.Module | undefined): void {
         if (originalModule) {
             require.cache[modulePath] = originalModule;
         } else {
