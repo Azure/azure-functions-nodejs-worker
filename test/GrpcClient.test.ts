@@ -20,8 +20,8 @@ describe('GrpcClient', () => {
     const protoLoaderModulePath = require.resolve('@grpc/proto-loader');
     const grpcClientModulePath = require.resolve('../src/GrpcClient');
 
-    let originalGrpcModule: NodeModule | undefined;
-    let originalProtoLoaderModule: NodeModule | undefined;
+    let originalGrpcModule: NodeJS.Module | undefined;
+    let originalProtoLoaderModule: NodeJS.Module | undefined;
     let originalExitListeners: Function[];
 
     beforeEach(() => {
@@ -232,13 +232,13 @@ describe('GrpcClient', () => {
     });
 
     function loadGrpcClient(grpcStub: unknown, protoLoaderStub: unknown): GrpcClientModule {
-        require.cache[grpcModulePath] = { exports: grpcStub } as NodeModule;
-        require.cache[protoLoaderModulePath] = { exports: protoLoaderStub } as NodeModule;
+        require.cache[grpcModulePath] = { exports: grpcStub } as NodeJS.Module;
+        require.cache[protoLoaderModulePath] = { exports: protoLoaderStub } as NodeJS.Module;
         delete require.cache[grpcClientModulePath];
         return module.require('../src/GrpcClient') as GrpcClientModule;
     }
 
-    function restoreModule(modulePath: string, originalModule: NodeModule | undefined): void {
+    function restoreModule(modulePath: string, originalModule: NodeJS.Module | undefined): void {
         if (originalModule) {
             require.cache[modulePath] = originalModule;
         } else {
