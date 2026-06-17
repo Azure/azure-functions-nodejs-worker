@@ -5,7 +5,7 @@
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
-        "@azure/functions": "^4.14.0",
+        "@azure/functions": "3.5.2",
         "@grpc/grpc-js": "^1.9.16",
         "@grpc/proto-loader": "^0.7.8",
         "blocked-at": "^1.2.0",
@@ -44,7 +44,7 @@
         "mocha-multi-reporters": "^1.5.1",
         "mock-fs": "^5.1.2",
         "prettier": "^2.4.1",
-        "protobufjs": "^7.6.0",
+        "protobufjs": "^7.6.3",
         "protobufjs-cli": "^1.2.1",
         "rimraf": "^2.6.3",
         "semver": "^7.3.5",
