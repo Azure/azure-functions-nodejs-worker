@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../azure-functions-nodejs-library"
+		}
+	],
+	"settings": {
+		"azureFunctions.showProjectWarning": false,
+		"typescript.tsdk": "node_modules/typescript/lib"
+	}
+}
