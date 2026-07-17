@@ -1,20 +1,20 @@
 trigger:
-    branches:
-        include:
-            - v*.x
-    tags:
-        include:
-            - v*.*.*
+  branches:
+    include:
+      - v*.x
+  tags:
+    include:
+      - v*.*.*
 
 resources:
-    repositories:
-        - repository: eng
-          type: git
-          name: engineering
-          ref: refs/tags/release
+  repositories:
+    - repository: eng
+      type: git
+      name: engineering
+      ref: refs/tags/release
 
 variables:
-    - template: ci/variables/cfs.yml@eng
+  - template: ci/variables/cfs.yml@eng
 
 extends:
-    template: ci/code-mirror.yml@eng
+  template: ci/code-mirror.yml@eng
