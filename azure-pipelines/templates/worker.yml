@@ -1,18 +1,18 @@
 jobs:
-    - job: CreateWorkerRelease
-      displayName: 'Publish NodeJs Worker to Nuget'
-      templateContext:
-          outputParentDirectory: $(Build.ArtifactStagingDirectory)
-          outputs:
-              - output: nuget
-                condition: and(succeeded(), ${{ eq(parameters.IsPrerelease, true) }})
-                packagesToPush: '$(Build.ArtifactStagingDirectory)/dropOutput/*.nupkg'
-                publishVstsFeed: 'e6a70c92-4128-439f-8012-382fe78d6396/eb652719-f36a-4e78-8541-e13a3cd655f9'
-                nuGetFeedType: internal
-                allowPackageConflicts: true
-      steps:
-          - task: NuGetToolInstaller@1
-            displayName: 'Use NuGet 5x'
-            inputs:
-                versionSpec: 5.x
-                checkLatest: true
+  - job: CreateWorkerRelease
+    displayName: "Publish NodeJs Worker to Nuget"
+    templateContext:
+      outputParentDirectory: $(Build.ArtifactStagingDirectory)
+      outputs:
+        - output: nuget
+          condition: and(succeeded(), ${{ eq(parameters.IsPrerelease, true) }})
+          packagesToPush: "$(Build.ArtifactStagingDirectory)/dropOutput/*.nupkg"
+          publishVstsFeed: "e6a70c92-4128-439f-8012-382fe78d6396/eb652719-f36a-4e78-8541-e13a3cd655f9"
+          nuGetFeedType: internal
+          allowPackageConflicts: true
+    steps:
+      - task: NuGetToolInstaller@1
+        displayName: "Use NuGet 5x"
+        inputs:
+          versionSpec: 5.x
+          checkLatest: true

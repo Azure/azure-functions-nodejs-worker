@@ -1,47 +1,47 @@
 parameters:
-    - name: IsPrerelease
-      type: boolean
-      default: true
+  - name: IsPrerelease
+    type: boolean
+    default: true
 
 pr: none
 
 resources:
-    repositories:
-        - repository: 1es
-          type: git
-          name: 1ESPipelineTemplates/1ESPipelineTemplates
-          ref: refs/tags/release
+  repositories:
+    - repository: 1es
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
 extends:
-    template: v1/1ES.Official.PipelineTemplate.yml@1es
-    parameters:
-        pool:
-            name: 1es-pool-azfunc
-            image: 1es-windows-2022
-            os: windows
-        sdl:
-            codeql:
-                runSourceLanguagesInSourceAnalysis: true
+  template: v1/1ES.Official.PipelineTemplate.yml@1es
+  parameters:
+    pool:
+      name: 1es-pool-azfunc
+      image: 1es-windows-2022
+      os: windows
+    sdl:
+      codeql:
+        runSourceLanguagesInSourceAnalysis: true
 
-        stages:
-            - stage: Build
-              dependsOn: []
-              jobs:
-                  - job:
-                    templateContext:
-                        outputs:
-                            - output: pipelineArtifact
-                              path: $(Build.ArtifactStagingDirectory)/dropOutput
-                              artifact: drop
-                              sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/dropInput'
-                              sbomPackageName: 'Azure Functions Node.js Worker'
-                              # The list of components can't be determined from the webpacked file in the staging dir, so reference the original node_modules folder
-                              sbomBuildComponentPath: '$(Build.SourcesDirectory)/node_modules'
-                    steps:
-                        - template: /azure-pipelines/templates/build.yml@self
-                          parameters:
-                              IsPrerelease: ${{ parameters.IsPrerelease }}
-            - stage: PublishNuget
-              dependsOn: [Build]
-              jobs:
-                  - template: /azure-pipelines/templates/worker.yml@self
+    stages:
+      - stage: Build
+        dependsOn: []
+        jobs:
+          - job:
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  path: $(Build.ArtifactStagingDirectory)/dropOutput
+                  artifact: drop
+                  sbomBuildDropPath: "$(Build.ArtifactStagingDirectory)/dropInput"
+                  sbomPackageName: "Azure Functions Node.js Worker"
+                  # The list of components can't be determined from the webpacked file in the staging dir, so reference the original node_modules folder
+                  sbomBuildComponentPath: "$(Build.SourcesDirectory)/node_modules"
+            steps:
+              - template: /azure-pipelines/templates/build.yml@self
+                parameters:
+                  IsPrerelease: ${{ parameters.IsPrerelease }}
+      - stage: PublishNuget
+        dependsOn: [Build]
+        jobs:
+          - template: /azure-pipelines/templates/worker.yml@self
