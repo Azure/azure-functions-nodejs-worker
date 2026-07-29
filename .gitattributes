@@ -1,0 +1,3 @@
+# Husky git hooks must use LF line endings so they run correctly under the
+# POSIX shell that Git invokes them with (including Git for Windows' bundled sh).
+.husky/* text eol=lf

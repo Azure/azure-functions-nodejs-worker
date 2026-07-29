@@ -11,6 +11,8 @@ steps:
         workingFile: .npmrc
     - script: npm ci
       displayName: 'npm ci'
+    - script: npm run check-lock
+      displayName: 'Verify package-lock.json references the public npm registry'
     - script: npm audit --production --audit-level=high
       displayName: 'Run vulnerability scan'
     - script: npm run updateVersion -- --buildNumber $(Build.BuildNumber)

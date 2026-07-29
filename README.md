@@ -38,6 +38,12 @@ This repository does **not** check in an `.npmrc`, so a plain `git clone` + `npm
 
 The generated `.npmrc` is gitignored, so it never affects public contributors or gets committed.
 
+### package-lock.json normalization
+
+The committed `package-lock.json` always references the public npm registry (`https://registry.npmjs.org`). A Husky `pre-commit` hook runs `scripts/normalizeLock.js`, which rewrites any internal Central Feed Services (CFS) proxy URLs (e.g. `*.pkgs.visualstudio.com/.../npm/registry`) back to the public registry and re-stages the lockfile. This keeps the lockfile portable for external contributors and avoids non-deterministic churn from the proxy's sharded backing hosts. The hook is installed automatically by the `prepare` script on `npm install`.
+
+CI enforces this with `npm run check-lock`. If that gate fails, run `npm run normalize-lock` locally and commit the result.
+
 ## Repositories
 
 These are the most important GitHub repositories that make up the Node.js experience on Azure Functions:

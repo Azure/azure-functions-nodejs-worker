@@ -1,0 +1,8 @@
+# Only normalize package-lock.json when it is part of this commit. If it is
+# staged, re-stage it after normalizing so the committed content references
+# the public npm registry. If it is not staged, leave it untouched -- we
+# never pull an unstaged lockfile into a commit.
+if [ -n "$(git diff --cached --name-only --diff-filter=ACMR -- package-lock.json)" ]; then
+    node scripts/normalizeLock.js || exit 1
+    git add package-lock.json
+fi
