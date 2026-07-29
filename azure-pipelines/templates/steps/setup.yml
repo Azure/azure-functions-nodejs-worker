@@ -1,0 +1,24 @@
+parameters:
+- name: nodeVersion
+  type: string
+
+steps:
+- task: NodeTool@0
+  displayName: Install Node
+  inputs:
+    versionSpec: ${{ parameters.nodeVersion }}
+
+- pwsh: |
+    $registry = "https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/npm/registry/"
+    if ($($env:SYSTEM_TEAMPROJECT) -eq 'internal') {
+        $registry = "https://pkgs.dev.azure.com/azfunc/internal/_packaging/upstream/npm/registry/"
+    }
+
+    npm config set registry $registry --userconfig ./.npmrc
+    npm config set always-auth true --userconfig ./.npmrc
+  displayName: Configure npm registry
+
+- task: npmAuthenticate@0
+  displayName: Authenticate to npm registry
+  inputs:
+    workingFile: .npmrc
