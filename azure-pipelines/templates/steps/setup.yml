@@ -10,12 +10,20 @@ steps:
 
 - pwsh: |
     $registry = "https://pkgs.dev.azure.com/azfunc/public/_packaging/upstream-public/npm/registry/"
-    if ($($env:SYSTEM_TEAMPROJECT) -eq 'internal') {
+    if ($env:SYSTEM_TEAMPROJECT -eq 'internal') {
         $registry = "https://pkgs.dev.azure.com/azfunc/internal/_packaging/upstream/npm/registry/"
     }
 
-    npm config set registry $registry --userconfig ./.npmrc
-    npm config set always-auth true --userconfig ./.npmrc
+    $lines = @("registry=$registry")
+
+    # always-auth is required on npm 6 (Node 14) for Azure Artifacts, but is
+    # deprecated and redundant on npm 7+ (auth is scoped to the registry).
+    $npmMajor = [int]((npm --version).Split('.')[0])
+    if ($npmMajor -lt 7) {
+        $lines += "always-auth=true"
+    }
+
+    Set-Content -Path ./.npmrc -Value $lines
   displayName: Configure npm registry
 
 - task: npmAuthenticate@0
