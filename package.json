@@ -64,11 +64,9 @@
         "url": "https://github.com/Azure/azure-functions-nodejs-worker/issues"
     },
     "scripts": {
-        "preinstall": "node scripts/preinstallNpmrc.js",
         "clean": "rimraf dist && rimraf azure-functions-language-worker-protobuf/src/rpc*",
         "build": "rimraf dist && npm run gen && shx mkdir -p dist/azure-functions-language-worker-protobuf/src && shx cp azure-functions-language-worker-protobuf/src/rpc.* dist/azure-functions-language-worker-protobuf/src/. && tsc",
         "gen": "node scripts/generateProtos.js",
-        "setup:npmrc": "node scripts/setupNpmrc.js",
         "host-sanity": "node scripts/hostSanityTest.js",
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
         "lint": "eslint .",

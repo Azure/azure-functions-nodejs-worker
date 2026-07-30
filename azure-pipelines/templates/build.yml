@@ -3,8 +3,6 @@ steps:
       displayName: 'Install Node.js'
       inputs:
         versionSpec: 14.x
-    - script: node scripts/setupNpmrc.js
-      displayName: 'Configure azfunc npm registry'
     - task: npmAuthenticate@0
       displayName: 'Authenticate to azfunc npm registry'
       inputs:

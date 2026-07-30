@@ -21,8 +21,6 @@ jobs:
             displayName: 'Install Node.js'
             inputs:
               versionSpec: $(NODE_VERSION)
-          - script: node scripts/setupNpmrc.js
-            displayName: 'Configure azfunc npm registry'
           - task: npmAuthenticate@0
             displayName: 'Authenticate to azfunc npm registry'
             inputs:

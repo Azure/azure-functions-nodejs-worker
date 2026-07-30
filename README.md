@@ -30,13 +30,9 @@
 
 ### npm registry configuration
 
-This repository does **not** check in an `.npmrc`, so a plain `git clone` + `npm install` uses the default public npm registry (`registry.npmjs.org`). **Public contributors don't need to do anything** — this section is only relevant to Microsoft employees.
+This repository checks in an `.npmrc` that points npm at the `azfunc/public/upstream-public` Azure Artifacts feed, which is an upstream proxy of `registry.npmjs.org`. Public contributors don't need to do anything — the feed allows anonymous reads, so `git clone` + `npm install` just works.
 
-- **Configure the azfunc feed:** run `npm run setup:npmrc`. It detects your environment and writes a local, gitignored `.npmrc` pointing at the correct Azure Artifacts feed (`azfunc/public/upstream-public` locally, `azfunc/internal/upstream` in internal CI).
-- **Authenticate:** run `npx better-vsts-npm-auth -c .npmrc` (one-time, refreshed periodically), then run `npm install`.
-- **First-time bootstrap:** on a Microsoft machine, an `npm install` with no existing `.npmrc` runs a `preinstall` hook that writes the `.npmrc` for you and then intentionally stops the install. npm had already loaded its config before the hook ran, so it can't use the new registry yet. Just authenticate (step above) and re-run `npm install` — the second run proceeds normally. Once `.npmrc` exists, the hook is a no-op.
-
-The generated `.npmrc` is gitignored, so it never affects public contributors or gets committed.
+Microsoft employees whose machines block direct public npm access are already covered by the same feed. If you hit an auth error, run `npx better-vsts-npm-auth -c .npmrc` (one-time, refreshed periodically) and re-run `npm install`.
 
 ## Repositories
 
