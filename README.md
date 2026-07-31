@@ -28,16 +28,6 @@
 - Back in the worker repository, press <kbd>F5</kbd> and select the process for your running function app
 - Before you submit a PR, run `npm run lint` and `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
 
-### npm registry configuration
-
-This repository does **not** check in an `.npmrc`, so a plain `git clone` + `npm install` uses the default public npm registry (`registry.npmjs.org`). **Public contributors don't need to do anything** — this section is only relevant to Microsoft employees.
-
-- **Configure the azfunc feed:** run `npm run setup:npmrc`. It detects your environment and writes a local, gitignored `.npmrc` pointing at the correct Azure Artifacts feed (`azfunc/public/upstream-public` locally, `azfunc/internal/upstream` in internal CI).
-- **Authenticate:** run `npx better-vsts-npm-auth -c .npmrc` (one-time, refreshed periodically), then run `npm install`.
-- **First-time bootstrap:** on a Microsoft machine, an `npm install` with no existing `.npmrc` runs a `preinstall` hook that writes the `.npmrc` for you and then intentionally stops the install. npm had already loaded its config before the hook ran, so it can't use the new registry yet. Just authenticate (step above) and re-run `npm install` — the second run proceeds normally. Once `.npmrc` exists, the hook is a no-op.
-
-The generated `.npmrc` is gitignored, so it never affects public contributors or gets committed.
-
 ## Repositories
 
 These are the most important GitHub repositories that make up the Node.js experience on Azure Functions:
