@@ -18,7 +18,7 @@ import path = require('path');
  * 1. The worker can start in "normal" mode, meaning `workerInitRequest` will reference the user's app
  * 2. The worker can start in "placeholder" mode, meaning `workerInitRequest` will reference a dummy app to "warm up" the worker and `functionEnvironmentReloadRequest` will be sent with the user's actual app.
  *    This process is called worker specialization and it helps with cold start times.
- *    The dummy app should never have actual startup code, so it should be safe to call `startApp` twice in this case
+ *    The app is only started after specialization if the directory differs from the one supplied during worker init.
  *    Worker specialization happens only once, so we don't need to worry about cleaning up resources from previous `functionEnvironmentReloadRequest`s.
  */
 export async function startApp(functionAppDirectory: string): Promise<void> {
@@ -61,7 +61,10 @@ async function loadEntryPointFile(functionAppDirectory: string): Promise<void> {
     if (entryPointPattern) {
         let currentFile: string | undefined = undefined;
         try {
-            const files = await globby(entryPointPattern, { cwd: functionAppDirectory });
+            const files = await globby(entryPointPattern, {
+                cwd: functionAppDirectory,
+                ignore: ['**/node_modules/**'],
+            });
             if (files.length === 0) {
                 let message: string = globby.hasMagic(entryPointPattern, { cwd: functionAppDirectory })
                     ? 'Found zero files matching the supplied pattern'
