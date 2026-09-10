@@ -1,6 +1,6 @@
 ---
 name: azure-functions-node-worker-security
-description: 'Security analysis for the Azure Functions Node.js worker. Use automatically or as /azure-functions-node-worker-security when code or a proposed change touches Host RPC input, function metadata, paths, package or module loading, require/import/eval, environment variables, process state, invocation data, protobuf conversion, hooks, logs, errors, credentials, gRPC transport, dependencies, build/release files, denial of service, or cross-invocation isolation. Identify evidence-backed vulnerabilities, rank severity, avoid expected-behavior false positives, and define regression tests.'
+description: 'Security analysis for Azure Functions Node.js worker code reviews, pull request reviews, and proposed changes. Use automatically or as /azure-functions-node-worker-security when code touches Host RPC input, function metadata, paths, package or module loading, require/import/eval, environment variables, process state, invocation data, protobuf conversion, hooks, logs, errors, credentials, gRPC transport, dependencies, build/release files, denial of service, or cross-invocation isolation. Identify evidence-backed vulnerabilities, rank severity, avoid expected-behavior false positives, and define regression tests.'
 argument-hint: '[diff, file, flow, or security concern]'
 user-invocable: true
 disable-model-invocation: false
@@ -89,10 +89,10 @@ Do not create exploit files outside the test workspace, access real credentials,
 Run the nearest security regression first, then the domain-required checks. Typical focused commands are:
 
 ```powershell
-npx mocha -r ts-node/register "test/errors.test.ts"
-npx mocha -r ts-node/register "test/loadScriptFile.test.ts"
-npx mocha -r ts-node/register "test/eventHandlers/FunctionEnvironmentReloadHandler.test.ts"
-npx mocha -r ts-node/register "test/eventHandlers/InvocationHandler.test.ts"
+npm test -- --grep "^errors "
+npm test -- --grep "^loadScriptFile "
+npm test -- --grep "^FunctionEnvironmentReloadHandler "
+npm test -- --grep "^InvocationHandler "
 ```
 
 For dependency changes, inspect the manifest and lockfile diff and run `npm audit --omit=dev` when a lockfile and network access are available. Never run `npm audit fix`, replace packages, or accept a major update automatically. Verify runtime reachability and review install/build scripts instead of treating an advisory count as proof of exploitability.

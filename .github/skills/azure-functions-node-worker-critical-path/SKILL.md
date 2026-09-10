@@ -1,6 +1,6 @@
 ---
 name: azure-functions-node-worker-critical-path
-description: 'Mandatory human-intervention gate for critical Azure Functions Node.js worker code. Use automatically or as /azure-functions-node-worker-critical-path for changes to Host-worker RPC/protobuf, gRPC startup, message routing, capabilities, app/module loading, programming-model registration, invocation conversion, specialization/environment/process state, hooks, termination, error sanitization, dependencies, bundling, packaging, pipelines, compatibility behavior, or tests that protect those paths. Classify risk, block AI-only approval, require the proper human review, and produce a review packet with validation evidence.'
+description: 'Mandatory human-intervention gate for critical Azure Functions Node.js worker code reviews, pull request reviews, and development completion checks. Use automatically or as /azure-functions-node-worker-critical-path for changes to Host-worker RPC/protobuf, gRPC startup, message routing, capabilities, app/module loading, programming-model registration, invocation conversion, specialization/environment/process state, hooks, termination, error sanitization, dependencies, bundling, packaging, pipelines, compatibility behavior, or tests that protect those paths. Classify risk, block AI-only approval, require the proper human review, and produce a review packet with validation evidence.'
 argument-hint: '[diff, file, proposed change, or PR]'
 user-invocable: true
 disable-model-invocation: false
