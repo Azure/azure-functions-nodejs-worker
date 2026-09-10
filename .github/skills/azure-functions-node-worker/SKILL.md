@@ -22,6 +22,24 @@ This experimental setup keeps three skills separate because they are useful inde
 
 Each skill exposes a slash command and allows automatic model invocation. For a full pull request review, begin with this skill and load the other two only when their documented triggers apply.
 
+## Inline Review Comment Contract
+
+Classify every inline review finding before writing it, and begin the comment with every applicable Markdown heading:
+
+```markdown
+### SECURITY VULNERABILITY
+### HUMAN REVIEW REQUIRED
+```
+
+- Use `SECURITY VULNERABILITY` only for an evidence-backed vulnerability classified by the security skill.
+- Use `HUMAN REVIEW REQUIRED` for every Gate A or Gate B finding classified by the critical-path skill.
+- When both apply, use both headings in the order shown above.
+- Do not bury these labels in prose or place them only at the end of a comment.
+- Attach each comment to the narrowest changed line that introduces or exposes the issue, and report one actionable issue per comment.
+- Do not rely on the pull request overview as the only location for these labels. Repeat the applicable heading on every relevant inline comment.
+
+Omit a heading when its classification does not apply. Follow the detailed evidence, severity, gate, owner, remediation, and test formats in the security and critical-path skills.
+
 ## Core Model
 
 Treat this repository as the process boundary between the Azure Functions Host and a user's Node.js function application:
