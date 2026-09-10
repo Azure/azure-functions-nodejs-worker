@@ -110,8 +110,8 @@ async function handleMessage(inMsg: rpc.StreamingMessage): Promise<void> {
             response.result = {
                 status: rpc.StatusResult.Status.Failure,
                 exception: {
-                    message: sanitizeErrorString(error.message),
-                    stackTrace: error.stack ? sanitizeErrorString(error.stack) : error.stack,
+                    message: error.message,
+                    stackTrace: error.stack,
                 },
             };
             outMsg[eventHandler.responseName] = response;

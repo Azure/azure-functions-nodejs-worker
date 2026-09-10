@@ -1,6 +1,6 @@
 ---
 name: azure-functions-node-worker-critical-path
-description: 'Mandatory human-intervention gate for critical Azure Functions Node.js worker code. Use automatically or as /azure-functions-node-worker-critical-path for changes to Host-worker RPC/protobuf, gRPC startup, message routing, capabilities, app/module loading, programming-model registration, invocation conversion, specialization/environment/process state, hooks, termination, error sanitization, dependencies, bundling, packaging, pipelines, compatibility behavior, or tests that protect those paths. Classify risk, block AI-only approval, require the proper human review, and produce a review packet with validation evidence.'
+description: 'Mandatory human-intervention gate for critical Azure Functions Node.js worker code reviews, pull request reviews, and development completion checks. Use automatically or as /azure-functions-node-worker-critical-path for changes to Host-worker RPC/protobuf, gRPC startup, message routing, capabilities, app/module loading, programming-model registration, invocation conversion, specialization/environment/process state, hooks, termination, error sanitization, dependencies, bundling, packaging, pipelines, compatibility behavior, or tests that protect those paths. Classify risk, block AI-only approval, require the proper human review, and produce a review packet with validation evidence.'
 argument-hint: '[diff, file, proposed change, or PR]'
 user-invocable: true
 disable-model-invocation: false
@@ -83,12 +83,39 @@ Passing unit tests do not prove wire compatibility, security, race freedom, or p
 
 If a required environment is unavailable, mark the evidence missing. Do not silently downgrade the gate.
 
-### 5. Produce the Human Review Packet
+### 5. Tag Inline Gated Findings
+
+Every inline comment that identifies a Gate A or Gate B concern must begin with this exact Markdown heading before any severity or explanation:
+
+```markdown
+### HUMAN REVIEW REQUIRED
+```
+
+If the same finding is an evidence-backed security vulnerability, put the security heading first:
+
+```markdown
+### SECURITY VULNERABILITY
+### HUMAN REVIEW REQUIRED
+```
+
+Do not bury the label in prose or place it only at the end of the comment. Attach the comment to the narrowest changed line that introduces or exposes the gated behavior, and report one decision per inline comment.
+
+After the headings, identify the gate, owner, and concrete decision:
+
+```markdown
+**Gate:** A - before implementation
+**Owner:** `@azure/azure-functions-nodejs`
+**Decision needed:** <one concrete human decision>
+```
+
+Do not add `HUMAN REVIEW REQUIRED` to non-gated findings. Repeat the heading on every gated inline comment even when the pull request overview also contains a human-review packet.
+
+### 6. Produce the Human Review Packet
 
 Use this exact structure:
 
-```text
-HUMAN REVIEW REQUIRED
+```markdown
+## HUMAN REVIEW REQUIRED
 
 Gate: A - before implementation | B - before acceptance
 Owner: @azure/azure-functions-nodejs (or more specific confirmed owner)

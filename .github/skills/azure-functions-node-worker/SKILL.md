@@ -1,7 +1,9 @@
 ---
 name: azure-functions-node-worker
-description: 'Repository-specific Azure Functions Node.js Host-worker architecture and change-validation workflow. Use for every implementation, fix, refactor, test, or explanation involving this repository, especially worker startup, gRPC StreamingMessage handling, initialization, specialization, metadata/indexing, function loading and invocation, programming models, hooks, converters, logging, process lifecycle, Node.js behavior, protobuf, build, or tests. Validate each code change against Host compatibility and Node runtime invariants.'
+description: 'Repository-specific Azure Functions Node.js Host-worker architecture and change-validation workflow. Use for every code review, pull request review, implementation, fix, refactor, test, or explanation involving this repository, especially worker startup, gRPC StreamingMessage handling, initialization, specialization, metadata/indexing, function loading and invocation, programming models, hooks, converters, logging, process lifecycle, Node.js behavior, protobuf, build, or tests. Validate each code change against Host compatibility and Node runtime invariants.'
 argument-hint: '[change, file, or behavior]'
+user-invocable: true
+disable-model-invocation: false
 ---
 
 # Azure Functions Node.js Worker
@@ -9,6 +11,34 @@ argument-hint: '[change, file, or behavior]'
 Apply this skill to code changes in this repository. It supplies domain context and a mandatory validation workflow; it does not replace focused security analysis or required human review.
 
 Read [architecture.md](./references/architecture.md) before reasoning about behavior that crosses the Host-worker boundary or more than one lifecycle stage.
+
+## Skill Organization
+
+This experimental setup keeps three skills separate because they are useful independently and should not always consume the same context:
+
+- Use this domain skill as the baseline for implementation and code review.
+- Use `azure-functions-node-worker-security` for focused threat analysis when a trust boundary or security-sensitive behavior is involved.
+- Use `azure-functions-node-worker-critical-path` at a development gate or during pull request review when a change may require a human decision.
+
+Each skill exposes a slash command and allows automatic model invocation. For a full pull request review, begin with this skill and load the other two only when their documented triggers apply.
+
+## Inline Review Comment Contract
+
+Classify every inline review finding before writing it, and begin the comment with every applicable Markdown heading:
+
+```markdown
+### SECURITY VULNERABILITY
+### HUMAN REVIEW REQUIRED
+```
+
+- Use `SECURITY VULNERABILITY` only for an evidence-backed vulnerability classified by the security skill.
+- Use `HUMAN REVIEW REQUIRED` for every Gate A or Gate B finding classified by the critical-path skill.
+- When both apply, use both headings in the order shown above.
+- Do not bury these labels in prose or place them only at the end of a comment.
+- Attach each comment to the narrowest changed line that introduces or exposes the issue, and report one actionable issue per comment.
+- Do not rely on the pull request overview as the only location for these labels. Repeat the applicable heading on every relevant inline comment.
+
+Omit a heading when its classification does not apply. Follow the detailed evidence, severity, gate, owner, remediation, and test formats in the security and critical-path skills.
 
 ## Core Model
 
@@ -73,8 +103,8 @@ Keep the change at the owning abstraction. Add or update the nearest test that o
 Use the test map in [architecture.md](./references/architecture.md). Prefer the smallest executable check first, for example:
 
 ```powershell
-npx mocha -r ts-node/register "test/Worker.test.ts"
-npx mocha -r ts-node/register "test/eventHandlers/InvocationHandler.test.ts"
+npm test -- --grep "^Worker "
+npm test -- --grep "^InvocationHandler "
 ```
 
 Then run the checks required by the affected surface:
