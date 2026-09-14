@@ -27,6 +27,11 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
     }
 
     async handleEvent(msg: rpc.IFunctionEnvironmentReloadRequest): Promise<rpc.IFunctionEnvironmentReloadResponse> {
+        const functionAppDirectoryUnchanged =
+            !!worker.app.functionAppDirectory &&
+            !!msg.functionAppDirectory &&
+            isPathEqual(worker.app.functionAppDirectory, msg.functionAppDirectory);
+
         if (!msg.functionAppDirectory) {
             worker.log({
                 message: `FunctionEnvironmentReload functionAppDirectory is not defined`,
@@ -35,11 +40,7 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             });
         }
 
-        if (
-            worker.app.functionAppDirectory &&
-            msg.functionAppDirectory &&
-            isPathEqual(worker.app.functionAppDirectory, msg.functionAppDirectory)
-        ) {
+        if (functionAppDirectoryUnchanged) {
             worker.log({
                 message: `FunctionEnvironmentReload functionAppDirectory has not changed`,
                 level: rpc.RpcLog.Level.Debug,
@@ -47,7 +48,10 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
             });
         }
 
-        worker.resetApp(msg.functionAppDirectory);
+        // Preserve registrations when specialization sends both requests for the same app; its modules are already cached.
+        if (!functionAppDirectoryUnchanged) {
+            worker.resetApp(msg.functionAppDirectory);
+        }
 
         const response = this.getDefaultResponse(msg);
 
@@ -72,9 +76,11 @@ export class FunctionEnvironmentReloadHandler extends EventHandler<
                 logCategory: rpc.RpcLog.RpcLogCategory.System,
             });
             process.chdir(msg.functionAppDirectory);
-            await startApp(msg.functionAppDirectory);
-            // model info may have changed, so we need to update this
-            response.workerMetadata = getWorkerMetadata();
+            if (!functionAppDirectoryUnchanged) {
+                await startApp(msg.functionAppDirectory);
+                // model info may have changed, so we need to update this
+                response.workerMetadata = getWorkerMetadata();
+            }
         }
 
         validateNodeVersion(process.version);

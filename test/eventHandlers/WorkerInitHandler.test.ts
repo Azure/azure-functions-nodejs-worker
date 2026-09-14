@@ -5,6 +5,7 @@ import 'mocha';
 import * as coreTypes from '@azure/functions-core';
 import { expect } from 'chai';
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import { logColdStartWarning } from '../../src/eventHandlers/WorkerInitHandler';
 import { isNode20Plus } from '../../src/utils/util';
 import { worker } from '../../src/WorkerContext';
@@ -122,6 +123,28 @@ describe('WorkerInitHandler', () => {
             msg.init.nodeVersionLog(),
             msg.init.response
         );
+    });
+
+    it('excludes node_modules from entry point globs', async () => {
+        const fileSubpath = 'src/dependencyEntry.js';
+        await fs.writeFile(testPackageJsonPath, JSON.stringify({ main: '**/dependencyEntry.js' }));
+        const nodeModulesDirectory = path.join(testAppPath, 'node_modules');
+        const dependencyDirectory = path.join(nodeModulesDirectory, 'test-dependency');
+        await fs.mkdir(dependencyDirectory, { recursive: true });
+        await fs.writeFile(path.join(dependencyDirectory, 'dependencyEntry.js'), '');
+
+        try {
+            stream.addTestMessage(msg.init.request(testAppPath));
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.loadingEntryPoint(fileSubpath),
+                msg.loadedEntryPoint(fileSubpath),
+                msg.init.nodeVersionLog(),
+                msg.init.response
+            );
+        } finally {
+            await fs.rm(nodeModulesDirectory, { recursive: true, force: true });
+        }
     });
 
     for (const rfpValue of ['1', 'https://url']) {
