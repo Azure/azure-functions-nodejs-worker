@@ -18,6 +18,8 @@ steps:
       displayName: 'npm run build'
     - script: npm run webpack
       displayName: 'npm run webpack'
+    - script: npm run test:bundle
+      displayName: 'Test production bundle'
     - task: CopyFiles@2
       displayName: 'Copy worker files to staging'
       inputs:

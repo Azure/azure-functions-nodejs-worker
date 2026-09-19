@@ -42,6 +42,48 @@ describe('GrpcClient', () => {
         }
     });
 
+    it('deserializes protobuf long values as numbers', () => {
+        const eventStream = new FakeEventStream();
+        let decodedMessage: any;
+        const grpcStub = {
+            closeClient: sinon.stub(),
+            credentials: {
+                createInsecure: sinon.stub().returns({ insecure: true }),
+                createSsl: sinon.stub(),
+            },
+            makeClientConstructor: sinon.stub().callsFake((serviceDefinition) => {
+                const eventStreamMethod = serviceDefinition.EventStream;
+                const wireData = eventStreamMethod.responseSerialize({
+                    invocationRequest: {
+                        invocationId: 'invocationId',
+                        functionId: 'functionId',
+                        triggerMetadata: {
+                            sequenceNumber: { int: 2251 },
+                            sequenceNumberArray: {
+                                collectionSint64: { sint64: [2251, 2252, 2253] },
+                            },
+                        },
+                    },
+                });
+                decodedMessage = eventStreamMethod.responseDeserialize(wireData);
+
+                return function TestClient() {
+                    return {
+                        eventStream: () => eventStream,
+                    };
+                };
+            }),
+        };
+        const protoLoader = module.require('@grpc/proto-loader');
+
+        const { CreateGrpcEventStream } = loadGrpcClient(grpcStub, protoLoader);
+        CreateGrpcEventStream('http://127.0.0.1:5000/', 2048);
+
+        const triggerMetadata = decodedMessage.invocationRequest.triggerMetadata;
+        expect(triggerMetadata.sequenceNumber.int).to.equal(2251);
+        expect(triggerMetadata.sequenceNumberArray.collectionSint64.sint64).to.deep.equal([2251, 2252, 2253]);
+    });
+
     it('uses insecure credentials for http functions URIs', () => {
         const insecureCredentials = { insecure: true };
         const sslCredentials = { ssl: true };

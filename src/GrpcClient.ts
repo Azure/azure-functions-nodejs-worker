@@ -15,6 +15,7 @@ function GetGrpcClientConstructor(): ServiceClientConstructor {
         objects: true,
         defaults: true,
         oneofs: true,
+        longs: Number,
     });
     const serviceDef = packageDef['AzureFunctionsRpcMessages.FunctionRpc'] as grpcloader.ServiceDefinition;
     const clientConstructor: ServiceClientConstructor = grpc.makeClientConstructor(serviceDef, 'FunctionRpc');

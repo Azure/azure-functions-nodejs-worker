@@ -67,6 +67,7 @@
         "gen": "node scripts/generateProtos.js",
         "host-sanity": "node scripts/hostSanityTest.js",
         "test": "mocha -r ts-node/register \"./test/**/*.ts\" --reporter mocha-multi-reporters --reporter-options configFile=test/mochaReporterOptions.json",
+        "test:bundle": "node scripts/bundleLongsTest.js",
         "lint": "eslint .",
         "lint-fix": "eslint . --fix",
         "format": "prettier . --write",
