@@ -1,13 +1,14 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ProgrammingModel } from '@azure/functions-core';
+import { LogMetadata, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
 import { AppContext } from './AppContext';
 import { fromCoreLogLevel } from './coreApi/converters/fromCoreStatusResult';
 import { AzFuncSystemError } from './errors';
 import { IEventStream } from './GrpcClient';
 import { InvocationLogContext, LogHookContext } from './hooks/LogHookContext';
+import { sanitizeLogMetadata } from './utils/structuredLogProperties';
 
 class WorkerContext {
     app = new AppContext(undefined);
@@ -18,6 +19,7 @@ class WorkerContext {
      */
     _hostVersion?: string;
 
+    #structuredLogWarnings = new WeakMap<object, Set<string>>();
     #id?: string;
     #eventStream?: IEventStream;
     #notInitializedMsg = 'WorkerContext has not been initialized yet.';
@@ -64,9 +66,29 @@ class WorkerContext {
      * @param requestId gRPC message request id
      * @param msg gRPC message content
      */
-    log(log: rpc.IRpcLog, invocationLogCtx?: InvocationLogContext): void {
+    log(
+        log: rpc.IRpcLog,
+        invocationLogCtx?: InvocationLogContext,
+        metadata?: LogMetadata,
+        warningScope: object = invocationLogCtx ?? this.app
+    ): void {
+        const sanitized = sanitizeLogMetadata(metadata);
+        if (metadata !== undefined) {
+            if (sanitized.rejectedCount > 0) {
+                this.warnStructuredLog(
+                    log,
+                    invocationLogCtx,
+                    warningScope,
+                    'structured_log_invalid_properties',
+                    sanitized.rejectedCount
+                );
+            }
+            if (!this.app.logHooks.some((callback) => this.app.structuredLogHooks.has(callback))) {
+                this.warnStructuredLog(log, invocationLogCtx, warningScope, 'structured_log_consumer_unavailable');
+            }
+        }
         try {
-            const logContext = new LogHookContext(log, invocationLogCtx);
+            const logContext = new LogHookContext(log, invocationLogCtx, sanitized.attributes);
             for (const callback of worker.app.logHooks) {
                 callback(logContext);
             }
@@ -84,6 +106,33 @@ class WorkerContext {
         this.eventStream.write({
             rpcLog: log,
         });
+    }
+    private warnStructuredLog(
+        log: rpc.IRpcLog,
+        invocationLogCtx: InvocationLogContext | undefined,
+        scope: object,
+        reason: string,
+        rejectedCount?: number
+    ): void {
+        let warnings = this.#structuredLogWarnings.get(scope);
+        if (!warnings) {
+            warnings = new Set<string>();
+            this.#structuredLogWarnings.set(scope, warnings);
+        }
+        if (warnings.has(reason)) {
+            return;
+        }
+        warnings.add(reason);
+        this.log(
+            {
+                invocationId: log.invocationId,
+                category: log.category,
+                logCategory: rpc.RpcLog.RpcLogCategory.System,
+                level: rpc.RpcLog.Level.Warning,
+                message: rejectedCount === undefined ? reason : `${reason}: rejected ${rejectedCount} properties`,
+            },
+            invocationLogCtx
+        );
     }
 }
 
