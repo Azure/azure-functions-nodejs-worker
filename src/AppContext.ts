@@ -34,6 +34,7 @@ export class AppContext {
     appStartHooks: HookCallback[] = [];
     appTerminateHooks: HookCallback[] = [];
     logHooks: HookCallback[] = [];
+    structuredLogHooks = new Set<HookCallback>();
     functions: { [id: string]: RegisteredFunction } = {};
     legacyFunctions: { [id: string]: LegacyRegisteredFunction } = {};
     workerIndexingLocked = false;

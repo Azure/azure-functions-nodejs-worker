@@ -169,7 +169,7 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
         this.#msgCategory = msgCategory;
     }
 
-    log(level: RpcLogLevel, logCategory: RpcLogCategory, message: string): void {
+    log(level: RpcLogLevel, logCategory: RpcLogCategory, message: string, metadata?: coreTypes.LogMetadata): void {
         worker.log(
             {
                 invocationId: this.request.invocationId,
@@ -178,7 +178,8 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
                 level: fromCoreLogLevel(level),
                 logCategory: fromCoreLogCategory(logCategory),
             },
-            this.logContext
+            this.logContext,
+            metadata
         );
     }
 }

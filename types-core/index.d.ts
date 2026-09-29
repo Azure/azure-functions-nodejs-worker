@@ -10,6 +10,8 @@ declare module '@azure/functions-core' {
      */
     const version: string;
 
+    const supportsStructuredLogProperties: boolean | undefined;
+
     /**
      * The version of the Functions Host
      */
@@ -58,8 +60,18 @@ declare module '@azure/functions-core' {
     function registerHook(hookName: 'postInvocation', callback: PostInvocationCallback): Disposable;
     function registerHook(hookName: 'appStart', callback: AppStartCallback): Disposable;
     function registerHook(hookName: 'appTerminate', callback: AppTerminateCallback): Disposable;
-    function registerHook(hookName: 'log', callback: LogHookCallback): Disposable;
-    function registerHook(hookName: string, callback: HookCallback): Disposable;
+    function registerHook(hookName: 'log', callback: LogHookCallback, options?: LogHookOptions): Disposable;
+    function registerHook(hookName: string, callback: HookCallback, options?: LogHookOptions): Disposable;
+
+    interface LogHookOptions {
+        structuredLogProperties?: boolean;
+    }
+
+    type LogAttributes = Readonly<Record<string, string | number | boolean>>;
+
+    interface LogMetadata {
+        readonly attributes: LogAttributes;
+    }
 
     type HookCallback = (context: HookContext) => unknown;
     type PreInvocationCallback = (context: PreInvocationContext) => void | Promise<void>;
@@ -149,6 +161,8 @@ declare module '@azure/functions-core' {
     type AppTerminateContext = HookContext;
 
     interface LogHookContext extends HookContext {
+        readonly attributes?: LogAttributes;
+
         /**
          * If the log occurs during a function execution, the context object passed to the function handler.
          * Otherwise, undefined.
@@ -214,7 +228,7 @@ declare module '@azure/functions-core' {
      * The recommended way to log information outside the context of an invocation
      * During an invocation, use `CoreInvocationContext.log` instead
      */
-    function log(level: RpcLogLevel, category: RpcLogCategory, message: string): void;
+    function log(level: RpcLogLevel, category: RpcLogCategory, message: string, metadata?: LogMetadata): void;
 
     /**
      * A set of information and methods that describe the model for handling a Node.js function app
@@ -271,7 +285,7 @@ declare module '@azure/functions-core' {
         /**
          * The recommended way to log information
          */
-        log(level: RpcLogLevel, category: RpcLogCategory, message: string): void;
+        log(level: RpcLogLevel, category: RpcLogCategory, message: string, metadata?: LogMetadata): void;
     }
 
     type InvocationState = 'preInvocationHooks' | 'postInvocationHooks' | 'invocation';

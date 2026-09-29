@@ -18,6 +18,7 @@ import Module = require('module');
 export function setupCoreModule(): void {
     const coreApi = {
         version: version,
+        supportsStructuredLogProperties: true,
         get hostVersion() {
             return worker.hostVersion;
         },
