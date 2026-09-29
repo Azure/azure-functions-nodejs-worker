@@ -66,19 +66,25 @@ class WorkerContext {
      * @param requestId gRPC message request id
      * @param msg gRPC message content
      */
-    log(log: rpc.IRpcLog, invocationLogCtx?: InvocationLogContext, metadata?: LogMetadata): void {
+    log(
+        log: rpc.IRpcLog,
+        invocationLogCtx?: InvocationLogContext,
+        metadata?: LogMetadata,
+        warningScope: object = invocationLogCtx ?? this.app
+    ): void {
         const sanitized = sanitizeLogMetadata(metadata);
         if (metadata !== undefined) {
             if (sanitized.rejectedCount > 0) {
                 this.warnStructuredLog(
                     log,
                     invocationLogCtx,
+                    warningScope,
                     'structured_log_invalid_properties',
                     sanitized.rejectedCount
                 );
             }
             if (!this.app.logHooks.some((callback) => this.app.structuredLogHooks.has(callback))) {
-                this.warnStructuredLog(log, invocationLogCtx, 'structured_log_consumer_unavailable');
+                this.warnStructuredLog(log, invocationLogCtx, warningScope, 'structured_log_consumer_unavailable');
             }
         }
         try {
@@ -104,10 +110,10 @@ class WorkerContext {
     private warnStructuredLog(
         log: rpc.IRpcLog,
         invocationLogCtx: InvocationLogContext | undefined,
+        scope: object,
         reason: string,
         rejectedCount?: number
     ): void {
-        const scope = invocationLogCtx ?? this.app;
         let warnings = this.#structuredLogWarnings.get(scope);
         if (!warnings) {
             warnings = new Set<string>();

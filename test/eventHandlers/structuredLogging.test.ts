@@ -42,6 +42,14 @@ describe('structured log properties', () => {
         );
     }
 
+    it('restricts structured logging options to log hooks in the public types', () => {
+        const checkTypes = () => {
+            // @ts-expect-error Log options do not apply to invocation hooks.
+            coreApi.registerHook('preInvocation', () => {}, { structuredLogProperties: true });
+        };
+        void checkTypes;
+    });
+
     it('exposes capability and preserves metadata only on the process-local hook path', () => {
         expect(coreApi.supportsStructuredLogProperties).to.equal(true);
         const captured: coreTypes.LogHookContext[] = [];
@@ -179,6 +187,46 @@ describe('structured log properties', () => {
         expect(() => coreApi.log('error', 'user', 'original', { attributes: { stationId: 'Merida' } })).not.to.throw();
         expect(logs()[1].message).to.equal('original');
         expect(logs()[1].level).to.equal(rpc.RpcLog.Level.Error);
+    });
+
+    it('isolates warnings across invocation preparation and execution', async () => {
+        worker.app.isUsingWorkerIndexing = true;
+        worker.app.functions.example = { metadata: { name: 'example' }, callback: () => {} };
+        worker.app.programmingModel = {
+            name: 'early logging test',
+            version: '1',
+            getInvocationModel: (coreContext) => {
+                const emit = () => coreContext.log('error', 'user', 'failure', { attributes: { invalid: NaN } });
+                emit();
+                return {
+                    getArguments: async () => {
+                        emit();
+                        return { context: { invocationId: coreContext.invocationId }, inputs: [] };
+                    },
+                    invokeFunction: async () => {
+                        emit();
+                    },
+                    getResponse: async () => ({ invocationId: coreContext.invocationId }),
+                };
+            },
+        };
+        await Promise.all(
+            ['first', 'second'].map((invocationId) =>
+                new InvocationHandler().handleEvent({ invocationId, functionId: 'example' })
+            )
+        );
+        for (const invocationId of ['first', 'second']) {
+            const invocationLogs = logs().filter((log) => log.invocationId === invocationId);
+            expect(
+                invocationLogs.filter((log) => log.message === 'structured_log_consumer_unavailable')
+            ).to.have.length(1);
+            expect(
+                invocationLogs.filter((log) => log.message?.startsWith('structured_log_invalid_properties'))
+            ).to.have.length(1);
+            expect(invocationLogs.filter((log) => log.logCategory === rpc.RpcLog.RpcLogCategory.User)).to.have.length(
+                3
+            );
+        }
     });
 
     it('carries attributes and invocation context through real concurrent invocation handlers', async () => {

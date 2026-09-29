@@ -61,7 +61,7 @@ declare module '@azure/functions-core' {
     function registerHook(hookName: 'appStart', callback: AppStartCallback): Disposable;
     function registerHook(hookName: 'appTerminate', callback: AppTerminateCallback): Disposable;
     function registerHook(hookName: 'log', callback: LogHookCallback, options?: LogHookOptions): Disposable;
-    function registerHook(hookName: string, callback: HookCallback, options?: LogHookOptions): Disposable;
+    function registerHook(hookName: string, callback: HookCallback): Disposable;
 
     interface LogHookOptions {
         structuredLogProperties?: boolean;

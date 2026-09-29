@@ -179,7 +179,8 @@ class CoreInvocationContext implements coreTypes.CoreInvocationContext {
                 logCategory: fromCoreLogCategory(logCategory),
             },
             this.logContext,
-            metadata
+            metadata,
+            this
         );
     }
 }
