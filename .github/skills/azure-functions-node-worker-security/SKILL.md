@@ -1,6 +1,6 @@
 ---
 name: azure-functions-node-worker-security
-description: 'Security analysis for the Azure Functions Node.js worker. Use automatically or as /azure-functions-node-worker-security when code or a proposed change touches Host RPC input, function metadata, paths, package or module loading, require/import/eval, environment variables, process state, invocation data, protobuf conversion, hooks, logs, errors, credentials, gRPC transport, dependencies, build/release files, denial of service, or cross-invocation isolation. Identify evidence-backed vulnerabilities, rank severity, avoid expected-behavior false positives, and define regression tests.'
+description: 'Security analysis for Azure Functions Node.js worker code reviews, pull request reviews, and proposed changes. Use automatically or as /azure-functions-node-worker-security when code touches Host RPC input, function metadata, paths, package or module loading, require/import/eval, environment variables, process state, invocation data, protobuf conversion, hooks, logs, errors, credentials, gRPC transport, dependencies, build/release files, denial of service, or cross-invocation isolation. Identify evidence-backed vulnerabilities, rank severity, avoid expected-behavior false positives, and define regression tests.'
 argument-hint: '[diff, file, flow, or security concern]'
 user-invocable: true
 disable-model-invocation: false
@@ -89,10 +89,10 @@ Do not create exploit files outside the test workspace, access real credentials,
 Run the nearest security regression first, then the domain-required checks. Typical focused commands are:
 
 ```powershell
-npx mocha -r ts-node/register "test/errors.test.ts"
-npx mocha -r ts-node/register "test/loadScriptFile.test.ts"
-npx mocha -r ts-node/register "test/eventHandlers/FunctionEnvironmentReloadHandler.test.ts"
-npx mocha -r ts-node/register "test/eventHandlers/InvocationHandler.test.ts"
+npm test -- --grep "^errors "
+npm test -- --grep "^loadScriptFile "
+npm test -- --grep "^FunctionEnvironmentReloadHandler "
+npm test -- --grep "^InvocationHandler "
 ```
 
 For dependency changes, inspect the manifest and lockfile diff and run `npm audit --omit=dev` when a lockfile and network access are available. Never run `npm audit fix`, replace packages, or accept a major update automatically. Verify runtime reachability and review install/build scripts instead of treating an advisory count as proof of exploitability.
@@ -107,7 +107,40 @@ npm run build
 
 Use `npm run webpack` for bundle or package changes and `npm run host-sanity` for Host-boundary changes when prerequisites are available.
 
-### 6. Report Findings
+### 6. Format Inline Findings
+
+Every inline comment for an evidence-backed vulnerability must begin with this exact Markdown heading before any severity or explanation:
+
+```markdown
+### SECURITY VULNERABILITY
+```
+
+If the same finding requires Gate A or Gate B human review, add the human-review heading immediately after it:
+
+```markdown
+### SECURITY VULNERABILITY
+### HUMAN REVIEW REQUIRED
+```
+
+Do not bury either label in prose or place it only at the end of the comment. Attach the comment to the narrowest changed line that introduces or exposes the issue, and report one security issue per inline comment.
+
+After the headings, use this compact structure:
+
+```markdown
+**Severity:** High
+**Confidence:** High
+**Gate:** A - before implementation
+**Owner:** `@azure/azure-functions-nodejs`
+
+<concise source-to-sink finding and impact>
+
+**Remediation:** <smallest compatible fix>
+**Regression test:** <test that proves the boundary>
+```
+
+Omit `Gate` and `Owner` when human review is not required. Do not use `SECURITY VULNERABILITY` for defense-in-depth suggestions, hardening, compatibility/correctness bugs, or unverified concerns; label those accurately in ordinary prose instead.
+
+### 7. Report Findings
 
 List findings first, ordered by severity. For each finding include:
 

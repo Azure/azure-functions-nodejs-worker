@@ -10,7 +10,9 @@ Use this reference when a change spans lifecycle stages or depends on Host-worke
 - Function application: supplies package metadata and executable CommonJS or ESM user code.
 - Language-worker protobuf: defines the shared wire contract. Generated JavaScript and TypeScript files are artifacts, not source of truth.
 
-Related repositories include `azure-functions-host`, `azure-functions-nodejs-library`, `azure-functions-nodejs-e2e-tests`, and `azure-functions-core-tools`. A local unit test cannot prove cross-repository compatibility when the shared contract changes.
+Related repositories include `azure-functions-host`, `azure-functions-nodejs-library`, `azure-functions-nodejs-extensions`, `azure-functions-nodejs-e2e-tests`, and `azure-functions-core-tools`. A local unit test cannot prove cross-repository compatibility when the shared contract changes.
+
+This reference is intentionally skill-local for progressive disclosure during this experiment. Update it in the same change whenever worker architecture, lifecycle, compatibility requirements, critical invariants, or validation ownership changes.
 
 ## Startup
 
