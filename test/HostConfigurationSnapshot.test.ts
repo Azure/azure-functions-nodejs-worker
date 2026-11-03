@@ -128,6 +128,45 @@ describe('HostConfigurationSnapshot', () => {
         expect(open.firstCall.args[0]).to.equal(configuredRoot + path.sep + 'host.json');
     });
 
+    const rootPaths = [
+        { separator: '\\', root: 'C:', expected: 'C:host.json' },
+        { separator: '\\', root: 'c:', expected: 'c:host.json' },
+        { separator: '\\', root: '\\', expected: '\\host.json' },
+        { separator: '\\', root: '/', expected: '/host.json' },
+        { separator: '\\', root: 'C:\\', expected: 'C:\\host.json' },
+        { separator: '\\', root: 'C:\\app\\', expected: 'C:\\app\\host.json' },
+        { separator: '\\', root: 'C:/app/', expected: 'C:/app/host.json' },
+        { separator: '\\', root: '\\\\server\\share\\', expected: '\\\\server\\share\\host.json' },
+        { separator: '\\', root: 'C:relative', expected: 'C:relative\\host.json' },
+        { separator: '\\', root: 'app\\..\\content', expected: 'app\\..\\content\\host.json' },
+        { separator: '/', root: '/', expected: '/host.json' },
+        { separator: '/', root: '//', expected: '//host.json' },
+        { separator: '/', root: '/app/', expected: '/app/host.json' },
+        { separator: '/', root: 'C:', expected: 'C:/host.json' },
+        { separator: '/', root: 'dir\\', expected: 'dir\\/host.json' },
+        { separator: '/', root: 'app/../content', expected: 'app/../content/host.json' },
+    ];
+    for (const { separator, root: configuredRoot, expected } of rootPaths) {
+        it(`joins configured roots natively: ${JSON.stringify(configuredRoot)} with ${JSON.stringify(
+            separator
+        )}`, async () => {
+            sandbox.stub(path, 'sep').value(separator);
+            const open = sandbox.stub(fs, 'open').rejects(new Error('synthetic read failure'));
+            snapshot = new HostConfigurationSnapshot(() => configuredRoot);
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(open.calledOnceWithExactly(expected, 'r')).to.be.true;
+        });
+    }
+
+    it('reads from a directory root ending in a native separator', async () => {
+        await fs.writeFile(filePath, '{}');
+        snapshot = new HostConfigurationSnapshot(() => root + path.sep);
+        expect(await snapshot.getConfiguration(requested)).to.deep.equal({
+            status: Status.Available,
+            content: Buffer.from('{}'),
+        });
+    });
+
     it('reports Missing only when the root directory exists', async () => {
         expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Missing });
         snapshot = new HostConfigurationSnapshot(() => path.join(root, 'missing-directory'));

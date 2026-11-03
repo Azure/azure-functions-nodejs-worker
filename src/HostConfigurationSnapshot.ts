@@ -36,7 +36,10 @@ export class HostConfigurationSnapshot {
 
             let file: fs.FileHandle;
             try {
-                file = await fs.open(path.format({ dir: root, base: 'host.json' }), 'r');
+                const hasSeparator = root.endsWith(path.sep) || (path.sep === '\\' && root.endsWith('/'));
+                const isDriveRelativeRoot = path.sep === '\\' && /^[a-z]:$/i.test(root);
+                const filePath = `${root}${hasSeparator || isDriveRelativeRoot ? '' : path.sep}host.json`;
+                file = await fs.open(filePath, 'r');
             } catch (error) {
                 // ENOENT can name the file or an absent parent. Only inspect the root after a failed open.
                 if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
