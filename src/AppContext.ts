@@ -3,6 +3,7 @@
 
 import { FunctionCallback, HookCallback, HookData, ProgrammingModel } from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../azure-functions-language-worker-protobuf/src/rpc';
+import { HostConfigurationSnapshot } from './HostConfigurationSnapshot';
 import { PackageJson } from './parsers/parsePackageJson';
 
 export interface RegisteredFunction {
@@ -15,6 +16,7 @@ export interface LegacyRegisteredFunction extends RegisteredFunction {
 }
 
 export class AppContext {
+    readonly hostConfiguration = new HostConfigurationSnapshot();
     functionAppDirectory: string | null | undefined;
     constructor(functionAppDirectory: string | null | undefined) {
         this.functionAppDirectory = functionAppDirectory;

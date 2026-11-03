@@ -18,14 +18,28 @@ import { getWorkerMetadata } from './getWorkerMetadata';
  */
 export class WorkerInitHandler extends EventHandler<'workerInitRequest', 'workerInitResponse'> {
     readonly responseName = 'workerInitResponse';
+    #hostConfiguration?: rpc.IHostConfiguration;
 
     getDefaultResponse(_msg: rpc.IWorkerInitRequest): rpc.IWorkerInitResponse {
         return {
             workerMetadata: getWorkerMetadata(),
+            ...(this.#hostConfiguration
+                ? {
+                      hostConfiguration: {
+                          status: this.#hostConfiguration.status,
+                          ...(this.#hostConfiguration.content
+                              ? { content: Buffer.from(this.#hostConfiguration.content) }
+                              : {}),
+                      },
+                  }
+                : {}),
         };
     }
 
     async handleEvent(msg: rpc.IWorkerInitRequest): Promise<rpc.IWorkerInitResponse> {
+        const configuration = worker.app.hostConfiguration.getConfiguration(msg);
+        this.#hostConfiguration = configuration ? await configuration : undefined;
+
         if (!msg.functionAppDirectory) {
             worker.log({
                 message: `WorkerInit functionAppDirectory is not defined`,

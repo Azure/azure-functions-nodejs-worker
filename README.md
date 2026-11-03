@@ -28,6 +28,37 @@
 - Back in the worker repository, press <kbd>F5</kbd> and select the process for your running function app
 - Before you submit a PR, run `npm run lint` and `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
 
+## Host configuration delivery
+
+When `WorkerInitRequest.capabilities["HostConfiguration"]` is exactly `"1"`, the worker
+captures `host.json` beneath its local `FUNCTIONS_APPLICATION_DIRECTORY` and attaches
+`WorkerInitResponse.host_configuration`. The launcher must provide this environment
+variable before enabled initialization. Neither the Host's `function_app_directory`,
+`AzureWebJobsScriptRoot`, nor the current directory is a fallback. Explicit relative
+roots use filesystem path resolution. The repository's Host sanity launcher does not
+set `FUNCTIONS_APPLICATION_DIRECTORY`; platform provisioning must be verified separately.
+
+The snapshot is lazy and shared across concurrent/repeated initialization requests for
+the current app generation, including failures. Specialization creates a new generation.
+Unrequested initialization performs no configuration lookup or I/O. There are no live
+rereads or retries of cached failures.
+
+Delivery converts strict UTF-8 (default) or BOM-marked UTF-8, UTF-16 LE/BE, or UTF-32
+LE/BE incrementally to BOM-free UTF-8, limited to 65,536 transmitted bytes. Available
+content is not parsed: empty files and malformed JSON are delivered for the Host to
+validate. Missing files, acquisition/conversion errors, and oversized output have
+distinct content-free outcomes. These do not replace the existing worker-init result.
+The Host owns parsing, defaults, and `AzureFunctionsJobHost__` overrides.
+
+The vendored APP-01 fields and comments come from
+[Azure/azure-functions-language-worker-protobuf#103](https://github.com/Azure/azure-functions-language-worker-protobuf/pull/103),
+commit `313666583af4e97f0b534f1cbf61a3812f277c12`; unrelated newer protocol fields are not
+imported. The behavioral reference is
+[Azure/azure-functions-dotnet-worker#3522](https://github.com/Azure/azure-functions-dotnet-worker/pull/3522),
+commit `6066d8c6597c8f9810a4467d10aea0ac4a58d62d`. Regenerate the vendored bindings
+with `npm run gen` (also run by `npm run build`); generated RPC files are not edited
+manually. Integration requires the compatible Host receiver and an opaque proxy path.
+
 ## Repositories
 
 These are the most important GitHub repositories that make up the Node.js experience on Azure Functions:
