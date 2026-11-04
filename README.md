@@ -45,12 +45,13 @@ rereads or retries of cached failures.
 
 Delivery converts strict UTF-8 (default) or BOM-marked UTF-8, UTF-16 LE/BE, or UTF-32
 LE/BE incrementally to BOM-free UTF-8. Both the converted source (before parsing)
-and normalized output are limited to 65,536 bytes. Non-empty input is normalized to
-strict compact JSON: `//` and `/* */` comments and trailing commas are removed, while
-raw string/number tokens, escapes, duplicate keys, and key order are preserved. One
-root of any JSON type is accepted, with at most 64 nested containers. Malformed JSON,
-including non-empty whitespace/comment-only input, returns content-free Error.
-Empty decoded files remain Available-empty for the Host to reject.
+and normalized output are limited to 65,536 bytes. Input must contain one JSON object
+root, with at most 64 nested containers including that root. Empty or BOM-only files,
+non-object roots, whitespace/comment-only input, and malformed JSON return content-free
+Error with reason `InvalidJson`. An empty object (`{}`) is valid, as are arrays and
+scalars nested inside an object. Normalization removes `//` and `/* */` comments and
+trailing commas while preserving raw string/number tokens, escapes, duplicate keys,
+and key order.
 
 Missing files, acquisition/conversion/JSON errors, and oversized output have distinct
 content-free outcomes. Each cached failure emits one system warning with a fixed
@@ -65,8 +66,8 @@ The vendored APP-01 fields and comments come from
 commit `313666583af4e97f0b534f1cbf61a3812f277c12`; unrelated newer protocol fields are not
 imported. The behavioral reference is
 [Azure/azure-functions-dotnet-worker#3522](https://github.com/Azure/azure-functions-dotnet-worker/pull/3522),
-commit `4c440d8d38526a16eb549ac6fba1082fe5ad4450`, including its compact-normalization
-and cached-failure diagnostic behavior. Regenerate the vendored bindings
+commit `e7765e7201008340e4cc407486bbd31649abf162`, including its object-root validation,
+compact-normalization, and cached-failure diagnostic behavior. Regenerate the vendored bindings
 with `npm run gen` (also run by `npm run build`); generated RPC files are not edited
 manually. Integration requires the compatible Host receiver and an opaque proxy path.
 

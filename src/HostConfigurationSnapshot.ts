@@ -160,13 +160,11 @@ async function readBounded(file: fs.FileHandle): Promise<Snapshot> {
         }
         length += encoded.copy(output, length);
         if (final) {
-            let content: Buffer = output.subarray(0, length);
-            if (length) {
-                try {
-                    content = normalize(content.toString('utf8'));
-                } catch {
-                    return failedSnapshot('InvalidJson');
-                }
+            let content: Buffer;
+            try {
+                content = normalize(output.subarray(0, length).toString('utf8'));
+            } catch {
+                return failedSnapshot('InvalidJson');
             }
             return content.length > maxContentBytes
                 ? failedSnapshot('Oversized')
@@ -229,6 +227,10 @@ function normalize(source: string): Buffer {
         }
         tokens.push(token);
         offset = tokenPattern.lastIndex;
+    }
+
+    if (tokens[0] !== '{') {
+        throw new SyntaxError('Host configuration must have an object root');
     }
 
     // Validate grammar only. Emitting parsed values would lose number lexemes, escapes, and duplicate keys.

@@ -296,7 +296,30 @@ describe('HostConfigurationSnapshot', () => {
     });
 
     for (const encoding of encodings) {
-        for (const text of ['', '{"text":"\u00e9\u20ac\ud83d\ude00"}', '"\ufeff"', '"\ufffd"', '"\\uD800"', '1E+2']) {
+        it(`rejects empty or BOM-only ${encoding} input as InvalidJson`, async () => {
+            await fs.writeFile(filePath, encode('', encoding));
+            const open = sandbox.spy(fs, 'open');
+            const [first, second] = await Promise.all([
+                snapshot.getConfiguration(requested),
+                snapshot.getConfiguration(requested),
+            ]);
+            expect(first).to.deep.equal({ status: Status.Error });
+            expect(second).to.deep.equal(first);
+            expect(second).not.to.equal(first);
+            await fs.writeFile(filePath, '{}');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(open.calledOnce).to.be.true;
+            expectWarning('InvalidJson');
+        });
+
+        for (const text of [
+            '{}',
+            '{"text":"\u00e9\u20ac\ud83d\ude00"}',
+            '{"text":"\ufeff"}',
+            '{"text":"\ufffd"}',
+            '{"text":"\\uD800"}',
+            '{"n":1E+2}',
+        ]) {
             it(`preserves ${encoding} JSON tokens ${JSON.stringify(text)}`, async () => {
                 await fs.writeFile(filePath, encode(text, encoding));
                 expect(await snapshot.getConfiguration(requested)).to.deep.equal({
@@ -319,6 +342,7 @@ describe('HostConfigurationSnapshot', () => {
         for (const size of [65535, 65536, 65537]) {
             it(`limits converted ${encoding} output to 65536 bytes (${size})`, async () => {
                 const text = '{"k":"' + 'x'.repeat(size - 8) + '"}';
+                expect(Buffer.byteLength(text)).to.equal(size);
                 await fs.writeFile(filePath, encode(text, encoding));
                 expect(await snapshot.getConfiguration(requested)).to.deep.equal(
                     size <= 65536
@@ -329,7 +353,8 @@ describe('HostConfigurationSnapshot', () => {
         }
 
         it(`handles ${encoding} multibyte sequences crossing read boundaries`, async () => {
-            const text = '"' + 'a'.repeat(4094) + '\ud83d\ude00\u00e9\u20ac'.repeat(1000) + '"';
+            const prefix = '{"k":"';
+            const text = prefix + 'a'.repeat(4095 - prefix.length) + '\ud83d\ude00\u00e9\u20ac'.repeat(1000) + '"}';
             await fs.writeFile(filePath, encode(text, encoding));
             expect(await snapshot.getConfiguration(requested)).to.deep.equal({
                 status: Status.Available,
@@ -343,6 +368,7 @@ describe('HostConfigurationSnapshot', () => {
             it(`measures ${encoding} expansion to ${size} UTF-8 bytes`, async () => {
                 const count = Math.floor((size - 8) / 3);
                 const text = '{"k":"' + '\u0800'.repeat(count) + 'x'.repeat(size - 8 - count * 3) + '"}';
+                expect(Buffer.byteLength(text)).to.equal(size);
                 const source = encode(text, encoding);
                 expect(source.length).to.be.lessThan(65536);
                 await fs.writeFile(filePath, source);
@@ -424,7 +450,7 @@ describe('HostConfigurationSnapshot', () => {
     }
 
     it('shares in-flight acquisition and returns independent immutable snapshots', async () => {
-        await fs.writeFile(filePath, '"original"');
+        await fs.writeFile(filePath, '{"value":"original"}');
         const handle = await fs.open(filePath, 'r');
         let release!: (file: fs.FileHandle) => void;
         const open = sandbox.stub(fs, 'open').returns(new Promise((resolve) => (release = resolve)));
@@ -442,10 +468,10 @@ describe('HostConfigurationSnapshot', () => {
         expect(one!.content).not.to.equal(two!.content);
         one!.content!.fill(0);
         one!.status = Status.Error;
-        await fs.writeFile(filePath, '"changed"');
+        await fs.writeFile(filePath, '{"value":"changed"}');
         expect(await snapshot.getConfiguration(requested)).to.deep.equal({
             status: Status.Available,
-            content: Buffer.from('"original"'),
+            content: Buffer.from('{"value":"original"}'),
         });
         expect(open.calledOnce).to.be.true;
         expect(warnings.called).to.be.false;
@@ -497,10 +523,10 @@ describe('HostConfigurationSnapshot', () => {
     ];
     for (const [source, expected] of normalizationCases) {
         it(`normalizes without changing raw tokens: ${JSON.stringify(source)}`, async () => {
-            await fs.writeFile(filePath, source);
+            await fs.writeFile(filePath, '{"value":' + source + '\n}');
             expect(await snapshot.getConfiguration(requested)).to.deep.equal({
                 status: Status.Available,
-                content: Buffer.from(expected),
+                content: Buffer.from('{"value":' + expected + '}'),
             });
             expect(warnings.called).to.be.false;
         });
@@ -513,10 +539,10 @@ describe('HostConfigurationSnapshot', () => {
             [`// before\n"${char}"`, `"${char}"`],
         ]) {
             it(`preserves Unicode in strings/block comments: ${JSON.stringify(source)}`, async () => {
-                await fs.writeFile(filePath, source);
+                await fs.writeFile(filePath, '{"value":' + source + '\n}');
                 expect(await snapshot.getConfiguration(requested)).to.deep.equal({
                     status: Status.Available,
-                    content: Buffer.from(expected),
+                    content: Buffer.from('{"value":' + expected + '}'),
                 });
             });
         }
@@ -577,8 +603,7 @@ describe('HostConfigurationSnapshot', () => {
     ];
     for (const source of invalidJson) {
         it(`rejects invalid JSON without exposing its content: ${JSON.stringify(source)}`, async () => {
-            // A BOM is only recognized at the start of the encoded source, not after JSON whitespace.
-            await fs.writeFile(filePath, source.startsWith('\ufeff') ? ' ' + source : source);
+            await fs.writeFile(filePath, '{"value":' + source + '\n}');
             expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
             expectWarning('InvalidJson');
         });
@@ -587,7 +612,9 @@ describe('HostConfigurationSnapshot', () => {
     for (const depth of [64, 65]) {
         for (const object of [false, true]) {
             it(`limits ${object ? 'object' : 'array'} nesting to 64 containers (${depth})`, async () => {
-                const source = (object ? '{"k":' : '[').repeat(depth) + '0' + (object ? '}' : ']').repeat(depth);
+                const nested =
+                    (object ? '{"k":' : '[').repeat(depth - 1) + '0' + (object ? '}' : ']').repeat(depth - 1);
+                const source = '{"k":' + nested + '}';
                 await fs.writeFile(filePath, source);
                 expect(await snapshot.getConfiguration(requested)).to.deep.equal(
                     depth === 64 ? { status: Status.Available, content: Buffer.from(source) } : { status: Status.Error }
@@ -618,23 +645,39 @@ describe('HostConfigurationSnapshot', () => {
         });
     }
 
-    it('logs one warning and caches InvalidJson across concurrent requests and repairs', async () => {
-        await fs.writeFile(filePath, '{"secret-json-value":');
-        const open = sandbox.spy(fs, 'open');
-        const [first, second] = await Promise.all([
-            snapshot.getConfiguration(requested),
-            snapshot.getConfiguration(requested),
-        ]);
-        expect(first).to.deep.equal({ status: Status.Error });
-        expect(second).to.deep.equal(first);
-        expect(second).not.to.equal(first);
-        first!.status = Status.Available;
-        await fs.writeFile(filePath, '{}');
-        expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
-        expect(await snapshot.getConfiguration({})).to.be.undefined;
-        expect(open.calledOnce).to.be.true;
-        expectWarning('InvalidJson');
-    });
+    for (const source of [
+        '{"secret-json-value":',
+        '[]',
+        '[7]',
+        '"s"',
+        '1',
+        'null',
+        'true',
+        'false',
+        '// c\n[1]',
+        '/* c */ "s"',
+        ' \t\r\n',
+        '// c',
+        '/* c */',
+    ]) {
+        it(`caches InvalidJson with one warning for an invalid object root: ${JSON.stringify(source)}`, async () => {
+            await fs.writeFile(filePath, source);
+            const open = sandbox.spy(fs, 'open');
+            const [first, second] = await Promise.all([
+                snapshot.getConfiguration(requested),
+                snapshot.getConfiguration(requested),
+            ]);
+            expect(first).to.deep.equal({ status: Status.Error });
+            expect(second).to.deep.equal(first);
+            expect(second).not.to.equal(first);
+            first!.status = Status.Available;
+            await fs.writeFile(filePath, '{}');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(await snapshot.getConfiguration({})).to.be.undefined;
+            expect(open.calledOnce).to.be.true;
+            expectWarning('InvalidJson');
+        });
+    }
 
     it('encodes the pinned canonical field numbers and statuses', () => {
         expect(Status).to.include({ Unspecified: 0, Available: 1, Missing: 2, Error: 3, TooLarge: 4 });

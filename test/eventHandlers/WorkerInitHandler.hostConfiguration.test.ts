@@ -91,12 +91,12 @@ describe('WorkerInitHandler host configuration', () => {
             stream.addTestMessage(request(value));
             await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
             expect(open.called).to.be.false;
-            await fs.writeFile(filePath, '"enabled-later"');
+            await fs.writeFile(filePath, '{"value":"enabled-later"}');
             stream.addTestMessage(request());
             await stream.assertCalledWith(
                 msg.init.receivedRequestLog,
                 msg.init.nodeVersionLog(),
-                response({ status: Status.Available, content: Buffer.from('"enabled-later"') })
+                response({ status: Status.Available, content: Buffer.from('{"value":"enabled-later"}') })
             );
             expect(open.calledOnce).to.be.true;
         });
@@ -168,7 +168,7 @@ describe('WorkerInitHandler host configuration', () => {
     });
 
     it('shares acquisition across concurrent init handlers and copies retry envelopes', async () => {
-        await fs.writeFile(filePath, '"original"');
+        await fs.writeFile(filePath, '{"value":"original"}');
         const open = sandbox.spy(fs, 'open');
         const init = request().workerInitRequest!;
         const firstHandler = new WorkerInitHandler();
@@ -190,14 +190,14 @@ describe('WorkerInitHandler host configuration', () => {
         first.hostConfiguration!.status = Status.Error;
         expect(firstHandler.getDefaultResponse(init).hostConfiguration).to.deep.equal({
             status: Status.Available,
-            content: Buffer.from('"original"'),
+            content: Buffer.from('{"value":"original"}'),
         });
-        await fs.writeFile(filePath, '"changed"');
+        await fs.writeFile(filePath, '{"value":"changed"}');
         const retry = await new WorkerInitHandler().handleEvent(init);
         await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog());
         expect(retry.hostConfiguration).to.deep.equal({
             status: Status.Available,
-            content: Buffer.from('"original"'),
+            content: Buffer.from('{"value":"original"}'),
         });
         expect(open.calledOnce).to.be.true;
     });
@@ -222,10 +222,10 @@ describe('WorkerInitHandler host configuration', () => {
     });
 
     it('creates a new lazy snapshot generation during environment reload', async () => {
-        await fs.writeFile(filePath, '"before-specialization"');
+        await fs.writeFile(filePath, '{"value":"before-specialization"}');
         await worker.app.hostConfiguration.getConfiguration(request().workerInitRequest!);
         const previous = worker.app.hostConfiguration;
-        await fs.writeFile(filePath, '"after-specialization"');
+        await fs.writeFile(filePath, '{"value":"after-specialization"}');
         const acquire = sandbox.spy(HostConfigurationSnapshot.prototype, 'getConfiguration');
         await new FunctionEnvironmentReloadHandler().handleEvent({
             environmentVariables: { FUNCTIONS_APPLICATION_DIRECTORY: root },
@@ -239,7 +239,7 @@ describe('WorkerInitHandler host configuration', () => {
         expect(acquire.called).to.be.false;
         expect(await worker.app.hostConfiguration.getConfiguration(request().workerInitRequest!)).to.deep.equal({
             status: Status.Available,
-            content: Buffer.from('"after-specialization"'),
+            content: Buffer.from('{"value":"after-specialization"}'),
         });
     });
 
@@ -252,6 +252,26 @@ describe('WorkerInitHandler host configuration', () => {
             response({ status: Status.Available, content: Buffer.from('{"n":9007199254740993,"n":-0}') })
         );
     });
+
+    for (const source of ['', '[]', '"s"', '1', 'null', 'true', '// c\n[1]']) {
+        it(`preserves init success when the configuration has no object root: ${JSON.stringify(source)}`, async () => {
+            await fs.writeFile(filePath, source);
+            stream.addTestMessage(request());
+            await stream.assertCalledWith(
+                failureWarning('InvalidJson'),
+                msg.init.receivedRequestLog,
+                msg.init.nodeVersionLog(),
+                response({ status: Status.Error })
+            );
+            await fs.writeFile(filePath, '{}');
+            stream.addTestMessage(request());
+            await stream.assertCalledWith(
+                msg.init.receivedRequestLog,
+                msg.init.nodeVersionLog(),
+                response({ status: Status.Error })
+            );
+        });
+    }
 
     it('logs one safe warning for concurrent/repeated malformed JSON while preserving init success', async () => {
         await fs.writeFile(filePath, '{"secret-configuration-value":');
