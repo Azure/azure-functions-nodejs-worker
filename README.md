@@ -44,18 +44,29 @@ Unrequested initialization performs no configuration lookup or I/O. There are no
 rereads or retries of cached failures.
 
 Delivery converts strict UTF-8 (default) or BOM-marked UTF-8, UTF-16 LE/BE, or UTF-32
-LE/BE incrementally to BOM-free UTF-8, limited to 65,536 transmitted bytes. Available
-content is not parsed: empty files and malformed JSON are delivered for the Host to
-validate. Missing files, acquisition/conversion errors, and oversized output have
-distinct content-free outcomes. These do not replace the existing worker-init result.
-The Host owns parsing, defaults, and `AzureFunctionsJobHost__` overrides.
+LE/BE incrementally to BOM-free UTF-8. Both the converted source (before parsing)
+and normalized output are limited to 65,536 bytes. Non-empty input is normalized to
+strict compact JSON: `//` and `/* */` comments and trailing commas are removed, while
+raw string/number tokens, escapes, duplicate keys, and key order are preserved. One
+root of any JSON type is accepted, with at most 64 nested containers. Malformed JSON,
+including non-empty whitespace/comment-only input, returns content-free Error.
+Empty decoded files remain Available-empty for the Host to reject.
+
+Missing files, acquisition/conversion/JSON errors, and oversized output have distinct
+content-free outcomes. Each cached failure emits one system warning with a fixed
+reason code, never a path, exception message, or file content. Available and Missing
+outcomes and cache replays emit no warning. These outcomes do not replace the existing
+worker-init result. The Host still owns settings validation, defaults, and
+`AzureFunctionsJobHost__` overrides. Node uses fatal decoders and accepts legitimately
+encoded U+FFFD; it does not use replacement-character detection to infer encoding errors.
 
 The vendored APP-01 fields and comments come from
 [Azure/azure-functions-language-worker-protobuf#103](https://github.com/Azure/azure-functions-language-worker-protobuf/pull/103),
 commit `313666583af4e97f0b534f1cbf61a3812f277c12`; unrelated newer protocol fields are not
 imported. The behavioral reference is
 [Azure/azure-functions-dotnet-worker#3522](https://github.com/Azure/azure-functions-dotnet-worker/pull/3522),
-commit `6066d8c6597c8f9810a4467d10aea0ac4a58d62d`. Regenerate the vendored bindings
+commit `4c440d8d38526a16eb549ac6fba1082fe5ad4450`, including its compact-normalization
+and cached-failure diagnostic behavior. Regenerate the vendored bindings
 with `npm run gen` (also run by `npm run build`); generated RPC files are not edited
 manually. Integration requires the compatible Host receiver and an opaque proxy path.
 

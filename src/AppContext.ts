@@ -16,10 +16,13 @@ export interface LegacyRegisteredFunction extends RegisteredFunction {
 }
 
 export class AppContext {
-    readonly hostConfiguration = new HostConfigurationSnapshot();
+    readonly hostConfiguration: HostConfigurationSnapshot;
     functionAppDirectory: string | null | undefined;
-    constructor(functionAppDirectory: string | null | undefined) {
+    constructor(functionAppDirectory: string | null | undefined, log: (message: rpc.IRpcLog) => void) {
         this.functionAppDirectory = functionAppDirectory;
+        this.hostConfiguration = new HostConfigurationSnapshot((message) =>
+            log({ message, level: rpc.RpcLog.Level.Warning, logCategory: rpc.RpcLog.RpcLogCategory.System })
+        );
     }
     packageJson: PackageJson = {};
     /**
