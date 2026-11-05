@@ -45,3 +45,10 @@ extends:
         dependsOn: [Build]
         jobs:
           - template: /azure-pipelines/templates/worker.yml@self
+            parameters:
+              IsPrerelease: ${{ parameters.IsPrerelease }}
+      - stage: PublishGitHub
+        dependsOn: [PublishNuget]
+        condition: and(succeeded(), ${{ eq(parameters.IsPrerelease, true) }})
+        jobs:
+          - template: /azure-pipelines/templates/publish-byoc.yml@self

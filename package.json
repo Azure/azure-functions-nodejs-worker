@@ -73,7 +73,8 @@
         "format": "prettier . --write",
         "updateVersion": "ts-node ./scripts/updateVersion.ts",
         "watch": "tsc --watch",
-        "webpack": "webpack --mode production"
+        "webpack": "webpack --mode production",
+        "package:byoc": "node scripts/packageByoc.js"
     },
     "files": [
         "dist"

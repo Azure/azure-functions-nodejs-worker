@@ -1,3 +1,8 @@
+parameters:
+  - name: IsPrerelease
+    type: boolean
+    default: true
+
 jobs:
   - job: CreateWorkerRelease
     displayName: "Publish NodeJs Worker to Nuget"
@@ -11,6 +16,13 @@ jobs:
           nuGetFeedType: internal
           allowPackageConflicts: true
     steps:
+      - checkout: none
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download worker packages from the current build"
+        inputs:
+          buildType: current
+          artifactName: drop
+          targetPath: "$(Build.ArtifactStagingDirectory)/dropOutput"
       - task: NuGetToolInstaller@1
         displayName: "Use NuGet 5x"
         inputs:

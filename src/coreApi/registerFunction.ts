@@ -22,6 +22,7 @@ export function registerFunction(metadata: FunctionMetadata, callback: FunctionC
 
     const rpcMetadata: rpc.IRpcFunctionMetadata = fromCoreFunctionMetadata(metadata);
     rpcMetadata.functionId = functionId;
+    rpcMetadata.language = 'node';
     // `rawBindings` is what's actually used by the host
     // `bindings` is used by the js library in both the old host indexing and the new worker indexing
     rpcMetadata.rawBindings = Object.entries(metadata.bindings).map(([name, binding]) => {
