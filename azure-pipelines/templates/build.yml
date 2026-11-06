@@ -1,3 +1,8 @@
+parameters:
+  - name: IsPrerelease
+    type: boolean
+    default: true
+
 steps:
     - task: NodeTool@0
       displayName: 'Install Node.js'
@@ -45,3 +50,5 @@ steps:
     - script: mkdir dropOutput && mv dropInput/*.nupkg dropOutput
       displayName: 'Move package to dropOutput'
       workingDirectory: '$(Build.ArtifactStagingDirectory)'
+    - script: npm run package:byoc -- --source "$(Build.ArtifactStagingDirectory)/dropInput" --output "$(Build.ArtifactStagingDirectory)/dropOutput"
+      displayName: 'Package Node.js BYOC worker'

@@ -1,8 +1,9 @@
 parameters:
   - name: IsPrerelease
     type: boolean
-    default: true
+    default: false
 
+trigger: none
 pr: none
 
 resources:
@@ -45,3 +46,8 @@ extends:
         dependsOn: [Build]
         jobs:
           - template: /azure-pipelines/templates/worker.yml@self
+      - stage: PublishGitHub
+        dependsOn: [PublishNuget]
+        condition: succeeded()
+        jobs:
+          - template: /azure-pipelines/templates/publish-byoc.yml@self

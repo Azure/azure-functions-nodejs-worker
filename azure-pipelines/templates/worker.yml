@@ -5,12 +5,19 @@ jobs:
       outputParentDirectory: $(Build.ArtifactStagingDirectory)
       outputs:
         - output: nuget
-          condition: and(succeeded(), ${{ eq(parameters.IsPrerelease, true) }})
+          condition: succeeded()
           packagesToPush: "$(Build.ArtifactStagingDirectory)/dropOutput/*.nupkg"
           publishVstsFeed: "e6a70c92-4128-439f-8012-382fe78d6396/eb652719-f36a-4e78-8541-e13a3cd655f9"
           nuGetFeedType: internal
           allowPackageConflicts: true
     steps:
+      - checkout: none
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download worker packages from the current build"
+        inputs:
+          buildType: current
+          artifactName: drop
+          targetPath: "$(Build.ArtifactStagingDirectory)/dropOutput"
       - task: NuGetToolInstaller@1
         displayName: "Use NuGet 5x"
         inputs:

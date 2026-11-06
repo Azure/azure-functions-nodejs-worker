@@ -5,6 +5,7 @@ import 'mocha';
 import * as escapeStringRegexp from 'escape-string-regexp';
 import * as path from 'path';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
+import { version } from '../../src/constants';
 import { getNodeVersionLog } from '../../src/utils/util';
 import { testAppPath, testAppSrcPath } from './testAppUtils';
 import { RegExpProps, RegExpStreamingMessage } from './TestEventStream';
@@ -21,7 +22,7 @@ function workerMetadataRegExps(responseName: string) {
     return {
         [`${responseName}.workerMetadata.runtimeVersion`]: /^[0-9]+\.[0-9]+\.[0-9]+$/,
         [`${responseName}.workerMetadata.workerBitness`]: /^(x64|x86|arm64)$/,
-        [`${responseName}.workerMetadata.workerVersion`]: /^(3|4)\.[0-9]+\.[0-9]+$/,
+        [`${responseName}.workerMetadata.workerVersion`]: new RegExp(`^${escapeStringRegexp(version)}$`),
         [`${responseName}.workerMetadata.customProperties.modelVersion`]: /^(3|4)\.[0-9]+\.[0-9]+$/,
     };
 }
