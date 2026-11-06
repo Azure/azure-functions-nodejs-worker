@@ -130,7 +130,7 @@ async function readBounded(file: fs.FileHandle): Promise<Snapshot> {
     const input = Buffer.alloc(4096);
     let head = 0;
     while (head < 4) {
-        const { bytesRead } = await file.read({ buffer: input, offset: head, length: 4 - head, position: null });
+        const { bytesRead } = await file.read(input, head, 4 - head, null);
         if (!bytesRead) {
             break;
         }
@@ -171,7 +171,7 @@ async function readBounded(file: fs.FileHandle): Promise<Snapshot> {
                 : { status: Status.Available, content };
         }
 
-        const { bytesRead } = await file.read({ buffer: input, offset: 0, length: input.length, position: null });
+        const { bytesRead } = await file.read(input, 0, input.length, null);
         bytes = input.subarray(0, bytesRead);
         final = bytesRead === 0;
     }

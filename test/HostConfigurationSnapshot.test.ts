@@ -14,6 +14,15 @@ const requested: rpc.IWorkerInitRequest = { capabilities: { HostConfiguration: '
 const encodings = ['utf8', 'utf8-bom', 'utf16le', 'utf16be', 'utf32le', 'utf32be'] as const;
 type Encoding = typeof encodings[number];
 
+type PositionalFileHandle = {
+    read: (
+        buffer: Buffer,
+        offset: number,
+        length: number,
+        position: number | null
+    ) => Promise<fs.FileReadResult<Buffer>>;
+};
+
 function encode(text: string, encoding: Encoding): Buffer {
     switch (encoding) {
         case 'utf8':
@@ -421,14 +430,14 @@ describe('HostConfigurationSnapshot', () => {
         await fs.writeFile(filePath, Buffer.alloc(1024 * 1024, 0x61));
         const handle = await fs.open(filePath, 'r');
         sandbox.stub(fs, 'open').resolves(handle);
-        const read = sandbox.spy(handle, 'read');
+        const read = sandbox.spy<PositionalFileHandle, 'read'>(handle, 'read');
         const close = sandbox.spy(handle, 'close');
         expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.TooLarge });
         expectWarning('Oversized');
         expect(read.callCount).to.be.at.most(18);
         expect(close.calledOnce).to.be.true;
         for (const call of read.getCalls()) {
-            expect(call.args[0]?.length).to.be.at.most(4096);
+            expect(call.args[2]).to.be.at.most(4096);
         }
     });
 
@@ -440,8 +449,8 @@ describe('HostConfigurationSnapshot', () => {
             const read = handle.read.bind(handle);
             sandbox.stub(fs, 'open').resolves(handle);
             sandbox
-                .stub(handle, 'read')
-                .callsFake((options) => read({ ...options, length: Math.min(options?.length ?? 4096, 1) }));
+                .stub<PositionalFileHandle, 'read'>(handle, 'read')
+                .callsFake((buffer, offset, length, position) => read(buffer, offset, Math.min(length, 1), position));
             expect(await snapshot.getConfiguration(requested)).to.deep.equal({
                 status: Status.Available,
                 content: Buffer.from(text),
