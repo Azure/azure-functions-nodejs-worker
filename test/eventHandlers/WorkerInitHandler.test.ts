@@ -10,7 +10,7 @@ import { isNode20Plus } from '../../src/utils/util';
 import { worker } from '../../src/WorkerContext';
 import { beforeEventHandlerSuite } from './beforeEventHandlerSuite';
 import { msg } from './msg';
-import { setTestAppMainField, testAppPath, testPackageJsonPath } from './testAppUtils';
+import { setTestAppMainField, testAppPath, testAppSrcPath, testPackageJsonPath } from './testAppUtils';
 import { TestEventStream } from './TestEventStream';
 
 describe('WorkerInitHandler', () => {
@@ -105,6 +105,39 @@ describe('WorkerInitHandler', () => {
             );
         });
     }
+
+    it('returns Node language metadata for functions registered during startup', async () => {
+        const fileName = 'registerFunction.js';
+        const fileSubpath = await setTestAppMainField(fileName);
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(fileSubpath),
+            msg.loadedEntryPoint(fileSubpath),
+            msg.init.nodeVersionLog(),
+            msg.init.response
+        );
+
+        stream.addTestMessage(msg.indexing.request);
+        await stream.assertCalledWith(
+            msg.indexing.receivedRequestLog,
+            msg.indexing.response(
+                [
+                    {
+                        bindings: {},
+                        directory: testAppSrcPath,
+                        functionId: 'testFunc',
+                        language: 'node',
+                        name: 'testFunc',
+                        rawBindings: [],
+                        scriptFile: fileName,
+                    },
+                ],
+                false
+            )
+        );
+    });
 
     it(`Loads entry point with glob`, async () => {
         await setTestAppMainField('doNothing*.js');

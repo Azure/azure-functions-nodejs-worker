@@ -1,7 +1,7 @@
 {
     "name": "azure-functions-nodejs-worker",
     "author": "Microsoft Corporation",
-    "version": "3.16.1",
+    "version": "3.17.0",
     "description": "Microsoft Azure Functions NodeJS Worker",
     "license": "(MIT OR Apache-2.0)",
     "dependencies": {
@@ -73,7 +73,8 @@
         "format": "prettier . --write",
         "updateVersion": "ts-node ./scripts/updateVersion.ts",
         "watch": "tsc --watch",
-        "webpack": "webpack --mode production"
+        "webpack": "webpack --mode production",
+        "package:byoc": "node scripts/packageByoc.js"
     },
     "files": [
         "dist"

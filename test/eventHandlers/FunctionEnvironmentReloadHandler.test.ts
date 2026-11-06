@@ -312,6 +312,7 @@ describe('FunctionEnvironmentReloadHandler', () => {
                             bindings: {},
                             directory: testAppSrcPath,
                             functionId: 'testFunc',
+                            language: 'node',
                             name: 'testFunc',
                             rawBindings: [],
                             scriptFile: fileName,
