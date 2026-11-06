@@ -28,6 +28,15 @@
 - Back in the worker repository, press <kbd>F5</kbd> and select the process for your running function app
 - Before you submit a PR, run `npm run lint` and `npm test` and fix any issues. If you want to debug the tests, switch your [launch profile](https://code.visualstudio.com/docs/editor/debugging) in VS Code to "Launch Unit Tests" and press <kbd>F5</kbd>.
 
+## Structured log metadata in the core API
+
+The built-in `@azure/functions-core` module exposes `supportsStructuredLogProperties` and accepts optional `{ attributes }` metadata as the fourth argument to `log`. The same argument is available on the invocation core context. Existing three-argument calls are unchanged.
+
+Attributes are copied into the process-local `LogHookContext.attributes` map. Only own enumerable string, boolean and finite-number values are accepted. Accessors, nested values and reserved telemetry keys are omitted without invoking getters or modifying the input. Reserved keys include `CategoryName`, `__proto__`, `prototype`, `constructor` and the prefixes `exception.`, `_MS`, `microsoft` and `ai.`, case-insensitively.
+
+A log exporter declares support with `registerHook("log", callback, { structuredLogProperties: true })` after it has been configured. Disposing the registration removes that declaration. A missing consumer or rejected metadata produces a system warning at most once per reason per invocation, or once per application outside an invocation. The original formatted message is still emitted once through the existing path.
+
+These attributes are not added to the worker-host RPC message. A compatible programming-model library and a direct telemetry exporter are required for queryable properties; this declaration does not guarantee network delivery or deduplication.
 ## Repositories
 
 These are the most important GitHub repositories that make up the Node.js experience on Azure Functions:

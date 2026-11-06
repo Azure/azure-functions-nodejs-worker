@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the MIT License.
 
-import { HookData, RpcLogCategory, RpcLogLevel } from '@azure/functions-core';
+import { HookData, LogAttributes, RpcLogCategory, RpcLogLevel } from '@azure/functions-core';
 import * as coreTypes from '@azure/functions-core';
 import { AzureFunctionsRpcMessages as rpc } from '../../azure-functions-language-worker-protobuf/src/rpc';
 import { toCoreLog } from '../coreApi/converters/toCoreStatusResult';
@@ -18,16 +18,22 @@ export class LogHookContext implements coreTypes.LogHookContext {
     level: RpcLogLevel;
     message: string;
     #category: RpcLogCategory;
+    #attributes?: LogAttributes;
     #hookData: HookData;
     #invocationContext: unknown;
 
-    constructor(log: rpc.IRpcLog, invocLogCtx: InvocationLogContext | undefined) {
+    constructor(log: rpc.IRpcLog, invocLogCtx: InvocationLogContext | undefined, attributes?: LogAttributes) {
+        this.#attributes = attributes;
         const coreLog = toCoreLog(log);
         this.level = nonNullProp(coreLog, 'level');
         this.message = nonNullProp(coreLog, 'message');
         this.#category = nonNullProp(coreLog, 'logCategory');
         this.#hookData = invocLogCtx?.hookData ?? {};
         this.#invocationContext = invocLogCtx?.invocationContext;
+    }
+
+    get attributes(): LogAttributes | undefined {
+        return this.#attributes;
     }
 
     get hookData(): HookData {
