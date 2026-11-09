@@ -32,7 +32,15 @@ export class HostConfigurationSnapshot {
 
     constructor(
         private readonly logWarning: (message: string) => void,
-        private readonly getAppDirectory = () => process.env.FUNCTIONS_APPLICATION_DIRECTORY
+        private readonly getAppDirectory = () => {
+            for (const setting of ['FUNCTIONS_APPLICATION_DIRECTORY', 'AzureWebJobsScriptRoot']) {
+                const root = process.env[setting];
+                if (root?.trim()) {
+                    return root;
+                }
+            }
+            return process.platform === 'linux' ? '/home/site/wwwroot' : undefined;
+        }
     ) {}
 
     getConfiguration(request: rpc.IWorkerInitRequest): Promise<rpc.IHostConfiguration> | undefined {

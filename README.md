@@ -31,12 +31,13 @@
 ## Host configuration delivery
 
 When `WorkerInitRequest.capabilities["HostConfiguration"]` is exactly `"1"`, the worker
-captures `host.json` beneath its local `FUNCTIONS_APPLICATION_DIRECTORY` and attaches
-`WorkerInitResponse.host_configuration`. The launcher must provide this environment
-variable before enabled initialization. Neither the Host's `function_app_directory`,
-`AzureWebJobsScriptRoot`, nor the current directory is a fallback. Explicit relative
-roots use filesystem path resolution. The repository's Host sanity launcher does not
-set `FUNCTIONS_APPLICATION_DIRECTORY`; platform provisioning must be verified separately.
+captures `host.json` and attaches `WorkerInitResponse.host_configuration`. Root resolution uses the first nonblank value:
+`FUNCTIONS_APPLICATION_DIRECTORY` (optional internal compatibility override; customers need not set it), then
+`AzureWebJobsScriptRoot` (customer-configured custom root), then Linux-only `/home/site/wwwroot`. Empty/whitespace-only
+values are blank; selected paths are preserved untrimmed. Non-Linux has no hardcoded default: both variables blank
+returns `AppDirectoryNotSet`. File open/read errors never trigger fallback to another root. Neither the Host's
+`function_app_directory` nor cwd is a root fallback; explicit relative paths use native filesystem resolution.
+This resolution does not change the Host's function app startup behavior.
 
 The snapshot is lazy and shared across concurrent/repeated initialization requests for
 the current app generation, including failures. Specialization creates a new generation.

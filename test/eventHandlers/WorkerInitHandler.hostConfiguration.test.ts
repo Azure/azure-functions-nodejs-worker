@@ -119,9 +119,23 @@ describe('WorkerInitHandler host configuration', () => {
         });
     }
 
-    it('does not fall back to the Host root or cwd when the local root is unset', async () => {
+    it('falls back to AzureWebJobsScriptRoot while preserving the Host app directory', async () => {
         delete process.env.FUNCTIONS_APPLICATION_DIRECTORY;
-        process.env.AzureWebJobsScriptRoot = testAppPath;
+        process.env.AzureWebJobsScriptRoot = root;
+        await fs.writeFile(filePath, '{"root":"script"}');
+        stream.addTestMessage(request());
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.init.nodeVersionLog(),
+            response({ status: Status.Available, content: Buffer.from('{"root":"script"}') })
+        );
+        expect(worker.app.functionAppDirectory).to.equal(testAppPath);
+    });
+
+    it('does not fall back to the Host root or cwd on non-Linux platforms', async () => {
+        delete process.env.FUNCTIONS_APPLICATION_DIRECTORY;
+        delete process.env.AzureWebJobsScriptRoot;
+        sandbox.stub(process, 'platform').value('win32');
         const open = sandbox.spy(fs, 'open');
         stream.addTestMessage(request());
         await stream.assertCalledWith(
