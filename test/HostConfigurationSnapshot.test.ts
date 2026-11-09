@@ -81,6 +81,67 @@ describe('HostConfigurationSnapshot', () => {
         await fs.rm(root, { recursive: true, force: true });
     });
 
+    describe('application directory resolution', () => {
+        beforeEach(() => {
+            sandbox.stub(process, 'env').value({ ...process.env });
+            delete process.env.AzureWebJobsScriptRoot;
+            snapshot = new HostConfigurationSnapshot(warnings);
+        });
+
+        it('preserves a nonblank AzureWebJobsScriptRoot and ignores the legacy internal setting', async () => {
+            process.env.AzureWebJobsScriptRoot = ' explicit ';
+            process.env.FUNCTIONS_APPLICATION_DIRECTORY = root;
+            const open = sandbox.stub(fs, 'open').rejects(new Error('synthetic open failure'));
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(open.calledOnceWithExactly(` explicit ${path.sep}host.json`, 'r')).to.be.true;
+            expectWarning('OpenFailed');
+        });
+
+        it('reads configuration from AzureWebJobsScriptRoot', async () => {
+            process.env.AzureWebJobsScriptRoot = root;
+            await fs.writeFile(filePath, '{"root":"script"}');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({
+                status: Status.Available,
+                content: Buffer.from('{"root":"script"}'),
+            });
+        });
+
+        for (const value of [undefined, '', ' \t\r\n']) {
+            it(`uses the Linux default when AzureWebJobsScriptRoot is ${JSON.stringify(value)}`, async () => {
+                if (value !== undefined) {
+                    process.env.AzureWebJobsScriptRoot = value;
+                }
+                sandbox.stub(process, 'platform').value('linux');
+                sandbox.stub(path, 'sep').value('/');
+                const open = sandbox.stub(fs, 'open').rejects(new Error('synthetic open failure'));
+                expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+                expect(open.calledOnceWithExactly('/home/site/wwwroot/host.json', 'r')).to.be.true;
+                expectWarning('OpenFailed');
+            });
+        }
+
+        for (const platform of ['win32', 'darwin']) {
+            it(`does not introduce a default directory on ${platform}`, async () => {
+                sandbox.stub(process, 'platform').value(platform);
+                const open = sandbox.spy(fs, 'open');
+                expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+                expect(open.called).to.be.false;
+                expectWarning('AppDirectoryNotSet');
+            });
+        }
+
+        it('does not fall back after selecting an unavailable AzureWebJobsScriptRoot', async () => {
+            sandbox.stub(process, 'platform').value('linux');
+            const missing = path.join(root, 'missing-directory');
+            process.env.AzureWebJobsScriptRoot = missing;
+            await fs.writeFile(filePath, '{}');
+            const open = sandbox.spy(fs, 'open');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(open.calledOnceWithExactly(path.join(missing, 'host.json'), 'r')).to.be.true;
+            expectWarning('AppDirectoryNotFound');
+        });
+    });
+
     const unrequestedCapabilities: rpc.IWorkerInitRequest['capabilities'][] = [
         undefined,
         null,

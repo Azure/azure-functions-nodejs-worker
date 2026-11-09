@@ -32,7 +32,7 @@ describe('WorkerInitHandler host configuration', () => {
     beforeEach(async () => {
         root = await fs.mkdtemp(path.join(__dirname, 'host-configuration-'));
         filePath = path.join(root, 'host.json');
-        process.env.FUNCTIONS_APPLICATION_DIRECTORY = root;
+        process.env.AzureWebJobsScriptRoot = root;
         sandbox = sinon.createSandbox();
     });
 
@@ -119,9 +119,9 @@ describe('WorkerInitHandler host configuration', () => {
         });
     }
 
-    it('does not fall back to the Host root or cwd when the local root is unset', async () => {
-        delete process.env.FUNCTIONS_APPLICATION_DIRECTORY;
-        process.env.AzureWebJobsScriptRoot = testAppPath;
+    it('does not fall back to the Host root or cwd on non-Linux platforms', async () => {
+        delete process.env.AzureWebJobsScriptRoot;
+        sandbox.stub(process, 'platform').value('win32');
         const open = sandbox.spy(fs, 'open');
         stream.addTestMessage(request());
         await stream.assertCalledWith(
@@ -228,7 +228,7 @@ describe('WorkerInitHandler host configuration', () => {
         await fs.writeFile(filePath, '{"value":"after-specialization"}');
         const acquire = sandbox.spy(HostConfigurationSnapshot.prototype, 'getConfiguration');
         await new FunctionEnvironmentReloadHandler().handleEvent({
-            environmentVariables: { FUNCTIONS_APPLICATION_DIRECTORY: root },
+            environmentVariables: { AzureWebJobsScriptRoot: root },
         });
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
@@ -308,7 +308,7 @@ describe('WorkerInitHandler host configuration', () => {
         await stream.assertCalledWith(failureWarning('InvalidJson'));
 
         await new FunctionEnvironmentReloadHandler().handleEvent({
-            environmentVariables: { FUNCTIONS_APPLICATION_DIRECTORY: root },
+            environmentVariables: { AzureWebJobsScriptRoot: root },
         });
         await stream.assertCalledWith(
             msg.envReload.funcAppDirNotDefined,
