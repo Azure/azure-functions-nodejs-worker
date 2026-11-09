@@ -31,10 +31,10 @@
 ## Host configuration delivery
 
 When `WorkerInitRequest.capabilities["HostConfiguration"]` is exactly `"1"`, the worker
-captures `host.json` and attaches `WorkerInitResponse.host_configuration`. Root resolution uses the first nonblank value:
-`FUNCTIONS_APPLICATION_DIRECTORY` (optional internal compatibility override; customers need not set it), then
-`AzureWebJobsScriptRoot` (customer-configured custom root), then Linux-only `/home/site/wwwroot`. Empty/whitespace-only
-values are blank; selected paths are preserved untrimmed. Non-Linux has no hardcoded default: both variables blank
+captures `host.json` and attaches `WorkerInitResponse.host_configuration`. Root resolution uses
+`AzureWebJobsScriptRoot` for a customer-configured custom root, or Linux-only `/home/site/wwwroot` when that setting
+is missing or blank. Empty/whitespace-only values are blank; selected paths are preserved untrimmed.
+Non-Linux has no hardcoded default: a missing or blank `AzureWebJobsScriptRoot`
 returns `AppDirectoryNotSet`. File open/read errors never trigger fallback to another root. Neither the Host's
 `function_app_directory` nor cwd is a root fallback; explicit relative paths use native filesystem resolution.
 This resolution does not change the Host's function app startup behavior.

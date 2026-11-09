@@ -84,36 +84,31 @@ describe('HostConfigurationSnapshot', () => {
     describe('application directory resolution', () => {
         beforeEach(() => {
             sandbox.stub(process, 'env').value({ ...process.env });
-            delete process.env.FUNCTIONS_APPLICATION_DIRECTORY;
             delete process.env.AzureWebJobsScriptRoot;
             snapshot = new HostConfigurationSnapshot(warnings);
         });
 
-        it('preserves a nonblank explicit root and prefers it to AzureWebJobsScriptRoot', async () => {
-            process.env.FUNCTIONS_APPLICATION_DIRECTORY = ' explicit ';
-            process.env.AzureWebJobsScriptRoot = root;
+        it('preserves a nonblank AzureWebJobsScriptRoot and ignores the legacy internal setting', async () => {
+            process.env.AzureWebJobsScriptRoot = ' explicit ';
+            process.env.FUNCTIONS_APPLICATION_DIRECTORY = root;
             const open = sandbox.stub(fs, 'open').rejects(new Error('synthetic open failure'));
             expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
             expect(open.calledOnceWithExactly(` explicit ${path.sep}host.json`, 'r')).to.be.true;
             expectWarning('OpenFailed');
         });
 
-        for (const value of [undefined, '', ' \t\r\n']) {
-            it(`falls back to AzureWebJobsScriptRoot for explicit root ${JSON.stringify(value)}`, async () => {
-                if (value !== undefined) {
-                    process.env.FUNCTIONS_APPLICATION_DIRECTORY = value;
-                }
-                process.env.AzureWebJobsScriptRoot = root;
-                await fs.writeFile(filePath, '{"root":"script"}');
-                expect(await snapshot.getConfiguration(requested)).to.deep.equal({
-                    status: Status.Available,
-                    content: Buffer.from('{"root":"script"}'),
-                });
+        it('reads configuration from AzureWebJobsScriptRoot', async () => {
+            process.env.AzureWebJobsScriptRoot = root;
+            await fs.writeFile(filePath, '{"root":"script"}');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({
+                status: Status.Available,
+                content: Buffer.from('{"root":"script"}'),
             });
+        });
 
-            it(`uses the Linux default when both settings are ${JSON.stringify(value)}`, async () => {
+        for (const value of [undefined, '', ' \t\r\n']) {
+            it(`uses the Linux default when AzureWebJobsScriptRoot is ${JSON.stringify(value)}`, async () => {
                 if (value !== undefined) {
-                    process.env.FUNCTIONS_APPLICATION_DIRECTORY = value;
                     process.env.AzureWebJobsScriptRoot = value;
                 }
                 sandbox.stub(process, 'platform').value('linux');
@@ -135,19 +130,16 @@ describe('HostConfigurationSnapshot', () => {
             });
         }
 
-        for (const setting of ['FUNCTIONS_APPLICATION_DIRECTORY', 'AzureWebJobsScriptRoot']) {
-            it(`does not fall back after selecting an unavailable ${setting}`, async () => {
-                sandbox.stub(process, 'platform').value('linux');
-                process.env.AzureWebJobsScriptRoot = root;
-                const missing = path.join(root, 'missing-directory');
-                process.env[setting] = missing;
-                await fs.writeFile(filePath, '{}');
-                const open = sandbox.spy(fs, 'open');
-                expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
-                expect(open.calledOnceWithExactly(path.join(missing, 'host.json'), 'r')).to.be.true;
-                expectWarning('AppDirectoryNotFound');
-            });
-        }
+        it('does not fall back after selecting an unavailable AzureWebJobsScriptRoot', async () => {
+            sandbox.stub(process, 'platform').value('linux');
+            const missing = path.join(root, 'missing-directory');
+            process.env.AzureWebJobsScriptRoot = missing;
+            await fs.writeFile(filePath, '{}');
+            const open = sandbox.spy(fs, 'open');
+            expect(await snapshot.getConfiguration(requested)).to.deep.equal({ status: Status.Error });
+            expect(open.calledOnceWithExactly(path.join(missing, 'host.json'), 'r')).to.be.true;
+            expectWarning('AppDirectoryNotFound');
+        });
     });
 
     const unrequestedCapabilities: rpc.IWorkerInitRequest['capabilities'][] = [
