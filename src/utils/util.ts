@@ -25,12 +25,19 @@ interface NodeVersionLog {
 }
 
 export function getNodeVersionLog(version: string): NodeVersionLog | undefined {
-    const versionSplit = version.split('.');
-    if (versionSplit.length != 3) {
+    const parsedVersion = semver.parse(version);
+    if (!parsedVersion) {
         throw new Error("Could not parse Node.js version: '" + version + "'");
     }
 
-    const major = versionSplit[0]; // e.g. "v18"
+    const major = `v${parsedVersion.major}`;
+    if (parsedVersion.prerelease.length > 0) {
+        return {
+            message: `Prerelease Node.js version ${version} is not supported. Use a stable Node.js version: ${upgradeUrl}`,
+            level: rpc.RpcLog.Level.Warning,
+        };
+    }
+
     const warningDateStr = NODE_EOL_WARNING_DATES[major];
     const eolDateStr = NODE_EOL_DATES[major];
     const today = currentYearMonth();
