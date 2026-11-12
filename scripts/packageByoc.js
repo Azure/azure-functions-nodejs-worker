@@ -102,7 +102,7 @@ function packageByoc(source, output) {
     files.push({ name: 'worker-manifest.json', content: Buffer.from(`${JSON.stringify(manifest, null, 4)}\n`) });
     const tar = Buffer.concat([...files.flatMap((file) => tarEntry(file.name, file.content)), Buffer.alloc(1024)]);
     const archive = zlib.gzipSync(tar, { level: 9, mtime: 0 });
-    const basename = `${workerName}-${pkg.version}.tar.gz`;
+    const basename = `${workerName}.tar.gz`;
     const archivePath = path.join(output, basename);
     const checksumPath = `${archivePath}.sha256`;
     assertNoSymlinks(archivePath);
