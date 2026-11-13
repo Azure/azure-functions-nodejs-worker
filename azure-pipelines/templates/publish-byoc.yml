@@ -11,20 +11,22 @@ jobs:
           targetPath: "$(Pipeline.Workspace)/node-worker-release"
       - pwsh: |
           $ErrorActionPreference = 'Stop'
-          $archives = @(Get-ChildItem -LiteralPath $env:ASSET_DIRECTORY -Filter 'azure-functions-nodejs-worker-*.tar.gz' -File)
-          if ($archives.Count -ne 1) {
-              throw "Expected exactly one Node.js worker archive; found $($archives.Count)."
-          }
-          $archive = $archives[0]
-          if ($archive.Name -notmatch '^azure-functions-nodejs-worker-(?<version>.+)\.tar\.gz$') {
-              throw "Unexpected worker archive name: $($archive.Name)"
-          }
-          $version = $Matches.version
+          $archive = Get-Item -LiteralPath (Join-Path $env:ASSET_DIRECTORY 'azure-functions-nodejs-worker.tar.gz')
           $checksum = Get-Item -LiteralPath "$($archive.FullName).sha256"
           $hash = (Get-FileHash -LiteralPath $archive.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           if ((Get-Content -LiteralPath $checksum.FullName -Raw).TrimEnd() -cne "$hash  $($archive.Name)") {
               throw "Checksum does not match $($archive.Name)."
           }
+          $manifestJson = & tar -xOf $archive.FullName worker-manifest.json
+          if ($LASTEXITCODE -ne 0) {
+              throw 'Could not read the packaged worker manifest.'
+          }
+          $manifest = ($manifestJson -join "`n") | ConvertFrom-Json
+          if ($manifest.name -cne 'azure-functions-nodejs-worker' -or
+              $manifest.version -isnot [string] -or [string]::IsNullOrWhiteSpace($manifest.version)) {
+              throw 'The packaged worker manifest must contain the worker name and version.'
+          }
+          $version = $manifest.version
           $assets = @($archive, $checksum)
           $headers = @{
               "Accept" = "application/vnd.github+json"
