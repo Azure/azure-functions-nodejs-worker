@@ -192,21 +192,11 @@ describe('FunctionEnvironmentReloadHandler', () => {
         process.chdir(cwd);
     });
 
-    it('reloads package.json', async () => {
+    it('preserves the initialized app when the function app directory is unchanged', async () => {
         const oldPackageJson = { type: 'module', hello: 'world' };
         await fs.writeFile(testPackageJsonPath, JSON.stringify(oldPackageJson));
-        stream.addTestMessage({
-            requestId: 'testReqId',
-            functionEnvironmentReloadRequest: {
-                functionAppDirectory: testAppPath,
-            },
-        });
-        await stream.assertCalledWith(
-            msg.envReload.reloadEnvVarsLog(0),
-            msg.envReload.changingCwdLog(testAppPath),
-            msg.envReload.nodeVersionLog(),
-            msg.envReload.response
-        );
+        stream.addTestMessage(msg.init.request(testAppPath));
+        await stream.assertCalledWith(msg.init.receivedRequestLog, msg.init.nodeVersionLog(), msg.init.response);
         expect(worker.app.packageJson).to.deep.equal(oldPackageJson);
 
         const newPackageJson = { type: 'commonjs', notHello: 'notWorld' };
@@ -224,7 +214,57 @@ describe('FunctionEnvironmentReloadHandler', () => {
             msg.envReload.nodeVersionLog(),
             msg.envReload.response
         );
-        expect(worker.app.packageJson).to.deep.equal(newPackageJson);
+        expect(worker.app.packageJson).to.deep.equal(oldPackageJson);
+    });
+
+    it('preserves v4 registrations when init and reload reference the same app', async () => {
+        const fileName = 'registerV4Function.js';
+        const fileSubpath = await setTestAppMainField(fileName);
+
+        stream.addTestMessage(msg.init.request(testAppPath));
+        await stream.assertCalledWith(
+            msg.init.receivedRequestLog,
+            msg.loadingEntryPoint(fileSubpath),
+            msg.infoLog('Setting Node.js programming model to "@azure/functions" version "4.12.0"'),
+            msg.loadedEntryPoint(fileSubpath),
+            msg.init.nodeVersionLog(),
+            msg.init.response
+        );
+
+        stream.addTestMessage({
+            requestId: 'testReqId',
+            functionEnvironmentReloadRequest: {
+                functionAppDirectory: testAppPath,
+            },
+        });
+        await stream.assertCalledWith(
+            msg.envReload.funcAppDirNotChanged,
+            msg.envReload.reloadEnvVarsLog(0),
+            msg.envReload.changingCwdLog(testAppPath),
+            msg.envReload.nodeVersionLog(),
+            msg.envReload.response
+        );
+
+        expect(worker.app.programmingModel?.version).to.equal('4.12.0');
+        expect(worker.app.isUsingWorkerIndexing).to.be.true;
+
+        stream.addTestMessage(msg.indexing.request);
+        await stream.assertCalledWith(
+            msg.indexing.receivedRequestLog,
+            msg.indexing.response(
+                [
+                    {
+                        bindings: {},
+                        directory: testAppSrcPath,
+                        functionId: 'testFunc',
+                        name: 'testFunc',
+                        rawBindings: [],
+                        scriptFile: fileName,
+                    },
+                ],
+                false
+            )
+        );
     });
 
     it('loads package.json (placeholder scenario)', async () => {
