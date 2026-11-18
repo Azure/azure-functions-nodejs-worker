@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('hello-world', 'hello-world-configured')]
+    [ValidateSet('hello-world', 'hello-world-configured', 'otel-sample')]
     [string]$Sample = 'hello-world',
     [int]$Port = 7075,
     [switch]$Streaming,
@@ -17,6 +17,9 @@ $sampleRoot = Join-Path $root "sample\$Sample"
 if (-not (Test-Path -LiteralPath (Join-Path $sampleRoot 'node_modules\@azure\functions'))) {
     throw "Run npm install in $sampleRoot first."
 }
+# TypeScript samples compile to dist before the host loads them.
+npm --prefix $sampleRoot run build --if-present
+if ($LASTEXITCODE -ne 0) { throw "Build failed for $sampleRoot" }
 # A sample can ship its own worker config (customer opt-in); otherwise use the worker defaults.
 $config = Join-Path $sampleRoot 'rust-worker.json'
 if (-not (Test-Path -LiteralPath $config)) {

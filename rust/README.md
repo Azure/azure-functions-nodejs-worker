@@ -60,6 +60,7 @@ npm run build
 npm --prefix rust ci --ignore-scripts
 npm --prefix rust\sample\hello-world ci --ignore-scripts
 npm --prefix rust\sample\hello-world-configured ci --ignore-scripts
+npm --prefix rust\sample\otel-sample ci --ignore-scripts
 cargo build --locked --manifest-path rust\Cargo.toml
 ```
 
@@ -75,6 +76,7 @@ Both samples live under `rust/sample` and run through the real Functions host.
 | --- | --- | --- |
 | `hello-world` | A single `hello` function. The customer changes nothing; OTel stays off. | `rust/runtime.json` (default) |
 | `hello-world-configured` | The same app with customer opt-in: native OTel on, a custom service name, chosen instrumentations, and Node arguments. Adds `trace` and `failure` functions. | `sample/hello-world-configured/rust-worker.json` |
+| `otel-sample` | TypeScript port of the [OTel quickstart](https://github.com/Azure-Samples/functions-quickstart-typescript-azd-otel/tree/main/src/otel-sample) that opts in to only the JS `http` and `dns` instrumentations. | `rust/runtime.json` (default) |
 
 `start-http.ps1` uses a sample's `rust-worker.json` when it has one and the
 default `runtime.json` otherwise. It points the host at the Rust executable,
@@ -122,6 +124,33 @@ Invoke-WebRequest 'http://localhost:7075/api/failure'
 Pass `-Streaming` to enable the library's existing HTTP streaming path. The
 host still owns routes, HTTP auth levels, binding extensions, and function keys.
 The samples use anonymous functions for local testing only.
+
+### OTel sample (JS instrumentation, opt-in)
+
+```powershell
+& rust\scripts\start-http.ps1 -Sample otel-sample -Port 7075 -VerboseHost
+```
+
+The script runs `npm run build` (TypeScript to `dist`) before starting the
+host. `index.ts` loads first and registers only `HttpInstrumentation`,
+`DnsInstrumentation`, and `AzureFunctionsInstrumentation`, not
+`getNodeAutoInstrumentations()`. With no `APPLICATIONINSIGHTS_CONNECTION_STRING`,
+spans and logs go to the console, which `-VerboseHost` shows. Set the connection
+string (see `local.settings.json.template`) to export to Application Insights.
+
+```powershell
+# dns.lookup + http GET client spans, same trace ID in both functions:
+Invoke-RestMethod 'http://localhost:7075/api/first_http_function'
+# dns.lookup span only:
+Invoke-RestMethod 'http://localhost:7075/api/dns_lookup?host=microsoft.com'
+```
+
+Differences from the quickstart: Service Bus and the extension bundle are
+removed so it runs locally with no Azure resources, and the sample uses
+`AlwaysOnSampler` because the local host sends unsampled `traceparent` headers.
+The Rust native pipeline stays off here (default `runtime.json`), so all
+telemetry comes from the JS SDK. This is today's baseline that the Rust OTel
+opt-in work replaces.
 
 ## Instrumentation configuration
 
