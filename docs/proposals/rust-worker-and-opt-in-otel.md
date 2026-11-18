@@ -5,7 +5,7 @@
 | **Status** | In progress |
 | **Area** | Azure Functions Node.js worker, Node.js OpenTelemetry instrumentation |
 | **Goal** | Reduce Node.js cold start and make OpenTelemetry (OTel) opt-in and vendor-neutral |
-| **Prototypes** | `azure-functions-nodejs-worker-Rust` and `azure-functions-nodejs-opentelemetry-Rust` (local prototypes, not yet published) |
+| **Prototypes** | [`rust/`](../../rust/README.md) (Rust worker) and [`rust/opentelemetry`](../../rust/opentelemetry/README.md) (Rust OTel crate) in this repository |
 
 ## 1. Summary
 
@@ -126,7 +126,7 @@ How the pieces fit:
   loading `@grpc/grpc-js` and the protobuf runtime, and never opens a gRPC
   channel. Rust generates its protocol types from the same proto files as the
   existing worker, so the two can't drift apart.
-- **Native telemetry.** The `azure-functions-nodejs-opentelemetry-Rust` crate
+- **Native telemetry.** The `rust/opentelemetry` crate
   handles tracing, logging, sampling, batching and OTLP export on Rust threads.
   None of it touches the Node.js event loop.
 - **A small Node.js footprint.** With OTel on, Node.js loads three things: the
@@ -322,7 +322,7 @@ asking the OpenTelemetry team to own it as a product package and to build the
 opt-in model into it.
 
 - **Own and publish the Rust OTel package.** Take the
-  `azure-functions-nodejs-opentelemetry-Rust` prototype, or an equivalent, and
+  `rust/opentelemetry` prototype, or an equivalent, and
   ship it as a supported, versioned package. That includes the official build,
   signing, SBOMs and security servicing.
 - **Build opt-in into the package.** One switch for OTel as a whole, and one per

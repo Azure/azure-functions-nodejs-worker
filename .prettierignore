@@ -6,3 +6,4 @@ NOTICE.html
 
 # Exclude markdown until this bug is fixed: https://github.com/prettier/prettier/issues/5019
 *.md
+rust/target
