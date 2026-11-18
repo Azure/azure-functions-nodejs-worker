@@ -1,99 +1,102 @@
-# Proposal: Rust-based Node.js worker with native, opt-in OpenTelemetry
+# Proposal: One OpenTelemetry for All, Exploring Rust to Reduce Cold Starts
 
 | | |
 |---|---|
 | **Status** | In progress |
 | **Area** | Azure Functions Node.js worker, Node.js OpenTelemetry instrumentation |
-| **Goal** | Reduce Node.js cold start, make OpenTelemetry (OTel) opt-in and vendor-neutral |
+| **Goal** | Reduce Node.js cold start and make OpenTelemetry (OTel) opt-in and vendor-neutral |
 | **Prototypes** | `azure-functions-nodejs-worker-Rust` and `azure-functions-nodejs-opentelemetry-Rust` (local prototypes, not yet published) |
 
 ## 1. Summary
 
-We propose to:
+Node.js apps pay for telemetry before their first function runs. We want to stop that.
 
-1. **Move the host-facing worker infrastructure to Rust.** This covers the gRPC
-   connection to the Functions host, the protocol handling, invocation
-   correlation, backpressure, and shutdown. Customer JavaScript continues to run
-   on Node.js through the existing execution engine and `@azure/functions`.
-   Customers do not change their code.
-2. **Move the OpenTelemetry pipeline to Rust.** This replaces
-   `@azure/functions-opentelemetry-instrumentation` and the JavaScript OTel
-   SDK/exporter stack. Span creation, sampling, log records, batching, and export
-   happen in a native crate, outside the Node.js event loop.
-3. **Make OTel and each instrumentation opt-in.** With no configuration, the
-   worker loads **no** telemetry code. Customers enable OTel, and then individually
-   enable instrumentations such as `http` (outgoing), `fetch`, and `dns`.
-   We load only the instrumentation code they turn on.
-4. **Make OTel platform-agnostic.** Export uses standard OTLP and W3C Trace
-   Context, so customers can choose any OTel-compatible backend. One shared Rust
-   implementation also aims for consistent behavior across supported OS,
-   architecture, and hosting plan targets. Each target counts as supported only
-   after it passes the build, extension/E2E parity, and benchmark validation in
-   sections 8–10. Until then, cross-platform consistency is a goal, not a guarantee.
+The plan has five parts:
 
-The main goal is to **reduce cold start**. Today, the telemetry setup and
-automatic instrumentation load in Node.js on the startup path. This proposal
-removes that work by default and moves the rest out of JavaScript.
+1. **Move the worker's host-facing code to Rust.** Rust takes over the gRPC
+   connection to the Functions host, protocol handling, invocation correlation,
+   backpressure and shutdown. Customer JavaScript still runs on Node.js through
+   the existing execution engine and `@azure/functions`. Nobody changes their code.
+2. **Move the OTel pipeline to Rust.** A native crate creates spans, samples
+   them, records logs, batches and exports. All of it runs outside the Node.js
+   event loop. This replaces `@azure/functions-opentelemetry-instrumentation`
+   and the JavaScript OTel SDK and exporters.
+3. **Ask the OpenTelemetry team to own the Rust OTel package.** We need them to
+   build, publish and maintain it, with an opt-in switch for OTel and for each
+   instrumentation. Section 10 lists what we need from them.
+4. **Make OTel and every instrumentation opt-in.** With no configuration, the
+   worker loads no telemetry code at all. Customers turn OTel on, then pick the
+   instrumentations they want, such as outgoing `http`, `fetch` and `dns`.
+   Anything they leave off never loads.
+5. **Make OTel platform-agnostic.** Export uses OTLP and W3C Trace Context, so
+   customers can send data to any OTel-compatible backend. One Rust
+   implementation should behave the same on every target we support. We'll call
+   a target supported only after it passes the build, extension/E2E parity and
+   benchmark checks in sections 8 to 11. Until then, consistent behavior across
+   platforms is a goal.
+
+The point of all this is **cold start**. Today the telemetry setup and automatic
+instrumentation load in Node.js on the startup path. We'd drop that work by
+default and move the rest out of JavaScript.
 
 ## 2. Problem
 
-### 2.1 Cold start cost of the current OTel setup
+### 2.1 What the current OTel setup costs at cold start
 
-The current Node.js OTel setup runs inside the customer's Node.js process,
-before the customer's functions can load:
+The Node.js OTel setup runs inside the customer's process, before their
+functions load.
 
-- The customer's app must `require`/`import` the OTel JS SDK, tracer provider,
-  exporters such as `@azure/monitor-opentelemetry-exporter`, and
-  `@opentelemetry/instrumentation-http`. It must also load
-  `@azure/functions-opentelemetry-instrumentation`.
-  This can add many modules to load, parse, and compile on V8 during cold start.
-- Instrumentation works by patching modules as they load
-  (`@opentelemetry/instrumentation` hooks `require`, and ESM needs
-  `--experimental-loader`/`--import`). These hooks affect **every**
-  module the app loads, not only the instrumented modules.
-- Span processing, serialization, and export run on the same event loop as the
-  customer's handlers. This competes with the first invocations.
-- HTTP instrumentation is effectively required. The README states that
-  *"Azure Functions instrumentation expects HTTP layer to be instrumented"*.
-  So customers pay for HTTP patching even when they only need invocation spans.
+- The app has to `require` or `import` the OTel JS SDK, a tracer provider,
+  exporters such as `@azure/monitor-opentelemetry-exporter`,
+  `@opentelemetry/instrumentation-http` and
+  `@azure/functions-opentelemetry-instrumentation`. V8 has to load, parse and
+  compile every one of those modules during cold start.
+- Instrumentation patches modules as they load. `@opentelemetry/instrumentation`
+  hooks `require`, and ESM needs `--experimental-loader` or `--import`. Those
+  hooks run for **every** module the app loads, including ones nobody instruments.
+- Span processing, serialization and export share the event loop with the
+  customer's handlers. The first invocations have to compete with them.
+- HTTP instrumentation is effectively mandatory. The package README says *"Azure
+  Functions instrumentation expects HTTP layer to be instrumented"*. Customers
+  who only want invocation spans still pay for HTTP patching.
 
-### 2.2 OTel is not opt-in or consistent
+### 2.2 OTel isn't opt-in, and setup varies
 
-- Customers must configure the setup in each app, and CJS and ESM need
-  different steps. Mistakes produce no traces or duplicate logs.
-- The host already supports `telemetryMode: "OpenTelemetry"` in `host.json`
-  (`ScriptJobHostOptions.TelemetryMode`), and the `WorkerOpenTelemetryEnabled`
-  worker capability. However, the Node.js side has no single,
-  worker-owned switch that matches them.
-- Examples and defaults lean toward the Azure Monitor exporter. They do not
-  promote a vendor-neutral OTLP path.
+- Each app needs its own setup, and CJS and ESM apps need different steps. Get
+  it wrong and you see no traces, or duplicate logs.
+- The host already has `telemetryMode: "OpenTelemetry"` in `host.json`
+  (`ScriptJobHostOptions.TelemetryMode`) and the `WorkerOpenTelemetryEnabled`
+  worker capability. Node.js has no single worker-owned switch to match them.
+- Examples and defaults point to the Azure Monitor exporter. Customers rarely
+  see the vendor-neutral OTLP path.
 
 ## 3. Goals and non-goals
 
 ### Goals
 
-- **G1. Cold start:** If telemetry is off (the default), the startup path loads no
-  OTel code. If telemetry is on, the startup work in Node.js is much smaller
-  than it is today.
-- **G2. Opt-in:** OTel is off by default. Each instrumentation is separately opt-in,
-  and we load only enabled instrumentations.
-- **G3. Platform-agnostic:** Use OTLP and W3C Trace Context with any compatible
-  backend. Aim for consistent behavior on each target we choose to support.
-  Candidate targets are Windows/Linux, x64/arm64, Consumption, Flex Consumption,
-  Premium, Dedicated, containers, and local Core Tools. A target counts as
-  supported only after it passes the validation in sections 8–10.
-- **G4. Zero app changes:** Existing v3 and v4, CJS and ESM apps run without changes.
-- **G5. Correctness:** Spans have the host trace as their parent, logs correlate
-  with traces, and the host does not emit duplicate logs.
+- **G1. Cold start.** With telemetry off, which is the default, the startup path
+  loads no OTel code. With telemetry on, Node.js does far less startup work than
+  it does today.
+- **G2. Opt-in.** OTel is off by default. Each instrumentation has its own
+  switch, and only enabled instrumentations load.
+- **G3. Platform-agnostic.** OTLP and W3C Trace Context work with any compatible
+  backend. Each supported target should behave the same. Candidate targets are
+  Windows and Linux, x64 and arm64, Consumption, Flex Consumption, Premium,
+  Dedicated, containers and local Core Tools. A target is supported once it
+  passes the checks in sections 8 to 11.
+- **G4. No app changes.** Existing v3 and v4 apps, CJS or ESM, run as they are.
+- **G5. Correct correlation.** Function spans use the host trace as their parent,
+  logs link to traces, and the host emits no duplicate logs.
 
 ### Non-goals
 
-- Running customer JavaScript in Rust, or replacing V8/Node.js.
-- Rewriting `@azure/functions`, bindings, or the HTTP streaming proxy in Rust
+- Running customer JavaScript in Rust, or replacing V8 or Node.js.
+- Rewriting `@azure/functions`, bindings or the HTTP streaming proxy in Rust
   during this phase.
-- Supporting every npm OTel instrumentation. Customers who need the full
-  JS ecosystem can still use their own JS SDK, as described in section 7.
-- Producing metrics in the first phase, which matches the current instrumentation package.
+- Matching every npm OTel instrumentation. Customers who need the full JS
+  ecosystem can keep their own JS SDK (section 7).
+- Metrics in the first phase. The current instrumentation package doesn't
+  produce them either.
 
 ## 4. Proposed architecture
 
@@ -116,63 +119,63 @@ Node.js execution engine (existing handlers + @azure/functions)
 Customer application (unchanged)
 ```
 
-Key design points:
+How the pieces fit:
 
-- **Native transport.** Rust owns the gRPC protocol to the host. Node.js no
-  longer loads `@grpc/grpc-js` or the protobuf runtime, or creates the gRPC
+- **Native transport.** Rust owns the gRPC protocol to the host. Node.js stops
+  loading `@grpc/grpc-js` and the protobuf runtime, and never opens a gRPC
   channel. Rust generates its protocol types from the same proto files as the
-  existing worker, so they cannot drift.
+  existing worker, so the two can't drift apart.
 - **Native telemetry.** The `azure-functions-nodejs-opentelemetry-Rust` crate
-  provides tracing, logging, sampling, batching, and OTLP export. Export runs on
-  Rust threads, not on the Node.js event loop.
-- **Minimal Node.js footprint.** When OTel is enabled, Node.js loads only the
-  OTel **API**, the async context manager, and the W3C propagator, so customer
-  code sees the correct active context. It does not load a JS SDK or exporter.
-- **Worker-owned enablement.** The worker installs the context hook before the
-  app loads. Customers no longer need to patch `require` themselves or add an ESM
-  `--import`/loader step.
+  handles tracing, logging, sampling, batching and OTLP export on Rust threads.
+  None of it touches the Node.js event loop.
+- **A small Node.js footprint.** With OTel on, Node.js loads three things: the
+  OTel **API**, the async context manager and the W3C propagator. That's enough
+  for customer code to see the right active context. No JS SDK, no exporter.
+- **The worker turns OTel on.** It installs the context hook before the app
+  loads. Customers stop patching `require` themselves and drop the ESM
+  `--import` or loader step.
 
 ## 5. Opt-in model
 
 ### 5.1 Default: OTel off
 
-If the customer does not configure OTel:
+Without any OTel configuration:
 
-- No OTel modules load in Node.js, no hooks are installed, and no exporter starts.
-- The worker keeps propagating the host's W3C trace context in the invocation
-  context, so downstream correlation still works.
-- The worker does not set `WorkerOpenTelemetryEnabled`, so host logging
-  behavior stays unchanged.
+- No OTel modules load in Node.js. No hooks, no exporter.
+- The worker still passes the host's W3C trace context into the invocation
+  context, so downstream services can still correlate.
+- The worker leaves `WorkerOpenTelemetryEnabled` unset. Host logging works as it
+  does today.
 
-### 5.2 Enabling OTel
+### 5.2 Turning OTel on
 
-OTel turns on when **either** of these is true:
+OTel turns on when **either** of these is true.
 
-- `host.json` sets `"telemetryMode": "OpenTelemetry"`. This is the existing
-  host switch and should be the primary path.
-- An explicit worker setting enables it. The final name needs review. Example:
+- `host.json` sets `"telemetryMode": "OpenTelemetry"`. That's the existing host
+  switch, and it should be the main path.
+- A worker setting enables it. The name is still up for review, for example
   `FUNCTIONS_NODE_OTEL_ENABLED=true`.
 
-When OTel is on, the worker reports `WorkerOpenTelemetryEnabled=true` only if
-native log export is enabled. The host then filters `Function.*` logs to avoid
-duplicates, which the host already does today.
+The worker reports `WorkerOpenTelemetryEnabled=true` only when native log export
+is on. The host then filters `Function.*` logs to avoid duplicates. It already
+does this.
 
-### 5.3 Per-instrumentation opt-in
+### 5.3 One switch per instrumentation
 
-Each instrumentation is independent and off unless the customer enables it. We
-load its code only after it is enabled.
+Every instrumentation stays off until the customer enables it, and its code
+loads only after that.
 
 | Instrumentation | Scope | Implementation | Default when OTel on |
 |---|---|---|---|
 | `invocation` | Server/internal span per function invocation, parented on host trace | Rust (no JS code) | On |
 | `logs` | Worker and `context.log` logs, with severity mapping and trace correlation | Rust | On |
-| `http` | Outgoing `http`/`https` client calls | Lazy JS hook (prefer `diagnostics_channel`), span data to Rust over IPC | Off |
-| `fetch` | Outgoing `fetch`/undici calls | Lazy JS hook via undici diagnostics channels | Off |
+| `http` | Outgoing `http`/`https` client calls | Lazy JS hook (prefer `diagnostics_channel`), span data sent to Rust over IPC | Off |
+| `fetch` | Outgoing `fetch`/undici calls | Lazy JS hook through undici diagnostics channels | Off |
 | `dns` | `dns.lookup`/resolve calls | Lazy JS wrapper | Off |
 | *(future)* `azure-sdk`, databases, etc. | Additional dependencies | Same lazy, opt-in pattern | Off |
 
-Proposed configuration. We should finalize the exact keys during review, then
-map them to app settings for portal and IaC use:
+A starting point for configuration. We'll settle the exact keys in review, then
+map them to app settings for the portal and IaC:
 
 ```json
 {
@@ -192,159 +195,183 @@ map them to app settings for portal and IaC use:
 }
 ```
 
-Equivalent app setting form:
+The app setting version would be
 `FUNCTIONS_NODE_OTEL_INSTRUMENTATIONS=invocation,logs,http`.
 
-Design rules:
+Rules we'll hold to:
 
-- **Pay only for what you enable.** A disabled instrumentation adds no
-  `require`, hook, or patch.
-- **Prefer `diagnostics_channel` over monkey-patching.** It is stable,
-  lower-cost, and does not require rewriting how modules load.
-- **JS hooks record, Rust processes.** The JS hooks only capture timing and
-  attributes, then send them to Rust over the existing IPC. Rust builds the
-  spans, samples them, and exports them.
-- **Respect sampling early.** If the parent trace is unsampled, hooks skip
-  recording data.
+- **You pay only for what you turn on.** A disabled instrumentation adds no
+  `require`, hook or patch.
+- **`diagnostics_channel` before monkey-patching.** It's stable, cheaper and
+  leaves module loading alone.
+- **JS records, Rust processes.** JS hooks capture timing and attributes and send
+  them to Rust over the existing IPC. Rust builds, samples and exports the spans.
+- **Check sampling first.** If the parent trace isn't sampled, the hooks skip
+  recording.
 
 ## 6. Platform-agnostic OTel
 
-- **Vendor-neutral export:** The default exporter is OTLP (HTTP/protobuf). The
-  standard `OTEL_EXPORTER_OTLP_*` environment variables configure the endpoint,
-  headers, and timeouts. This works with any OTel-compatible collector or
-  backend, such as an OTel Collector, Azure Monitor via OTLP, Grafana, Datadog,
-  Honeycomb, Jaeger, or Elastic.
-- **Standard context:** Use W3C `traceparent`/`tracestate` end-to-end, and follow OTel
-  semantic conventions (`faas.*`, `http.*`, `dns.*`, `server.*`).
-- **Consistent behavior across supported targets (goal):** The same Rust crate
-  handles telemetry on every target, so behavior should no longer depend on
-  which JS packages, versions, or loader flags the app uses. This is a design
-  goal, not a proven result. OTLP makes the choice of backend portable, but it
-  does not guarantee runtime or hosting-plan parity. The prototype has not been
-  certified on every OS, architecture, hosting plan, or extension combination.
-  Each target must pass its own platform build, the full extension/E2E parity
-  suite, and the section 8 benchmarks before we call it supported.
-- **Azure Monitor:** Azure Monitor support should use OTLP or the host's existing
-  Azure Monitor exporter path. It should not require a Node-only exporter in the
-  customer's app.
-- **Standard resource attributes:** Use `service.name`, `faas.instance`,
-  `cloud.*`, and other standard resource attributes. The host already adds
-  `faas.instance` when `telemetryMode` is OpenTelemetry.
+- **Vendor-neutral export.** OTLP over HTTP/protobuf is the default exporter.
+  The standard `OTEL_EXPORTER_OTLP_*` environment variables set the endpoint,
+  headers and timeouts. Any OTel-compatible collector or backend works, such as
+  an OTel Collector, Azure Monitor through OTLP, Grafana, Datadog, Honeycomb,
+  Jaeger or Elastic.
+- **Standard context.** W3C `traceparent` and `tracestate` end to end, plus the
+  OTel semantic conventions (`faas.*`, `http.*`, `dns.*`, `server.*`).
+- **Consistent behavior on supported targets.** One Rust crate handles telemetry
+  everywhere, so results shouldn't depend on which JS packages, versions or
+  loader flags an app uses. That's the design intent, and we haven't proven it
+  yet. OTLP lets customers switch backends. It doesn't make every runtime or
+  hosting plan behave the same. We haven't tested the prototype on every OS,
+  architecture, hosting plan and extension combination. Each target needs its
+  own platform build, a passing extension/E2E parity suite and the section 8
+  benchmarks before we call it supported.
+- **Azure Monitor.** Use OTLP or the host's existing Azure Monitor exporter. The
+  customer's app shouldn't need a Node-only exporter.
+- **Standard resource attributes.** `service.name`, `faas.instance`, `cloud.*`
+  and the other standard attributes. The host already adds `faas.instance` when
+  `telemetryMode` is OpenTelemetry.
 
 ## 7. Compatibility and migration
 
 | Customer scenario | Behavior |
 |---|---|
-| No telemetry configured | No change. Cold start should improve because the gRPC client and protobuf runtime no longer load in Node.js |
-| Uses `@azure/functions-opentelemetry-instrumentation` today | Phase 1: keep working. Docs recommend switching to `telemetryMode: OpenTelemetry`. Later: deprecate the package and log a warning |
-| Brings their own full JS OTel SDK (custom instrumentations) | Supported. The worker propagates context and does not double-instrument. Customers keep their native OTel settings disabled |
-| Uses Application Insights SDK | Unchanged. Its existing behavior is outside this proposal |
+| No telemetry configured | No change. Cold start should improve, since Node.js no longer loads the gRPC client or protobuf runtime |
+| Uses `@azure/functions-opentelemetry-instrumentation` today | Phase 1 keeps it working, and docs recommend moving to `telemetryMode: OpenTelemetry`. Later we deprecate the package and log a warning |
+| Brings their own full JS OTel SDK (custom instrumentations) | Supported. The worker propagates context and doesn't instrument twice. Customers leave the native OTel settings off |
+| Uses Application Insights SDK | Unchanged. This proposal doesn't touch it |
 
-The worker must detect when the customer registered their own JS tracer
-provider. In that case, it should not register a competing provider or emit
-duplicate spans.
+If a customer registers their own JS tracer provider, the worker has to notice.
+It then skips registering a second provider and emits no duplicate spans.
 
-## 8. Cold start hypothesis and validation
+## 8. Cold start: hypothesis and validation
 
-> **Important:** The current prototype has **no** cold start data yet. It also
-> adds a process boundary and IPC serialization, which could increase latency or
-> memory if we do not optimize them. We must treat the cold start benefit as a
-> hypothesis and prove it with measurements before rollout.
+> **Important:** We have **no** cold start data for the prototype yet. It also
+> adds a process boundary and IPC serialization, and both could cost latency or
+> memory if we don't tune them. Until measurements say otherwise, the cold start
+> win is a hypothesis.
 
-Expected sources of improvement:
+Where we expect the gains to come from:
 
-1. Telemetry is off by default, so the startup path loads no OTel code.
-2. When telemetry is on, Node.js loads no JS SDK or exporter and does not patch
-   module loading for every module.
-3. Instrumentations load lazily and only when the customer enables them.
-4. Node.js does not load or initialize `@grpc/grpc-js` or the protobuf runtime.
-5. Rust connects to the host and completes the handshake while Node.js is
-   still booting, so those steps can happen in parallel.
-6. Export happens off the event loop, so the first invocations do not compete
-   with telemetry work.
+1. Telemetry is off by default, so startup loads no OTel code.
+2. With telemetry on, Node.js skips the JS SDK and exporter and doesn't patch
+   every module as it loads.
+3. Instrumentations load lazily, and only when enabled.
+4. Node.js never loads or initializes `@grpc/grpc-js` or the protobuf runtime.
+5. Rust connects to the host and finishes the handshake while Node.js is still
+   booting. The two run in parallel.
+6. Export happens off the event loop, so early invocations don't wait on
+   telemetry.
 
-Potential regressions to mitigate:
+What could make it worse:
 
-- Starting an extra process. Mitigations include spawning Node.js immediately,
-  sharing work with placeholder warmup, and exploring an in-process option
-  through a N-API addon.
-- IPC serialization costs on each invocation.
+- Starting an extra process. We can spawn Node.js immediately, share work with
+  placeholder warmup, or try an in-process N-API addon.
+- IPC serialization on every invocation.
 - Extra memory for the native SDK.
 
-**Benchmark matrix:** Compare the current worker with and without the JS OTel
-SDK against the Rust worker with OTel off, OTel on, and OTel on with `http`.
-Run on Windows and Linux, on Flex Consumption and Consumption, with
-placeholder/specialization and without it. Test a small HTTP app, a
-dependency-heavy app, and an ESM app.
+**Benchmark matrix.** Compare the current worker, with and without the JS OTel
+SDK, against the Rust worker with OTel off, OTel on, and OTel on with `http`.
+Run on Windows and Linux, on Flex Consumption and Consumption, with and without
+placeholder specialization. Use a small HTTP app, a dependency-heavy app and an
+ESM app.
 
-**Metrics:** Cold start p50/p95/p99, host-measured time from specialization to
+**Metrics.** Cold start p50/p95/p99, host-measured time from specialization to
 the first successful invocation, worker RSS, warm-path p50/p99 latency,
-throughput, event-loop lag, and export overhead.
+throughput, event-loop lag and export overhead.
 
-**Go/no-go gates for this proposal** (values to confirm with the team):
+**Go/no-go gates** (values to confirm with the team):
 
 - Rust worker with OTel off: cold start must be **no worse** than the current
-  worker. Target: a measurable improvement.
-- Rust worker with OTel on: cold start must be **significantly better** than
-  the current worker plus the JS OTel SDK. Target: at least 30% lower p95.
+  worker. We're aiming for a measurable improvement.
+- Rust worker with OTel on: cold start must be **clearly better** than the
+  current worker plus the JS OTel SDK. Target: at least 30% lower p95.
 - Warm-path p99 latency and RSS must stay within agreed limits of the current
   worker.
 
-## 9. Current prototype status
+## 9. Where the prototypes stand
 
-These prototypes already exist:
+Two prototypes exist today.
 
-- **Rust worker:** Rust handles gRPC to the host and uses the existing Node.js
-  execution engine over protobuf IPC. Real gRPC tests cover v3/v4, CJS/ESM,
-  hooks, bindings, HTTP streaming, specialization, concurrency, and shutdown.
-  We have also smoke-tested real HTTP functions through Core Tools.
-- **Rust OTel crate:** It provides traces and logs, parent-based sampling,
-  invocation spans, log severity mapping and correlation, and console/OTLP
-  exporters. It also sets `WorkerOpenTelemetryEnabled` correctly.
+- **Rust worker.** Rust talks gRPC to the host and drives the existing Node.js
+  execution engine over protobuf IPC. Real gRPC tests cover v3 and v4, CJS and
+  ESM, hooks, bindings, HTTP streaming, specialization, concurrency and
+  shutdown. We've also run real HTTP functions through Core Tools.
+- **Rust OTel crate.** Traces and logs, parent-based sampling, invocation spans,
+  log severity mapping and correlation, plus console and OTLP exporters. It sets
+  `WorkerOpenTelemetryEnabled` correctly.
 
-Gaps to close before this is production-ready:
+Still missing before production:
 
-- Outgoing `http`/`fetch`/`dns` instrumentations. These are the opt-in hooks
-  described in section 5.3. They do not exist yet.
-- `host.json`/`telemetryMode` and app setting configuration. The prototype
-  currently uses `runtime.json`.
-- Reconfiguring native telemetry during specialization (environment reload).
-  Today, the native SDK reads OTLP settings only when the Rust process starts.
-- Streaming HTTP response status on spans.
-- Builds for multiple platforms (win/linux/osx on x64/arm64), signing, and
+- The outgoing `http`, `fetch` and `dns` instrumentations from section 5.3. None
+  of them exist yet.
+- Configuration through `host.json`, `telemetryMode` and app settings. The
+  prototype reads `runtime.json` for now.
+- Reconfiguring native telemetry during specialization. Right now the native SDK
+  reads OTLP settings once, when the Rust process starts.
+- HTTP response status on spans for streaming responses.
+- Builds for Windows, Linux and macOS on x64 and arm64, plus signing and
   bundling into the worker package.
-- Full extension/E2E parity testing and the cold start benchmarks in section 8.
+- Full extension/E2E parity testing and the section 8 benchmarks.
 
-## 10. Rollout plan
+## 10. What we need from the OpenTelemetry team
+
+The Rust OTel crate shouldn't live as a side project inside the worker. We're
+asking the OpenTelemetry team to own it as a product package and to build the
+opt-in model into it.
+
+- **Own and publish the Rust OTel package.** Take the
+  `azure-functions-nodejs-opentelemetry-Rust` prototype, or an equivalent, and
+  ship it as a supported, versioned package. That includes the official build,
+  signing, SBOMs and security servicing.
+- **Build opt-in into the package.** One switch for OTel as a whole, and one per
+  instrumentation (`invocation`, `logs`, `http`, `fetch`, `dns` and future
+  ones). Anything turned off loads nothing and costs nothing.
+- **Keep one OTel implementation for every language worker.** The same package
+  should serve the Node.js worker first and be reusable by other workers later.
+  That's what "one OpenTelemetry for all" means here.
+- **Follow the standards.** OTLP export, W3C Trace Context and current OTel
+  semantic conventions, kept up to date as the specs change.
+- **Agree on the contract with the worker.** Configuration keys, the IPC format
+  for span data coming from JS hooks, and how the package handles reconfiguration
+  during specialization.
+- **Release on our schedule.** Ship builds for every supported OS and
+  architecture, in step with the worker releases in section 11.
+
+## 11. Rollout plan
 
 | Phase | Deliverable | Exit criteria |
 |---|---|---|
 | 0. Measure | Baseline and prototype benchmarks (section 8) | Go/no-go gates met |
-| 1. Preview | Rust worker behind an opt-in app setting. Native OTel with `invocation` + `logs` | E2E parity suite green on all platforms |
-| 2. Instrumentations | Opt-in `http`, `fetch`, `dns` hooks; `telemetryMode` integration; specialization reconfiguration | Semantic-convention tests; no duplicate telemetry |
-| 3. Default worker | Ship the Rust worker as the default for supported Node.js versions, and keep the existing worker available as a fallback | Production telemetry shows cold start/stability equal or better |
+| 1. Preview | Rust worker behind an opt-in app setting. Native OTel with `invocation` and `logs`, using the package from the OpenTelemetry team | E2E parity suite green on all platforms |
+| 2. Instrumentations | Opt-in `http`, `fetch` and `dns` hooks, `telemetryMode` integration, specialization reconfiguration | Semantic-convention tests pass, no duplicate telemetry |
+| 3. Default worker | Rust worker becomes the default for supported Node.js versions. The existing worker stays available as a fallback | Production telemetry shows cold start and stability equal or better |
 | 4. Deprecate | Deprecate `@azure/functions-opentelemetry-instrumentation` with a migration guide | Adoption threshold met |
 
-## 11. Risks
+## 12. Risks
 
 | Risk | Mitigation |
 |---|---|
-| Extra process/IPC offsets the cold start gains | Benchmark gates; parallel startup; evaluate an in-process N-API addon |
-| Behavior differences vs. the current worker | Reuse the existing execution engine; run the existing worker test suite plus a gRPC parity suite |
-| Native binary packaging and supply chain | Build and sign through the official pipeline; generate SBOMs; pin dependencies with `--locked` |
-| Customer stdout writes corrupting IPC | Already handled by redirecting console output. Move IPC off stdio to a dedicated pipe |
-| Double instrumentation with a customer JS SDK | Detect existing providers; clear documentation |
-| Smaller instrumentation catalog than JS ecosystem | Customers can still bring their own SDK; add instrumentations by demand |
-| Behavior differs by OS, architecture, hosting plan, or extension | Publish an explicit support matrix. Each target must pass its platform build, extension/E2E parity, and benchmarks before support is announced |
+| Extra process and IPC cancel out the cold start gains | Benchmark gates, parallel startup, and an in-process N-API addon as a fallback option |
+| Behavior differs from the current worker | Reuse the existing execution engine. Run the existing worker test suite plus a gRPC parity suite |
+| Native binary packaging and supply chain | Build and sign through the official pipeline, generate SBOMs and pin dependencies with `--locked` |
+| Customer stdout writes corrupt the IPC stream | Console output is already redirected. Next, move IPC off stdio to a dedicated pipe |
+| Double instrumentation alongside a customer's JS SDK | Detect existing providers and document the behavior clearly |
+| Fewer instrumentations than the JS ecosystem | Customers can still bring their own SDK. We add instrumentations as demand shows up |
+| Behavior differs by OS, architecture, hosting plan or extension | Publish an explicit support matrix. Each target passes its platform build, extension/E2E parity and benchmarks before we announce support |
+| The OpenTelemetry team can't take ownership of the Rust package in time | Agree on ownership and timelines before phase 1. Until then the worker team maintains the prototype |
 
-## 12. Open questions
+## 13. Open questions
 
-1. Final configuration surface: should we use `host.json` `openTelemetry.node`
-   or app settings? What precedence should apply when both exist?
-2. Should `invocation` and `logs` default to on whenever
+1. Where does configuration live: `host.json` `openTelemetry.node`, app
+   settings, or both? Which wins when both are set?
+2. Should `invocation` and `logs` be on by default whenever
    `telemetryMode: OpenTelemetry` is set?
-3. Should we use an out-of-process Node.js engine (the current prototype) or an
-   in-process N-API addon in the long term?
-4. Which instrumentations should ship after `http`/`fetch`/`dns`, such as Azure SDK, `pg`, `mongodb`, or `redis`?
-5. What is the deprecation timeline for `@azure/functions-opentelemetry-instrumentation`?
-6. Should we add metrics in phase 2 or treat them as a separate proposal?
+3. Long term, do we keep the out-of-process Node.js engine from the prototype,
+   or move to an in-process N-API addon?
+4. Which instrumentations come after `http`, `fetch` and `dns`? Candidates
+   include the Azure SDK, `pg`, `mongodb` and `redis`.
+5. When do we deprecate `@azure/functions-opentelemetry-instrumentation`?
+6. Do metrics belong in phase 2, or in a separate proposal?
+7. Which team owns the Rust OTel package, and what timeline can the
+   OpenTelemetry team commit to?
