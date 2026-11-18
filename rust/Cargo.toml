@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 license = "MIT"
 build = "build.rs"
-exclude = ["node_modules", "sample/node_modules"]
+exclude = ["node_modules", "sample"]
 
 [workspace]
 members = [".", "opentelemetry"]

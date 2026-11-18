@@ -1,9 +1,0 @@
-{
-    "name": "rust-worker-http-sample",
-    "version": "0.1.0",
-    "private": true,
-    "main": "http.cjs",
-    "dependencies": {
-        "@azure/functions": "^4.7.0"
-    }
-}

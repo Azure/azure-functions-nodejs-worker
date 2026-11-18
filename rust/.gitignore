@@ -1,4 +1,4 @@
 /target/
 /node_modules/
-/sample/node_modules/
-/sample/local.settings.json
+/sample/*/node_modules/
+/sample/*/local.settings.json

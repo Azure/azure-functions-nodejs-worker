@@ -58,30 +58,59 @@ the repository root (`..`) and generates protocol types from
 npm run build
 
 npm --prefix rust ci --ignore-scripts
-npm --prefix rust\sample ci --ignore-scripts
+npm --prefix rust\sample\hello-world ci --ignore-scripts
+npm --prefix rust\sample\hello-world-configured ci --ignore-scripts
 cargo build --locked --manifest-path rust\Cargo.toml
 ```
 
 If Cargo is not on PATH, use `& "$env:USERPROFILE\.cargo\bin\cargo.exe"`.
 The worker deliberately reuses the built execution engine and schema instead of
-copying them. The sample and tests use the published `@azure/functions` package.
+copying them. The samples and tests use the published `@azure/functions` package.
 
-## Run real HTTP functions
+## Samples
+
+Both samples live under `rust/sample` and run through the real Functions host.
+
+| Sample | What it shows | Worker config |
+| --- | --- | --- |
+| `hello-world` | A single `hello` function. The customer changes nothing; OTel stays off. | `rust/runtime.json` (default) |
+| `hello-world-configured` | The same app with customer opt-in: native OTel on, a custom service name, chosen instrumentations, and Node arguments. Adds `trace` and `failure` functions. | `sample/hello-world-configured/rust-worker.json` |
+
+`start-http.ps1` uses a sample's `rust-worker.json` when it has one and the
+default `runtime.json` otherwise. It points the host at the Rust executable,
+uses local file secret storage, and restores process environment settings on
+exit. No Azure resources, Azurite, or cloud credentials are needed because only
+HTTP triggers are hosted.
+
+### Hello World
 
 ```powershell
-& rust\scripts\start-http.ps1 -Port 7075
+& rust\scripts\start-http.ps1 -Sample hello-world -Port 7075 -VerboseHost
 ```
 
-The script selects the Rust executable via host worker settings, uses local file
-secret storage, and restores process environment settings on exit. No Azure
-resources, Azurite, or cloud credentials are required for these HTTP functions.
-Only HTTP triggers are hosted, so no extension bundle or storage binding is needed.
-
-In another terminal:
+`-VerboseHost` shows worker console output, including the `[Rust worker]`
+startup lines that confirm the Rust executable is running. In another terminal:
 
 ```powershell
 Invoke-RestMethod 'http://localhost:7075/api/hello?name=Rust'
-Invoke-RestMethod 'http://localhost:7075/api/echo' -Method Post -ContentType 'application/json' -Body '{"message":"hello"}'
+```
+
+### Customer-configured Hello World
+
+```powershell
+& rust\scripts\start-http.ps1 -Sample hello-world-configured -Port 7075
+```
+
+The customer owns `rust-worker.json`. In it they turn telemetry on, name the
+service (`contoso-hello-world`), and pick instrumentations (`http` and `logs`
+on, `functions` off). Spans and logs go to the `console` exporter, so they show
+up in the host output. To send them to a collector instead, set `"exporter":
+"otlp"` and `OTEL_EXPORTER_OTLP_ENDPOINT`. In a deployed app the same file is
+selected with the `FUNCTIONS_RUST_WORKER_CONFIG` app setting.
+
+```powershell
+Invoke-RestMethod 'http://localhost:7075/api/hello?name=Rust'
+Invoke-RestMethod 'http://localhost:7075/api/hello' -Method Post -Body 'Contoso'
 Invoke-RestMethod 'http://localhost:7075/api/trace' -Headers @{
     traceparent = '00-12345678901234567890123456789012-1234567890123456-01'
     tracestate = 'vendor=value'
@@ -90,10 +119,9 @@ Invoke-RestMethod 'http://localhost:7075/api/trace' -Headers @{
 Invoke-WebRequest 'http://localhost:7075/api/failure'
 ```
 
-Pass `-Streaming` to the startup script to enable the library's existing HTTP
-streaming path. The HTTP host, including routes, HTTP auth levels, binding
-extensions, and function keys, remains responsible for its normal responsibilities.
-The anonymous sample functions are for local testing.
+Pass `-Streaming` to enable the library's existing HTTP streaming path. The
+host still owns routes, HTTP auth levels, binding extensions, and function keys.
+The samples use anonymous functions for local testing only.
 
 ## Instrumentation configuration
 
