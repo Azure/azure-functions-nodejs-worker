@@ -1,0 +1,16 @@
+{
+    "engine_directory": "../../..",
+    "node_executable": "node",
+    "node_arguments": ["--max-old-space-size=256"],
+    "telemetry": {
+        "enabled": true,
+        "service_name": "contoso-hello-world",
+        "context_propagation": true,
+        "instrumentations": {
+            "http": true,
+            "functions": false,
+            "logs": true
+        },
+        "exporter": "console"
+    }
+}

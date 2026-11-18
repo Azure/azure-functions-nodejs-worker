@@ -1,0 +1,12 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "FUNCTIONS_WORKER_RUNTIME": "node",
+        "AzureWebJobsStorage": "",
+        "OTEL_WORKER_DEFAULT": "true",
+        "OTEL_WORKER_ENABLE": "http,dns,fetch",
+        "OTEL_SERVICE_NAME": "rust-worker-native-otel",
+        "OTEL_TRACES_SAMPLER": "always_on",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": ""
+    }
+}

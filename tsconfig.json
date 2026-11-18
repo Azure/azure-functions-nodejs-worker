@@ -11,5 +11,6 @@
         "paths": {
             "@azure/functions-core": ["types-core"]
         }
-    }
+    },
+    "exclude": ["node_modules", "dist", "rust"]
 }

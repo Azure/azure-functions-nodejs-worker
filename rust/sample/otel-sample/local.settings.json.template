@@ -1,0 +1,9 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "FUNCTIONS_WORKER_RUNTIME": "node",
+        "AzureWebJobsStorage": "",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": "",
+        "OTEL_SERVICE_NAME": "rust-worker-otel-sample"
+    }
+}
