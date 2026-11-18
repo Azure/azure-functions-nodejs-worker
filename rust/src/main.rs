@@ -102,7 +102,26 @@ async fn run(args: Args) -> Result<()> {
         );
     }
     let engine_display = engine.display().to_string();
-    let mut protocol = Protocol::new(Telemetry::new(config.telemetry)?);
+    let (telemetry_config, warnings) = config
+        .telemetry
+        .with_app_settings(|name| std::env::var(name).ok());
+    for warning in warnings {
+        eprintln!("LanguageWorkerConsoleLog[Rust worker] Warning: {warning}");
+    }
+    let mut protocol = Protocol::new(Telemetry::new(telemetry_config)?);
+    let clients = protocol
+        .telemetry
+        .client_instrumentations()
+        .iter()
+        .map(|kind| kind.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+    eprintln!(
+        "LanguageWorkerConsoleLog[Rust worker] OpenTelemetry: native={}, context={}, client instrumentations={}",
+        protocol.telemetry.enabled(),
+        protocol.telemetry.context_enabled(),
+        if clients.is_empty() { "none" } else { &clients }
+    );
     let limit = args.functions_grpc_max_message_length as usize;
     let mut child = Command::new(config.node_executable)
         .args(config.node_arguments)
@@ -115,6 +134,7 @@ async fn run(args: Args) -> Result<()> {
         .arg(&args.functions_worker_id)
         .arg(limit.to_string())
         .arg(protocol.telemetry.context_enabled().to_string())
+        .arg(if clients.is_empty() { "none" } else { &clients })
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())

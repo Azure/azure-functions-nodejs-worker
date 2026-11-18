@@ -402,6 +402,95 @@ test('legacy v3 function loading and invocation remain available', async (t) => 
     assert.equal(response.returnValue.http.body.string, 'Legacy Rust');
 });
 
+async function echoServer(t) {
+    const seen = [];
+    const server = http.createServer((request, response) => {
+        seen.push({ url: request.url, traceparent: request.headers.traceparent });
+        response.setHeader('content-type', 'application/json');
+        response.end(JSON.stringify({ traceparent: request.headers.traceparent }));
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise((resolve) => server.close(resolve)));
+    return { target: `http://localhost:${server.address().port}`, seen };
+}
+
+async function eventually(check) {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return check();
+        } catch (error) {
+            if (attempt >= 50) throw error;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+    }
+}
+
+test('OTEL_WORKER_DEFAULT and OTEL_WORKER_ENABLE opt in to native http, fetch and dns client spans', async (t) => {
+    const { target } = await echoServer(t);
+    const worker = await host(t, {
+        enabled: false,
+        env: { OTEL_WORKER_DEFAULT: 'true', OTEL_WORKER_ENABLE: 'http,dns,fetch,bogus' },
+    });
+    const { init, metadata } = await initialize(worker);
+    assert.equal(init.capabilities.WorkerOpenTelemetryEnabled, 'true');
+    assert.match(worker.stderr(), /OTEL_WORKER_ENABLE contains unknown instrumentation 'bogus'/);
+    assert.match(worker.stderr(), /client instrumentations=http,dns,fetch/);
+    const body = jsonResponse(
+        await worker.request(
+            'invocationRequest',
+            invocation(metadata, 'outbound', { query: { target } }),
+            'invocationResponse'
+        )
+    );
+    for (const injected of [body.http, body.fetch]) {
+        const [, injectedTrace, injectedSpan, flags] = injected.split('-');
+        assert.equal(injectedTrace, traceId);
+        assert.equal(flags, '01');
+        await eventually(() => assert.match(worker.stdout(), new RegExp(`SpanId\\s*:\\s*${injectedSpan}`)));
+    }
+    await eventually(() => assert.match(worker.stdout(), /Name\s+: dns\.lookup/));
+    const out = worker.stdout();
+    assert.equal(out.match(/Kind\s+: Client/g)?.length >= 3, true, out);
+    assert.match(out, /Kind\s+: Server/);
+    assert.match(out, /dns\.question\.name/);
+    assert.match(out, /sig=REDACTED/);
+    assert.doesNotMatch(out, /sig=secret/);
+
+    const unsampled = jsonResponse(
+        await worker.request(
+            'invocationRequest',
+            invocation(metadata, 'outbound', {
+                query: { target },
+                trace: `00-${'a'.repeat(32)}-1234567890123456-00`,
+            }),
+            'invocationResponse'
+        )
+    );
+    assert.match(unsampled.http, new RegExp(`^00-${'a'.repeat(32)}-[0-9a-f]{16}-00$`));
+    assert.match(unsampled.fetch, /-00$/);
+    // Logs still correlate with unsampled traces; only spans must be absent.
+    assert.doesNotMatch(worker.stdout(), /TraceId\s+: a{32}/);
+});
+
+test('client instrumentation stays off without OTEL_WORKER_ENABLE', async (t) => {
+    const { target, seen } = await echoServer(t);
+    const worker = await host(t, { env: { OTEL_WORKER_DEFAULT: 'true' } });
+    const { metadata } = await initialize(worker);
+    assert.match(worker.stderr(), /client instrumentations=none/);
+    const body = jsonResponse(
+        await worker.request(
+            'invocationRequest',
+            invocation(metadata, 'outbound', { query: { target } }),
+            'invocationResponse'
+        )
+    );
+    assert.equal(body.http, null);
+    assert.equal(body.fetch, null);
+    assert.equal(seen.length, 2);
+    assert.match(worker.stdout(), /Kind\s+: Server/);
+    assert.doesNotMatch(worker.stdout(), /Kind\s+: Client/);
+});
+
 test('disabled telemetry restores baseline capabilities without emitting native telemetry', async (t) => {
     const worker = await host(t, { enabled: false });
     const { init, metadata } = await initialize(worker);

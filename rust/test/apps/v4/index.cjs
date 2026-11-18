@@ -52,6 +52,24 @@ app.http('crash', {
     },
 });
 app.http('binary', { authLevel: 'anonymous', handler: async () => ({ body: Buffer.from([0, 255, 128, 1]) }) });
+app.http('outbound', {
+    authLevel: 'anonymous',
+    handler: async (request) => {
+        const target = request.query.get('target');
+        const viaHttp = await new Promise((resolve, reject) =>
+            require('node:http')
+                .get(`${target}/http`, (response) => {
+                    let text = '';
+                    response.on('data', (chunk) => (text += chunk));
+                    response.on('end', () => resolve(JSON.parse(text)));
+                })
+                .on('error', reject)
+        );
+        const viaFetch = await (await fetch(`${target}/fetch?sig=secret`)).json();
+        await require('node:dns').promises.lookup('localhost');
+        return { jsonBody: { http: viaHttp.traceparent ?? null, fetch: viaFetch.traceparent ?? null } };
+    },
+});
 const extraInput = input.generic({ type: 'blob', path: 'input' });
 const extraOutput = output.generic({ type: 'queue', queueName: 'out' });
 app.generic('bindings', {

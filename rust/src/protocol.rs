@@ -218,8 +218,16 @@ impl Protocol {
     }
 
     pub fn handle_engine_event(&mut self, event: &HashMap<String, String>) -> Result<()> {
-        if event.get("event").map(String::as_str) != Some("httpRequest") {
-            bail!("unknown private engine event");
+        match event.get("event").map(String::as_str) {
+            Some("httpRequest") => {}
+            Some("clientSpan") => {
+                // A malformed span report must never fail the worker.
+                if let Err(error) = self.telemetry.record_client_span(event) {
+                    eprintln!("Ignoring invalid client span from Node.js: {error}");
+                }
+                return Ok(());
+            }
+            _ => bail!("unknown private engine event"),
         }
         let id = event
             .get("invocationId")

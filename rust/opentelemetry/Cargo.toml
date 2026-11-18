@@ -15,3 +15,4 @@ serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 opentelemetry_sdk = { version = "0.31", features = ["testing"] }
+serde_json = "1"

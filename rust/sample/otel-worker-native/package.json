@@ -1,0 +1,9 @@
+{
+    "name": "rust-worker-otel-worker-native",
+    "version": "1.0.0",
+    "private": true,
+    "main": "src/index.cjs",
+    "dependencies": {
+        "@azure/functions": "^4.7.0"
+    }
+}

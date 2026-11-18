@@ -154,8 +154,8 @@ OTel turns on when **either** of these is true.
 
 - `host.json` sets `"telemetryMode": "OpenTelemetry"`. That's the existing host
   switch, and it should be the main path.
-- A worker setting enables it. The name is still up for review, for example
-  `FUNCTIONS_NODE_OTEL_ENABLED=true`.
+- A worker setting enables it. The prototype uses `OTEL_WORKER_DEFAULT=true`.
+  The final name is still up for review.
 
 The worker reports `WorkerOpenTelemetryEnabled=true` only when native log export
 is on. The host then filters `Function.*` logs to avoid duplicates. It already
@@ -197,7 +197,10 @@ map them to app settings for the portal and IaC:
 ```
 
 The app setting version would be
-`FUNCTIONS_NODE_OTEL_INSTRUMENTATIONS=invocation,logs,http`.
+`FUNCTIONS_NODE_OTEL_INSTRUMENTATIONS=invocation,logs,http`. The prototype
+already does this with two settings: `OTEL_WORKER_DEFAULT=true` turns on
+invocation spans and logs, and `OTEL_WORKER_ENABLE=http,dns,fetch` opts in to
+client calls.
 
 Rules we'll hold to:
 
@@ -301,13 +304,17 @@ Two prototypes exist today.
 - **Rust OTel crate.** Traces and logs, parent-based sampling, invocation spans,
   log severity mapping and correlation, plus console and OTLP exporters. It sets
   `WorkerOpenTelemetryEnabled` correctly.
+- **Opt-in client instrumentation.** `OTEL_WORKER_DEFAULT=true` with
+  `OTEL_WORKER_ENABLE=http,dns,fetch` turns on outgoing `http`, `fetch` and `dns`
+  spans with no OTel packages in the app. The hooks load only when listed. They
+  use `diagnostics_channel` for `http` and `fetch`, inject `traceparent`, and
+  send timing to Rust, which builds and exports the `Client` spans. We've run this
+  through Core Tools with the `otel-worker-native` sample.
 
 Still missing before production:
 
-- The outgoing `http`, `fetch` and `dns` instrumentations from section 5.3. None
-  of them exist yet.
-- Configuration through `host.json`, `telemetryMode` and app settings. The
-  prototype reads `runtime.json` for now.
+- Final names for the settings, `host.json` and `telemetryMode` support, and
+  more instrumentations (`azure-sdk`, databases).
 - Reconfiguring native telemetry during specialization. Right now the native SDK
   reads OTLP settings once, when the Rust process starts.
 - HTTP response status on spans for streaming responses.

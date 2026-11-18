@@ -70,16 +70,19 @@ copying them. The samples and tests use the published `@azure/functions` package
 
 ## Samples
 
-Both samples live under `rust/sample` and run through the real Functions host.
+The samples live under `rust/sample` and run through the real Functions host.
 
 | Sample | What it shows | Worker config |
 | --- | --- | --- |
 | `hello-world` | A single `hello` function. The customer changes nothing; OTel stays off. | `rust/runtime.json` (default) |
 | `hello-world-configured` | The same app with customer opt-in: native OTel on, a custom service name, chosen instrumentations, and Node arguments. Adds `trace` and `failure` functions. | `sample/hello-world-configured/rust-worker.json` |
 | `otel-sample` | TypeScript port of the [OTel quickstart](https://github.com/Azure-Samples/functions-quickstart-typescript-azd-otel/tree/main/src/otel-sample) that opts in to only the JS `http` and `dns` instrumentations. | `rust/runtime.json` (default) |
+| `otel-worker-native` | The same `http`/`dns` coverage plus `fetch`, with no OTel packages in the app. The Rust worker's native SDK is turned on with app settings only. | `rust/runtime.json` + `local.settings.json.template` |
 
 `start-http.ps1` uses a sample's `rust-worker.json` when it has one and the
-default `runtime.json` otherwise. It points the host at the Rust executable,
+default `runtime.json` otherwise. On first run it copies a sample's
+`local.settings.json.template` to `local.settings.json`. It points the host at
+the Rust executable,
 uses local file secret storage, and restores process environment settings on
 exit. No Azure resources, Azurite, or cloud credentials are needed because only
 HTTP triggers are hosted.
@@ -152,6 +155,30 @@ The Rust native pipeline stays off here (default `runtime.json`), so all
 telemetry comes from the JS SDK. This is today's baseline that the Rust OTel
 opt-in work replaces.
 
+### Worker-native OTel sample (app settings only)
+
+```powershell
+& rust\scripts\start-http.ps1 -Sample otel-worker-native -Port 7075 -VerboseHost
+Invoke-RestMethod 'http://localhost:7075/api/outbound'
+```
+
+The app has no OpenTelemetry dependencies or setup file. Its
+`local.settings.json.template` sets `OTEL_WORKER_DEFAULT=true` and
+`OTEL_WORKER_ENABLE=http,dns,fetch`. The worker log confirms the opt-in:
+
+```text
+[Rust worker] OpenTelemetry: native=true, context=true, client instrumentations=http,dns,fetch
+```
+
+`outbound` does a `dns.promises.lookup`, an `http.get`, and a `fetch` to the
+`downstream` function. Rust exports a `Client` span for each call (plus the
+lookups that `http` and `fetch` make when they connect), and all of them are
+children of the `GET outbound` invocation span. The `downstream` invocations
+join the same trace because the worker injects `traceparent` into the outgoing
+requests. The response echoes the `traceparent` that each call carried.
+`OTEL_TRACES_SAMPLER=always_on` is set only because the local host sends
+unsampled parents.
+
 ## Instrumentation configuration
 
 Native telemetry is **opt-in**: the shipped `runtime.json` sets
@@ -177,8 +204,8 @@ host keeps its own logging. To turn it on, edit `runtime.json` and restart the w
 }
 ```
 
-- `http`: spans for HTTP invocations (including handler failures), not outbound
-  Node.js `http`/`https`/`fetch` calls.
+- `http`: spans for HTTP invocations (including handler failures). Outbound
+  calls are covered by `client_instrumentations` below.
 - `functions`: spans for non-HTTP invocations.
 - `logs`: native export of worker/application RPC logs, with severity,
   `CategoryName`, and invocation/Node async context correlation. The host receives
@@ -200,6 +227,43 @@ for example `http://127.0.0.1:4318`. Traces and logs use `/v1/traces` and
 `/v1/logs`; signal-specific endpoints and OTLP authentication environment
 variables are also supported by the native SDK. Do not store credentials in JSON.
 Console telemetry uses Rust stdout; bridge/customer console diagnostics use stderr.
+
+### App settings: `OTEL_WORKER_DEFAULT` and `OTEL_WORKER_ENABLE`
+
+Customers can opt in without editing any worker JSON. App settings are applied
+on top of the config file when the worker starts:
+
+| App setting | Effect |
+| --- | --- |
+| `OTEL_WORKER_DEFAULT=true` | Turns on the native pipeline: invocation spans (`http`, `functions`), native logs, and context propagation. Exports with OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` (or `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`) is set, otherwise to the console. The service name comes from `OTEL_SERVICE_NAME`, then `WEBSITE_SITE_NAME`, then the config file. |
+| `OTEL_WORKER_DEFAULT=false` | Forces native telemetry off, whatever the config file says. |
+| unset | The config file decides (off by default). |
+| `OTEL_WORKER_ENABLE=http,dns,fetch` | Opts in to client instrumentation for the listed modules. It applies only when `OTEL_WORKER_DEFAULT=true`. Unknown names are logged as warnings and ignored. |
+
+Client instrumentations can also be set in the config file with
+`"client_instrumentations": { "http": true, "dns": false, "fetch": true }`
+(optional; all off by default).
+
+How client instrumentation works:
+
+- Rust passes the enabled list to the Node.js engine. Only then does
+  `bridge/instrumentation.cjs` load; with nothing enabled, no hooks are installed.
+- `http`/`https` use the `http.client.*` diagnostics channels and `fetch` uses
+  the built-in undici `undici:request:*` channels, so neither is patched. `dns`
+  wraps `dns.lookup` and `dns.promises.lookup` once at startup, before the app
+  loads, and syncs the builtin ESM exports so CommonJS and ESM apps both see it.
+- Calls are recorded only inside an invocation. For `http` and `fetch`, Node.js
+  generates the span ID and injects a W3C `traceparent` unless the caller already
+  set one.
+- When the call finishes, Node.js sends the timing and semantic-convention
+  attributes (`http.request.method`, `url.full`, `server.address`, `server.port`,
+  `http.response.status_code`, `error.type`, `dns.question.name`) to Rust as a
+  private IPC event. Rust builds the `Client` span and exports it with the
+  invocation spans. Responses with status 400 or higher and errors mark the span
+  as failed. Credentials are removed from `url.full`, and `sig`/`signature`
+  query values are redacted.
+- The worker honors the standard `OTEL_TRACES_SAMPLER` setting. If it is unset,
+  the worker uses parent-based always-on sampling.
 
 ## Compatibility evidence
 

@@ -15,7 +15,7 @@ global.console = new Console(process.stderr, process.stderr);
 let reportError = (error) => console.error('Internal Node.js engine failed:', error);
 
 async function main() {
-    const [engineDirectory, workerId, maxLength, propagate] = process.argv.slice(2);
+    const [engineDirectory, workerId, maxLength, propagate, clientInstrumentations = 'none'] = process.argv.slice(2);
     const limit = Number(maxLength);
     if (!engineDirectory || !workerId || !Number.isSafeInteger(limit) || limit <= 0) {
         throw new Error('Invalid internal engine arguments');
@@ -60,6 +60,10 @@ async function main() {
         if (!propagation.setGlobalPropagator(propagator)) {
             throw new Error('Cannot register worker W3C propagator');
         }
+    }
+    const kinds = new Set(clientInstrumentations.split(',').filter((kind) => kind && kind !== 'none'));
+    if (kinds.size > 0) {
+        require('./instrumentation.cjs').install(kinds, (event) => writeFrame(Buffer.alloc(0), event));
     }
     const { registerHook } = load(path.join('src', 'hooks', 'registerHook.js'));
     const install = () =>

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('hello-world', 'hello-world-configured', 'otel-sample')]
+    [ValidateSet('hello-world', 'hello-world-configured', 'otel-sample', 'otel-worker-native')]
     [string]$Sample = 'hello-world',
     [int]$Port = 7075,
     [switch]$Streaming,
@@ -20,6 +20,12 @@ if (-not (Test-Path -LiteralPath (Join-Path $sampleRoot 'node_modules\@azure\fun
 # TypeScript samples compile to dist before the host loads them.
 npm --prefix $sampleRoot run build --if-present
 if ($LASTEXITCODE -ne 0) { throw "Build failed for $sampleRoot" }
+# Samples ship app settings as a template; create local.settings.json on first run.
+$localSettings = Join-Path $sampleRoot 'local.settings.json'
+$template = "$localSettings.template"
+if (-not (Test-Path -LiteralPath $localSettings) -and (Test-Path -LiteralPath $template)) {
+    Copy-Item -LiteralPath $template -Destination $localSettings
+}
 # A sample can ship its own worker config (customer opt-in); otherwise use the worker defaults.
 $config = Join-Path $sampleRoot 'rust-worker.json'
 if (-not (Test-Path -LiteralPath $config)) {
