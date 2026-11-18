@@ -23,7 +23,8 @@ The plan has five parts:
    and the JavaScript OTel SDK and exporters.
 3. **Ask the OpenTelemetry team to own the Rust OTel package.** We need them to
    build, publish and maintain it, with an opt-in switch for OTel and for each
-   instrumentation. Section 10 lists what we need from them.
+   instrumentation. The same library can serve Node.js, Python (which already
+   has a Rust worker), Go and Rust. Section 10 lists what we need from them.
 4. **Make OTel and every instrumentation opt-in.** With no configuration, the
    worker loads no telemetry code at all. Customers turn OTel on, then pick the
    instrumentations they want, such as outgoing `http`, `fetch` and `dns`.
@@ -329,7 +330,7 @@ opt-in model into it.
   ones). Anything turned off loads nothing and costs nothing.
 - **Keep one OTel implementation for every language worker.** The same package
   should serve the Node.js worker first and be reusable by other workers later.
-  That's what "one OpenTelemetry for all" means here.
+  Section 10.1 explains how. That's what "one OpenTelemetry for all" means here.
 - **Follow the standards.** OTLP export, W3C Trace Context and current OTel
   semantic conventions, kept up to date as the specs change.
 - **Agree on the contract with the worker.** Configuration keys, the IPC format
@@ -337,6 +338,27 @@ opt-in model into it.
   during specialization.
 - **Release on our schedule.** Ship builds for every supported OS and
   architecture, in step with the worker releases in section 11.
+
+### 10.1 One Rust OTel library for four languages
+
+Node.js is the first user, not the only one. Python already has a Rust worker,
+so it can plug into the same Rust OTel library and get the same opt-in model
+with little extra work. Go and Rust workers can follow the same pattern.
+
+That gives us one library from the OpenTelemetry team serving four languages:
+
+| Language | Worker | How it uses the Rust OTel library |
+|---|---|---|
+| Node.js | Rust worker (this proposal) | Links the library directly. JS hooks send span data over IPC |
+| Python | Existing Rust worker | Links the library directly. Python hooks send span data the same way |
+| Go | Rust-based worker (future) | Same integration pattern as Node.js and Python |
+| Rust | Rust worker (future) | Uses the library natively, no bridge needed |
+
+Every language gets the same switches, configuration keys, semantic
+conventions and export behavior. A fix or a new instrumentation lands once and
+ships to all four. Each language still needs its own thin hooks for
+language-specific libraries, and each one must pass its own parity and cold
+start checks before we call it supported.
 
 ## 11. Rollout plan
 
@@ -375,3 +397,4 @@ opt-in model into it.
 6. Do metrics belong in phase 2, or in a separate proposal?
 7. Which team owns the Rust OTel package, and what timeline can the
    OpenTelemetry team commit to?
+8. In what order do Python, Go and Rust adopt the shared library after Node.js?
