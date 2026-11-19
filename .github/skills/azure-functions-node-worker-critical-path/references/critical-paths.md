@@ -44,6 +44,17 @@ Use Gate B when the established contract remains fixed but implementation change
 
 Gate B requires a focused regression plus broad repository validation. Security-sensitive cases also require the security skill's source-to-sink analysis.
 
+## Dependency Upgrade Requirements
+
+For upgrades affecting critical-path dependencies:
+
+- Review upstream release notes, changelogs, and the source diff when available.
+- Identify breaking changes, behavior changes, and security fixes.
+- Document which upstream changes may affect the Node.js worker.
+- Map each relevant behavior change to validation evidence or regression tests.
+- Record the source and target versions reviewed.
+- If upstream documentation or source history is unavailable, mark the dependency analysis incomplete.
+
 ## Not Gated by This Skill
 
 Examples normally outside this gate, provided they do not mask a critical behavior change:
@@ -61,6 +72,7 @@ Require evidence or ownership input from related repositories when changing shar
 
 - `azure-functions-host` for RPC messages, capabilities, startup, and lifecycle contracts
 - `azure-functions-nodejs-library` for programming-model and core API behavior
+- `azure-functions-nodejs-extensions` for extension integration and Azure resource binding behavior
 - `azure-functions-nodejs-e2e-tests` for ecosystem compatibility coverage
 - `azure-functions-core-tools` for local Host startup and debugging behavior
 
