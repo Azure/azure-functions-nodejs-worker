@@ -69,7 +69,9 @@ keeps the worker alive. `appTerminate` flushes it, waiting up to 5 seconds.
   `AsyncLocalStorage` so client calls find their parent.
 - `http` (the `http.client.*` diagnostics channels), `fetch`
   (`undici:request:*`), and `dns` (a wrapped `lookup`) record client spans and
-  inject `traceparent` into outgoing requests.
+  inject `traceparent` into outgoing requests. `url.full` drops user info and
+  the fragment and keeps only query parameter names: every value becomes
+  `REDACTED`. If a URL cannot be parsed, the query is removed.
 - `app.hook.log` correlates `context.log` records with the active span.
 - Node assigns trace and span IDs, because it has already propagated them
   downstream. The Rust SDK keeps those IDs (`SpanBuilder::with_span_id` and

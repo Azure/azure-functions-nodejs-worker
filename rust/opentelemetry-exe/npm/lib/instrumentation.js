@@ -10,7 +10,6 @@ const { randomBytes } = require('node:crypto');
 const diagnostics = require('node:diagnostics_channel');
 
 const maxUrlLength = 1024;
-const redactedQueryKeys = new Set(['sig', 'signature', 'awsaccesskeyid', 'x-goog-signature']);
 
 const nowNs = () => BigInt(Math.round((performance.timeOrigin + performance.now()) * 1e6)).toString();
 
@@ -34,19 +33,23 @@ function traceparent(traceId, spanId, sampled) {
     return `00-${traceId}-${spanId}-${sampled ? '01' : '00'}`;
 }
 
+// Query values and fragments often carry tokens or SAS signatures, so only parameter names are exported.
 function sanitizeUrl(value) {
+    let sanitized;
     try {
         const url = new URL(value);
         url.username = '';
         url.password = '';
-        for (const key of [...url.searchParams.keys()]) {
-            if (redactedQueryKeys.has(key.toLowerCase())) url.searchParams.set(key, 'REDACTED');
-        }
-        value = url.toString();
+        url.hash = '';
+        const keys = [...url.searchParams.keys()];
+        url.search = keys.map((key) => `${encodeURIComponent(key)}=REDACTED`).join('&');
+        sanitized = url.toString();
     } catch {
-        // Report the raw value when it is not a parseable absolute URL.
+        sanitized = String(value)
+            .split(/[?#]/, 1)[0]
+            .replace(/^([^:/?#]+:\/\/)[^/@]*@/, '$1');
     }
-    return value.length > maxUrlLength ? value.slice(0, maxUrlLength) : value;
+    return sanitized.length > maxUrlLength ? sanitized.slice(0, maxUrlLength) : sanitized;
 }
 
 function hasHeader(headers, name) {
@@ -202,4 +205,4 @@ function install(kinds, active, send) {
     }
 }
 
-module.exports = { install, newSpanId, newTraceId, nowNs, traceparent };
+module.exports = { install, newSpanId, newTraceId, nowNs, sanitizeUrl, traceparent };
