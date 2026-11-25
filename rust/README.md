@@ -179,6 +179,25 @@ requests. The response echoes the `traceparent` that each call carried.
 `OTEL_TRACES_SAMPLER=always_on` is set only because the local host sends
 unsampled parents.
 
+### Customer-installed OTel exe sample (standard worker, no worker changes)
+
+This sample runs on the **unchanged** Node.js worker. Instead of the worker
+owning telemetry, the app installs `@azure/functions-opentelemetry-native`,
+which bundles the Rust `azfunc-otel` sidecar. The OpenTelemetry SDK and the
+exporters run in that sidecar, so the app has no `@opentelemetry/*` packages.
+Export goes over OTLP to the OpenTelemetry Collector by default, so the
+Collector (maintained by another team) owns the Azure Monitor exporter. See
+[opentelemetry-exe/README.md](opentelemetry-exe/README.md).
+
+```powershell
+& rust\scripts\build-otel-exe.ps1          # add -AzureMonitor for direct export
+cd rust\sample\otel-customer-exe
+npm install
+Copy-Item local.settings.json.template local.settings.json
+func start
+Invoke-RestMethod 'http://localhost:7071/api/outbound'
+```
+
 ## Instrumentation configuration
 
 Native telemetry is **opt-in**: the shipped `runtime.json` sets

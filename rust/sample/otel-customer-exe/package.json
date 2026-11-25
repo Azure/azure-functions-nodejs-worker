@@ -1,0 +1,10 @@
+{
+    "name": "rust-worker-otel-customer-exe",
+    "version": "1.0.0",
+    "private": true,
+    "main": "src/index.cjs",
+    "dependencies": {
+        "@azure/functions": "^4.7.0",
+        "@azure/functions-opentelemetry-native": "file:../../opentelemetry-exe/npm"
+    }
+}

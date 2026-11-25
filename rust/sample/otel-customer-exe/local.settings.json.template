@@ -1,0 +1,13 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "FUNCTIONS_WORKER_RUNTIME": "node",
+        "AzureWebJobsStorage": "",
+        "OTEL_NODE_ENABLED_INSTRUMENTATIONS": "http,dns,fetch,logs",
+        "OTEL_SERVICE_NAME": "otel-customer-exe",
+        "OTEL_TRACES_SAMPLER": "always_on",
+        "AZURE_FUNCTIONS_OTEL_EXPORTER": "auto",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "",
+        "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
+    }
+}

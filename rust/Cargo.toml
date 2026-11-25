@@ -8,7 +8,7 @@ build = "build.rs"
 exclude = ["node_modules", "sample"]
 
 [workspace]
-members = [".", "opentelemetry"]
+members = [".", "opentelemetry", "opentelemetry-exe"]
 
 [dependencies]
 anyhow = "1"

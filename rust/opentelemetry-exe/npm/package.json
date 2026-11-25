@@ -1,0 +1,19 @@
+{
+    "name": "@azure/functions-opentelemetry-native",
+    "version": "0.1.0-prototype",
+    "description": "Prototype: opt-in OpenTelemetry for Azure Functions Node.js apps with the SDK and exporters in a Rust sidecar",
+    "license": "MIT",
+    "private": true,
+    "main": "index.js",
+    "files": [
+        "index.js",
+        "lib/",
+        "bin/"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "peerDependencies": {
+        "@azure/functions": "^4.5.0"
+    }
+}

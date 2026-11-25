@@ -1,0 +1,31 @@
+[package]
+name = "azure-functions-otel-exe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+description = "Customer-installed OpenTelemetry sidecar for Azure Functions Node.js apps"
+
+[[bin]]
+name = "azfunc-otel"
+path = "src/main.rs"
+
+[features]
+default = []
+# Direct export to Application Insights through the community exporter. Off by default:
+# the recommended path is OTLP to an OpenTelemetry Collector with the Azure Monitor exporter.
+azure-monitor = ["dep:opentelemetry-application-insights", "dep:reqwest"]
+
+[dependencies]
+anyhow = "1"
+opentelemetry = { version = "0.31", features = ["trace", "logs"] }
+opentelemetry_sdk = { version = "0.31", features = ["trace", "logs"] }
+opentelemetry-otlp = { version = "0.31", default-features = false, features = ["trace", "logs", "http-proto", "reqwest-blocking-client", "reqwest-rustls"] }
+opentelemetry-stdout = { version = "0.31", features = ["trace", "logs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+opentelemetry-application-insights = { version = "0.44", optional = true, default-features = false, features = ["trace", "logs", "reqwest-blocking-client-rustls"] }
+reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "rustls-tls"] }
+
+[dev-dependencies]
+opentelemetry_sdk = { version = "0.31", features = ["trace", "logs", "testing"] }
