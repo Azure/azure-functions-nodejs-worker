@@ -1,0 +1,74 @@
+// Run in the shared Application Insights Logs view.
+let measurements = traces
+| where timestamp > ago(7d)
+| where message startswith "otel-coldstart "
+| extend benchmark = parse_json(substring(message, strlen("otel-coldstart ")))
+| where tostring(benchmark.event) == "measurement";
+measurements
+| where tobool(benchmark.success)
+| extend variant = tostring(benchmark.variant), phase = tostring(benchmark.phase),
+    classification = tostring(benchmark.classification), elapsedMs = todouble(benchmark.elapsedMs)
+| summarize samples = count(), p50Ms = percentile(elapsedMs, 50),
+    p95Ms = percentile(elapsedMs, 95), p99Ms = percentile(elapsedMs, 99)
+    by variant, phase, classification
+| order by phase asc, classification asc, variant asc
+
+// Inspect raw measurements, including errors; never silently drop failed probes.
+traces
+| where timestamp > ago(7d)
+| where message startswith "otel-coldstart "
+| extend benchmark = parse_json(substring(message, strlen("otel-coldstart ")))
+| where tostring(benchmark.event) == "measurement"
+| project timestamp, operation_Id, variant = tostring(benchmark.variant), roundId = tostring(benchmark.roundId),
+    phase = tostring(benchmark.phase), classification = tostring(benchmark.classification),
+    elapsedMs = todouble(benchmark.elapsedMs), success = tobool(benchmark.success),
+    httpStatus = toint(benchmark.httpStatus), bootId = tostring(benchmark.bootId),
+    instanceId = tostring(benchmark.instanceId), error = tostring(benchmark.error)
+| order by timestamp desc
+
+// Paired idle worker-first candidates from the same rounds; positive percent favors Rust.
+let scheduledOperations = traces
+| where timestamp > ago(7d)
+| where cloud_RoleName == "otel-coldstart-probe-86a4"
+| where message startswith "Executing 'Functions.coldStartProbe'" and message contains "Timer fired"
+| distinct operation_Id;
+let candidates = traces
+| where timestamp > ago(7d)
+| where message startswith "otel-coldstart "
+| join kind=leftsemi scheduledOperations on operation_Id
+| extend benchmark = parse_json(substring(message, strlen("otel-coldstart ")))
+| where tostring(benchmark.event) == "measurement" and tobool(benchmark.success)
+| where not(tobool(benchmark.isPastDue))
+| where tostring(benchmark.phase) == "idle" and tostring(benchmark.classification) == "worker-first"
+| extend variant = tostring(benchmark.variant), roundId = tostring(benchmark.roundId),
+    elapsedMs = todouble(benchmark.elapsedMs), entryLoadMs = todouble(benchmark.entryLoadMs);
+candidates
+| summarize rustMs = maxif(elapsedMs, variant == "customer-exe"),
+    nodeMs = maxif(elapsedMs, variant == "node-otel"),
+    baselineMs = maxif(elapsedMs, variant == "baseline"),
+    rustEntryMs = maxif(entryLoadMs, variant == "customer-exe"),
+    nodeEntryMs = maxif(entryLoadMs, variant == "node-otel") by roundId
+| where isnotnull(rustMs) and isnotnull(nodeMs) and isnotnull(baselineMs) and nodeMs > 0
+| extend rustReductionPct = 100.0 * (nodeMs - rustMs) / nodeMs
+| summarize pairedRounds = count(), rustP50Ms = percentile(rustMs, 50),
+    nodeP50Ms = percentile(nodeMs, 50), baselineP50Ms = percentile(baselineMs, 50),
+    medianPairedRustReductionPct = percentile(rustReductionPct, 50),
+    rustEntryP50Ms = percentile(rustEntryMs, 50), nodeEntryP50Ms = percentile(nodeEntryMs, 50)
+
+// Check the sidecar really ran rather than relying on HTTP success/fail-open.
+traces
+| where timestamp > ago(7d)
+| where cloud_RoleName == "otel-coldstart-exe-86a4"
+| where message contains "[otel-native]" or message contains "azfunc-otel"
+    or message startswith "Span #" or message startswith "TraceId"
+| project timestamp, message, cloud_RoleInstance
+| order by timestamp desc
+
+// Check JavaScript SDK readiness plus real console span/log export.
+traces
+| where timestamp > ago(7d)
+| where cloud_RoleName == "otel-coldstart-node-86a4"
+| where message contains "[node-otel]" or message contains "GET hello"
+    or message startswith "traceId:" or message startswith "severityNumber:"
+| project timestamp, message, cloud_RoleInstance
+| order by timestamp desc

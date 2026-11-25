@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "value": "westus3" },
+    "resourceGroupName": { "value": "rg-otel-coldstart-86a4" },
+    "environmentName": { "value": "otel-coldstart-86a4" },
+    "sessionId": { "value": "86a4775b-dcab-43cb-8258-fa919590f8b5" },
+    "createdAt": { "value": "2026-11-25T17:20:35.5954262Z" },
+    "probeEnabled": { "value": false }
+  }
+}

@@ -198,6 +198,13 @@ func start
 Invoke-RestMethod 'http://localhost:7071/api/outbound'
 ```
 
+For a matched cloud comparison, see
+[the cold-start samples](sample/otel-coldstart/README.md): one HTTP app with the
+customer package/exe, one without, and a third using npm OpenTelemetry
+SDK/instrumentation packages. An isolated timer app probes all three every
+30 minutes. They use the standard worker on Linux Flex Consumption and report
+worker-first candidates separately from warm requests.
+
 ## Instrumentation configuration
 
 Native telemetry is **opt-in**: the shipped `runtime.json` sets
