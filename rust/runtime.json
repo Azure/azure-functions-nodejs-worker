@@ -1,0 +1,16 @@
+{
+    "engine_directory": "..",
+    "node_executable": "node",
+    "node_arguments": [],
+    "telemetry": {
+        "enabled": false,
+        "service_name": "azure-functions-rust-worker",
+        "context_propagation": true,
+        "instrumentations": {
+            "http": true,
+            "functions": true,
+            "logs": true
+        },
+        "exporter": "console"
+    }
+}

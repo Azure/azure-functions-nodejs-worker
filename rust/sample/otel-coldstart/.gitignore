@@ -1,0 +1,6 @@
+node_modules/
+artifacts/
+local.settings.json
+**/local.settings.json
+**/node_modules/
+**/vendor/

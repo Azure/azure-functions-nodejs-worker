@@ -43,3 +43,4 @@ types/*.tgz
 
 **/*-test-results.xml
 testResults
+.copilot-azure/

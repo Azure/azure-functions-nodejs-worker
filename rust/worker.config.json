@@ -1,0 +1,12 @@
+{
+    "description": {
+        "language": "node",
+        "extensions": [".js", ".mjs", ".cjs"],
+        "defaultExecutablePath": "target\\debug\\azure-functions-nodejs-worker-rust.exe",
+        "workerIndexing": "true"
+    },
+    "processOptions": {
+        "initializationTimeout": "00:02:00",
+        "environmentReloadTimeout": "00:02:00"
+    }
+}

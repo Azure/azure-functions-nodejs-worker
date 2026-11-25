@@ -1,0 +1,6 @@
+/target/
+/node_modules/
+/sample/*/node_modules/
+/sample/*/local.settings.json
+/sample/*/dist/
+/opentelemetry-exe/npm/bin/
